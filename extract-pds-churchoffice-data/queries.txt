@@ -1,0 +1,57 @@
+CREATE TABLE MemKWType_DB (
+  DescRec integer,
+  Description char(30),
+  NewItem integer,
+  unique(DescRec)
+);
+
+Description: "LIST:Tech"
+DescRec: integer ID
+
+----------------------
+
+CREATE TABLE MemKW_DB (
+  MemKWRecNum integer,
+  OrderNum integer,
+  MemRecNum integer,
+  DescRec integer,
+  ProgNum integer,
+  unique(MemKWRecNum)
+);
+
+DescRec: key into MemKWType_DB/DescRec
+MemRecNum: key into Mem/MemRecNum
+
+----------------------
+
+CREATE TABLE Mem_DB (
+  MemRecNum integer,
+  FamRecNum integer,
+  Name char(100),
+...
+);
+
+----------------------
+
+CREATE TABLE MemEMail_DB (
+  EMailRec integer,
+  MemRecNum integer,
+  Order integer,
+  EMailAddress char(65),
+  EMailTypeRec integer,
+  EMailOverMail boolean,
+  EmailIsUnlisted boolean,
+  EmailUnlisted boolean,
+  FamEmail boolean,
+  unique(EMailRec)
+);
+
+Get name and email address for everyone on a given list:
+
+SELECT Mem_DB.Name,
+       MemEmail_DB.EMailAddress
+FROM   Mem_DB
+       INNER JOIN MemKWType_DB ON MemKWType_DB.Description = "LIST:Tech"
+       INNER JOIN MemKW_DB     ON MemKW_DB.MemRecNum    = Mem_DB.MemRecNum
+       INNER JOIN MemEmail_DB  ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
+WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec;
