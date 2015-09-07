@@ -53,7 +53,10 @@ $echo = "-echo "
 open(SQLITE, "|$sqlite3_bin $echo$database_name") ||
     die "Can't run sqlite3 binary: $sqlite3_bin";
 
-#print SQLITE "PRAGMA $database_name.synchronous=0;\n";
+# This helps SQLite performance considerably (it's slightly risky, in
+# general, because it removes some atomic-ness of transactions, but
+# for this application, it's fine).
+print SQLITE "PRAGMA $database_name.synchronous=0;\n";
 
 foreach my $db (@dbs) {
     print "=== PDS table: $db\n";
@@ -99,20 +102,10 @@ foreach my $db (@dbs) {
         if ($debug_arg);
     system($cmd);
 
-    # SQLite3 (greatly) benefits by surrounding all the INSERT lines
-    # with BEGIN.. (especially databases like FundHist, which have
-    # zillions of INSERT lines).
-    my $found_first_insert = 0;
-
     open(SQL, $sql_file) ||
         die "Can't open $sql_file";
     while (<SQL>) {
         my $str = $_;
-
-        if (!$found_first_insert && $str =~ /INSERT/) {
-            $str =~ s/INSERT/BEGIN;\nINSERT/;
-            $found_first_insert = 1;
-        }
 
         # PDS uses some fields named "order", "key", "default", etc.,
         # which are keywords in SQL
@@ -135,11 +128,8 @@ foreach my $db (@dbs) {
         print SQLITE $str;
     }
     close(SQL);
-    print SQLITE ";COMMIT"
-        if ($found_first_insert);
     print SQLITE ";\n";
     #unlink($sql_file);
-    #sleep(1);
 }
 
 close(SQLITE);
