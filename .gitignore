@@ -14,9 +14,7 @@
 .diff
 .DS_Store
 
-m4/
-
-stamp-h?
+more mstamp-h?
 configure
 config.guess
 config.sub
@@ -37,3 +35,4 @@ Makefile
 Makefile.in
 
 pds-pxtools/mem-fam-picturefiles/mem-fam-picturefiles
+pds-pxtools/mailman-list-audit/mailman-list-audit

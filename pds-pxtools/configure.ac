@@ -56,6 +56,7 @@ AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([
     Makefile
 
+    mailman-list-audit/Makefile
     mem-fam-picturefiles/Makefile
 ])
 
