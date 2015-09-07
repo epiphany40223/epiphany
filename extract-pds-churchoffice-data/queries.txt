@@ -46,6 +46,8 @@ CREATE TABLE MemEMail_DB (
   unique(EMailRec)
 );
 
+----------------------
+
 Get name and email address for everyone on a given list:
 
 SELECT Mem_DB.Name,
@@ -58,10 +60,37 @@ WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec;
 
 ----------------------
 
+See if a specific keyword is set on a specific user
+
+SELECT MemKW_DB.MemRecNum
+FROM   MemKW_DB
+WHERE  MemKW_DB.MemRecNum=xxx AND MemKW_DB.DescRec=yyy
+
+----------------------
+
+Find all names corresponding to an email address
+
+SELECT Mem_DB.RecNum,
+       Mem_DB.Name,
+       MemEmail_DB.EMailAddress
+FROM   Mem_DB
+       INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
+WHERE  MemEmail_DB.EmailAddress = 'address'
+
+SELECT Mem_DB.RecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM   Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  MemEmail_DB.EmailAddress = 'address'
+
+----------------------
+
+iMac:
+
 SQLite plain: 38 minutes
-
 SQLite with BEGIN..COMMIT: 5:43
-
 SQLite with BEGIN..COMMIT + asynchronous:  8:05
-
 SQLite with asynchronous: 6:09
+
+RPi:
+
+SQLite plain: ...don't even bother...
+SQLite with BEGIN..COMMIT: 5:01:10
+SQLite with BEGIN..COMMIT + asynchronous: 4:51:03
+SQLite with asynchronous: 4:51:53
