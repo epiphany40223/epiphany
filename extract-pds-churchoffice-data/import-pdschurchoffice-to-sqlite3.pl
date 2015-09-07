@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+use Time::HiRes;
 
 my $sqlite3_bin = "sqlite3";
 my $pxview_bin = "pxview";
@@ -61,6 +62,7 @@ print SQLITE "PRAGMA $database_name.synchronous=0;\n";
 foreach my $db (@dbs) {
     print "=== PDS table: $db\n";
 
+    my $start_time = Time::HiRes::time();
     my $table_base = $db;
     $table_base =~ s/\.DB$//;
 
@@ -129,6 +131,10 @@ foreach my $db (@dbs) {
     }
     close(SQL);
     print SQLITE ";\n";
+
+    my $stop_time = Time::HiRes::time();
+    my $elapsed = $stop_time - $start_time;
+    printf("    Elapsed time for %s table: %0.02f\n", $db, $elapsed);
     #unlink($sql_file);
 }
 
