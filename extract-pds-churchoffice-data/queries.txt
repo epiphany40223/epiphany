@@ -55,3 +55,13 @@ FROM   Mem_DB
        INNER JOIN MemKW_DB     ON MemKW_DB.MemRecNum    = Mem_DB.MemRecNum
        INNER JOIN MemEmail_DB  ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
 WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec;
+
+----------------------
+
+SQLite plain: 38 minutes
+
+SQLite with BEGIN..COMMIT: 5:43
+
+SQLite with BEGIN..COMMIT + asynchronous:  8:05
+
+SQLite with asynchronous: 6:09

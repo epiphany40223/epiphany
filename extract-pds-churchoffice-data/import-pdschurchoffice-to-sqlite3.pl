@@ -53,7 +53,7 @@ $echo = "-echo "
 open(SQLITE, "|$sqlite3_bin $echo$database_name") ||
     die "Can't run sqlite3 binary: $sqlite3_bin";
 
-print SQLITE "PRAGMA $database_name.synchronous=0;\n";
+#print SQLITE "PRAGMA $database_name.synchronous=0;\n";
 
 foreach my $db (@dbs) {
     print "=== PDS table: $db\n";
