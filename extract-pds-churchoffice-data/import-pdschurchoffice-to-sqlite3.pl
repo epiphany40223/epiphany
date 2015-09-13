@@ -8,8 +8,8 @@ use Time::HiRes;
 
 my $sqlite3_bin = "sqlite3";
 my $pxview_bin = "pxview";
-my $data_dir = ".";
-my $database_name = "pdschurchoffice";
+my $data_dir;
+my $database_name = "pdschurchoffice.sqlite3";
 
 my $help_arg = 0;
 my $debug_arg = 0;
@@ -18,21 +18,52 @@ my $debug_arg = 0;
 
 &Getopt::Long::Configure("bundling");
 my $ok = Getopt::Long::GetOptions("sqlite3=s" => \$sqlite3_bin,
+                                  "sqlite3-db-name=s", \$database_name,
                                   "pxview=s" => \$pxview_bin,
-                                  "data-dir=s" => \$data_dir,
-                                  "database-name=s", \$database_name,
+                                  "pdsdata-dir=s" => \$data_dir,
                                   "debug" => \$debug_arg,
                                   "help|h" => \$help_arg);
 if (!$ok || $help_arg) {
-    print "$0 [--sqlite3=SQLITE3_BIN] [--pxview=PXVIEW_BIN] [--data-dir=DIR]\n";
+    print "$0 [--sqlite3=SQLITE3_BIN] [--pxview=PXVIEW_BIN] [--pdsdata-dir=DIR][--sqlite3-name=NAME]\n";
     exit(0);
 }
 
 ###############################################################################
 
+sub find {
+    my $bin_name = shift;
+    my $arg_value = shift;
+
+    if (defined($arg_value)) {
+        if ($arg_value =~ /^\// && -x $arg_value) {
+            return $arg_value;
+        } elsif ($arg_value =~ /^\./ && -x $arg_value) {
+            return $arg_value;
+        } else {
+            $bin_name = $arg_value;
+        }
+    }
+
+    foreach my $dir (split(/:/, $ENV{PATH})) {
+        my $b = "$dir/$bin_name";
+        return $b
+            if (-x $b);
+    }
+
+    return undef;
+}
+
+$pxview_bin = find("pxview", $pxview_bin)
+    if (!defined($pxview_bin));
+$sqlite3_bin = find("sqlite3", $sqlite3_bin)
+    if (!defined($sqlite3_bin));
 die "Can't fix pxview executable: $pxview_bin"
-    if (! -x $pxview_bin);
-die "Can't find data dir: $data_dir"
+    if (!defined($pxview_bin));
+die "Can't find sqlite3 executable"
+    if (!defined($sqlite3_bin));
+die "Must specify PDS data dir"
+    if (!defined($data_dir));
+die "Can't find PDS data dir: $data_dir"
     if (! -d $data_dir);
 
 ###############################################################################
@@ -43,6 +74,8 @@ unlink($database_name);
 
 opendir(my $dh, $data_dir) ||
     die "Can't open $data_dir";
+print "PDS data dir: $data_dir\n"
+    if ($debug_arg);
 my @dbs = grep { /\.DB$/ && -f "$data_dir/$_" } readdir($dh);
 closedir($dh);
 
@@ -80,6 +113,13 @@ foreach my $db (@dbs) {
     if ($db =~ /^AskRecNum.DB/i ||
         $db =~ /^RecNum.DB/i) {
         print "    ==> Skipping bogus $db table\n";
+        next;
+    }
+
+    # We dont' currently care about the *GIANT* databases (that take
+    # -- literally -- hours to import on an RPi).
+    if ($db =~ /fund/i) {
+        print "   ==> Skipping giant table $db\n";
         next;
     }
 
