@@ -24,8 +24,8 @@ my $ok = Getopt::Long::GetOptions("sqlite3=s" => \$sqlite3_bin,
                                   "debug" => \$debug_arg,
                                   "help|h" => \$help_arg);
 if (!$ok || $help_arg) {
-    print "$0 [--sqlite3=SQLITE3_BIN] [--pxview=PXVIEW_BIN] [--pdsdata-dir=DIR][--sqlite3-name=NAME]\n";
-    exit(0);
+    print "$0 [--sqlite3=SQLITE3_BIN] [--pxview=PXVIEW_BIN] [--pdsdata-dir=DIR][--sqlite3-db-name=NAME]\n";
+    exit($ok);
 }
 
 ###############################################################################
