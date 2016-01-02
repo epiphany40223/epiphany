@@ -5,12 +5,16 @@ use warnings;
 
 use Getopt::Long;
 
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+
 my $mysql_user;
 my $mysql_password;
 my $mysql_bin = "mysql";
 my $pxview_bin = "pxview";
 my $data_dir = ".";
-my $database_name = "pdschurchoffice";
+my $database_name = sprintf("pdschurchoffice-%04d-%02d-%02d-%02d%02d%02d",
+                            $year + 1900, $mon + 1, $mday,
+                            $hour, $min, $sec);
 
 my $help_arg = 0;
 my $debug_arg = 0;

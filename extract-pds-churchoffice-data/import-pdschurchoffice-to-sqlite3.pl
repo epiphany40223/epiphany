@@ -6,10 +6,14 @@ use warnings;
 use Getopt::Long;
 use Time::HiRes;
 
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+
 my $sqlite3_bin = "sqlite3";
 my $pxview_bin = "pxview";
 my $data_dir;
-my $database_name = "pdschurchoffice.sqlite3";
+my $database_name = sprintf("pdschurchoffice-%04d-%02d-%02d-%02d%02d%02d.sqlite3",
+                            $year + 1900, $mon + 1, $mday,
+                            $hour, $min, $sec);
 
 my $help_arg = 0;
 my $debug_arg = 0;
