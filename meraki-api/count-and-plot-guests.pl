@@ -83,7 +83,9 @@ while ($dt->epoch() < time()) {
     $dt = DateTime->from_epoch(epoch => $e);
 }
 
-# Remove the old file, write a new one
+#######################################################################
+
+# Remove the old data file, write a new one
 my $file = "results.txt";
 unlink($file);
 open(OUT, ">$file")
@@ -111,6 +113,8 @@ foreach my $date (@dates) {
 }
 close(OUT);
 
+#######################################################################
+
 # Gnuplot it!
 # Make a string with the gnuplot commands
 # Use the dates as xtics
@@ -124,6 +128,7 @@ set key bottom left
 
 set xtics border in scale 1,0.5 nomirror rotate by -45  autojustify
 set xtics (';
+# Write out the dates for each X tic label
 my $num = 1;
 foreach my $date (@dates) {
     $gp .= "\"$date\" $num";
@@ -136,6 +141,7 @@ $gp .= ')
 set output "ecc-meraki-data.pdf";
 plot ';
 
+# Plot each AP
 my $column = 3;
 foreach my $location (@locations) {
     $gp .= "\"$file\" using 2:$column with linespoints title \"$location\"";
@@ -147,7 +153,7 @@ foreach my $location (@locations) {
 $gp .= "
 quit\n";
 
-# Plot it
+# Do the actual plot
 open(GP, "|gnuplot") || die "Can't open gnuplot";
 print $gp;
 print GP $gp;
