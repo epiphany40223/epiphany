@@ -5,24 +5,78 @@ use strict;
 use POSIX;
 use DateTime;
 
+my $sqlite_file;
+# On WOPR / queeg
+$sqlite_file = "/home/jeff/ecc-meraki-data/data.sqlite3";
+if (! -f $sqlite_file) {
+    # Jeff's laptop
+    $sqlite_file = "/Users/jsquyres/git/epiphany/meraki-api/ecc-meraki-data/data.sqlite3";
+}
+if (! -f $sqlite_file) {
+    die "Can't fine a datafile to open";
+}
+
+#######################################################################
+
+my $local_time_zone = DateTime::TimeZone->new( name => 'local' );
+
+# This calculates an offset of GMT from our local time.  This isn't
+# 100% accurate on dates that change time (because they don't change
+# time at midnight), but it's close enough for this app.  :-)
+sub calc_gmt_offset {
+    my $dt = shift;
+
+    my $gmt_foo = DateTime->new(
+        year       => $dt->year(),
+        month      => $dt->month(),
+        day        => $dt->day(),
+        hour       => 12,
+        minute     => 0,
+        second     => 0,
+        nanosecond => 0,
+        time_zone  => 'GMT',
+        );
+    my $local_foo = DateTime->new(
+        year       => $dt->year(),
+        month      => $dt->month(),
+        day        => $dt->day(),
+        hour       => 12,
+        minute     => 0,
+        second     => 0,
+        nanosecond => 0,
+        time_zone  => $local_time_zone,
+        );
+
+    return ($gmt_foo->epoch() - $local_foo->epoch());
+}
+
+#######################################################################
+
 sub doit {
     my $apMac = shift;
     my $apName = shift;
     my $dt = shift;
 
     my $date_str = $dt->strftime("%Y-%m-%d");
-
     print "=== For $apName on $date_str\n";
 
     my $file = "bogus.sql";
     open(TMP, ">$file")
         || die "Can't write to $file";
-#    print TMP ".load /usr/lib/sqlite3/pcre.so\n";
 
     my $sql = "select distinct clientMac,ipv4,manufacturer from data where ";
     $sql .=  "apMac = '$apMac' and "
         if ($apMac ne "");
-    $sql .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and seenTime glob '$date_str*' ";
+
+    # Dates are stored in Zulu / GMT in the database.  Create a
+    # timestamp range that we want for this specific date, and then
+    # convert those timestamps to GMT.  Cacluate the GMT offset for
+    # this specific date.
+    my $offset = calc_gmt_offset($dt);
+    my $ts_start = $dt->epoch() - $offset;
+    my $ts_end = $ts_start + (24 * 60 * 60);
+
+    $sql .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
     $sql .= "order by apMac"
         if ($apMac ne "");
     $sql .= ";";
@@ -31,7 +85,7 @@ sub doit {
     print TMP "$sql\n";
     close(TMP);
 
-    open(SQL, "sqlite3 /home/jeff/ecc-meraki-data/data.sqlite3 -init $file|")
+    open(SQL, "sqlite3 $sqlite_file -init $file|")
         || die "Can't run SQL";
 
     my $count = 0;
@@ -56,15 +110,15 @@ close(STDIN);
 # ...then there was a bug and we didn't collect data betwen 2016-09-09T01:49:09Z
 # 2016-09-12T01:26:15Z.  :-(
 # ...so start looking for data on 2016-09-12 US Eastern.
-my $d = mktime(0, 0, 3, 6, 9 - 1, 2016 - 1900);
 my $dt = DateTime->new(
     year       => 2016,
     month      => 9,
     day        => 12,
     hour       => 0,
     minute     => 0,
-    second     => 1, # Just to make sure we're in that day
+    second     => 0,
     nanosecond => 0,
+    time_zone  => $local_time_zone,
     );
 
 # Collect results for each date and each location
@@ -91,15 +145,9 @@ unlink($file);
 open(OUT, ">$file")
     || die "Can't write to $file";
 
-# Write title row
-# (just grab any date so that we can get the location keys)
+# Grab all the dates and locations
 my @dates = sort(keys(%{$results}));
 my @locations = sort(keys(%{$results->{$dates[0]}}));
-#print OUT "# date,";
-#foreach my $location (@locations) {
-#    print OUT "$location,";
-#}
-#print OUT "\n";
 
 # Write all the data
 my $num = 1;
@@ -144,9 +192,7 @@ plot ';
 # Plot each AP
 my $column = 3;
 foreach my $location (@locations) {
-    $gp .= "\"$file\" using 2:$column with linespoints title \"$location\"";
-    $gp .= ", "
-        if ($column - 3 < $#locations);
+    $gp .= "\"$file\" using 2:$column with linespoints title \"$location\",";
     ++$column;
 }
 
