@@ -26,6 +26,16 @@ my $local_time_zone = DateTime::TimeZone->new( name => 'local' );
 sub calc_gmt_offset {
     my $dt = shift;
 
+    # The Meraki timestamps a reportedly in Zulu time (GMT), but
+    # they're actually *not*.  They're in America/New York time.
+    # Sigh.  So return an offset of 0.
+    return 0;
+
+
+
+
+
+
     my $gmt_foo = DateTime->new(
         year       => $dt->year(),
         month      => $dt->month(),
@@ -68,10 +78,8 @@ sub doit {
     $sql .=  "apMac = '$apMac' and "
         if ($apMac ne "");
 
-    # Dates are stored in Zulu / GMT in the database.  Create a
-    # timestamp range that we want for this specific date, and then
-    # convert those timestamps to GMT.  Cacluate the GMT offset for
-    # this specific date.
+    # Create a timestamp range that we want for this specific date,
+    # and ensure to account for the GMT offset.
     my $offset = calc_gmt_offset($dt);
     my $ts_start = $dt->epoch() - $offset;
     my $ts_end = $ts_start + (24 * 60 * 60);

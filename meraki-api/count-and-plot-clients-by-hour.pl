@@ -28,6 +28,16 @@ my $local_time_zone = DateTime::TimeZone->new( name => 'local' );
 sub calc_gmt_offset {
     my $dt = shift;
 
+    # The Meraki timestamps a reportedly in Zulu time (GMT), but
+    # they're actually *not*.  They're in America/New York time.
+    # Sigh.  So return an offset of 0.
+    return 0;
+
+
+
+
+
+
     my $gmt_foo = DateTime->new(
         year       => $dt->year(),
         month      => $dt->month(),
@@ -59,19 +69,20 @@ sub doit_hour {
     my $apName = shift;
     my $dt = shift;
 
-    my $sql = "select distinct clientMac,ipv4,manufacturer from data where ";
+    print "=== Searching for hour " . $dt->hour() . "\n";
+    my $sql = "select distinct clientMac,ipv4 from data where ";
     $sql .=  "apMac = '$apMac' and "
         if ($apMac ne "");
 
-    # Dates are stored in Zulu / GMT in the database.  Create a
-    # timestamp range that we want for this specific date, and then
-    # convert those timestamps to GMT.  Cacluate the GMT offset for
-    # this specific date.
+    # Create a timestamp range that we want for this specific date,
+    # and ensure to account for the GMT offset.
     my $offset = calc_gmt_offset($dt);
     my $ts_start = $dt->epoch() - $offset;
     my $ts_end = $ts_start + (60 * 60);
 
-    $sql .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
+    # Limit it to a specific SSID or not
+    #$sql .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and ipv4 != '' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
+    $sql .= "ipv4 != '/0.0.0.0' and ipv4 != '' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
     $sql .= "order by apMac"
         if ($apMac ne "");
     $sql .= ";";
@@ -197,10 +208,10 @@ close(OUT);
 # Use the dates as xtics
 my $gp;
 $gp = "set terminal pdf
-set title \"Guests on ECC Meraki AP wifi networks, by hour on $date_arg\"\n";
+set title \"Clients on ECC Meraki AP wifi networks, by hour on $date_arg\"\n";
 $gp .= 'set grid
 set xlabel "Hour of day"
-set ylabel "Number of guests"
+set ylabel "Number of clients"
 set key top left
 
 set xtics border in scale 1,0.5 nomirror rotate by -45  autojustify
