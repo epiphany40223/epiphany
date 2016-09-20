@@ -28,6 +28,17 @@ CREATE TABLE Mem_DB (
   MemRecNum integer,
   FamRecNum integer,
   Name char(100),
+  PictureFile char(100),
+...
+);
+
+CREATE TABLE fam_DB (
+  FamRecNum integer,
+  ParKey char(10),
+  SchKey char(10),
+  REKey char(10),
+  Name char(100),
+  PictureFile char(100),
 ...
 );
 
@@ -78,6 +89,20 @@ FROM   Mem_DB
 WHERE  MemEmail_DB.EmailAddress = 'address'
 
 SELECT Mem_DB.RecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM   Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  MemEmail_DB.EmailAddress = 'address'
+
+Find all names with pictures:
+
+----------------------
+
+Members and families with pictures:
+
+SELECT Mem_DB.Name, Mem_DB.PictureFile
+FROM   Mem_DB
+WHERE  Mem_DB.PictureFile <> "";
+
+SELECT Fam_DB.Name, Fam_DB.PictureFile
+FROM   Fam_DB
+WHERE  Fam_DB.PictureFile <> "";
 
 ----------------------
 
