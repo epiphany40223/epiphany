@@ -225,10 +225,10 @@ foreach my $m (qw/am pm/) {
         ++$num;
     }
 }
-$gp .= ')
+$gp .= ")
 
-set output "ecc-meraki-data-by-hour-$date_arg.pdf";
-plot ';
+set output \"ecc-meraki-data-by-hour-$date_arg.pdf\";
+plot ";
 
 # Plot each AP
 my $column = 2;
