@@ -22,6 +22,9 @@ lastWarnTimestampKey = keyBase & "lastWarnTimestamp"
 Dim suppressWarnings
 suppressWarnings = 0
 
+Dim MsgBoxTitle
+MsgBoxTitle = "Backup to Epiphany FileEngine"
+
 ' -------------------------------------------------------------------
 ' If this was run non-interactively (i.e., with the /nowarn argument),
 ' then suppress warnings.
@@ -153,7 +156,8 @@ Sub printBackupFailed(Str, isWarning)
         Call oWShell.RegWrite(lastWarnTimestampKey, Now(), "REG_SZ")
 
         ' Display the warning message box
-        MsgBox Str, (vbOKOnly + vbExclamation), "Backup to Epiphany FileEngine failed"
+        MsgBox Str, (vbOKOnly + vbExclamation), MsgBoxTitle & " failed"
+'bls	oWShell.Popup Str, 10, MsgBoxTitle & " failed"
     End If
 
     ' Quit
@@ -180,6 +184,19 @@ End If
 
 Sub doTheBackup
     On Error Resume Next
+
+    ' print a user info block on the screen and wait for box to close
+    If (Not suppressWarnings) Then
+        Str =                "The Tech committee needs you to run your laptop backup today."
+        Str = Str & vbCrLf & ""
+        Str = Str & vbCrLf & " * Just close this message box and it will start automatically."
+        Str = Str & vbCrLf & " * It will open a window and start scrolling text."
+        Str = Str & vbCrLf & " * The backup will finish and the window will close by itself."
+        Str = Str & vbCrLf & " * You can continue to do other work while the backup is running."
+        Str = Str & vbCrLf & ""
+        Str = Str &          "YOU MUST BE ON THE EPIPHANY CAMPUS TO RUN THE BACKUP!"
+        MsgBox Str, (vbOKOnly + vbExclamation), MsgBoxTitle
+    End If
 
     Err.Clear
     Call oWShell.Run(backupCmd, 1, 1)
