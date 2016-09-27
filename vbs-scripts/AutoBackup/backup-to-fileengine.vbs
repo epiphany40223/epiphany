@@ -34,6 +34,7 @@ Do While (i < wscript.Arguments.Count)
     If (LCase(wscript.Arguments.item(i)) = "/nowarn") Then
         suppressWarnings = 1
     End If 
+    i = i + 1
 Loop
 
 ' -------------------------------------------------------------------
