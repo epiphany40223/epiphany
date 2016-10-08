@@ -37,25 +37,25 @@ sub calc_gmt_offset {
 
 
     my $gmt_foo = DateTime->new(
-        year       => $dt->year(),
-        month      => $dt->month(),
-        day        => $dt->day(),
-        hour       => 12,
-        minute     => 0,
-        second     => 0,
-        nanosecond => 0,
-        time_zone  => 'GMT',
-        );
+	year       => $dt->year(),
+	month      => $dt->month(),
+	day        => $dt->day(),
+	hour       => 12,
+	minute     => 0,
+	second     => 0,
+	nanosecond => 0,
+	time_zone  => 'GMT',
+	);
     my $local_foo = DateTime->new(
-        year       => $dt->year(),
-        month      => $dt->month(),
-        day        => $dt->day(),
-        hour       => 12,
-        minute     => 0,
-        second     => 0,
-        nanosecond => 0,
-        time_zone  => $local_time_zone,
-        );
+	year       => $dt->year(),
+	month      => $dt->month(),
+	day        => $dt->day(),
+	hour       => 12,
+	minute     => 0,
+	second     => 0,
+	nanosecond => 0,
+	time_zone  => $local_time_zone,
+	);
 
     return ($gmt_foo->epoch() - $local_foo->epoch());
 }
@@ -72,11 +72,11 @@ sub doit {
 
     my $file = "bogus.sql";
     open(TMP, ">$file")
-        || die "Can't write to $file";
+	|| die "Can't write to $file";
 
     my $sql = "select distinct clientMac,ipv4,manufacturer from data where ";
     $sql .=  "apMac = '$apMac' and "
-        if ($apMac ne "");
+	if ($apMac ne "");
 
     # Create a timestamp range that we want for this specific date,
     # and ensure to account for the GMT offset.
@@ -86,7 +86,7 @@ sub doit {
 
     $sql .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
     $sql .= "order by apMac"
-        if ($apMac ne "");
+	if ($apMac ne "");
     $sql .= ";";
 
     print "SQL: $sql\n";
@@ -94,12 +94,12 @@ sub doit {
     close(TMP);
 
     open(SQL, "sqlite3 $sqlite_file -init $file|")
-        || die "Can't run SQL";
+	|| die "Can't run SQL";
 
     my $count = 0;
     while (<SQL>) {
-        print $_;
-        ++$count;
+	print $_;
+	++$count;
     }
     close(SQL);
     print "=== Total of $count rows\n";
@@ -135,11 +135,11 @@ while ($dt->epoch() < time()) {
     my $date_str = $dt->strftime("%Y-%m-%d-%a");
 
     $results->{$date_str}->{wc} =
-        doit("00:18:0a:79:a5:e2", "WC", $dt);
+	doit("00:18:0a:79:a5:e2", "WC", $dt);
     $results->{$date_str}->{eh} =
-        doit("00:18:0a:79:8e:2d", "EH Copyroom", $dt);
+	doit("00:18:0a:79:8e:2d", "EH Copyroom", $dt);
     $results->{$date_str}->{both} =
-        doit("", "Both", $dt);
+	doit("", "Both", $dt);
 
     my $e = $dt->epoch() + (24 * 60 * 60);
     $dt = DateTime->from_epoch(epoch => $e);
@@ -162,7 +162,7 @@ my $num = 1;
 foreach my $date (@dates) {
     print OUT "$date $num ";
     foreach my $location (@locations) {
-        print OUT "$results->{$date}->{$location} ";
+	print OUT "$results->{$date}->{$location} ";
     }
     print OUT "\n";
     ++$num;
@@ -189,7 +189,7 @@ my $num = 1;
 foreach my $date (@dates) {
     $gp .= "\"$date\" $num";
     $gp .= ", "
-        if ($num <= $#dates);
+	if ($num <= $#dates);
     ++$num;
 }
 $gp .= ')
