@@ -39,25 +39,25 @@ sub calc_gmt_offset {
 
 
     my $gmt_foo = DateTime->new(
-        year       => $dt->year(),
-        month      => $dt->month(),
-        day        => $dt->day(),
-        hour       => 12,
-        minute     => 0,
-        second     => 0,
-        nanosecond => 0,
-        time_zone  => 'GMT',
-        );
+	year       => $dt->year(),
+	month      => $dt->month(),
+	day        => $dt->day(),
+	hour       => 12,
+	minute     => 0,
+	second     => 0,
+	nanosecond => 0,
+	time_zone  => 'GMT',
+	);
     my $local_foo = DateTime->new(
-        year       => $dt->year(),
-        month      => $dt->month(),
-        day        => $dt->day(),
-        hour       => 12,
-        minute     => 0,
-        second     => 0,
-        nanosecond => 0,
-        time_zone  => $local_time_zone,
-        );
+	year       => $dt->year(),
+	month      => $dt->month(),
+	day        => $dt->day(),
+	hour       => 12,
+	minute     => 0,
+	second     => 0,
+	nanosecond => 0,
+	time_zone  => $local_time_zone,
+	);
 
     return ($gmt_foo->epoch() - $local_foo->epoch());
 }
@@ -72,7 +72,7 @@ sub doit_hour {
     print "=== Searching for hour " . $dt->hour() . "\n";
     my $sql = "select distinct clientMac,ipv4 from data where ";
     $sql .=  "apMac = '$apMac' and "
-        if ($apMac ne "");
+	if ($apMac ne "");
 
     # Create a timestamp range that we want for this specific date,
     # and ensure to account for the GMT offset.
@@ -84,22 +84,22 @@ sub doit_hour {
     #$sql .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and ipv4 != '' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
     $sql .= "ipv4 != '/0.0.0.0' and ipv4 != '' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
     $sql .= "order by apMac"
-        if ($apMac ne "");
+	if ($apMac ne "");
     $sql .= ";";
 
     my $file = "bogus.sql";
     open(TMP, ">$file")
-        || die "Can't write to $file";
+	|| die "Can't write to $file";
     print "SQL: $sql\n";
     print TMP "$sql\n";
     close(TMP);
 
     open(SQL, "sqlite3 $sqlite_file -init $file|")
-        || die "Can't run SQL";
+	|| die "Can't run SQL";
     my $count = 0;
     while (<SQL>) {
-        print $_;
-        ++$count;
+	print $_;
+	++$count;
     }
     close(SQL);
     print "Got count: $count\n";
@@ -120,11 +120,11 @@ sub doit {
     my $hour = 0;
     my $results;
     while ($hour < 24) {
-        my $e = $dt->epoch() + ($hour * 60 * 60);
-        my $hour_dt = DateTime->from_epoch(epoch => $e);
-        $results->{$hour} = doit_hour($apMac, $apName, $hour_dt);
+	my $e = $dt->epoch() + ($hour * 60 * 60);
+	my $hour_dt = DateTime->from_epoch(epoch => $e);
+	$results->{$hour} = doit_hour($apMac, $apName, $hour_dt);
 
-        ++$hour;
+	++$hour;
     }
 
     return $results;
@@ -140,7 +140,7 @@ my $help_arg;
 
 &Getopt::Long::Configure("bundling");
 my $ok = Getopt::Long::GetOptions("date|d=s" => \$date_arg,
-                                  "help|h" => \$help_arg);
+				  "help|h" => \$help_arg);
 
 if ($date_arg !~ m/(\d\d\d\d)-(\d\d)-(\d\d)/) {
     $ok = 0;
@@ -194,7 +194,7 @@ my $hour = 0;
 while ($hour < 24) {
     print OUT "$hour ";
     foreach my $location (@locations) {
-        print OUT "$results->{$location}->{$hour} ";
+	print OUT "$results->{$location}->{$hour} ";
     }
     print OUT "\n";
     ++$hour;
@@ -220,20 +220,20 @@ my $num = 0;
 foreach my $m (qw/am pm/) {
     my $render;
     if ($m eq "am") {
-        $render = "midnight";
+	$render = "midnight";
     } else {
-        $render = "noon";
+	$render = "noon";
     }
     $gp .= "\"$render\" $num, ";
     ++$num;
 
     my $hour = 1;
     while ($hour < 12) {
-        $gp .= "\"$hour$m\" $num";
-        $gp .= ", "
-            if ($num < 24);
-        ++$hour;
-        ++$num;
+	$gp .= "\"$hour$m\" $num";
+	$gp .= ", "
+	    if ($num < 24);
+	++$hour;
+	++$num;
     }
 }
 $gp .= ")
