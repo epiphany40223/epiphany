@@ -7,16 +7,13 @@ use DateTime;
 use Getopt::Long;
 use Data::Dumper;
 
-my $sqlite_file;
-# On WOPR / queeg
-$sqlite_file = "/home/jeff/ecc-meraki-data/data.sqlite3";
-if (! -f $sqlite_file) {
-    # Jeff's laptop
-    $sqlite_file = "/Users/jsquyres/git/epiphany/meraki-api/ecc-meraki-data/data.sqlite3";
-}
-if (! -f $sqlite_file) {
-    die "Can't fine a datafile to open";
-}
+my $sqlite_file = "./data.sqlite3";
+$sqlite_file = "/home/jeff/ecc-meraki-data/data.sqlite3"
+    if (! -r $sqlite_file);
+$sqlite_file = "/Users/jsquyres/git/epiphany/meraki-api/ecc-meraki-data"
+    if (! -r $sqlite_file);
+die "Can't find sqlite3 file"
+    if (! -r $sqlite_file);
 
 #######################################################################
 
@@ -171,10 +168,22 @@ my $dt = DateTime->new(
 my $results;
 $results->{wc} =
     doit("00:18:0a:79:a5:e2", "WC", $dt);
-$results->{eh} =
+$results->{cc} =
+    doit("e0:55:3d:92:84:a0", "CC", $dt);
+$results->{wc} =
+    doit("e0:55:3d:91:a8:b0", "WC", $dt);
+$results->{lh} =
+    doit("e0:55:3d:92:9a:50", "LH", $dt);
+$results->{eh_worship} =
+    doit("e0:55:3d:92:82:50", "EH Worship", $dt);
+$results->{eh_phone} =
+    doit("00:18:0a:79:a5:e2", "EH Phone", $dt); # used to be WC
+$results->{eh_pastor} =
+    doit("e0:55:3d:92:b1:90", "EH Pastor", $dt);
+$results->{eh_copyroom} =
     doit("00:18:0a:79:8e:2d", "EH Copyroom", $dt);
-$results->{both} =
-    doit("", "Both", $dt);
+$results->{all} =
+    doit("", "All", $dt);
 
 print Dumper($results);
 
@@ -244,7 +253,9 @@ plot ";
 # Plot each AP
 my $column = 2;
 foreach my $location (@locations) {
-    $gp .= "\"$file\" using 1:$column with linespoints title \"$location\",";
+    my $loc_title = $location;
+    $loc_title =~ s/_/ /g;
+    $gp .= "\"$file\" using 1:$column with linespoints title \"$loc_title\",";
     ++$column;
 }
 
