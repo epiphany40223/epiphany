@@ -81,14 +81,62 @@ WHERE  MemKW_DB.MemRecNum=xxx AND MemKW_DB.DescRec=yyy
 
 Find all names corresponding to an email address
 
-SELECT Mem_DB.RecNum,
+SELECT Mem_DB.MemRecNum,
        Mem_DB.Name,
        MemEmail_DB.EMailAddress
 FROM   Mem_DB
        INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
 WHERE  MemEmail_DB.EmailAddress = 'address'
 
-SELECT Mem_DB.RecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM   Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  MemEmail_DB.EmailAddress = 'address'
+SELECT Mem_DB.MemRecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM   Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  MemEmail_DB.EmailAddress = 'address'
+
+----------------------
+
+Listing of ministry names
+MinType_DB:
+        MinDescRec | int(4)    # ID
+       Description | char(30)  # ministry name
+           NewItem | int(2)
+
+Members of ministries:
+MemMin_DB:
+       MemKWRecNum | int(4)
+          OrderNum | int(4)
+         MemRecNum | int(4)   --> to Mem_DB.MemRecNum
+        MinDescRec | int(4)   --> to MinType_DB.MinDescRec
+     StatusDescRec | int(4)   --> to StatusType_DB.StatusDescRec
+         StartDate | date(4)
+           EndDate | date(4)
+
+Various status messages
+StatusType_DB:
+     StatusDescRec | int(4)
+       Description | char(30)
+           NewItem | int(2)
+            Active | boolean(1)
+
+----------------------
+
+Find all members of a ministry name:
+
+SELECT Mem_DB.Name,
+       MemEmail_DB.EMailAddress,
+       StatusType_DB.Description
+FROM   MemMin_DB
+       INNER JOIN MinType_DB ON MinType_DB.MinDescRec = MemMin_DB.MinDescRec
+       INNER JOIN Mem_DB ON Mem_DB.MemRecNum = MemMin_DB.MemRecNum
+       INNER JOIN MemEMail_DB ON MemEMail_DB.MemRecNum = MemMin_DB.MemRecNum
+       INNER JOIN StatusType_DB ON StatusType_DB.StatusDescRec = MemMin_DB.StatusDescRec
+WHERE  MinType_DB.Description LIKE '%Technology%' AND
+       StatusType_DB.Active = 1 AND
+       StatusType_DB.Description NOT LIKE '%occasional%'
+
+
+SELECT Mem_DB.Name, MemEmail_DB.EMailAddress FROM MemMin_DB INNER JOIN MinType_DB ON MinType_DB.MinDescRec = MemMin_DB.MinDescRec INNER JOIN Mem_DB ON Mem_DB.MemRecNum = MemMin_DB.MemRecNum INNER JOIN MemEMail_DB ON MemEMail_DB.MemRecNum = MemMin_DB.MemRecNum INNER JOIN StatusType_DB ON StatusType_DB.StatusDescRec = MemMin_DB.StatusDescRec WHERE  MinType_DB.Description LIKE '%Technology%' AND StatusType_DB.Active = 1 AND StatusType_DB.Description NOT LIKE '%occasional%'
+
+
+
+----------------------
 
 Find all names with pictures:
 
