@@ -1,3 +1,10 @@
+//
+// Toy program to play around with Google Java APIs for querying
+// users, groups, and the members of those groups.
+//
+// Javadoc: https://developers.google.com/resources/api-libraries/documentation/admin/directory_v1/java/latest/
+//
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -122,7 +129,13 @@ public class PDSGoogleGroupConnector {
 	} else {
 	    System.out.println(String.format("===== First %d users in the domain", n));
 	    for (User user : users) {
-		System.out.println(user.getName().getFullName());
+		String suspended;
+		if (user.getSuspended()) {
+		    suspended = " (suspended)";
+		} else {
+		    suspended = "";
+		}
+		System.out.println(user.getName().getFullName() + suspended);
 	    }
 	}
     }
@@ -158,27 +171,27 @@ public class PDSGoogleGroupConnector {
 	String groupKey = group.getId();
 	System.out.println("==== Members of " + groupKey);
 	Directory.Members.List res = service.members().list(groupKey);
-	Members mbrs;
-	List<Member> members;
-	int count = 0;
+	Members members;
+	List<Member> membersList;
 	String pageToken;
 	do {
 	    pageToken = null;
-	    mbrs = res.execute();
-	    members = mbrs.getMembers();
-	    if (members != null && members.size() > 0) {
-		for (Member member : members) {
-		    count++;
-		    System.out.println(member.getEmail());
+	    members = res.execute();
+	    membersList = members.getMembers();
+	    if (membersList != null && membersList.size() > 0) {
+		for (Member member : membersList) {
+		    String msg;
+		    msg = member.getEmail() + ": " +
+			member.getId() + ", " +
+			member.getRole() + ", " +
+			//member.getStatus() + ", " +
+			member.getType();
+		    System.out.println(msg);
 		}
-		pageToken = mbrs.getNextPageToken();
-		//System.out.println(res.getPageToken());   //The first pageToken of any Directory.Members.List is null.
+		pageToken = members.getNextPageToken();
 		res.setPageToken(pageToken);
-		System.out.println(count);
 	    }
 	} while(pageToken != null);
-
-	// JMS see https://developers.google.com/admin-sdk/directory/v1/guides/manage-group-members ...?
     }
 
     public static void groupMembershipTest(Directory service) throws IOException {
