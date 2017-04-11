@@ -104,6 +104,9 @@ public class PDSGoogleGroupConnector {
 	    .build();
     }
 
+    //////////////////////////////////////////////////////////////////////
+    // List first 10 users in the domain
+
     public static void usersTest(Directory service) throws IOException {
 	// Print the first 10 users in the domain.
 	int n = 10;
@@ -124,14 +127,61 @@ public class PDSGoogleGroupConnector {
 	}
     }
 
-    public static void membersTest(Directory service, Group group) throws IOException {
-	System.out.println("==== continue here to print members of the group");
-        // JMS This will be paginated
-        // JMS continue here
-        // JMS see https://developers.google.com/admin-sdk/directory/v1/guides/manage-group-members ...?
+    //////////////////////////////////////////////////////////////////////
+    // Find all the groups that a particular member is in
+
+    public static void userMembershipTest(Directory service) throws IOException {
+	String member = "itadmin@epiphanycatholicchurch.org";
+	System.out.println("===== Groups that " + member + " is in:");
+
+	Groups result = service.groups().list()
+	    .setUserKey(member)
+	    .execute();
+
+	List<Group> groups = result.getGroups();
+	if (groups == null || groups.size() == 0) {
+	    System.out.println("===== " + member + " is not in any groups!");
+	    return;
+	}
+
+	for (Group group : groups) {
+	    System.out.println(String.format("Group: %s (%s)",
+					     group.getName(),
+					     group.getEmail()));
+	}
     }
 
-    public static void groupsTest(Directory service) throws IOException {
+    //////////////////////////////////////////////////////////////////////
+    // List all the members in all groups
+
+    public static void membersTest(Directory service, Group group) throws IOException {
+	String groupKey = group.getId();
+	System.out.println("==== Members of " + groupKey);
+	Directory.Members.List res = service.members().list(groupKey);
+	Members mbrs;
+	List<Member> members;
+	int count = 0;
+	String pageToken;
+	do {
+	    pageToken = null;
+	    mbrs = res.execute();
+	    members = mbrs.getMembers();
+	    if (members != null && members.size() > 0) {
+		for (Member member : members) {
+		    count++;
+		    System.out.println(member.getEmail());
+		}
+		pageToken = mbrs.getNextPageToken();
+		//System.out.println(res.getPageToken());   //The first pageToken of any Directory.Members.List is null.
+		res.setPageToken(pageToken);
+		System.out.println(count);
+	    }
+	} while(pageToken != null);
+
+	// JMS see https://developers.google.com/admin-sdk/directory/v1/guides/manage-group-members ...?
+    }
+
+    public static void groupMembershipTest(Directory service) throws IOException {
 	System.out.println("===== Groups in the domain");
 
 	Groups result = service.groups().list()
@@ -188,6 +238,7 @@ public class PDSGoogleGroupConnector {
 	Directory service = getDirectoryService();
 
 	usersTest(service);
-	groupsTest(service);
+	groupMembershipTest(service);
+	userMembershipTest(service);
     }
 }
