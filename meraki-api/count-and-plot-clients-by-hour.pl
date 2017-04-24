@@ -6,11 +6,12 @@ use POSIX;
 use DateTime;
 use Getopt::Long;
 use Data::Dumper;
+use DBI;
 
 my $sqlite_file = "./data.sqlite3";
 $sqlite_file = "/home/jeff/ecc-meraki-data/data.sqlite3"
     if (! -r $sqlite_file);
-$sqlite_file = "/Users/jsquyres/git/epiphany/meraki-api/ecc-meraki-data"
+$sqlite_file = "/Users/jsquyres/git/epiphany/meraki-api/ecc-meraki-data/data.sqlite3"
     if (! -r $sqlite_file);
 die "Can't find sqlite3 file"
     if (! -r $sqlite_file);
@@ -61,15 +62,24 @@ sub calc_gmt_offset {
 
 #######################################################################
 
+my $dbh = DBI->connect("dbi:SQLite:dbname=$sqlite_file", undef, undef, {
+#    sqlite_open_flags => SQLITE_OPEN_READONLY,
+		       });
+die "Can't open database"
+    if (!$dbh);
+
+my $sql_base  = "select distinct clientMac,ipv4,manufacturer from data where";
+my $sql_next .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and seenEpoch >= ? and seenEpoch < ? ";
+my $sql_mac   = "$sql_base apMac = ? and $sql_next order by apMac";
+my $sql_nomac = "$sql_base $sql_next";
+
+my $sth_mac   = $dbh->prepare($sql_mac);
+my $sth_nomac = $dbh->prepare($sql_nomac);
+
 sub doit_hour {
     my $apMac = shift;
     my $apName = shift;
     my $dt = shift;
-
-    print "=== Searching for hour " . $dt->hour() . "\n";
-    my $sql = "select distinct clientMac,ipv4 from data where ";
-    $sql .=  "apMac = '$apMac' and "
-	if ($apMac ne "");
 
     # Create a timestamp range that we want for this specific date,
     # and ensure to account for the GMT offset.
@@ -77,31 +87,20 @@ sub doit_hour {
     my $ts_start = $dt->epoch() - $offset;
     my $ts_end = $ts_start + (60 * 60);
 
-    # Limit it to a specific SSID or not
-    #$sql .= "ssid='Epiphany (pw=epiphany)' and ipv4 != '/0.0.0.0' and ipv4 != '' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
-    $sql .= "ipv4 != '/0.0.0.0' and ipv4 != '' and seenEpoch >= $ts_start and seenEpoch < $ts_end ";
-    $sql .= "order by apMac"
-	if ($apMac ne "");
-    $sql .= ";";
-
-    my $file = "bogus.sql";
-    open(TMP, ">$file")
-	|| die "Can't write to $file";
-    print "SQL: $sql\n";
-    print TMP "$sql\n";
-    close(TMP);
-
-    open(SQL, "sqlite3 $sqlite_file -init $file|")
-	|| die "Can't run SQL";
     my $count = 0;
-    while (<SQL>) {
-	print $_;
-	++$count;
+    if ($apMac ne "") {
+	$sth_mac->execute($apMac, $ts_start, $ts_end);
+	while ($sth_mac->fetchrow_array()) {
+	    ++$count;
+	}
+    } else {
+	$sth_nomac->execute($ts_start, $ts_end);
+	while ($sth_nomac->fetchrow_array()) {
+	    ++$count;
+	}
     }
-    close(SQL);
-    print "Got count: $count\n";
 
-    unlink($file);
+    print "=== Hour " . $dt->hour() . ": $count guests\n";
 
     return $count;
 }
@@ -164,26 +163,53 @@ my $dt = DateTime->new(
     time_zone  => $local_time_zone,
     );
 
+# This is the date where we installed a bunch more Meraki APs.
+my $meraki_move = DateTime->new(
+    year       => 2016,
+    month      => 10,
+    day        => 16,
+    hour       => 0,
+    minute     => 0,
+    second     => 0,
+    nanosecond => 0,
+    time_zone  => $local_time_zone,
+    );
+
 # Collect results for and each location on that date
 my $results;
-$results->{wc} =
-    doit("00:18:0a:79:a5:e2", "WC", $dt);
-$results->{cc} =
-    doit("e0:55:3d:92:84:a0", "CC", $dt);
-$results->{wc} =
-    doit("e0:55:3d:91:a8:b0", "WC", $dt);
-$results->{lh} =
-    doit("e0:55:3d:92:9a:50", "LH", $dt);
-$results->{eh_worship} =
-    doit("e0:55:3d:92:82:50", "EH Worship", $dt);
-$results->{eh_phone} =
-    doit("00:18:0a:79:a5:e2", "EH Phone", $dt); # used to be WC
-$results->{eh_pastor} =
-    doit("e0:55:3d:92:b1:90", "EH Pastor", $dt);
-$results->{eh_copyroom} =
-    doit("00:18:0a:79:8e:2d", "EH Copyroom", $dt);
-$results->{all} =
-    doit("", "All", $dt);
+
+# From when we started collecting Meraki data, we had 2 Meraki
+# WAPs at these MAC addresses:
+if (DateTime->compare($dt, $meraki_move) <= 0) {
+    $results->{wc} =
+        doit("00:18:0a:79:a5:e2", "WC", $dt);
+    $results->{eh_copyroom} =
+        doit("00:18:0a:79:8e:2d", "EH Copyroom", $dt);
+    $results->{all} =
+        doit("", "All", $dt);
+}
+
+# As of 2016-10-16, we installed several more Meraki APs and moved the
+# the WC AP to EH phone room.  For this script, just gather stats for
+# these APs:
+else {
+    $results->{wc} =
+        doit("e0:55:3d:91:a8:b0", "WC", $dt);
+    $results->{cc} =
+        doit("e0:55:3d:92:84:a0", "CC", $dt);
+    $results->{lh} =
+        doit("e0:55:3d:92:9a:50", "LH", $dt);
+    $results->{eh_worship} =
+        doit("e0:55:3d:92:82:50", "EH Worship", $dt);
+    $results->{eh_phone} =
+        doit("00:18:0a:79:a5:e2", "EH Phone", $dt); # used to be WC
+    $results->{eh_pastor} =
+        doit("e0:55:3d:92:b1:90", "EH Pastor", $dt);
+    $results->{eh_copyroom} =
+        doit("00:18:0a:79:8e:2d", "EH Copyroom", $dt);
+    $results->{all} =
+        doit("", "All", $dt);
+}
 
 print Dumper($results);
 
