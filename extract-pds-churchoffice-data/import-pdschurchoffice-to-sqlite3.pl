@@ -122,11 +122,9 @@ foreach my $db (@dbs) {
 
     # We dont' currently care about the *GIANT* databases (that take
     # -- literally -- hours to import on an RPi).
-    if (0) {
     if ($db =~ /fund/i) {
         print "   ==> Skipping giant table $db\n";
         next;
-    }
     }
 
     # Yes, we use "--sql" here, not "--sqlite".  See the comment below
