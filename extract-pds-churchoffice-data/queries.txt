@@ -1,3 +1,5 @@
+NOTE: "KW" stands for "Keyword"
+
 CREATE TABLE MemKWType_DB (
   DescRec integer,
   Description char(30),
@@ -26,8 +28,13 @@ MemRecNum: key into Mem/MemRecNum
 
 CREATE TABLE Mem_DB (
   MemRecNum integer,
-  FamRecNum integer,
+  FamRecNum integer,       --> To fam_db.FamRecNum
   Name char(100),
+  MemberType int(4),       --> ???  From the PDS Church Office UI,
+                               this field seems to map to "Head of
+                               Household", "Spouse", ...etc.  Can't
+                               find the normailized table
+                               holding these strings, though.  :-(
   PictureFile char(100),
 ...
 );
@@ -89,6 +96,53 @@ FROM   Mem_DB
 WHERE  MemEmail_DB.EmailAddress = 'address'
 
 SELECT Mem_DB.MemRecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM   Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  MemEmail_DB.EmailAddress = 'address'
+
+----------------------
+
+Find preferred email addresses for members (families handled
+separately) for all non-deceased (!) active members
+
+SELECT Mem_DB.MemRecNum,
+       Mem_DB.Name,
+       MemEmail_DB.EMailAddress
+FROM   Mem_DB
+       INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
+WHERE  Mem_DB.deceased = 0 AND
+       Mem_DB.PDSInactive1 = 0 AND
+       Mem_DB.PDSInactive2 = 0 AND
+       Mem_DB.PDSInactive3 = 0 AND
+       Mem_DB.PDSInactive4 = 0 AND
+       Mem_DB.PDSInactive5 = 0 AND
+       MemEmail_DB.EmailOverMail = 1 AND
+       (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=0)
+
+# ^^ The NULL handling is especially annoying.  PDS sometimes puts in
+# NULL values instead of FALSE.  But only sometimes.  Sigh.
+
+SELECT Mem_DB.MemRecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  Mem_DB.deceased = 0 AND Mem_DB.PDSInactive1 = 0 AND Mem_DB.PDSInactive2 = 0 AND Mem_DB.PDSInactive3 = 0 AND Mem_DB.PDSInactive4 = 0 AND Mem_DB.PDSInactive5 = 0 AND MemEmail_DB.EmailOverMail = 1 AND (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=0)
+
+
+Similar to above, but for families:
+Find preferred email addresses for members (families handled
+separately) for all active families
+
+SELECT Fam_DB.FamRecNum,
+       Fam_DB.Name,
+       MemEmail_DB.EmailAddress
+FROM   Fam_DB
+       INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Fam_DB.FamRecNum
+WHERE  Fam_DB.PDSInactive1 = 0 AND
+       Fam_DB.PDSInactive2 = 0 AND
+       Fam_DB.PDSInactive3 = 0 AND
+       Fam_DB.PDSInactive4 = 0 AND
+       Fam_DB.PDSInactive5 = 0 AND
+       MemEmail_DB.EmailOverMail = 1 AND
+       (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=1)
+
+# ^^ The NULL handling is especially annoying.  PDS sometimes puts in
+# NULL values instead of FALSE.  But only sometimes.  Sigh.
+
+SELECT Fam_DB.FamRecNum, Fam_DB.Name, MemEmail_DB.EmailAddress FROM Fam_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Fam_DB.FamRecNum WHERE  Fam_DB.PDSInactive1 = 0 AND Fam_DB.PDSInactive2 = 0 AND Fam_DB.PDSInactive3 = 0 AND Fam_DB.PDSInactive4 = 0 AND Fam_DB.PDSInactive5 = 0 AND MemEmail_DB.EmailOverMail = 1 AND (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=1)
 
 ----------------------
 
