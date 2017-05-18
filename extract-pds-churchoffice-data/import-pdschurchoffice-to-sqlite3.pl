@@ -152,6 +152,7 @@ foreach my $db (@dbs) {
 
     open(SQL, $sql_file) ||
         die "Can't open $sql_file";
+    my $transaction_started = 0;
     while (<SQL>) {
         my $str = $_;
 
@@ -173,10 +174,19 @@ foreach my $db (@dbs) {
 
         print "SQL: $str"
             if ($debug_arg);
+
+        # If we're insertting and we haven't started the transaction,
+        # start the transaction.
+        if (!$transaction_started && $str =~ /^insert/i) {
+            print SQLITE "BEGIN TRANSACTION;\n";
+            $transaction_started = 1;
+        }
         print SQLITE $str;
     }
     close(SQL);
     print SQLITE ";\n";
+    print SQLITE "END TRANSACTION;\n"
+        if ($transaction_started);
 
     my $stop_time = Time::HiRes::time();
     my $elapsed = $stop_time - $start_time;
