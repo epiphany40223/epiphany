@@ -131,8 +131,12 @@ my @unique_keys = keys(%{$unique});
 my @in_both_keys = keys(%{$in_both});
 my @only_in_mailman_keys = keys(%{$only_in_mailman});
 my @only_in_pds_keys = keys(%{$only_in_pds});
+my @in_pds_keys = keys(%{$pds});
+my @in_mailman_keys = keys(%{$mailman});
 
 print "Total unique email addresses: " . ($#unique_keys + 1) . "\n";
+print "Unique addresses in mailman: " . ($#in_mailman_keys + 1) . "\n";
+print "Unique Member and Family email addresses in PDS: " . ($#in_pds_keys + 1) . "\n";
 print "In both: " . ($#in_both_keys + 1) . "\n";
 print "Only in mailman: " . ($#only_in_mailman_keys + 1) . "\n";
 print "Only in pds: " . ($#only_in_pds_keys + 1) . "\n";
