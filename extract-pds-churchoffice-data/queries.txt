@@ -1,3 +1,25 @@
+Note: in the Mem_DB and Fam_DB tables there are "CensusMemberX" and
+"CensusFamilyX" fields, respectively, where X ranges from 1 to 5
+(i.e., in the Mem_DB table, there's fields named "CensusMember1",
+"CensusMember2", ..., "CensusMember5".
+
+The values of these fields will be set to 1 if and only if that
+memeber / family is included in the "database" of that X value.
+
+The "database number" is passed on the PDS command line via the N
+parameter.  At Epiphany, we pass "N=1" on the command line, meaning
+that when you do queries, you should always include "AND
+CensusMember1=1" or "AND CensusFamily1=1" to restrict your results to
+the N=1 "database".
+
+Similarly, there are several fields in the Mem_DB and Fam_DB tables
+that are "fooX", where X ranges from 1 to 5.  These fields should also
+be accessed according to the N value.  E.g., if N=1 (and you're
+checking CensusMember1), you should also access "foo1" (e.g.,
+PDSInactive1, GenRemarks1, ...etc.).
+
+----------------------------------------------------------------
+
 NOTE: "KW" stands for "Keyword"
 
 CREATE TABLE MemKWType_DB (
@@ -64,6 +86,47 @@ CREATE TABLE MemEMail_DB (
   unique(EMailRec)
 );
 
+# Active families with at least 1 email address
+SELECT count(famrecnum)
+FROM   Fam_DB
+       INNER JOIN MemEMail_DB ON MemEMail_Db.MemRecNum = Fam_DB.FamRecNum
+WHERE  (Fam_DB.PDSInactive1 = 0 OR Fam_DB.PDSInactive1 is null) AND
+       Fam_DB.CensusFamily1 = 1
+
+# Active families
+SELECT count(famrecnum)
+FROM   Fam_DB
+WHERE  (Fam_DB.PDSInactive1 = 0 OR Fam_DB.PDSInactive1 is null) AND
+       Fam_DB.CensusFamily1 = 1
+
+# Inactive families
+SELECT count(famrecnum)
+FROM   Fam_DB
+WHERE  Fam_DB.PDSInactive1 = 1 AND
+       Fam_DB.CensusFamily1 = 1
+
+# Active members with at least 1 email address
+SELECT count(MemEmail_DB.EmailRec)
+FROM   Mem_DB
+       INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
+WHERE  Mem_DB.deceased = 0 AND
+       (Mem_DB.PDSInactive1 = 0 OR Mem_DB.PDSInactive1 is null) AND
+       Mem_DB.CensusMember1 = 1
+
+# Active members
+SELECT count(memrecnum)
+FROM   Mem_DB
+WHERE  Mem_DB.deceased = 0 AND
+       (Mem_DB.PDSInactive1 = 0 OR Mem_DB.PDSInactive1 is null) AND
+       Mem_DB.CensusMember1 = 1
+
+# Inactive or deceased members
+SELECT count(Mem_DB.MemRecNum)
+FROM   Mem_DB
+WHERE  (Mem_DB.deceased = 1 OR
+       Mem_DB.PDSInactive1 = 1) AND
+       Mem_DB.CensusMember1 = 1
+
 ----------------------
 
 Get name and email address for everyone on a given list:
@@ -74,7 +137,8 @@ FROM   Mem_DB
        INNER JOIN MemKWType_DB ON MemKWType_DB.Description = "LIST:Tech"
        INNER JOIN MemKW_DB     ON MemKW_DB.MemRecNum    = Mem_DB.MemRecNum
        INNER JOIN MemEmail_DB  ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
-WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec;
+WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec AND
+       Mem_DB.CensusMember1 = 1
 
 ----------------------
 
@@ -82,7 +146,9 @@ See if a specific keyword is set on a specific user
 
 SELECT MemKW_DB.MemRecNum
 FROM   MemKW_DB
-WHERE  MemKW_DB.MemRecNum=xxx AND MemKW_DB.DescRec=yyy
+WHERE  MemKW_DB.MemRecNum=xxx AND
+       MemKW_DB.DescRec=yyy AND
+       Mem_DB.CensusMember1 = 1
 
 ----------------------
 
@@ -93,9 +159,9 @@ SELECT Mem_DB.MemRecNum,
        MemEmail_DB.EMailAddress
 FROM   Mem_DB
        INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
-WHERE  MemEmail_DB.EmailAddress = 'address'
+WHERE  MemEmail_DB.EmailAddress = 'address' AND
+       Mem_DB.CensusMember1 = 1
 
-SELECT Mem_DB.MemRecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM   Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  MemEmail_DB.EmailAddress = 'address'
 
 ----------------------
 
@@ -108,19 +174,15 @@ SELECT Mem_DB.MemRecNum,
 FROM   Mem_DB
        INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
 WHERE  Mem_DB.deceased = 0 AND
-       Mem_DB.PDSInactive1 = 0 AND
-       Mem_DB.PDSInactive2 = 0 AND
-       Mem_DB.PDSInactive3 = 0 AND
-       Mem_DB.PDSInactive4 = 0 AND
-       Mem_DB.PDSInactive5 = 0 AND
+       (Mem_DB.PDSInactive1 = 0 OR Mem_DB.PDSInactive1 is null) AND
+       Mem_DB.CensusMember1 = 1 AND
        MemEmail_DB.EmailOverMail = 1 AND
        (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=0)
 
 # ^^ The NULL handling is especially annoying.  PDS sometimes puts in
 # NULL values instead of FALSE.  But only sometimes.  Sigh.
 
-SELECT Mem_DB.MemRecNum, Mem_DB.Name, MemEmail_DB.EMailAddress FROM Mem_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum WHERE  Mem_DB.deceased = 0 AND Mem_DB.PDSInactive1 = 0 AND Mem_DB.PDSInactive2 = 0 AND Mem_DB.PDSInactive3 = 0 AND Mem_DB.PDSInactive4 = 0 AND Mem_DB.PDSInactive5 = 0 AND MemEmail_DB.EmailOverMail = 1 AND (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=0)
-
+Note: This is the "preferred" notation: MemEmail_DB.EmailOverMail = 1
 
 Similar to above, but for families:
 Find preferred email addresses for members (families handled
@@ -131,18 +193,13 @@ SELECT Fam_DB.FamRecNum,
        MemEmail_DB.EmailAddress
 FROM   Fam_DB
        INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Fam_DB.FamRecNum
-WHERE  Fam_DB.PDSInactive1 = 0 AND
-       Fam_DB.PDSInactive2 = 0 AND
-       Fam_DB.PDSInactive3 = 0 AND
-       Fam_DB.PDSInactive4 = 0 AND
-       Fam_DB.PDSInactive5 = 0 AND
+WHERE  (Fam_DB.PDSInactive1 = 0 OR FAM_DB.PDSInactive1 is null) AND
+       Fam_DB.CensusFamily1 = 1 AND
        MemEmail_DB.EmailOverMail = 1 AND
        (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=1)
 
 # ^^ The NULL handling is especially annoying.  PDS sometimes puts in
 # NULL values instead of FALSE.  But only sometimes.  Sigh.
-
-SELECT Fam_DB.FamRecNum, Fam_DB.Name, MemEmail_DB.EmailAddress FROM Fam_DB INNER JOIN MemEmail_DB ON MemEmail_DB.MemRecNum = Fam_DB.FamRecNum WHERE  Fam_DB.PDSInactive1 = 0 AND Fam_DB.PDSInactive2 = 0 AND Fam_DB.PDSInactive3 = 0 AND Fam_DB.PDSInactive4 = 0 AND Fam_DB.PDSInactive5 = 0 AND MemEmail_DB.EmailOverMail = 1 AND (MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=1)
 
 ----------------------
 
@@ -183,28 +240,24 @@ FROM   MemMin_DB
        INNER JOIN StatusType_DB ON StatusType_DB.StatusDescRec = MemMin_DB.StatusDescRec
 WHERE  MinType_DB.Description LIKE '%Technology%' AND
        StatusType_DB.Active = 1 AND
-       StatusType_DB.Description NOT LIKE '%occasional%'
-
-
-SELECT Mem_DB.Name, MemEmail_DB.EMailAddress FROM MemMin_DB INNER JOIN MinType_DB ON MinType_DB.MinDescRec = MemMin_DB.MinDescRec INNER JOIN Mem_DB ON Mem_DB.MemRecNum = MemMin_DB.MemRecNum INNER JOIN MemEMail_DB ON MemEMail_DB.MemRecNum = MemMin_DB.MemRecNum INNER JOIN StatusType_DB ON StatusType_DB.StatusDescRec = MemMin_DB.StatusDescRec WHERE  MinType_DB.Description LIKE '%Technology%' AND StatusType_DB.Active = 1 AND StatusType_DB.Description NOT LIKE '%occasional%'
-
-
+       StatusType_DB.Description NOT LIKE '%occasional%' AND
+       Mem_DB.CensusMember1 = 1
 
 ----------------------
 
 Find all names with pictures:
 
-----------------------
-
 Members and families with pictures:
 
 SELECT Mem_DB.Name, Mem_DB.PictureFile
 FROM   Mem_DB
-WHERE  Mem_DB.PictureFile <> "";
+WHERE  Mem_DB.PictureFile <> "" AND
+       Mem_DB.CensusMember1 = 1
 
 SELECT Fam_DB.Name, Fam_DB.PictureFile
 FROM   Fam_DB
-WHERE  Fam_DB.PictureFile <> "";
+WHERE  Fam_DB.PictureFile <> "" AND
+       Mem_DB.CensusMember1 = 1
 
 ----------------------
 
