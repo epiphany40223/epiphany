@@ -2,6 +2,9 @@
 
 """Script to upload specific MP3 files to Google Drive.
 
+This script developed and tested with Python 3.6.x.  It has not been
+tested with other versions (e.g., Python 2.7.x).
+
 - Watch a directory for new MP3 files named of the form
   Txxx-YYYYMMDD-HHMMSS.mp3.
 - If the file size of the file doesn't change for 30 seconds, assume
@@ -380,7 +383,7 @@ def main():
 	    user_cred = load_user_credentials(scope, app_cred)
 	    service = authorize(user_cred)
 
-            last_auth = time.clock()
+	    last_auth = time.clock()
 
 	    # Find the target team drive to which we want to upload
 	    team_drive = find_team_drive(service, target_team_drive)
@@ -395,17 +398,17 @@ def main():
 	    # expired.
 	    # Try to re-auth.  If we fail to re-auth 3 times within 60
 	    # seconds, abort and let a human figure it out.
-            now = time.clock()
-            if (now - last_auth) > auth_grace_period:
-                last_auth = now
-                auth_count = 0
-                continue
+	    now = time.clock()
+	    if (now - last_auth) > auth_grace_period:
+		last_auth = now
+		auth_count = 0
+		continue
 
-            else:
-                auth_count = auth_count + 1
-                if auth_count > auth_max_attempts:
-                    diediedie("Failed to authenticate to Google {0} times in {1} seconds.\nA human needs to figure this out."
-                              .format(auth_max_attempts, auth_grace_period))
+	    else:
+		auth_count = auth_count + 1
+		if auth_count > auth_max_attempts:
+		    diediedie("Failed to authenticate to Google {0} times in {1} seconds.\nA human needs to figure this out."
+			      .format(auth_max_attempts, auth_grace_period))
 
 
 if __name__ == '__main__':
