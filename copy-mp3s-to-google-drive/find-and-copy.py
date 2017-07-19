@@ -7,7 +7,7 @@ tested with other versions (e.g., Python 2.7.x).
 
 - Watch a directory for new MP3 files named of the form
   Txxx-YYYYMMDD-HHMMSS.mp3.
-- If the file size of the file doesn't change for 30 seconds, assume
+- If the file size of the file doesn't change for 60 seconds, assume
   that the file has finished uploading to this directory, and upload
   it to a Google Team Drive folder.
 - Put the uploaded MP3 file in a YYYY/MM-MONTHNAME folder, just to
@@ -81,6 +81,7 @@ import httplib2
 import calendar
 import smtplib
 import logging
+import logging.handlers
 import traceback
 from email.message import EmailMessage
 
@@ -102,6 +103,7 @@ dir_check_frequency = 60
 auth_grace_period = 60
 auth_max_attempts = 3
 args = None
+log = None
 # Scopes documented here:
 # https://developers.google.com/drive/v3/web/about-auth
 scope = 'https://www.googleapis.com/auth/drive'
@@ -110,13 +112,12 @@ scope = 'https://www.googleapis.com/auth/drive'
 
 def send_mail(subject, message_body, html=False):
     if args.smtp_to == '' or args.smtp_from == '' or args.smtp_host == '':
-        logging.debug('Not sending email "{0}" because SMTP to, from, and/or host node defined'.format(subject))
+        log.debug('Not sending email "{0}" because SMTP to, from, and/or host node defined'.format(subject))
         return
 
-    logging.info('Sending email to {0}, subject "{1}"'
+    log.info('Sending email to {0}, subject "{1}"'
                  .format(args.smtp_to, subject))
     with smtplib.SMTP_SSL(host=args.smtp_host) as smtp:
-        logging.info("Got smtp ssl connection")
         if args.debug:
             smtp.set_debuglevel(2)
 
@@ -130,18 +131,13 @@ def send_mail(subject, message_body, html=False):
         else:
             msg.replace_header('Content-Type', 'text/plain')
 
-        logging.info("Sending message")
         smtp.send_message(msg)
-        logging.info("Done Sending message")
-
-    logging.debug('sent email to {0}, subject "{1}"'
-                 .format(args.smtp_to, subject))
 
 #-------------------------------------------------------------------
 
 def diediedie(msg):
-    logging.error(msg)
-    logging.error("Aborting")
+    log.error(msg)
+    log.error("Aborting")
 
     send_mail('Fatal error from MP3 uploader', msg)
 
@@ -153,11 +149,31 @@ def setup_logging(args):
     level=logging.ERROR
 
     if args.debug:
-        level=logging.DEBUG
+        level="DEBUG"
     elif args.verbose:
-        level=logging.INFO
+        level="INFO"
 
-    logging.basicConfig(level=level)
+    global log
+    log = logging.getLogger('mp3')
+    log.setLevel(level)
+
+    # Make sure to include the timestamp in each message
+    f = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
+
+    # Default log output to stdout
+    s = logging.StreamHandler()
+    s.setFormatter(f)
+    log.addHandler(s)
+
+    # Optionally save to a rotating logfile
+    if args.logfile:
+        s = logging.handlers.RotatingFileHandler(filename=args.logfile,
+                                                 maxBytes=(pow(2,20) * 10),
+                                                 backupCount=10)
+        s.setFormatter(f)
+        log.addHandler(s)
+
+    log.info('Starting')
 
 #-------------------------------------------------------------------
 
@@ -173,7 +189,7 @@ def load_app_credentials():
     with open(file) as data_file:
         app_cred = json.load(data_file)
 
-    logging.debug('=== Loaded application credentials from {0}'
+    log.debug('Loaded application credentials from {0}'
                   .format(file))
     return app_cred
 
@@ -199,7 +215,7 @@ def load_user_credentials(scope, app_cred):
         user_cred = tools.run_flow(flow, storage,
                                         tools.argparser.parse_args())
 
-    logging.debug('=== Loaded user credentials from {0}'
+    log.debug('Loaded user credentials from {0}'
                   .format(file))
     return user_cred
 
@@ -210,14 +226,14 @@ def authorize(user_cred):
     http    = user_cred.authorize(http)
     service = build('drive', 'v3', http=http)
 
-    logging.debug('=== Authorized to Google')
+    log.debug('Authorized to Google')
     return service
 
 ####################################################################
 
 def upload_file(service, team_drive, dest_folder, upload_filename):
     try:
-        logging.info('=== Uploading file "{0}" (parent: {1})'
+        log.info('Uploading file "{0}" (parent: {1})'
                      .format(upload_filename, dest_folder['id']))
         metadata = {
             'name' : upload_filename,
@@ -230,21 +246,22 @@ def upload_file(service, team_drive, dest_folder, upload_filename):
         file = service.files().create(body=metadata,
                                       media_body=media,
                                       supportsTeamDrives=True,
-                                      fields='id').execute()
-        logging.info('=== Successfully uploaded file: "{0}" (ID: {1})'
-                     .format(upload_filename, file.get('id')))
-        return True
+                                      fields='name,id,webContentLink,webViewLink').execute()
+        log.info('Successfully uploaded file: "{0}" (ID: {1})'
+                     .format(upload_filename,
+                             file['id']))
+        return True, file
 
     except:
-        traceback.print_exc(file=sys.stdout)
-        logging.info('=== Google upload failed for some reason -- will try again later')
+        log.error(traceback.format_exc())
+        log.error('Google upload failed for some reason -- will try again later')
 
-        return False
+        return False, None
 
 #-------------------------------------------------------------------
 
 def create_folder(service, team_drive, folder_name, parent_id):
-    logging.debug("=== Creating folder {0}, parent {1}".format(folder_name, parent_id))
+    log.debug("Creating folder {0}, parent {1}".format(folder_name, parent_id))
     metadata = {
         'name' : folder_name,
         'mimeType' : folder_mime_type,
@@ -252,8 +269,8 @@ def create_folder(service, team_drive, folder_name, parent_id):
         }
     folder = service.files().create(body=metadata,
                                     supportsTeamDrives=True,
-                                    fields='name,id').execute()
-    logging.debug('=== Created folder: "{0}" (ID: {1})'
+                                    fields='name,id,webContentLink,webViewLink').execute()
+    log.debug('Created folder: "{0}" (ID: {1})'
                   .format(folder_name, folder.get('id')))
     return folder
 
@@ -269,12 +286,12 @@ def find_or_create_folder(service, team_drive, folder_name, parent_id):
     if parent_id is not None:
         query = query + (" and '{0}' in parents"
                          .format(parent_id))
-    logging.debug("=== Folder query: {0}".format(query))
+    log.debug("Folder query: {0}".format(query))
     response = (service.files()
                 .list(q=query,
                       spaces='drive',
                       corpora='teamDrive',
-                      fields='files(name,id,parents)',
+                      fields='files(name,id,parents,webContentLink,webViewLink)',
                       teamDriveId=team_drive['id'],
                       includeTeamDriveItems=True,
                       supportsTeamDrives=True).execute())
@@ -282,20 +299,20 @@ def find_or_create_folder(service, team_drive, folder_name, parent_id):
 
     # If we got more than 1 result back, let a human figure it out
     if len(folders) > 1:
-        diediedie("""Error: found more than one folder matching name="{0}"
-Error: a human should fix this in the Google Drive web interface."""
+        diediedie('''Error: found more than one folder matching name="{0}"
+Error: a human should fix this in the Google Drive web interface.'''
                   .format(folder_name, parent_id))
 
     # If we got 0 results back, then go create that folder
     elif len(folders) == 0:
-        logging.debug("=== Folder not found -- need to create it")
+        log.debug("Folder not found -- need to create it")
         return create_folder(service, team_drive, folder_name,
                              parent_id)
 
     # Otherwise, we found it.  Yay!
     else:
         folder = folders[0]
-        logging.debug('=== Found target folder: "{0}" (ID: {1})'
+        log.debug('Found target folder: "{0}" (ID: {1})'
                       .format(folder_name, folder['id']))
         return folder
 
@@ -316,7 +333,7 @@ def create_dest_folder(service, team_drive, year, month):
 
 def upload_mp3(service, team_drive, year, month, file):
     folder = create_dest_folder(service, team_drive, year, month)
-    success = upload_file(service, team_drive, folder, file)
+    (success, uploaded_file) = upload_file(service, team_drive, folder, file)
 
     # If we succeeded, remove the file from the local filesystem
     if success:
@@ -329,23 +346,29 @@ def upload_mp3(service, team_drive, year, month, file):
 <table border="0">
 <tr>
 <td>Team Drive:</td>
-<td>{0} (ID: {1})</td>
+<td><a href="{0}">{1}</a></td>
+</tr>
+
+<tr>
+<td>Folder:</td>
+<td><a href="{2}">{3}/{4}</a></td>
 </tr>
 
 <tr>
 <td>File:</td>
-<td>{2}/{3}/{4}</td>
+<td><a href="{5}">{6}</a></td>
 </tr>
 </table>
 
 <p>- Marvin the MP3 Daemon</p>'''
-                      .format(team_drive['name'],
-                              team_drive['id'],
-                              year,
-                              month,
-                              file))
+                      .format("https://drive.google.com/drive/u/0/folders/" + team_drive['id'],
+                              team_drive['name'],
+                              folder['webViewLink'],
+                              year, month,
+                              uploaded_file['webViewLink'],
+                              uploaded_file['name']))
 
-        logging.debug('=== Moved {0} to "Uploaded" folder'.format(file))
+        log.debug('Moved {0} to "Uploaded" folder'.format(file))
         try:
             os.mkdir("Uploaded")
         except:
@@ -359,8 +382,8 @@ def upload_mp3(service, team_drive, year, month, file):
 def watch_for_new_mp3s(service, team_drive, source_dir):
     seen_files = {}
     while True:
-        logging.debug('=== Checking {0} at {1}'.format(source_dir,
-                                                       time.asctime(time.localtime())))
+        log.info('Checking {0}'.format(source_dir))
+
         files = os.listdir(source_dir)
         for file in files:
             m = re.match(pattern='^T\d+-(\d\d\d\d)(\d\d)\d\d-\d\d\d\d\d\d.mp3$',
@@ -382,7 +405,7 @@ def watch_for_new_mp3s(service, team_drive, source_dir):
             # If the filename matches the pattern,
             # check to see if it's file size is still changing.
             if file not in seen_files:
-                logging.debug("=== Found MP3 {0} with file size {1}"
+                log.info("Found new MP3 {0} with file size {1}"
                               .format(file, s.st_size))
                 seen_files[file] = s.st_size
                 continue
@@ -391,13 +414,13 @@ def watch_for_new_mp3s(service, team_drive, source_dir):
                 # If the file size is the same, then it's probably no
                 # longer changing, and it's safe to upload.
                 if seen_files[file] != s.st_size:
-                    logging.debug("=== Found MP3 {0}; file size changed to {1}"
+                    log.info("Found MP3 {0}; file size changed to {1}"
                                   .format(file, s.st_size))
                     seen_files[file] = s.st_size
                     continue
 
                 else:
-                    logging.debug("=== Found MP3 {0}; file size did not change"
+                    log.info("Found MP3 {0}; file size did not change"
                                   .format(file))
                     upload_mp3(service, team_drive, year, month, file)
                     del seen_files[file]
@@ -425,7 +448,7 @@ def find_team_drive(service, target_name):
                     .list(pageToken=page_token).execute())
         for team_drive in response.get('teamDrives', []):
             if team_drive['name'] == target_name:
-                logging.debug('=== Found target Team Drive: "{0}" (ID: {1})'
+                log.debug('Found target Team Drive: "{0}" (ID: {1})'
                               .format(target_name, team_drive['id']))
                 return team_drive
 
@@ -474,6 +497,9 @@ def add_cli_args():
                                  required=False,
                                  action='store_true',
                                  help='If enabled, emit even more extra status messages during run')
+    tools.argparser.add_argument('--logfile',
+                                 required=False,
+                                 help='Store verbose/debug logging to the specified file')
 
     global args
     args = tools.argparser.parse_args()
