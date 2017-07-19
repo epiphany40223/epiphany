@@ -79,6 +79,10 @@ import re
 import time
 import httplib2
 import calendar
+import smtplib
+import logging
+import traceback
+from email.message import EmailMessage
 
 from pprint import pprint
 
@@ -90,49 +94,87 @@ from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 
 # Globals
-app_cred_file = 'client_id.json'
 user_cred_file = 'user-credentials.json'
 user_agent = 'py_mp3_uploader'
-target_team_drive = 'ECC Recordings'
 folder_mime_type = 'application/vnd.google-apps.folder'
-source_directory = 'C:\ftp\ecc-recordings'
 mp3_mime_type = 'audio/mpeg'
-dir_check_frequency = 30
+dir_check_frequency = 60
 auth_grace_period = 60
 auth_max_attempts = 3
+args = None
 # Scopes documented here:
 # https://developers.google.com/drive/v3/web/about-auth
 scope = 'https://www.googleapis.com/auth/drive'
 
-# JMS delete me
-source_directory = '.'
+#-------------------------------------------------------------------
+
+def send_mail(subject, message_body, html=False):
+    if args.smtp_to == '' or args.smtp_from == '' or args.smtp_host == '':
+        logging.debug('Not sending email "{0}" because SMTP to, from, and/or host node defined'.format(subject))
+        return
+
+    logging.info('Sending email to {0}, subject "{1}"'
+                 .format(args.smtp_to, subject))
+    with smtplib.SMTP_SSL(host=args.smtp_host) as smtp:
+        logging.info("Got smtp ssl connection")
+        if args.debug:
+            smtp.set_debuglevel(2)
+
+        msg = EmailMessage()
+        msg.set_content(message_body)
+        msg['Subject'] = subject
+        msg['From'] = args.smtp_from
+        msg['To'] = args.smtp_to
+        if html:
+            msg.replace_header('Content-Type', 'text/html')
+        else:
+            msg.replace_header('Content-Type', 'text/plain')
+
+        logging.info("Sending message")
+        smtp.send_message(msg)
+        logging.info("Done Sending message")
+
+    logging.debug('sent email to {0}, subject "{1}"'
+                 .format(args.smtp_to, subject))
 
 #-------------------------------------------------------------------
 
 def diediedie(msg):
-    print(msg)
-    print("Aborting")
+    logging.error(msg)
+    logging.error("Aborting")
 
-    # JMS Somehow let a human know
+    send_mail('Fatal error from MP3 uploader', msg)
 
     exit(1)
+
+#-------------------------------------------------------------------
+
+def setup_logging(args):
+    level=logging.ERROR
+
+    if args.debug:
+        level=logging.DEBUG
+    elif args.verbose:
+        level=logging.INFO
+
+    logging.basicConfig(level=level)
 
 #-------------------------------------------------------------------
 
 def load_app_credentials():
     # Read in the JSON file to get the client ID and client secret
     cwd  = os.getcwd()
-    file = os.path.join(cwd, app_cred_file)
+    file = os.path.join(cwd, args.app_id)
     if not os.path.isfile(file):
-	diediedie("Error: JSON file {0} does not exist".format(file))
+        diediedie("Error: JSON file {0} does not exist".format(file))
     if not os.access(file, os.R_OK):
-	diediedie("Error: JSON file {0} is not readable".format(file))
+        diediedie("Error: JSON file {0} is not readable".format(file))
 
     with open(file) as data_file:
-	app_cred = json.load(data_file)
+        app_cred = json.load(data_file)
 
-    print('=== Loaded application credentials from {0}'
-	  .format(file))
+    logging.debug('=== Loaded application credentials from {0}'
+                  .format(file))
     return app_cred
 
 #-------------------------------------------------------------------
@@ -154,11 +196,11 @@ def load_user_credentials(scope, app_cred):
     # credentials in the file listed above so that next time we
     # run, those credentials are available.
     if user_cred is None or user_cred.invalid:
-	user_cred = tools.run_flow(flow, storage,
-					tools.argparser.parse_args())
+        user_cred = tools.run_flow(flow, storage,
+                                        tools.argparser.parse_args())
 
-    print('=== Loaded user credentials from {0}'
-	  .format(file))
+    logging.debug('=== Loaded user credentials from {0}'
+                  .format(file))
     return user_cred
 
 #-------------------------------------------------------------------
@@ -168,49 +210,51 @@ def authorize(user_cred):
     http    = user_cred.authorize(http)
     service = build('drive', 'v3', http=http)
 
-    print('=== Authorized to Google')
+    logging.debug('=== Authorized to Google')
     return service
 
 ####################################################################
 
 def upload_file(service, team_drive, dest_folder, upload_filename):
     try:
-	print('=== Uploading file "{0}" (parent: {1})'
-	      .format(upload_filename, dest_folder['id']))
-	metadata = {
-	    'name' : upload_filename,
-	    'mimeType' : mp3_mime_type,
-	    'parents' : [ dest_folder['id'] ]
-	    }
-	media = MediaFileUpload(upload_filename,
-				mimetype=mp3_mime_type,
-				resumable=True)
-	file = service.files().create(body=metadata,
-				      media_body=media,
-				      supportsTeamDrives=True,
-				      fields='id').execute()
-	print('=== Successfully uploaded file: "{0}" (ID: {1})'
-	      .format(upload_filename, file.get('id')))
-	return True
+        logging.info('=== Uploading file "{0}" (parent: {1})'
+                     .format(upload_filename, dest_folder['id']))
+        metadata = {
+            'name' : upload_filename,
+            'mimeType' : mp3_mime_type,
+            'parents' : [ dest_folder['id'] ]
+            }
+        media = MediaFileUpload(upload_filename,
+                                mimetype=mp3_mime_type,
+                                resumable=True)
+        file = service.files().create(body=metadata,
+                                      media_body=media,
+                                      supportsTeamDrives=True,
+                                      fields='id').execute()
+        logging.info('=== Successfully uploaded file: "{0}" (ID: {1})'
+                     .format(upload_filename, file.get('id')))
+        return True
 
     except:
-	print('=== Google upload failed for some reason -- will try again later')
-	return False
+        traceback.print_exc(file=sys.stdout)
+        logging.info('=== Google upload failed for some reason -- will try again later')
+
+        return False
 
 #-------------------------------------------------------------------
 
 def create_folder(service, team_drive, folder_name, parent_id):
-    print("=== Creating folder {0}, parent {1}".format(folder_name, parent_id))
+    logging.debug("=== Creating folder {0}, parent {1}".format(folder_name, parent_id))
     metadata = {
-	'name' : folder_name,
-	'mimeType' : folder_mime_type,
-	'parents' : [ parent_id ]
-	}
+        'name' : folder_name,
+        'mimeType' : folder_mime_type,
+        'parents' : [ parent_id ]
+        }
     folder = service.files().create(body=metadata,
-				    supportsTeamDrives=True,
-				    fields='id').execute()
-    print('=== Created folder: "{0}" (ID: {1})'
-	  .format(folder_name, folder.get('id')))
+                                    supportsTeamDrives=True,
+                                    fields='name,id').execute()
+    logging.debug('=== Created folder: "{0}" (ID: {1})'
+                  .format(folder_name, folder.get('id')))
     return folder
 
 #-------------------------------------------------------------------
@@ -221,50 +265,50 @@ def find_or_create_folder(service, team_drive, folder_name, parent_id):
     # Don't worry about pagination, because we expect to only get
     # 0 or 1 results back.
     query = ("name='{0}' and mimeType='{1}' and trashed=false"
-	     .format(folder_name, folder_mime_type))
+             .format(folder_name, folder_mime_type))
     if parent_id is not None:
-	query = query + (" and '{0}' in parents"
-			 .format(parent_id))
-    print("=== Folder query: {0}".format(query))
+        query = query + (" and '{0}' in parents"
+                         .format(parent_id))
+    logging.debug("=== Folder query: {0}".format(query))
     response = (service.files()
-		.list(q=query,
-		      spaces='drive',
-		      corpora='teamDrive',
-		      fields='files(name,id,parents)',
-		      teamDriveId=team_drive['id'],
-		      includeTeamDriveItems=True,
-		      supportsTeamDrives=True).execute())
+                .list(q=query,
+                      spaces='drive',
+                      corpora='teamDrive',
+                      fields='files(name,id,parents)',
+                      teamDriveId=team_drive['id'],
+                      includeTeamDriveItems=True,
+                      supportsTeamDrives=True).execute())
     folders = response.get('files', [])
 
     # If we got more than 1 result back, let a human figure it out
     if len(folders) > 1:
-	diediedie("""Error: found more than one folder matching name="{0}"
+        diediedie("""Error: found more than one folder matching name="{0}"
 Error: a human should fix this in the Google Drive web interface."""
-		  .format(folder_name, parent_id))
+                  .format(folder_name, parent_id))
 
     # If we got 0 results back, then go create that folder
     elif len(folders) == 0:
-	print("=== Folder not found -- need to create it")
-	return create_folder(service, team_drive, folder_name,
-			     parent_id)
+        logging.debug("=== Folder not found -- need to create it")
+        return create_folder(service, team_drive, folder_name,
+                             parent_id)
 
     # Otherwise, we found it.  Yay!
     else:
-	folder = folders[0]
-	print('=== Found target folder: "{0}" (ID: {1})'
-	      .format(folder_name, folder['id']))
-	return folder
+        folder = folders[0]
+        logging.debug('=== Found target folder: "{0}" (ID: {1})'
+                      .format(folder_name, folder['id']))
+        return folder
 
 #-------------------------------------------------------------------
 
 def create_dest_folder(service, team_drive, year, month):
     # Look for the year folder at the top of the team drive
     year_folder = find_or_create_folder(service, team_drive, year,
-					team_drive['id'])
+                                        team_drive['id'])
 
     # Look for the month folder in the year folder
     month_folder = find_or_create_folder(service, team_drive, month,
-					 year_folder['id'])
+                                         year_folder['id'])
 
     return month_folder
 
@@ -276,99 +320,174 @@ def upload_mp3(service, team_drive, year, month, file):
 
     # If we succeeded, remove the file from the local filesystem
     if success:
-	print('=== Moved {0} to "Uploaded" folder'.format(file))
-	try:
-	    os.mkdir("Uploaded")
-	except:
-	    pass
-	os.rename(file, os.path.join("Uploaded", file))
+        if args.verbose:
+            send_mail(html=True,
+                      subject='Successful MP3 upload',
+                      message_body='''<p>Successfully uploaded file to Google drive:<p>
+
+<p>
+<table border="0">
+<tr>
+<td>Team Drive:</td>
+<td>{0} (ID: {1})</td>
+</tr>
+
+<tr>
+<td>File:</td>
+<td>{2}/{3}/{4}</td>
+</tr>
+</table>
+
+<p>- Marvin the MP3 Daemon</p>'''
+                      .format(team_drive['name'],
+                              team_drive['id'],
+                              year,
+                              month,
+                              file))
+
+        logging.debug('=== Moved {0} to "Uploaded" folder'.format(file))
+        try:
+            os.mkdir("Uploaded")
+        except:
+            pass
+        os.rename(file, os.path.join("Uploaded", file))
+
+    # If we failed, update a count and notify a human
 
 #-------------------------------------------------------------------
 
 def watch_for_new_mp3s(service, team_drive, source_dir):
     seen_files = {}
     while True:
-	print('=== Checking {0} at {1}'.format(source_dir,
-					       time.asctime(time.localtime())))
-	files = os.listdir(source_dir)
-	for file in files:
-	    m = re.match(pattern='^T\d+-(\d\d\d\d)(\d\d)\d\d-\d\d\d\d\d\d.mp3$',
-			 flags=re.IGNORECASE,
-			 string=file)
-	    if m is None:
-		continue
+        logging.debug('=== Checking {0} at {1}'.format(source_dir,
+                                                       time.asctime(time.localtime())))
+        files = os.listdir(source_dir)
+        for file in files:
+            m = re.match(pattern='^T\d+-(\d\d\d\d)(\d\d)\d\d-\d\d\d\d\d\d.mp3$',
+                         flags=re.IGNORECASE,
+                         string=file)
+            if m is None:
+                continue
 
-	    year = m.group(1)
-	    month_num = m.group(2)
-	    month = "{0}-{1}".format(month_num,
-				     calendar.month_name[int(month_num)])
+            year = m.group(1)
+            month_num = m.group(2)
+            month = "{0}-{1}".format(month_num,
+                                     calendar.month_name[int(month_num)])
 
-	    # If the filename matches the pattern, first check to see
-	    # if the file is still being uploaded to us.  Check by
-	    # file size.
-	    s = os.stat(file)
+            # If the filename matches the pattern, first check to see
+            # if the file is still being uploaded to us.  Check by
+            # file size.
+            s = os.stat(file)
 
-	    # If the filename matches the pattern,
-	    # check to see if it's file size is still changing.
-	    if file not in seen_files:
-		print("=== Found MP3 {0} with file size {1}"
-		      .format(file, s.st_size))
-		seen_files[file] = s.st_size
-		continue
+            # If the filename matches the pattern,
+            # check to see if it's file size is still changing.
+            if file not in seen_files:
+                logging.debug("=== Found MP3 {0} with file size {1}"
+                              .format(file, s.st_size))
+                seen_files[file] = s.st_size
+                continue
 
-	    else:
-		# If the file size is the same, then it's probably no
-		# longer changing, and it's safe to upload.
-		if seen_files[file] != s.st_size:
-		    print("=== Found MP3 {0}; file size changed to {1}"
-			  .format(file, s.st_size))
-		    seen_files[file] = s.st_size
-		    continue
+            else:
+                # If the file size is the same, then it's probably no
+                # longer changing, and it's safe to upload.
+                if seen_files[file] != s.st_size:
+                    logging.debug("=== Found MP3 {0}; file size changed to {1}"
+                                  .format(file, s.st_size))
+                    seen_files[file] = s.st_size
+                    continue
 
-		else:
-		    print("=== Found MP3 {0}; file size did not change"
-			  .format(file))
-		    upload_mp3(service, team_drive, year, month, file)
-		    del seen_files[file]
+                else:
+                    logging.debug("=== Found MP3 {0}; file size did not change"
+                                  .format(file))
+                    upload_mp3(service, team_drive, year, month, file)
+                    del seen_files[file]
 
-	# Once we're done traversing the files in the directory, clean
-	# up any files in seen_files that no longer exist (must do
-	# this in 2 loops: it's not safe to remove a key from a
-	# dictionary that you're iterating over).
-	to_remove = []
-	for file in seen_files:
-	    if not os.path.isfile(file):
-		to_remove.append(file)
-	for file in to_remove:
-	    del seen_files[file]
+        # Once we're done traversing the files in the directory, clean
+        # up any files in seen_files that no longer exist (must do
+        # this in 2 loops: it's not safe to remove a key from a
+        # dictionary that you're iterating over).
+        to_remove = []
+        for file in seen_files:
+            if not os.path.isfile(file):
+                to_remove.append(file)
+        for file in to_remove:
+            del seen_files[file]
 
-	# Wait a little bit, and then check again
-	time.sleep(dir_check_frequency)
+        # Wait a little bit, and then check again
+        time.sleep(dir_check_frequency)
 
 #-------------------------------------------------------------------
 
 def find_team_drive(service, target_name):
     page_token = None
     while True:
-	response = (service.teamdrives()
-		    .list(pageToken=page_token).execute())
-	for team_drive in response.get('teamDrives', []):
-	    if team_drive['name'] == target_name:
-		print('=== Found target Team Drive: "{0}" (ID: {1})'
-		      .format(target_name, team_drive['id']))
-		return team_drive
+        response = (service.teamdrives()
+                    .list(pageToken=page_token).execute())
+        for team_drive in response.get('teamDrives', []):
+            if team_drive['name'] == target_name:
+                logging.debug('=== Found target Team Drive: "{0}" (ID: {1})'
+                              .format(target_name, team_drive['id']))
+                return team_drive
 
-	page_token = response.get('nextPageToken', None)
-	if page_token is None:
-	    break
+        page_token = response.get('nextPageToken', None)
+        if page_token is None:
+            break
 
     # If we get here, we didn't find the target team drive
     diediedie("Error: Could not find the target Team Drive ({0})"
-	      .format(target_team_drive))
+              .format(args.target_team_drive))
+
+#-------------------------------------------------------------------
+
+def add_cli_args():
+    tools.argparser.add_argument('--smtp-to',
+                                 required=False,
+                                 help='Who to send status mails')
+    tools.argparser.add_argument('--smtp-from',
+                                 required=False,
+                                 default='no-reply@epiphanycatholicchurch.org',
+                                 help='Who to send status from')
+    tools.argparser.add_argument('--smtp-host',
+                                 required=False,
+                                 default='smtp-relay.gmail.com',
+                                 help='SMTP server hostname')
+
+    tools.argparser.add_argument('--source-dir',
+                                 required=False,
+                                 default='C:\ftp\ecc-recordings',
+                                 help='Directory to watch for incoming MP3s')
+
+    tools.argparser.add_argument('--app-id',
+                                 required=False,
+                                 default='client_id.json',
+                                 help='Filename containing Google application credentials')
+    tools.argparser.add_argument('--target-team-drive',
+                                 required=False,
+                                 default='ECC Recordings',
+                                 help='Name of Team Drive to upload the found MP3 files to')
+
+    tools.argparser.add_argument('--verbose',
+                                 required=False,
+                                 action='store_true',
+                                 help='If enabled, emit extra status messages during run')
+    tools.argparser.add_argument('--debug',
+                                 required=False,
+                                 action='store_true',
+                                 help='If enabled, emit even more extra status messages during run')
+
+    global args
+    args = tools.argparser.parse_args()
+
+    # --debug also implies --verbose
+    if args.debug:
+        args.verbose = True
+    setup_logging(args)
 
 #-------------------------------------------------------------------
 
 def main():
+    add_cli_args()
+
     # Put a loop around the whole program so that it can
     # re-authenticate via the OAuth refresh token when possible.  Real
     # errors will cause the script to abort, which will notify a human
@@ -377,39 +496,38 @@ def main():
     last_auth = 0
     auth_count = 0
     while True:
-	try:
-	    # Authorize the app and provide user consent to Google
-	    app_cred = load_app_credentials()
-	    user_cred = load_user_credentials(scope, app_cred)
-	    service = authorize(user_cred)
+        try:
+            # Authorize the app and provide user consent to Google
+            app_cred = load_app_credentials()
+            user_cred = load_user_credentials(scope, app_cred)
+            service = authorize(user_cred)
 
-	    last_auth = time.clock()
+            last_auth = time.clock()
 
-	    # Find the target team drive to which we want to upload
-	    team_drive = find_team_drive(service, target_team_drive)
+            # Find the target team drive to which we want to upload
+            team_drive = find_team_drive(service, args.target_team_drive)
 
-	    # Endlessly watch for new files to appear in the source
-	    # directory, and upload them to Google
-	    watch_for_new_mp3s(service, team_drive, source_directory)
+            # Endlessly watch for new files to appear in the source
+            # directory, and upload them to Google
+            watch_for_new_mp3s(service, team_drive, args.source_dir)
 
-	except AccessTokenRefreshError:
-	    # The AccessTokenRefreshError exception is raised if the
-	    # credentials have been revoked by the user or they have
-	    # expired.
-	    # Try to re-auth.  If we fail to re-auth 3 times within 60
-	    # seconds, abort and let a human figure it out.
-	    now = time.clock()
-	    if (now - last_auth) > auth_grace_period:
-		last_auth = now
-		auth_count = 0
-		continue
+        except AccessTokenRefreshError:
+            # The AccessTokenRefreshError exception is raised if the
+            # credentials have been revoked by the user or they have
+            # expired.
+            # Try to re-auth.  If we fail to re-auth 3 times within 60
+            # seconds, abort and let a human figure it out.
+            now = time.clock()
+            if (now - last_auth) > auth_grace_period:
+                last_auth = now
+                auth_count = 0
+                continue
 
-	    else:
-		auth_count = auth_count + 1
-		if auth_count > auth_max_attempts:
-		    diediedie("Failed to authenticate to Google {0} times in {1} seconds.\nA human needs to figure this out."
-			      .format(auth_max_attempts, auth_grace_period))
-
+            else:
+                auth_count = auth_count + 1
+                if auth_count > auth_max_attempts:
+                    diediedie("Failed to authenticate to Google {0} times in {1} seconds.\nA human needs to figure this out."
+                              .format(auth_max_attempts, auth_grace_period))
 
 if __name__ == '__main__':
     main()
