@@ -381,8 +381,13 @@ def upload_mp3(service, team_drive, year, month, file):
 
 def watch_for_new_mp3s(service, team_drive, source_dir):
     seen_files = {}
+    count = 0
     while True:
-        log.info('Checking {0}'.format(source_dir))
+        # Conditionally emit a log message
+        if args.debug or (args.verbose and count == 0):
+            log.info('Checking directory {0} every {1} seconds'
+                     .format(source_dir, dir_check_frequency))
+        count = (count + 1) % 60
 
         files = os.listdir(source_dir)
         for file in files:
