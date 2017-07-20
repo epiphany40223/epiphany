@@ -340,7 +340,7 @@ def upload_mp3(service, team_drive, year, month, file):
         if args.verbose:
             send_mail(html=True,
                       subject='Successful MP3 upload',
-                      message_body='''<p>Successfully uploaded file to Google drive:<p>
+                      message_body='''<p>Successfully uploaded MPI to Google Team Drive:<p>
 
 <p>
 <table border="0">
