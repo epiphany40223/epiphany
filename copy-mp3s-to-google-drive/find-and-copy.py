@@ -475,6 +475,9 @@ def add_cli_args():
                                  required=False,
                                  default='no-reply@epiphanycatholicchurch.org',
                                  help='Who to send status from')
+    # Be sure to check the Google SMTP relay documentation for
+    # non-authenticated relaying instructions:
+    # https://support.google.com/a/answer/2956491
     tools.argparser.add_argument('--smtp-host',
                                  required=False,
                                  default='smtp-relay.gmail.com',
