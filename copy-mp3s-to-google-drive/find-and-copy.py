@@ -121,7 +121,7 @@ archive_dir = None
 smtp = ["smtp-relay.gmail.com",
         "jsquyres@epiphanycatholicchurch.org",
         "no-reply@epiphanycatholicchurch.org"]
-incoming_ftp_dir = 'C:\ftp\ecc-recordings',
+incoming_ftp_dir = 'C:\\ftp\\ecc-recordings',
 data_dir = 'data'
 app_id='client_id.json'
 target_team_drive = 'ECC Recordings',
