@@ -121,13 +121,11 @@ archive_dir = None
 smtp = ["smtp-relay.gmail.com",
         "jsquyres@epiphanycatholicchurch.org",
         "no-reply@epiphanycatholicchurch.org"]
-incoming_ftp_dir = 'C:\\ftp\\ecc-recordings',
+incoming_ftp_dir = 'C:\\ftp\\ecc-recordings'
 data_dir = 'data'
 app_id='client_id.json'
-target_team_drive = 'ECC Recordings',
-ftp = ["ftp.epiphanycatholicchurch.org",
-       "username",
-       "password"]
+target_team_drive = 'ECC Recordings'
+ftp = None
 ftp_cwd = "from-media-server"
 verbose = True
 debug = False
@@ -593,7 +591,7 @@ def ftp_login():
         return ftp
 
     except:
-        diediedie("FTP login or directory change (to {0}) failed.\n\nA human needs to figure this out.")
+        diediedie("FTP login or directory change (to {0}) failed.\n\nA human needs to figure this out.".format(ftp_server))
 
 #-------------------------------------------------------------------
 
@@ -727,13 +725,14 @@ def check_for_incoming_ftp():
         # and "to Google Team Drive" directories so that they will be
         # processed.
         log.info("Found incoming FTP file: {0}".format(file.filename))
-        shutil.copy2(src=file.filename, dst=to_gtd_dir)
-        shutil.copy2(src=file.filename, dst=to_ftp_dir)
+        filename = "{0}{1}{2}".format(args.incoming_ftp_dir, os.path.sep, file.filename)
+        shutil.copy2(src=filename, dst=to_gtd_dir)
+        shutil.copy2(src=filename, dst=to_ftp_dir)
 
         # Finally, move the file to the archive directory for a
         # "permanent" record (and so that we won't see it again on
         # future passes through this directory).
-        shutil.move(src=file.filename, dst=archive_dir)
+        shutil.move(src=filename, dst=archive_dir)
 
 ####################################################################
 #
@@ -837,12 +836,16 @@ def add_cli_args():
     setup_logging(args)
 
     # Sanity check args
-    l = len(args.ftp)
+    l = 0
+    if args.ftp:
+        l = len(args.ftp)
     if l > 0 and l != 3:
         log.error("Need exactly 3 arguments to --ftp: server username password")
         exit(1)
 
-    l = len(args.smtp)
+    l = 0
+    if args.smtp:
+        l = len(args.smtp)
     if l > 0 and l != 3:
         log.error("Need exactly 3 arguments to --smtp: server to from")
         exit(1)
