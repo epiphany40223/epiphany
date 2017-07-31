@@ -56,6 +56,8 @@ import httplib2
 import calendar
 import uuid
 import logging
+import logging.handlers
+import traceback
 
 from pprint import pprint
 
@@ -75,6 +77,8 @@ user_agent = 'gxcopy'
 doc_mime_type = 'application/vnd.google-apps.document';
 sheet_mime_type = 'application/vnd.google-apps.spreadsheet';
 folder_mime_type = 'application/vnd.google-apps.folder'
+args = None
+log = None
 # JMS this is probably a lie, but it's useful for comparisons
 team_drive_mime_type = 'application/vnd.google-apps.team_drive'
 # Scopes documented here:
@@ -93,7 +97,10 @@ GFile = recordclass('GFile',
 		    'mimeType',     # string
 		    'name',         # string
 		    'parents',      # list of strings (each an ID)
-		    'team_file'     # GFile or None
+		    'team_file',    # GFile or None
+		    'permissions',  # List of permissions obtained from Google Drive API
+		    'perms_to_add', # List of permissions to add, compared to those that were inherited
+		    'perms_to_delete'  # List of permissions to delete, compared to those that were inherited
 		    ])
 Tree = recordclass('Tree',
 		  ['root_folder',   # See comment in read_source_tree()
@@ -109,7 +116,8 @@ AllFiles = recordclass('AllFiles',
 		      ['name',           # string
 		       'webViewLink',    # string (URL)
 		       'parents',        # list of strings (each an ID)
-		       'team_file'       # GFile
+		       'team_file',      # GFile
+		       'permissions'     # List of non-inherited permissions
 		       ])
 Parent = recordclass('Parent',
 		     ['id',              # string
@@ -124,8 +132,6 @@ def diediedie(msg):
     print(msg)
     print("Aborting")
 
-    # JMS Somehow let a human know
-
     exit(1)
 
 #-------------------------------------------------------------------
@@ -134,11 +140,29 @@ def setup_logging(args):
     level=logging.ERROR
 
     if args.debug:
-	level=logging.DEBUG
+	level="DEBUG"
     elif args.verbose:
-	level=logging.INFO
+	level="INFO"
 
-    logging.basicConfig(level=level)
+    global log
+    log = logging.getLogger('FToTD')
+    log.setLevel(level)
+
+    # Make sure to include the timestamp in each message
+    f = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
+
+    # Default log output to stdout
+    s = logging.StreamHandler()
+    s.setFormatter(f)
+    log.addHandler(s)
+
+    # Optionally save to a rotating logfile
+    if args.logfile:
+	s = logging.FileHandler(filename=args.logfile)
+	s.setFormatter(f)
+	log.addHandler(s)
+
+    log.info('Starting')
 
 #-------------------------------------------------------------------
 
@@ -154,7 +178,7 @@ def load_app_credentials(app_cred_file):
     with open(file) as data_file:
 	app_cred = json.load(data_file)
 
-    logging.debug('=== Loaded application credentials from {0}'
+    log.debug('Loaded application credentials from {0}'
 		  .format(file))
     return app_cred
 
@@ -178,7 +202,7 @@ def load_user_credentials(scope, app_cred):
 	user_cred = tools.run_flow(flow, storage,
 					tools.argparser.parse_args())
 
-    logging.debug('=== Loaded user credentials from {0}'
+    log.debug('Loaded user credentials from {0}'
 	      .format(file))
     return user_cred
 
@@ -187,14 +211,14 @@ def authorize(user_cred):
     http    = user_cred.authorize(http)
     service = build('drive', 'v3', http=http)
 
-    logging.debug('=== Authorized to Google')
+    log.debug('Authorized to Google')
     return service
 
 ####################################################################
 
 def upload_file(service, team_drive, dest_folder, upload_filename):
     try:
-	logging.info('=== Uploading file "{0}" (parent: {1})'
+	log.info('Uploading file "{0}" (parent: {1})'
 		 .format(upload_filename, dest_folder['id']))
 	metadata = {
 	    'name' : upload_filename,
@@ -208,12 +232,13 @@ def upload_file(service, team_drive, dest_folder, upload_filename):
 					   media_body=media,
 					   supportsTeamDrives=True,
 					   fields='id'))
-	logging.debug('=== Successfully uploaded file: "{0}" (ID: {1})'
-		  .format(upload_filename, file.get('id')))
+	log.debug('Successfully uploaded file: "{0}" (ID: {1})'
+		  .format(upload_filename, file['id']))
 	return True
 
     except:
-	logging.warn('=== Google upload failed for some reason -- will try again later')
+	log.error(traceback.format_exc())
+	log.error('Google upload failed for some reason -- will try again later')
 	return False
 
 #-------------------------------------------------------------------
@@ -227,25 +252,25 @@ def doit(httpref):
 	    return ret
 
 	except HttpError as err:
-	    logging.debug("*** Got HttpError:")
+	    log.debug("*** Got HttpError:")
 	    pprint(err)
 	    if err.resp.status in [500, 503]:
-		logging.debug("*** Seems recoverable; let's sleep and try again...")
+		log.debug("*** Seems recoverable; let's sleep and try again...")
 		time.sleep(5)
 		count = count + 1
 		continue
 	    else:
-		logging.debug("*** Doesn't seem recoverable (status {0}) -- aborting".format(err.resp.status))
-		logging.debug(err)
+		log.debug("*** Doesn't seem recoverable (status {0}) -- aborting".format(err.resp.status))
+		log.debug(err)
 		raise
 
 	except:
-	    logging.error("*** Some unknown error occurred")
-	    logging.error(sys.exc_info()[0])
+	    log.error("*** Some unknown error occurred")
+	    log.error(sys.exc_info()[0])
 	    raise
 
     # If we get here, it's failed multiple times -- time to bail...
-    logging.error("=== Error: we failed this 3 times; there's no reason to believe it'll work if we do it again...")
+    log.error("Error: we failed this 3 times; there's no reason to believe it'll work if we do it again...")
     exit(1)
 
 #-------------------------------------------------------------------
@@ -253,7 +278,7 @@ def doit(httpref):
 # parent_folder: gfile
 # new_folder_name: string
 def create_folder(service, parent_folder, new_folder_name):
-    logging.debug("=== Creating new folder {0}, parent {1} (ID: {2})"
+    log.debug("Creating new folder {0}, parent {1} (ID: {2})"
 	      .format(new_folder_name, parent_folder.name, parent_folder.id))
     metadata = {
 	'name' : new_folder_name,
@@ -264,7 +289,7 @@ def create_folder(service, parent_folder, new_folder_name):
     folder = doit(service.files().create(body=metadata,
 					 supportsTeamDrives=True,
 					 fields='id,name,mimeType,parents,webViewLink'))
-    logging.debug('=== Created folder: "{0}" (ID: {1})'
+    log.debug('Created folder: "{0}" (ID: {1})'
 		  .format(folder['name'], folder['id']))
 
     file = GFile(id=folder['id'],
@@ -272,7 +297,10 @@ def create_folder(service, parent_folder, new_folder_name):
 		 name=folder['name'],
 		 parents=folder['parents'],
 		 webViewLink=folder['webViewLink'],
-		 team_file=None)
+		 team_file=None,
+		 permissions=[],
+		 perms_to_add=[],
+		 perms_to_delete=[])
     file.team_file = file
 
     return file
@@ -298,11 +326,11 @@ def create_folder(service, parent_folder, new_folder_name):
 # This routine will not be called if this is a dry run, so no need for
 # such protection inside this function.
 def migrate_to_team_drive(service, source_root, team_root, all_files):
-    logging.debug('Migrating folder to Team Drive: "{0}"'
+    log.debug('Migrating folder to Team Drive: "{0}"'
 		  .format(source_root.root_folder.name))
     for source_entry in source_root.contents:
-        logging.debug('- Migrating entry: "{0}"'
-                      .format(source_entry.gfile.name))
+	log.debug('- Migrating entry: "{0}"'
+		      .format(source_entry.gfile.name))
 	source_id = source_entry.gfile.id
 
 	# Folder
@@ -317,7 +345,7 @@ def migrate_to_team_drive(service, source_root, team_root, all_files):
 
 def migrate_folder_to_team_drive(service, source_root, team_root,
 				 all_files, source_folder_entry):
-    logging.debug('- Making sub folder: "{0}" in "{1}"'
+    log.debug('- Making sub folder: "{0}" in "{1}"'
 		  .format(source_root.root_folder.name,
 			  source_folder_entry.gfile.name))
 
@@ -344,23 +372,108 @@ def migrate_folder_to_team_drive(service, source_root, team_root,
 
 def migrate_file_to_team_drive(service, source_root, team_root,
 			       all_files, source_file_entry):
-    logging.debug('- Migrating file: "{0}" in "{1}"'
+    log.debug('- Migrating file: "{0}" in "{1}"'
 		  .format(source_root.root_folder.name,
 			  source_file_entry.gfile.name))
 
     # Try to just move the file
-    migrated_file = doit(service.files().update(fileId=source_file_entry.gfile.id,
-                                                addParents=team_root.id,
-                                                removeParents=source_file_entry.gfile.parents[0],
-                                                fields='id,parents'))
+    migrated_file = doit(service
+			 .files()
+			 .update(fileId=source_file_entry.gfile.id,
+				 addParents=team_root.id,
+				 removeParents=source_file_entry.gfile.parents[0],
+				 fields='id,parents'))
     if migrated_file is None:
-        # JMS try to copy
-        pass
+	# JMS try to copy
+	pass
     else:
-        # JMS happiness
-        pass
+	# JMS happiness
+	pass
 
     # JMS continue here
+
+#-------------------------------------------------------------------
+
+# In regular google drive folders, permissions are inherited.
+# Meaning: when we create a folder and set permissions on it, anything
+# in that folder will inherit those permissions.  The implication is
+# that we need to set the permissions on the top-level folder, and
+# then only set permissions *that are different* on the items
+# contained within.
+#
+# This routine traverses the entire set of permissions that we
+# obtained from the source tree and builds up two lists for each
+# content entry in each folder (compared to the containing folder's
+# permissions):
+#
+# 1. Permissions to add
+# 2. Permissions to remove
+#
+
+def perms_equal(a, b):
+    if (a['id'] == b['id'] and
+	a['type'] == b['type'] and
+	a['emailAddress'] == b['emailAddress'] and
+	a['role'] == b['role'] and
+	a['deleted'] == b['deleted']):
+	return True
+    else:
+	return False
+
+def resolve_permissions(service, root, all_files):
+    log.debug("Resolving permissions; traversing folder: {0}"
+	      .format(root.root_folder.name))
+    log.debug("  Base permissions on folder: {0}"
+	      .format(root.root_folder.permissions))
+
+    for entry in root.contents:
+	log.debug("Resolving permissions on file: {0}"
+		  .format(entry.gfile.name))
+	id = entry.gfile.id
+
+	to_add = []
+	to_delete = []
+	e_perms_copy = entry.gfile.permissions[:]
+
+	for pr in root.root_folder.permissions:
+	    i = 0
+	    while i < len(e_perms_copy):
+		# If we found the root perm on the entry, delete it
+		# from the e_perms_copy list.
+		if perms_equal(pr, e_perms_copy[i]):
+		    del e_perms_copy[i]
+		    break
+		else:
+		    i = i + 1
+
+	    else:
+		# If the loop falls through without hitting the
+		# "break" statement, that means that this root
+		# permission was not found on the entry, and therefore
+		# it needs to be put on the "to_delete" list for this
+		# entry.
+		to_delete.append(pr)
+
+	# After traversing the entire root permissions list, if we
+	# still have perms in the copy list, than means that these are
+	# permissions that need to be added specifically to this
+	# entry.
+	if len(e_perms_copy) > 0:
+	    to_add = e_perms_copy[:]
+
+	# Save the to_add and to_delete lists on the gfile on the
+	# entry
+	entry.gfile.perms_to_add = to_add
+	entry.gfile.perms_to_delete = to_delete
+	# JMS delete me
+	log.debug("Entry: {0}".format(entry.gfile.name))
+	log.debug("  Base permissions: {0}".format(entry.gfile.permissions))
+	log.debug("  Perms to add: {0}".format(entry.gfile.perms_to_add))
+	log.debug("  Perms to del: {0}".format(entry.gfile.perms_to_delete))
+
+	# If this is a folder, we need to traverse into it
+	if entry.traverse:
+	    resolve_permissions(service, entry.tree, all_files)
 
 #-------------------------------------------------------------------
 
@@ -372,8 +485,8 @@ def print_multiparents(service, root, all_files):
     (found, seen) = traverse_multiparents(service, root, all_files, seen)
 
     if found:
-	logging.error("Found at least one file/folder with multiple parents.")
-	logging.error("These files/folders must be converted to having a single parent before converting over to a Team Drive.")
+	log.error("Found at least one file/folder with multiple parents.")
+	log.error("These files/folders must be converted to having a single parent before converting over to a Team Drive.")
     else:
 	print("--> None found -- yay!")
 
@@ -432,6 +545,7 @@ def traverse_multiparents(service, root, all_files, seen):
 #      .name
 #      .parents: list
 #      .team_id: None (will be populated later)
+#      .permissions
 #   .contents: list, each entry is an instance of ContentEntry, representing an item in this folder
 #      .gfile, a GFile instance:
 #         .id
@@ -439,6 +553,7 @@ def traverse_multiparents(service, root, all_files, seen):
 #         .name
 #         .parents
 #         .team_id: None (will never be populated)
+#         .permissions
 #      .is_folder: boolean, True if folder
 #      .traverse: boolean, True if this is 1st time we've seen this folder
 #      .tree: if traverse==True, a tree, otherwise None
@@ -454,18 +569,18 @@ def traverse_multiparents(service, root, all_files, seen):
 #    .team_file: None (will be populated later)
 #
 def read_source_tree(service, prefix, root_folder, all_files):
-    logging.info('=== Discovering contents of folder: "{0}" (ID: {1})'
-		 .format(root_folder.name, root_folder.id))
+    log.info('Discovering contents of folder: "{0}" (ID: {1})'
+	     .format(root_folder.name, root_folder.id))
 
     parent_folder_name_abs = '{0}/{1}'.format(prefix, root_folder.name)
-    logging.debug('=== parent folder name abs: {0}=={1}'
-		  .format(prefix, root_folder.name))
+    log.debug('parent folder name abs: {0}=={1}'
+	      .format(prefix, root_folder.name))
     tree = Tree(root_folder=root_folder, contents=[])
 
     # Iterate through everything in this root folder
     page_token = None
     query = "'{0}' in parents and trashed=false".format(root_folder.id)
-    logging.debug("=== Query: {0}".format(query))
+    log.debug("Query: {0}".format(query))
     while True:
 	response = doit(service.files()
 			.list(q=query,
@@ -475,47 +590,65 @@ def read_source_tree(service, prefix, root_folder, all_files):
 			      pageToken=page_token,
 			      supportsTeamDrives=True))
 	for file in response.get('files', []):
-	    logging.info('=== Found: "{0}"'.format(file['name']))
+	    log.info('Found: "{0}"'.format(file['name']))
 	    id = file['id']
 	    traverse = False
 	    is_folder = False
 	    if file['mimeType'] == folder_mime_type:
 		is_folder = True
+	    perms = None
 
 	    # We have already seen this file before
 	    if id in all_files:
-		logging.debug('--- We already know this file; cross-referencing...')
+		log.debug('--- We already know this file; cross-referencing...')
+		perms = all_files[id].permissions
+
 		# If this is a folder that we already know, then do
 		# not traverse down into it (again).
 		if is_folder:
-		    logging.debug('--- Is a folder, but we already know it; NOT adding to pending traversal list')
+		    log.debug('--- Is a folder, but we already know it; NOT adding to pending traversal list')
 		    traverse = False
 
 	    # We have *NOT* already seen this file before
 	    else:
-		logging.debug('--- We do not already know this file; saving...')
+		log.debug('--- We do not already know this file; saving...')
+		p = doit(service.permissions().list(fileId=id,
+						    fields='permissions(*)',
+						    supportsTeamDrives=True))
+		perms = p['permissions']
 		all_files[id] = AllFiles(name=file['name'],
 					 webViewLink=file['webViewLink'],
 					 parents=[],
-					 team_file=None)
+					 team_file=None,
+					 permissions=perms)
 
 		# If it's a folder, add it to the pending traversal list
 		if is_folder:
 		    traverse = True
-		    logging.debug("--- Is a folder; adding to pending traversal list")
+		    log.debug("--- Is a folder; adding to pending traversal list")
 
 	    # Save this content entry in the list of contents for this
 	    # folder
-	    gfile = GFile(id=id, mimeType=file['mimeType'],
+	    log.debug('--- Got perms: {0}'.format(perms))
+	    gfile = GFile(id=id,
+			  mimeType=file['mimeType'],
 			  webViewLink=file['webViewLink'],
-			  name=file['name'], parents=file['parents'],
-			  team_file=None)
+			  name=file['name'],
+			  parents=file['parents'],
+			  team_file=None,
+			  permissions=perms,
+			  perms_to_add=[],
+			  perms_to_delete=[])
 	    content_entry = ContentEntry(gfile=gfile,
 					 is_folder=is_folder,
 					 traverse=traverse,
 					 contents=[],
 					 tree=None)
 	    tree.contents.append(content_entry)
+
+	    # JMS delete me
+	    print("Created gfile for content entry: {0}"
+		  .format(gfile))
 
 	    # Save this file in the master list of *all* files found.
 	    # Basically, add a parent listing to this ID in the
@@ -538,7 +671,7 @@ def read_source_tree(service, prefix, root_folder, all_files):
 	if entry.traverse:
 	    new_prefix = '{0}/{1}'.format(parent_folder_name_abs,
 					  entry.gfile.name)
-	    logging.debug("== Traversing down into {0}"
+	    log.debug("== Traversing down into {0}"
 			  .format(new_prefix))
 	    (t, all_files) = read_source_tree(service,
 					      parent_folder_name_abs,
@@ -567,7 +700,7 @@ def find_team_drive_owner(service, team_drive):
 					    fields='id,lastModifyingUser'))
 
     owner = test_file['lastModifyingUser']
-    logging.info("=== Team Drive owner: {0}".format(owner['emailAddress']))
+    log.info("Team Drive owner: {0}".format(owner['emailAddress']))
 
     doit(service.files().delete(fileId=test_file['id'],
 				supportsTeamDrives=True))
@@ -584,7 +717,7 @@ def find_team_drive_owner(service, team_drive):
 # This routine will not be called if this is a dry run, so no need for
 # such protection inside this function.
 def create_team_drive(service, source_folder):
-    logging.debug('=== Creating Team Drive: "{0}"'
+    log.debug('Creating Team Drive: "{0}"'
 	  .format(source_folder.name))
     metadata = {
 	'name' : source_folder.name,
@@ -592,12 +725,17 @@ def create_team_drive(service, source_folder):
     u = uuid.uuid4()
     tdrive = doit(service.teamdrives().create(body=metadata,
 					      requestId=u))
-    logging.info('=== Created Team Drive: "{0}" (ID: {1})'
+    log.info('Created Team Drive: "{0}" (ID: {1})'
 	  .format(source_folder.name, tdrive['id']))
 
     file = GFile(id=tdrive['id'], mimeType=team_drive_mime_type,
 		 webViewLink=None,
-		 name=tdrive['name'], parents=['root'], team_file=None)
+		 name=tdrive['name'],
+		 parents=['root'],
+		 team_file=None,
+		 permissions=[],
+		 perms_to_add=[],
+		 perms_to_delete=[])
     return file
 
 #-------------------------------------------------------------------
@@ -614,19 +752,22 @@ def verify_no_team_drive_name(service, args, source_folder):
 		# already exists.  But if the user said it was ok,
 		# keep going if it already exists.
 		if args.debug_team_drive_already_exists_ok:
-		    logging.info('Team Drive "{0}" already exists, but proceeding anyway...'
+		    log.info('Team Drive "{0}" already exists, but proceeding anyway...'
 				 .format(source_folder.name))
 		    file = GFile(id=team_drive['id'],
 				 mimeType=team_drive_mime_type,
 				 webViewLink=None,
 				 name=team_drive['name'],
 				 parents=['root'],
-				 team_file=None)
+				 team_file=None,
+				 permissions=[],
+				 perms_to_add=[],
+				 perms_to_delete=[])
 		    return file
 		else:
-		    logging.error('Found existing Team Drive of same name as source folder: "{0}" (ID: {1})'
+		    log.error('Found existing Team Drive of same name as source folder: "{0}" (ID: {1})'
 				  .format(source_folder.name, team_drive['id']))
-		    logging.error("There cannot be an existing Team Drive with the same name as the source folder")
+		    log.error("There cannot be an existing Team Drive with the same name as the source folder")
 		    exit(1)
 
 	page_token = response.get('nextPageToken', None)
@@ -635,7 +776,7 @@ def verify_no_team_drive_name(service, args, source_folder):
 
     # If we get here, we didn't find a team drive with the same name.
     # Yay!
-    logging.info("=== Verified: no existing Team Drives with same name as source folder ({0})"
+    log.info("Verified: no existing Team Drives with same name as source folder ({0})"
 	     .format(source_folder.name))
     return
 
@@ -644,28 +785,36 @@ def verify_no_team_drive_name(service, args, source_folder):
 # Given a folder ID, verify that it is a valid folder.
 # If valid, return a GFile instance of the folder.
 def verify_folder_id(service, id):
-    response = doit(service.files().get(fileId=id,
-					fields='id,mimeType,name,webViewLink,parents',
-					supportsTeamDrives=True))
+    folder = doit(service.files().get(fileId=id,
+				      fields='id,mimeType,name,webViewLink,parents',
+				      supportsTeamDrives=True))
 
-    if response is not None and response['mimeType'] == folder_mime_type:
-	logging.info("=== Valid folder ID: {0} ({1})"
-		 .format(id, response['name']))
-
-	folder = GFile(id=response['id'], mimeType=response['mimeType'],
-		       webViewLink=response['webViewLink'],
-		       name=response['name'], parents=response['parents'],
-		       team_file=None)
-	return folder
-
-    else:
-	logging.error("Error: Could not find any contents of folder ID: {0}"
+    if folder is None or folder['mimeType'] != folder_mime_type:
+	log.error("Error: Could not find any contents of folder ID: {0}"
 		  .format(id))
 	exit(1)
 
+    log.info("Valid folder ID: {0} ({1})"
+	     .format(id, folder['name']))
+
+    # Get the folder's permissions
+    perms = doit(service.permissions().list(fileId=id,
+					    fields='permissions(*)',
+					    supportsTeamDrives=True))
+
+    gfile = GFile(id=folder['id'], mimeType=folder['mimeType'],
+		  webViewLink=folder['webViewLink'],
+		  name=folder['name'], parents=folder['parents'],
+		  team_file=None,
+		  permissions=perms['permissions'],
+		  perms_to_add=[],
+		  perms_to_delete=[])
+
+    return gfile
+
 #-------------------------------------------------------------------
 
-def main():
+def add_cli_args():
     tools.argparser.add_argument('--source-folder-id',
 				 required=True,
 				 help='Source folder ID')
@@ -696,11 +845,20 @@ def main():
     tools.argparser.add_argument('--debug',
 				 action='store_true',
 				 help='Be incredibly verbose in what the script is doing')
+    tools.argparser.add_argument('--logfile',
+				 required=False,
+				 help='Store verbose/debug logging to the specified file')
     tools.argparser.add_argument('--debug-team-drive-already-exists-ok',
 				 action='store_true',
 				 help='For debugging only: don\'t abort if the team drive already exists')
 
+    global args
     args = tools.argparser.parse_args()
+
+#-------------------------------------------------------------------
+
+def main():
+    add_cli_args()
 
     # Setup logging
     setup_logging(args)
@@ -713,6 +871,9 @@ def main():
     # Verify source folder ID.  Do this up front, before doing
     # expensive / slow things.
     source_folder = verify_folder_id(service, id=args.source_folder_id)
+
+    # JMS delete me
+    log.debug("Source folder is: {0}".format(source_folder))
 
     # If this is not a dry run, do some checks before we read the
     # source tree.
@@ -741,6 +902,13 @@ def main():
     # Drive and move/copy all the files to it.
     #------------------------------------------------------------------
 
+    # Traverse the source tree data and resolve permissions
+    # JMS delete me
+    log.debug("==== RESOLVE PERMISSIONS")
+    resolve_permissions(service, source_root, all_files)
+    # JMS delete me
+    exit(0)
+
     # Make a Team Drive of the same folder name
     if team_drive is None:
 	team_drive = create_team_drive(service, source_folder)
@@ -750,10 +918,10 @@ def main():
 
     # Create a folder tree skeleton in the new Team Drive (i.e., just
     # folders -- no files yet).
-    logging.debug("=== Creating folders in new Team Drive")
+    log.debug("Creating folders in new Team Drive")
     migrate_to_team_drive(service, source_root, team_drive, all_files)
 
-    logging.debug("=== END OF MAIN")
+    log.debug("END OF MAIN")
 
 if __name__ == '__main__':
     exit(main())
