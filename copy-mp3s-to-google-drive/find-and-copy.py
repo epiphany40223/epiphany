@@ -5,30 +5,34 @@
 This script developed and tested with Python 3.6.x.  It has not been
 tested with other versions (e.g., Python 2.7.x).
 
+- This script takes a single pass through the incoming FTP dir, the
+  outgoing Google Team Drive dir, and the outgoing FTP dir.  It is
+  intended to be launched periodically via some external mechanism
+  (e.g., every 5 minutes via cron or the Windows scheduler).
 - Watch a directory for new MP3 files named of the form
   Txxx-YYYYMMDD-HHMMSS.mp3.
-- If the file size of the file doesn't change for 60 seconds, assume
+- If the file size of the file hasn't changed for 60 seconds, assume
   that the file has finished uploading to this directory, and upload
-  it to a Google Team Drive folder.
-- Put the uploaded MP3 file in a YYYY/MM-MONTHNAME folder, just to
-  break it up.  Create those folders in the Google Team Drive if they
-  don't exist.
-- If the upload fails, it should just try again later.
-- If the upload succeeds, the MP3 file will be moved to the "Uploaded"
-  sub-folder.  Someday, we can likely remove the file altogether, but
-  until we run this script in real-world conditions for a while, we
-  don't know what the failure conditions will be.  So save the MP3s on
-  the local disk for now.
-
-Various names and constants are hard-coded into this script, which may
-well be sufficient.
-
-Things that still need to be done:
-
-- This script errors out in a few places.  Since this script is
-  intended to be run non-interactively, it should probably send an
-  alert of some kind (email?) to humans when that happens.  I.e., fill
-  in the notification part in diediedie().
+  it to both a Google Team Drive folder and (if specified) an FTP
+  server.
+- In Google, put the uploaded MP3 file in a YYYY/MM-MONTHNAME folder,
+  just to break it up.  Create those folders in the Google Team Drive
+  if they don't exist.
+- In FTP, put the file in a CLI-specified subdirectory.
+- Connection+authentication to Google/the FTP server is only done if
+  necessary (i.e., if there are files to upload to either one of
+  them).
+- Send email summaries of the results:
+  - Google email will contain links to the Team Drive, destination
+    folder, and each uploaded MP3.
+  - FTP email will not include links (because they require passwords).
+  - Both emails will contain success/failure indications.
+- If an upload fails, it is abandoned and will be re-tried at the next
+  invocation.
+- A lockfile is used to ensure that only one copy of this script runs
+  at a time.  If the script cannot obtain the lockfile, it simply
+  exits immediately (this is not an error, it just does nothing and
+  exits).
 
 -----
 
@@ -41,7 +45,7 @@ directory with the result of getting user consent for the Google
 Account being used to authenticate.
 
 Note that this script works on Windows, Linux, and OS X.  But first,
-you need to install the Google API python client:
+you need to install some Python classes:
 
     pip install --upgrade google-api-python-client
     pip install --upgrade recordclass
