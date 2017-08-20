@@ -172,6 +172,11 @@ foreach my $db (@dbs) {
         $str =~ s/TRUE/1/g;
         $str =~ s/FALSE/0/g;
 
+        # PDS Puts dates into YYYY-MM-DD, which sqlite will turn into
+        # a mathematical expression.  So quote it so that sqlite3 will
+        # treat it as a string.
+        $str =~ s/, (\d\d\d\d-\d\d-\d\d),/, "$1",/g;
+
         print "SQL: $str"
             if ($debug_arg);
 
