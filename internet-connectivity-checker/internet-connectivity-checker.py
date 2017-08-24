@@ -34,8 +34,8 @@ def setup_ping_cmd():
         ping_cmd.append("-n")
     else:
         ping_cmd.append("-c")
-        ping_cmd.append("1")
-        ping_cmd.append(hostname)
+    ping_cmd.append("1")
+    ping_cmd.append(hostname)
 
 #
 # Return True if we succeed in submitting the form.
