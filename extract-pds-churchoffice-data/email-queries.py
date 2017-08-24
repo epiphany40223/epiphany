@@ -7,10 +7,11 @@
 # basis.
 #
 
+import fileinput
+import datetime
 import sqlite3
 import pprint
 import time
-import datetime
 import csv
 import os
 import re
@@ -291,6 +292,34 @@ def write_families_with_email_but_no_member_emails():
 
 ##############################################################################
 
+def write_families_with_emails_same_as_members():
+    results = list()
+
+    # "families" is a dict
+    for family_id in families:
+        f = families[family_id]
+        if len(f.emails) == 0:
+            continue
+
+        # f.members is a list
+        for m in f.members:
+            if len(m.emails) == 0:
+                continue
+
+            found = False
+            for fe in f.emails:
+                for me in m.emails:
+                    if fe.address.lower() == me.address.lower():
+                        found = True
+                        break
+
+            if found:
+                results.append(m)
+
+    write_member_csv('families-emails-same-as-members.csv', results)
+
+##############################################################################
+
 def write_families_with_email_that_is_not_a_member_email():
     results = list()
 
@@ -405,6 +434,33 @@ def write_members_gt13yo_with_N_non_preferred_email():
         if len(m.emails) < 2:
             continue
 
+        have_duplicate = False
+        for (i, m1) in enumerate(m.emails):
+            for j in range(i+1, len(m.emails)):
+                if m1.address.lower() == m.emails[j].address.lower():
+                    have_duplicate = True
+                    break
+
+        if have_duplicate:
+            results.append(m)
+
+    write_member_csv('members-with-dup-emails.csv', results)
+
+##############################################################################
+
+def write_members_with_dup_emails():
+    results = list()
+
+    # "members" is a dict
+    for member_id in members:
+        m = members[member_id]
+        (have_birthdate, is_ge13) = member_is_ge13(m)
+        if not is_ge13:
+            continue
+
+        if len(m.emails) < 2:
+            continue
+
         have_preferred = False
         for me in m.emails:
             if me.preferred == True:
@@ -415,6 +471,57 @@ def write_members_gt13yo_with_N_non_preferred_email():
             results.append(m)
 
     write_member_csv('members-gt13yo-with-N-non-preferred-email.csv', results)
+
+##############################################################################
+
+# This is who we want to sent the update email to
+def write_members_gt13yo_not_in_mailman():
+
+
+
+    print("JMS FINISH ME")
+    return
+
+
+
+
+
+
+    # Read in parishioner email list
+    parishioner_list = list()
+    with fileinput.input(files=('parishioner.txt')) as f:
+        for line in f:
+            parishioner_list.append(line)
+
+    results = list()
+
+    # "members" is a dict
+    for member_id in members:
+        m = members[member_id]
+        (have_birthdate, is_ge13) = member_is_ge13(m)
+        if not is_ge13:
+            continue
+
+        if m.emails is None or len(m.emails) == 0:
+            continue
+
+        # Use the first preferred email address, if available
+        preferred_address = None
+        for me in sorted(m.emails):
+            if me.preferred == True:
+                preferred_address = me
+                break
+
+        if preferred_address is None:
+            preferred_address = sorted(m.emails)[0]
+
+    write_member_csv('members-gt13yo-not-in-parishioner-listserve.csv', results)
+
+##############################################################################
+
+# This will ultimately be the "real" list
+def write_members_gt13yo_in_email_ministry():
+    pass
 
 ##############################################################################
 
@@ -445,6 +552,10 @@ def main():
     # member email addresses
     write_families_with_email_that_is_not_a_member_email()
 
+    # 3.5 Families that have family email addresses that are
+    # duplicates of their Members
+    write_families_with_emails_same_as_members()
+
     # 4. Members >=13 years old that have no email addresses
     write_members_gt13yo_with_no_email()
 
@@ -455,5 +566,15 @@ def main():
     # 6. Members >=13 years old that have more than one email address,
     # and none are preferred
     write_members_gt13yo_with_N_non_preferred_email()
+
+    # 7. Members >=13 years old who are not in the parishioner mailman list
+    write_members_gt13yo_not_in_mailman()
+
+    # 8. Members who have duplicate email addresses
+    write_members_with_dup_emails()
+
+    # 9. Preferred Members >=13 years old in the parish-wide email
+    # ministry
+    write_members_gt13yo_in_email_ministry()
 
 main()
