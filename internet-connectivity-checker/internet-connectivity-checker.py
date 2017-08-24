@@ -52,8 +52,8 @@ def submit_google_form(outage_start, outage_end):
 
     start_str = outage_start.strftime(timestamp_format)
     start_ts  = outage_start.timestamp()
-    end_str   = outage_start.strftime(timestamp_format)
-    end_ts    = outage_start.timestamp()
+    end_str   = outage_end.strftime(timestamp_format)
+    end_ts    = outage_end.timestamp()
     values = {
         form_fields["start_str"]       : start_str,
         form_fields["start_timestamp"] : start_ts,
