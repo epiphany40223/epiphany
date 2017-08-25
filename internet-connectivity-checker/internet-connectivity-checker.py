@@ -28,11 +28,6 @@ form_fields = {
 # Return False otherwise.
 #
 def submit_google_form(outage_start, outage_end):
-    try:
-        conn = http.client.HTTPSConnection("docs.google.com", timeout=15)
-    except:
-        return False
-
     headers = { "Content-type" : "application/x-www-form-urlencoded",
                 "Accept" : "text/plain" }
 
@@ -49,6 +44,7 @@ def submit_google_form(outage_start, outage_end):
     body = urllib.parse.urlencode(values)
 
     try:
+        conn = http.client.HTTPSConnection("docs.google.com", timeout=15)
         conn.request(method="POST",
                      url=form_path,
                      body=body,
@@ -57,6 +53,8 @@ def submit_google_form(outage_start, outage_end):
         if response and response.status == 200:
             return True
     except:
+        # If we get an exception, just fall through so that all errors
+        # exit a common way.
         pass
 
     return False
@@ -69,16 +67,14 @@ def check_connectivity():
 
     try:
         conn = http.client.HTTPSConnection(o.hostname, timeout=15)
-    except:
-        return False
-
-    try:
         conn.request(method="GET",
                      url=o.path)
         response = conn.getresponse()
         if response and response.status == 200:
             return True
     except:
+        # If we get an exception, just fall through so that all errors
+        # exit a common way.
         pass
 
     return False
