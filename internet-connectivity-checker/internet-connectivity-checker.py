@@ -4,19 +4,16 @@
 #
 
 import subprocess
-import platform
 import datetime
 import time
 import http.client
 import urllib.parse
 
-hostname = "google.com"
 last_state = None
-ping_cmd = list()
+external_url = "https://status.github.com/api/status.json"
 timestamp_format = "%m/%d/%Y %H:%M:%S"
 
 # Hand-set values from the Google Form
-form_server = "docs.google.com"
 form_id = "1FAIpQLSeeflsGQMxGq_tlbvx69D5jNmB5Pa0ZvHGWwy-Vo4h3N0DQzA"
 form_path = "/forms/d/e/{0}/formResponse".format(form_id)
 form_fields = {
@@ -26,24 +23,13 @@ form_fields = {
     "end_timestamp" : "entry.342404331"
     }
 
-def setup_ping_cmd():
-    # The Windows "ping" command uses the "-n" CLI parameter; Linux
-    # and OS X use "-c".
-    ping_cmd.append("ping")
-    if "windows" in platform.system().lower():
-        ping_cmd.append("-n")
-    else:
-        ping_cmd.append("-c")
-    ping_cmd.append("1")
-    ping_cmd.append(hostname)
-
 #
 # Return True if we succeed in submitting the form.
 # Return False otherwise.
 #
 def submit_google_form(outage_start, outage_end):
     try:
-        conn = http.client.HTTPSConnection(form_server, timeout=15)
+        conn = http.client.HTTPSConnection("docs.google.com", timeout=15)
     except:
         return False
 
@@ -70,28 +56,42 @@ def submit_google_form(outage_start, outage_end):
         response = conn.getresponse()
         if response and response.status == 200:
             return True
+    except:
+        pass
 
-        return False
+    return False
+
+def check_connectivity():
+    print("*** Checking connectivity to {0} at {1}"
+          .format(external_url, datetime.datetime.now().strftime(timestamp_format)))
+
+    o = urllib.parse.urlparse(external_url)
+
+    try:
+        conn = http.client.HTTPSConnection(o.hostname, timeout=15)
     except:
         return False
 
-def do_ping():
-    print("*** Running ping to {0} at {1}"
-          .format(hostname, datetime.datetime.now().strftime(timestamp_format)))
-    ret = subprocess.run(ping_cmd, timeout=15)
-    return ret.returncode == 0
+    try:
+        conn.request(method="GET",
+                     url=o.path)
+        response = conn.getresponse()
+        if response and response.status == 200:
+            return True
+    except:
+        pass
+
+    return False
 
 def main():
-    setup_ping_cmd()
-
     # Do the ping once to establish a baseline
-    last_state = do_ping()
+    last_state = check_connectivity()
     outage_start = None
 
     # Steady state loop
     print("*** Continually checking for internet connectivity...")
     while True:
-        current_state = do_ping()
+        current_state = check_connectivity()
 
         if current_state != last_state:
 
