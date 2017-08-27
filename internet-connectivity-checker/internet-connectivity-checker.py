@@ -59,9 +59,11 @@ def submit_google_form(outage_start, outage_end):
 
     return False
 
-def check_connectivity():
-    print("*** Checking connectivity to {0} at {1}"
-          .format(external_url, datetime.datetime.now().strftime(timestamp_format)))
+def check_connectivity(state_msg):
+    print("*** [Now:{state}] Checking connectivity to {dest} at {time}"
+          .format(dest=external_url,
+                  state=state_msg,
+                  time=datetime.datetime.now().strftime(timestamp_format)))
 
     o = urllib.parse.urlparse(external_url)
 
@@ -71,23 +73,23 @@ def check_connectivity():
                      url=o.path)
         response = conn.getresponse()
         if response and response.status == 200:
-            return True
+            return 'Online', True
     except:
         # If we get an exception, just fall through so that all errors
         # exit a common way.
         pass
 
-    return False
+    return 'Offline', False
 
 def main():
     # Do the ping once to establish a baseline
-    last_state = check_connectivity()
+    msg, last_state = check_connectivity('Initial')
     outage_start = None
 
     # Steady state loop
     print("*** Continually checking for internet connectivity...")
     while True:
-        current_state = check_connectivity()
+        msg, current_state = check_connectivity(msg)
 
         if current_state != last_state:
 
@@ -112,11 +114,17 @@ def main():
 
             last_state = current_state
 
-        # Sleep until the next minute.  Calculate how much time it is
-        # until the next "0" seconds (because the above submission may
-        # have taken a few seconds).
-        d = datetime.datetime.now()
-        secs = d.second
-        time.sleep(60 - secs)
+        # If we're online, sleep until the next minute.  Calculate how
+        # much time it is until the next "0" seconds (because the
+        # above submission may have taken a few seconds).
+        if current_state:
+            d = datetime.datetime.now()
+            secs = d.second
+            time.sleep(60 - secs)
+
+        # If we're offline, sleep much less time (so that we can be
+        # more precise about when we get back online) -- just 1 second.
+        else:
+            time.sleep(1)
 
 main()
