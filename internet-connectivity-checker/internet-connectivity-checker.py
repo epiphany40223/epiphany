@@ -43,6 +43,7 @@ def submit_google_form(outage_start, outage_end):
         }
     body = urllib.parse.urlencode(values)
 
+    response = None
     try:
         conn = http.client.HTTPSConnection("docs.google.com", timeout=15)
         conn.request(method="POST",
@@ -57,6 +58,7 @@ def submit_google_form(outage_start, outage_end):
         # exit a common way.
         pass
 
+    print("Connectivity failed: {response}".format(response=response))
     return False
 
 def check_connectivity(state_msg):
