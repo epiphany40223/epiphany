@@ -32,6 +32,9 @@ CREATE TABLE MemKWType_DB (
 Description: "LIST:Tech"
 DescRec: integer ID
 
+Description: "Parish-wide Email"
+DescRec: integer ID
+
 ----------------------
 
 CREATE TABLE MemKW_DB (
@@ -139,6 +142,32 @@ FROM   Mem_DB
        INNER JOIN MemEmail_DB  ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
 WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec AND
        Mem_DB.CensusMember1 = 1
+
+----------------------
+
+Get name and all email addresses for everyone on a given list who is:
+- active
+- not deceased
+- over 13 years old
+
+SELECT Mem_DB.MemRecNum,
+       Mem_DB.Name,
+       Mem_DB.DateOfBirth, Mem_DB.MonthOfBirth, Mem_DB.YearOfBirth,
+       MemEmail_DB.EMailAddress,
+       MemEmail_DB.EmailOverMail
+FROM   Mem_DB
+       INNER JOIN MemKWType_DB ON MemKWType_DB.Description = "Parish-wide Email"
+       INNER JOIN MemKW_DB     ON MemKW_DB.MemRecNum    = Mem_DB.MemRecNum
+       INNER JOIN MemEmail_DB  ON MemEmail_DB.MemRecNum = Mem_DB.MemRecNum
+WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec AND
+       Mem_DB.CensusMember1 = 1
+       Mem_DB.deceased = 0 AND
+       (Mem_DB.PDSInactive1 = 0 OR Mem_DB.PDSInactive1 is null) AND
+
+This query ^^ will get *all* email addresses for all active,
+non-deceased members.  Need to post-process the results to filter out
+who are >= 13 (or presumed >= 13 if there is no birth date information
+in PDS) and selecting a preferred email address (if they have one).
 
 ----------------------
 
