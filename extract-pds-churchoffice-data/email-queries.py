@@ -211,13 +211,13 @@ def write_member_csv(filename, members):
         writer.writeheader()
         for m in members:
             count = count + 1
+            # If we don't do this wonky value for the Member Family ID,
+            # Excel will strip off the leading zeros.  :-(
             try:
                 parkey = "' {0}".format(families[m.family_id].parkey.strip())
             except:
                 parkey = 'None'
 
-            # If we don't do this wonky value for the Member Family ID,
-            # Excel will strip off the leading zeros.  :-(
             (have_birthdate, is_ge13) = member_is_ge13(m)
             age = None
             if have_birthdate:
