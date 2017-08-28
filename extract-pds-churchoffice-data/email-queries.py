@@ -37,11 +37,25 @@ Member = recordclass('Member',
                       'birth_month',
                       'birth_year',
                       'family_id',
-                      'emails'])
+                      'emails',
+                      'keywords',
+                      'active_ministries'])
 
 Email = recordclass('Email',
                     ['address',
                      'preferred'])
+
+Keyword = recordclass('Keyword',
+                      ['id',
+                       'keyword'])
+
+Ministry = recordclass('Ministry',
+                       ['id',
+                        'name'])
+
+Status = recordclass('Status',
+                       ['id',
+                        'description'])
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -52,9 +66,54 @@ families = dict()
 members = dict()
 # Member key: MemRecNum
 members_with_inactive_families = dict()
+# Keywords, key: ID
+keywords = dict()
+# Ministries, key: ID
+ministries = dict()
+# Statuses, key: ID
+statuses = dict()
 
 today = datetime.date.today()
 thirteen_years = datetime.timedelta(days = (365 * 13))
+
+##############################################################################
+
+def find_statuses(cur):
+    query = ('SELECT * '
+             'FROM StatusType_DB '
+             .format(database))
+
+    for status_row in cur.execute(query).fetchall():
+        status_id=status_row[0]
+        status = Status(id=status_id,
+                        description=status_row[1])
+        statuses[status_id] = status
+
+#-----------------------------------------------------------------------------
+
+def find_ministries(cur):
+    query = ('SELECT * '
+             'FROM MinType_DB '
+             .format(database))
+
+    for ministry_row in cur.execute(query).fetchall():
+        ministry_id = ministry_row[0]
+        ministry = Ministry(id=ministry_id,
+                            name=ministry_row[1])
+        ministries[ministry_id] = ministry
+
+#-----------------------------------------------------------------------------
+
+def find_keywords(cur):
+    query = ('SELECT * '
+             'FROM MemKWType_DB '
+             .format(database))
+
+    for kw_row in cur.execute(query).fetchall():
+        kw_id = kw_row[0]
+        kw = Keyword(id=kw_id,
+                     keyword=kw_row[1])
+        keywords[kw_id] = kw
 
 ##############################################################################
 
@@ -131,6 +190,40 @@ def find_member_addresses(cur, mem_id):
 
 #-----------------------------------------------------------------------------
 
+def find_member_keywords(cur, mem_id):
+    mem_keywords = []
+
+    query = ('SELECT DescRec '
+             'FROM MemKW_DB '
+             'WHERE MemRecNum=?'
+             .format(database))
+
+    for mem_kw_row in cur.execute(query, (int(mem_id),)).fetchall():
+        kw_id = mem_kw_row[0]
+
+        mem_keywords.append(keywords[kw_id].keyword)
+
+    return mem_keywords
+
+#-----------------------------------------------------------------------------
+
+def find_member_active_ministries(cur, mem_id):
+    mem_ministries = []
+
+    query = ('SELECT MinDescRec '
+             'FROM MemMin_DB '
+             'INNER JOIN StatusType_DB on MemMin_DB.StatusDescRec = StatusType_DB.StatusDescRec '
+             'WHERE MemMin_DB.MemRecNum=? and StatusType_DB.Active=1'
+             .format(database))
+
+    for mem_ministry_row in cur.execute(query, (int(mem_id),)).fetchall():
+        ministry_id = mem_ministry_row[0]
+        mem_ministries.append(ministries[ministry_id].name)
+
+    return mem_ministries
+
+#-----------------------------------------------------------------------------
+
 def find_active_members(cur):
     query = ('SELECT MemRecNum,Name,FamRecNum,DateOfBirth,MonthOfBirth,YearOfBirth '
              'FROM Mem_DB '
@@ -154,12 +247,20 @@ def find_active_members(cur):
         # Find all member email addresses
         mem_addrs = find_member_addresses(cur, mem_id)
 
+        # Find all member keywords
+        mem_keywords = find_member_keywords(cur, mem_id)
+
+        # Find all member ministries
+        mem_ministries = find_member_active_ministries(cur, mem_id)
+
         member = Member(name=mem_name,
                         id=mem_id,
                         birth_day=mem_birth_day,
                         birth_month=mem_birth_month,
                         birth_year=mem_birth_year,
                         family_id=mem_fam_id,
+                        keywords=mem_keywords,
+                        active_ministries=mem_ministries,
                         emails=mem_addrs)
 
         # Fun situation: A Member may not be inactive, but their
@@ -382,7 +483,7 @@ def member_is_ge13(member):
     else:
         return (True, False)
 
-#-----------------------------------------------------------------------------
+##############################################################################
 
 def write_members_gt13yo_with_no_email():
     results = list()
@@ -525,9 +626,101 @@ def write_members_gt13yo_in_email_ministry():
 
 ##############################################################################
 
+def write_member_gt13yo_emails_for_form():
+    results = list()
+
+    FormMemData = recordclass('FormMemData',
+                              ['mem_rec_num',
+                               'name',
+                               'parkey',
+                               'preferred_email',
+                               'other_emails'])
+
+    # "members" is a dict
+    for member_id in members:
+        m = members[member_id]
+        (have_birthdate, is_ge13) = member_is_ge13(m)
+        if not is_ge13:
+            continue
+
+        if len(m.emails) < 1:
+            continue
+
+        # JMS HARD-CODED HACK JUST TO TEST WITH TECH COMMITTEE
+        if 'S-Technology Committee' not in m.active_ministries:
+            continue
+
+        # At this point, we have a member that we want to, and can,
+        # email.
+        #print("FOUND TECH: {}".format(m))
+
+        # We need to capture all email addresses, and know which one
+        # is "preferred".  If there's no "preferred", then pick the
+        # lexigraphicaly first one.
+        preferred_email = None
+        other_emails = []
+        for me in m.emails:
+            # Don't take duplicates
+            if me.address.lower() in other_emails:
+                continue
+
+            if preferred_email is None and me.preferred == True:
+                preferred_email = me.address
+            else:
+                other_emails.append(me.address.lower())
+
+        if preferred_email is None:
+            other_emails.sort(reverse=True)
+            preferred_email = other_emails.pop()
+
+        memdata = FormMemData(mem_rec_num=member_id,
+                              name=m.name,
+                              parkey=families[m.family_id].parkey,
+                              preferred_email=preferred_email,
+                              other_emails=other_emails)
+        results.append(memdata)
+
+    count = 0
+    filename = 'members-gt13-email-update-form.csv'
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ['ParKey', 'Member Name', 'PreferredEmail',
+                      'OtherEmail1', 'OtherEmail2', 'OtherEmail3',
+                      'OtherEmail4', 'OtherEmail5' ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                quoting=csv.QUOTE_ALL)
+        writer.writeheader()
+
+        for r in results:
+            other_emails = []
+            for i in range(5):
+                try:
+                    other_emails.append(r.other_emails[i])
+                except:
+                    other_emails.append('')
+
+            writer.writerow({'ParKey': r.parkey.strip(),
+                             'Member Name': r.name,
+                             'PreferredEmail': r.preferred_email,
+                             'OtherEmail1': other_emails[0],
+                             'OtherEmail2': other_emails[1],
+                             'OtherEmail3': other_emails[2],
+                             'OtherEmail4': other_emails[3],
+                             'OtherEmail5': other_emails[4]})
+
+            count = count + 1
+
+    print("    Number of members written: {0}".format(count))
+
+##############################################################################
+
 def main():
+    print("=== Crunching the data...")
     conn = sqlite3.connect('pdschurchoffice-current.sqlite3')
     cur = conn.cursor()
+
+    find_statuses(cur)
+    find_ministries(cur)
+    find_keywords(cur)
 
     # Build up dictionary of families and members
     find_active_families(cur)
@@ -535,6 +728,7 @@ def main():
 
     # Done with the database
     conn.close()
+    print("=== Data crunched!");
 
     # Now we have dictionaries of Families and members.
     # Analyze these data structures and make some CSVs.
@@ -576,5 +770,8 @@ def main():
     # 9. Preferred Members >=13 years old in the parish-wide email
     # ministry
     write_members_gt13yo_in_email_ministry()
+
+    # 10. Write out data for the email update form
+    write_member_gt13yo_emails_for_form()
 
 main()
