@@ -6,6 +6,7 @@ import base64
 import csv
 import re
 
+from recordclass import recordclass
 from email.message import EmailMessage
 
 single_email_base_url = 'https://form.jotform.us/72402423638149'
@@ -20,19 +21,39 @@ name_squash1 = re.compile('\(.+\)')
 name_squash2 = re.compile('\{.+\}')
 
 member_email_filename = 'members-ge13-email-update-form.csv'
-# Not currently sending to the family addresses
-family_email_filename = 'members-ge13-email-family-update-form.csv'
+
+# Read in the list of those who we need to send the reminder.
+NotUpdated = recordclass('NotUpdated',
+                         ['ParKey',
+                          'original_email'])
+
+not_updated_filename = 'those-who-have-not-updated.csv'
+not_updated_list = list()
+with open(not_updated_filename, 'r', newline='') as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        nu = NotUpdated(ParKey         = int(row['ParKey']),
+                        original_email = row['OriginalEmail'])
+        not_updated_list.append(nu)
 
 with open(member_email_filename, 'r', newline='') as csvfile:
-    fieldnames = ['ParKey', 'Member Name', 'PreferredEmail',
-                  'OtherEmail1', 'OtherEmail2', 'OtherEmail3',
-                  'OtherEmail4', 'OtherEmail5' ]
-    reader = csv.DictReader(csvfile, fieldnames=fieldnames)
-    first = True
+    reader = csv.DictReader(csvfile)
     for row in reader:
-        # Skip first row -- it's the headers
-        if first:
-            first = False
+        # See if this person has not updated
+        found = False
+        pk = int(row['ParKey'])
+        print("Checking: {pk} {name}"
+              .format(pk=pk, name=row['PreferredEmail']))
+        for nu in not_updated_list:
+            if nu.ParKey == pk and nu.original_email == row['PreferredEmail']:
+                print("FOUND SOMEONE WHO NEEDS A REMINDER: {pk} {mail}"
+                      .format(pk=pk, mail=nu.original_email))
+                found = True
+
+        # If we didn't find this person in the "not updated list",
+        # that means this person submitted.  So we don't need to bug
+        # them again.
+        if not found:
             continue
 
         # Fix a few things with names
@@ -107,19 +128,13 @@ with open(member_email_filename, 'r', newline='') as csvfile:
 <img src="http://jeff.squyres.com/ecc/email-graphic.jpg" alt="" align="left" scale="0" style="margin: 0px 20px; height: 75px">
 Dear {name}:</p>
 
-<p>In an effort to improve communications with the parish, the office
-has been reviewing the parishioner email addresses we have on file.
-It appears that some of our parishioners may not have been receiving
-our parish-wide emails and some of the email addresses may not be
-up-to-date.  <strong>We need your help to fix that!</strong></p>
-
-<p>Specifically, we want to make sure that we have a correct email
-addresses for you.  If this communication has reached you at the wrong
--- or a less-preferred -- email address, please click on the link below
-and update it.  Once you click on the link, you can check what we have
-on file, make changes if necessary, and have the option to
-"unsubscribe".  (Though we hope you will choose to continue to receive
-our emails.)</p>
+<p>Just a gentle reminder: Epiphany wants to make sure that we have a
+correct email addresses for you.  If this communication has reached
+you at the wrong -- or a less-preferred -- email address <font
+color="red"><em>and you have not already done so</em></font>, please
+click on the link below and update it.  Once you click on the link,
+you can check what we have on file, make changes if necessary, and
+have the option to unsubscribe.</p>
 
 <p>If you have any changes to make, <em>please click the link below
 and update your data before October 16, 2017.</em>.</p>

@@ -15,6 +15,9 @@ my $database_name = sprintf("pdschurchoffice-%04d-%02d-%02d-%02d%02d%02d.sqlite3
                             $year + 1900, $mon + 1, $mday,
                             $hour, $min, $sec);
 
+# JMS Override:
+$database_name = "pdschurch.sqlite3";
+
 my $help_arg = 0;
 my $debug_arg = 0;
 
@@ -196,10 +199,14 @@ foreach my $db (@dbs) {
     my $stop_time = Time::HiRes::time();
     my $elapsed = $stop_time - $start_time;
     printf("    Elapsed time for %s table: %0.02f\n", $db, $elapsed);
-    #unlink($sql_file);
+    unlink($sql_file);
 }
 
 close(SQLITE);
+
+my $file = "pdschurchoffice-current.sqlite3";
+unlink($file);
+system("ln -s $database_name $file");
 
 print "**** All done!\n";
 
