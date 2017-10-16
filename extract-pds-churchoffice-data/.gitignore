@@ -1,0 +1,6 @@
+*.zip
+*.sqlite3
+*.csv
+*.xlsx
+
+pdschurch-data-*
