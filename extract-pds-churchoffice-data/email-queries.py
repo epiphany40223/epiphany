@@ -5,6 +5,12 @@
 # results of the queries.  These queries are likely only needed
 # one-time -- it is unlikely that they will be run on an ongoing
 # basis.
+
+#
+# TO DO BEFORE SENDING EMAIL
+# - Add "I am no longer a parishioner" option to the form
+# - Signup for a plan on Jotfotm
+# - Confirm what we're doing for Members with no Email addresses
 #
 
 import fileinput
@@ -16,6 +22,9 @@ import csv
 import os
 import re
 from recordclass import recordclass
+
+# Jeff's module (written in C)
+import pds
 
 # Which database number to use?
 # At ECC, the active database is 1.
@@ -80,8 +89,7 @@ thirteen_years = datetime.timedelta(days = (365 * 13))
 
 def find_statuses(cur):
     query = ('SELECT * '
-             'FROM StatusType_DB '
-             .format(database))
+             'FROM StatusType_DB ')
 
     for status_row in cur.execute(query).fetchall():
         status_id=status_row[0]
@@ -93,8 +101,7 @@ def find_statuses(cur):
 
 def find_ministries(cur):
     query = ('SELECT * '
-             'FROM MinType_DB '
-             .format(database))
+             'FROM MinType_DB ')
 
     for ministry_row in cur.execute(query).fetchall():
         ministry_id = ministry_row[0]
@@ -106,8 +113,7 @@ def find_ministries(cur):
 
 def find_keywords(cur):
     query = ('SELECT * '
-             'FROM MemKWType_DB '
-             .format(database))
+             'FROM MemKWType_DB ')
 
     for kw_row in cur.execute(query).fetchall():
         kw_id = kw_row[0]
@@ -124,15 +130,15 @@ def find_family_addresses(cur, fam_id):
              'FROM MemEmail_DB '
              'INNER JOIN Fam_DB ON MemEmail_DB.MemRecNum=Fam_DB.FamRecNum '
              'WHERE MemEmail_DB.MemRecNum=? AND '
-             '(Fam_DB.PDSInactive{0}=0 OR Fam_DB.PDSInactive{0} is NULL) AND '
-             'Fam_DB.CensusFamily{0}=1 AND '
+             '(Fam_DB.PDSInactive{db_num}=0 OR Fam_DB.PDSInactive{db_num} is NULL) AND '
+             'Fam_DB.CensusFamily{db_num}=1 AND '
              'MemEmail_DB.FamEmail=1'
-             .format(database))
+             .format(db_num=database))
 
     for email_row in cur.execute(query, (int(fam_id),)).fetchall():
         email_address = email_row[0]
         email_preferred = email_row[1]
-        email = Email(address=email_address,
+        email = Email(address=email_address.lower(),
                       preferred=email_preferred)
         addrs.append(email)
 
@@ -144,11 +150,13 @@ def find_active_families(cur):
     # Find all active families in database 1
     query = ('SELECT FamRecNum,Name,ParKey '
              'FROM Fam_DB '
-             'WHERE (Fam_DB.PDSInactive{0}=0 OR '
-             'FAM_DB.PDSInactive{0} is null) AND '
-             'Fam_DB.CensusFamily{0}=1 '
-             'ORDER BY FamRecNum'.format(database))
+             'WHERE (Fam_DB.PDSInactive{db_num}=0 OR '
+             'FAM_DB.PDSInactive{db_num} is null) AND '
+             'Fam_DB.CensusFamily{db_num}=1 '
+             'ORDER BY FamRecNum'
+             .format(db_num=database))
 
+    num_active_families = 0
     for family_row in cur.execute(query).fetchall():
         fam_id = family_row[0]
         fam_name = family_row[1]
@@ -164,6 +172,9 @@ def find_active_families(cur):
                         members=[])
 
         families[fam_id] = family
+        num_active_families = num_active_families + 1
+
+    print("    Number of active families: {}".format(num_active_families))
 
 ##############################################################################
 
@@ -174,15 +185,15 @@ def find_member_addresses(cur, mem_id):
              'FROM MemEmail_DB '
              'INNER JOIN Mem_DB ON MemEmail_DB.MemRecNum=Mem_DB.MemRecNum '
              'WHERE MemEmail_DB.MemRecNum=? AND '
-             '(Mem_DB.PDSInactive{0}=0 OR Mem_DB.PDSInactive{0} is NULL) AND '
-             'Mem_DB.CensusMember{0}=1 AND '
+             '(Mem_DB.PDSInactive{db_num}=0 OR Mem_DB.PDSInactive{db_num} is NULL) AND '
+             'Mem_DB.CensusMember{db_num}=1 AND '
              '(MemEmail_DB.FamEmail is NULL or MemEmail_DB.FamEmail=0)'
-             .format(database))
+             .format(db_num=database))
 
     for email_row in cur.execute(query, (int(mem_id),)).fetchall():
         email_address = email_row[0]
         email_preferred = email_row[1]
-        email = Email(address=email_address,
+        email = Email(address=email_address.lower(),
                       preferred=email_preferred)
         addrs.append(email)
 
@@ -195,8 +206,7 @@ def find_member_keywords(cur, mem_id):
 
     query = ('SELECT DescRec '
              'FROM MemKW_DB '
-             'WHERE MemRecNum=?'
-             .format(database))
+             'WHERE MemRecNum=?')
 
     for mem_kw_row in cur.execute(query, (int(mem_id),)).fetchall():
         kw_id = mem_kw_row[0]
@@ -213,8 +223,7 @@ def find_member_active_ministries(cur, mem_id):
     query = ('SELECT MinDescRec '
              'FROM MemMin_DB '
              'INNER JOIN StatusType_DB on MemMin_DB.StatusDescRec = StatusType_DB.StatusDescRec '
-             'WHERE MemMin_DB.MemRecNum=? and StatusType_DB.Active=1'
-             .format(database))
+             'WHERE MemMin_DB.MemRecNum=? and StatusType_DB.Active=1')
 
     for mem_ministry_row in cur.execute(query, (int(mem_id),)).fetchall():
         ministry_id = mem_ministry_row[0]
@@ -228,10 +237,12 @@ def find_active_members(cur):
     query = ('SELECT MemRecNum,Name,FamRecNum,DateOfBirth,MonthOfBirth,YearOfBirth '
              'FROM Mem_DB '
              'WHERE Mem_DB.deceased=0 AND '
-             '(Mem_DB.PDSInactive{0}=0 OR Mem_DB.PDSInactive{0} is null) AND '
-             'Mem_DB.CensusMember{0}=1'
-             .format(database))
+             '(Mem_DB.PDSInactive{db_num}=0 OR Mem_DB.PDSInactive{db_num} is null) AND '
+             'Mem_DB.CensusMember{db_num}=1'
+             .format(db_num=database))
 
+    num_active_members = 0
+    num_active_ge13_members = 0
     p = re.compile("(\d\d\d\d)-(\d\d)-(\d\d)")
     for member_row in cur.execute(query).fetchall():
         mem_id = member_row[0]
@@ -239,10 +250,15 @@ def find_active_members(cur):
         mem_fam_id = member_row[2]
         mem_birth_date = member_row[3]
 
-        m = p.match(mem_birth_date)
-        mem_birth_year = m.group(1)
-        mem_birth_month = m.group(2)
-        mem_birth_day = m.group(3)
+        try:
+            m = p.match(mem_birth_date)
+            mem_birth_year = m.group(1)
+            mem_birth_month = m.group(2)
+            mem_birth_day = m.group(3)
+        except:
+            mem_birth_year = None
+            mem_birth_month = None
+            mem_birth_day = None
 
         # Find all member email addresses
         mem_addrs = find_member_addresses(cur, mem_id)
@@ -269,8 +285,17 @@ def find_active_members(cur):
             # This will succeed if there's an active family
             families[mem_fam_id].members.append(member)
             members[mem_id] = member
+
+            num_active_members = num_active_members + 1
+            (have_birthdate, is_ge13) = member_is_ge13(member)
+            if is_ge13:
+                num_active_ge13_members = num_active_ge13_members + 1
+
         except:
             members_with_inactive_families[mem_id] = member
+
+    print("    Number of active members: {}".format(num_active_members))
+    print("    Number of active members >=13: {}".format(num_active_ge13_members))
 
 ##############################################################################
 
@@ -485,8 +510,9 @@ def member_is_ge13(member):
 
 ##############################################################################
 
-def write_members_gt13yo_with_no_email():
-    results = list()
+def write_members_ge13yo_with_no_email():
+    no_email_results = list()
+    email_results = list()
 
     # "members" is a dict
     for member_id in members:
@@ -496,13 +522,16 @@ def write_members_gt13yo_with_no_email():
             continue
 
         if len(m.emails) == 0:
-            results.append(m)
+            no_email_results.append(m)
+        else:
+            email_results.append(m)
 
-    write_member_csv('members-gt13yo-with-no-email.csv', results)
+    write_member_csv('members-ge13yo-with-no-email.csv', no_email_results)
+    write_member_csv('members-ge13yo-with-some-email.csv', email_results)
 
 ##############################################################################
 
-def write_members_gt13yo_with_1_non_preferred_email():
+def write_members_ge13yo_with_1_non_preferred_email():
     results = list()
 
     # "members" is a dict
@@ -518,11 +547,11 @@ def write_members_gt13yo_with_1_non_preferred_email():
         if not m.emails[0].preferred:
             results.append(m)
 
-    write_member_csv('members-gt13yo-with-1-non-preferred-email.csv', results)
+    write_member_csv('members-ge13yo-with-1-non-preferred-email.csv', results)
 
 ##############################################################################
 
-def write_members_gt13yo_with_N_non_preferred_email():
+def write_members_ge13yo_with_N_non_preferred_email():
     results = list()
 
     # "members" is a dict
@@ -571,12 +600,12 @@ def write_members_with_dup_emails():
         if not have_preferred:
             results.append(m)
 
-    write_member_csv('members-gt13yo-with-N-non-preferred-email.csv', results)
+    write_member_csv('members-ge13yo-with-N-non-preferred-email.csv', results)
 
 ##############################################################################
 
 # This is who we want to sent the update email to
-def write_members_gt13yo_not_in_mailman():
+def write_members_ge13yo_not_in_mailman():
 
 
 
@@ -616,17 +645,17 @@ def write_members_gt13yo_not_in_mailman():
         if preferred_address is None:
             preferred_address = sorted(m.emails)[0]
 
-    write_member_csv('members-gt13yo-not-in-parishioner-listserve.csv', results)
+    write_member_csv('members-ge13yo-not-in-parishioner-listserve.csv', results)
 
 ##############################################################################
 
 # This will ultimately be the "real" list
-def write_members_gt13yo_in_email_ministry():
+def write_members_ge13yo_in_email_ministry():
     pass
 
 ##############################################################################
 
-def write_member_gt13yo_emails_for_form():
+def write_member_ge13yo_emails_for_form():
     results = list()
 
     FormMemData = recordclass('FormMemData',
@@ -647,12 +676,12 @@ def write_member_gt13yo_emails_for_form():
             continue
 
         # JMS HARD-CODED HACK JUST TO TEST WITH TECH COMMITTEE
-        if 'S-Technology Committee' not in m.active_ministries:
-            continue
+        #if 'S-Technology Committee' not in m.active_ministries:
+        #    continue
+        #print("FOUND TECH: {}".format(m))
 
         # At this point, we have a member that we want to, and can,
         # email.
-        #print("FOUND TECH: {}".format(m))
 
         # We need to capture all email addresses, and know which one
         # is "preferred".  If there's no "preferred", then pick the
@@ -681,7 +710,9 @@ def write_member_gt13yo_emails_for_form():
         results.append(memdata)
 
     count = 0
-    filename = 'members-gt13-email-update-form.csv'
+    filename = 'members-ge13-email-update-form.csv'
+    print("+++ Custom writing to file {}"
+          .format(filename))
     with open(filename, 'w', newline='') as csvfile:
         fieldnames = ['ParKey', 'Member Name', 'PreferredEmail',
                       'OtherEmail1', 'OtherEmail2', 'OtherEmail3',
@@ -713,9 +744,178 @@ def write_member_gt13yo_emails_for_form():
 
 ##############################################################################
 
+def write_member_ge13yo_family_emails_for_form():
+    results = list()
+
+    FormMemData = recordclass('FormMemData',
+                              ['mem_rec_num',
+                               'name',
+                               'parkey',
+                               'preferred_email',
+                               'other_emails'])
+
+    # "members" is a dict
+    for member_id in members:
+        m = members[member_id]
+        (have_birthdate, is_ge13) = member_is_ge13(m)
+        if not is_ge13:
+            continue
+
+        # JMS HARD-CODED HACK JUST TO TEST WITH TECH COMMITTEE
+        if 'S-Technology Committee' not in m.active_ministries:
+            continue
+
+        # We only want Members with 0 email addresses.
+        if len(m.emails) > 0:
+            continue
+
+        # Find the corresponding Family.
+        family_id = m.family_id
+        f = families[family_id]
+
+        # If there's no Family email, there's nothing we can do.
+        if len(f.emails) == 0:
+            continue
+
+        # Now we have a Member with no email addresses, but with a
+        # corresponding Family that has >=1 email addresses.
+
+        # We need to capture all email addresses, and know which one
+        # is "preferred".  If there's no "preferred", then pick the
+        # lexigraphicaly first one.
+        preferred_email = None
+        other_emails = []
+        for fe in f.emails:
+            # Don't take duplicates
+            if fe.address.lower() in other_emails:
+                continue
+
+            if preferred_email is None and fe.preferred == True:
+                preferred_email = fe.address
+            else:
+                other_emails.append(fe.address.lower())
+
+        if preferred_email is None:
+            other_emails.sort(reverse=True)
+            preferred_email = other_emails.pop()
+
+        memdata = FormMemData(mem_rec_num=member_id,
+                              name=m.name,
+                              parkey=families[m.family_id].parkey,
+                              preferred_email=preferred_email,
+                              other_emails=other_emails)
+        results.append(memdata)
+
+    count = 0
+    filename = 'members-ge13-email-family-update-form.csv'
+    print("+++ Custom writing to file {}"
+          .format(filename))
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ['ParKey', 'Member Number', 'Member Name', 'PreferredEmail',
+                      'OtherEmail1', 'OtherEmail2', 'OtherEmail3',
+                      'OtherEmail4', 'OtherEmail5' ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                quoting=csv.QUOTE_ALL)
+        writer.writeheader()
+
+        for r in results:
+            other_emails = []
+            for i in range(5):
+                try:
+                    other_emails.append(r.other_emails[i])
+                except:
+                    other_emails.append('')
+
+            writer.writerow({'ParKey': r.parkey.strip(),
+                             'Member Name': r.name,
+                             'Member Number': r.mem_rec_num,
+                             'PreferredEmail': r.preferred_email,
+                             'OtherEmail1': other_emails[0],
+                             'OtherEmail2': other_emails[1],
+                             'OtherEmail3': other_emails[2],
+                             'OtherEmail4': other_emails[3],
+                             'OtherEmail5': other_emails[4]})
+
+            count = count + 1
+
+    print("    Number of members written: {0}".format(count))
+
+    # Update MemEMail.db database file
+    new_db_file = 'data-current/MemEmail-updated.DB'
+    if os.path.exists(new_db_file):
+        os.unlink(new_db_file)
+    os.system('cp data-current/MemEMail.DB {dest}'.format(dest=new_db_file))
+    mem_count = 0
+    email_count = 0
+    f = pds.open(new_db_file)
+    for r in results:
+        f.add_member_email(r.mem_rec_num, r.preferred_email, True)
+        email_count = email_count + 1
+        for i in range(5):
+            try:
+                f.add_member_email(r.mem_rec_num, r.other_emails[i], False)
+                email_count = email_count + 1
+            except:
+                pass
+
+        mem_count = mem_count + 1
+
+    f.close()
+
+    print("    Number of members updated with a preferred address: {}"
+          .format(mem_count))
+    print("    Number of email addresses added to Members overall: {}"
+          .format(email_count))
+
+def write_unknown_parishonier_listserv_addresses():
+    filename = 'parishioner-current.txt'
+    if not os.path.exists(filename):
+        print("Cannot find file \"{file}\"; skipping".format(file=filename))
+        return
+
+    # Read current parishioner listserve members
+    listserv = list()
+    with open(filename, 'r', newline='') as textfile:
+        tmp = textfile.readlines()
+
+        # Make sure all the addresses are lower case.  Crude, but effective.
+        for addr in tmp:
+            listserv.append(addr.rstrip().lower())
+
+    # Check every address in the listserve.  Can we find a Member
+    # associated with that address?
+    not_found = list()
+    for addr in listserv:
+        found = False
+
+        # "members" is a dict
+        for member_id in members:
+            m = members[member_id]
+            (have_birthdate, is_ge13) = member_is_ge13(m)
+            if not is_ge13:
+                continue
+
+            for email in m.emails:
+                if email.address == addr:
+                    found = True
+                    break
+
+            if found:
+                break
+
+        if not found:
+            not_found.append(addr)
+            print("NOT FOUND: {addr}".format(addr=addr))
+
+    with open('unknown-listserve-addresses.txt', 'w', newline='') as textfile:
+        for addr in not_found:
+            textfile.write(addr + '\n')
+
+##############################################################################
+
 def main():
     print("=== Crunching the data...")
-    conn = sqlite3.connect('pdschurchoffice-current.sqlite3')
+    conn = sqlite3.connect('pdschurch.sqlite3')
     cur = conn.cursor()
 
     find_statuses(cur)
@@ -751,27 +951,34 @@ def main():
     write_families_with_emails_same_as_members()
 
     # 4. Members >=13 years old that have no email addresses
-    write_members_gt13yo_with_no_email()
+    write_members_ge13yo_with_no_email()
 
     # 5. Members >=13 years old that have exactly one email address,
     # and it's not preferred
-    write_members_gt13yo_with_1_non_preferred_email()
+    write_members_ge13yo_with_1_non_preferred_email()
 
     # 6. Members >=13 years old that have more than one email address,
     # and none are preferred
-    write_members_gt13yo_with_N_non_preferred_email()
+    write_members_ge13yo_with_N_non_preferred_email()
 
     # 7. Members >=13 years old who are not in the parishioner mailman list
-    write_members_gt13yo_not_in_mailman()
+    write_members_ge13yo_not_in_mailman()
 
     # 8. Members who have duplicate email addresses
     write_members_with_dup_emails()
 
     # 9. Preferred Members >=13 years old in the parish-wide email
     # ministry
-    write_members_gt13yo_in_email_ministry()
+    write_members_ge13yo_in_email_ministry()
 
     # 10. Write out data for the email update form
-    write_member_gt13yo_emails_for_form()
+    write_member_ge13yo_emails_for_form()
+
+    # 11. Write out data for the email update form
+    write_member_ge13yo_family_emails_for_form()
+
+    # 12. Read current parishioner list, find any email address that
+    # is not associated with an active Member.
+    write_unknown_parishonier_listserv_addresses()
 
 main()

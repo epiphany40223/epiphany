@@ -5,4 +5,4 @@ set -x
 time \
 ./import-pdschurchoffice-to-sqlite3.pl \
     --pxview=/Users/jsquyres/bogus/bin/pxview \
-    --pdsdata-dir=/Users/jsquyres/git/epiphany/extract-pds-churchoffice-data/data |& tee import.out
+    --pdsdata-dir=data-current |& tee import.out
