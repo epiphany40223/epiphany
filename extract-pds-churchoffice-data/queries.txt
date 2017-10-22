@@ -145,7 +145,7 @@ WHERE  MemKW_DB.DescRec = MemKWType_DB.DescRec AND
 
 ----------------------
 
-Get name and all email addresses for everyone on a given list who is:
+Get name and all email addresses for everyone on the Parish-wide list who is:
 - active
 - not deceased
 - over 13 years old
@@ -257,7 +257,10 @@ StatusType_DB:
 
 ----------------------
 
-Find all members of a ministry name:
+Find all members of a ministry who is:
+- active in the ministry
+- active in the parish
+- not deceased
 
 SELECT Mem_DB.Name,
        MemEmail_DB.EMailAddress,
@@ -268,9 +271,10 @@ FROM   MemMin_DB
        INNER JOIN MemEMail_DB ON MemEMail_DB.MemRecNum = MemMin_DB.MemRecNum
        INNER JOIN StatusType_DB ON StatusType_DB.StatusDescRec = MemMin_DB.StatusDescRec
 WHERE  MinType_DB.Description LIKE '%Technology%' AND
-       StatusType_DB.Active = 1 AND
        StatusType_DB.Description NOT LIKE '%occasional%' AND
-       Mem_DB.CensusMember1 = 1
+       StatusType_DB.Active = 1 AND
+       Mem_DB.CensusMember1 = 1 AND
+       Mem_DB.deceased = 0
 
 ----------------------
 

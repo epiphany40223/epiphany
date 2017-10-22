@@ -882,6 +882,8 @@ def write_unknown_parishonier_listserv_addresses():
         for addr in tmp:
             listserv.append(addr.rstrip().lower())
 
+    print("Searching for unknown listserve members...")
+
     # Check every address in the listserve.  Can we find a Member
     # associated with that address?
     not_found = list()
@@ -905,11 +907,71 @@ def write_unknown_parishonier_listserv_addresses():
 
         if not found:
             not_found.append(addr)
-            print("NOT FOUND: {addr}".format(addr=addr))
+            #print("NOT FOUND: {addr}".format(addr=addr))
 
     with open('unknown-listserve-addresses.txt', 'w', newline='') as textfile:
         for addr in not_found:
             textfile.write(addr + '\n')
+
+##############################################################################
+
+def write_good_list():
+    results = list()
+
+    # "members" is a dict
+    for member_id in members:
+        m = members[member_id]
+        (have_birthdate, is_ge13) = member_is_ge13(m)
+        if not is_ge13:
+            continue
+
+        if len(m.emails) < 1:
+            continue
+
+        # Make sure they have the "Parish-wide Email" keyword
+        if 'Parish-wide Email' not in m.keywords:
+            continue
+
+        # At this point, we have a member that we want to, and can,
+        # email.
+
+        # We need to capture all email addresses, and know which one
+        # is "preferred".  If there's no "preferred", then pick the
+        # lexigraphicaly first one.
+        preferred_email = None
+        other_emails = []
+        for me in m.emails:
+            # Don't take duplicates
+            if me.address.lower() in other_emails:
+                continue
+
+            if preferred_email is None and me.preferred == True:
+                preferred_email = me.address
+            else:
+                other_emails.append(me.address.lower())
+
+        if preferred_email is None:
+            other_emails.sort(reverse=True)
+            preferred_email = other_emails.pop()
+
+        results.append((m.name, preferred_email))
+
+    # Add all the staff members
+    for name in ['julie', 'jim', 'frrandy', 'erica', 'lynne', 'mary', 'polly', 'erin', 'linda', 'jimd', 'faith']:
+        results.append(('Staff {name}'.format(name=name),
+                        '{name}@epiphanycatholicchurch.org'.format(name=name)))
+
+    count = 0
+    filename = 'good-list.txt'
+    print("+++ Custom writing to file {}"
+          .format(filename))
+    with open(filename, 'w', newline='') as textfile:
+        for t in results:
+            textfile.write('"{name}" <{email}>\n'
+                           .format(name=t[0], email=t[1]))
+            count = count + 1
+
+    print("    Number of members written: {0}".format(count))
 
 ##############################################################################
 
@@ -980,5 +1042,8 @@ def main():
     # 12. Read current parishioner list, find any email address that
     # is not associated with an active Member.
     write_unknown_parishonier_listserv_addresses()
+
+    # 13. Write out the members for the current "all parish" list
+    write_good_list()
 
 main()
