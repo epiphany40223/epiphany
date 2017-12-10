@@ -927,7 +927,7 @@ class LockFile:
 def main():
     add_cli_args()
 
-    filename = "{0}{1}{2}".format(args.data_dir, os.path.sep, "lockfile")
+    filename = os.path.join(args.data_dir, "lockfile")
     with LockFile(filename) as lockfile:
         setup()
         check_for_incoming_ftp()
