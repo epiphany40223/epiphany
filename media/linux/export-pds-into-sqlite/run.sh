@@ -2,7 +2,7 @@
 
 set -x
 
-pds_input_dir=/mnt/hgfs/pdschurch/Data
+pds_input_dir=/media/sf_pdschurch/Data
 
 base=/home/itadmin/git/epiphany/media/linux
 prog_dir=$base/export-pds-into-sqlite
