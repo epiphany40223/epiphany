@@ -21,3 +21,14 @@ file=mailman-parishioner.txt
 scp $file jeff@lists.epiphanycatholicchurch.org:ecc
 # Now update the list
 ssh jeff@lists.epiphanycatholicchurch.org ecc/replace-parishioners.sh ecc/$file
+
+################################################################################
+
+# Generate the list of email addresses from PDS data and sync
+google_logfile=$prog_dir/sync-google-group-logfile.txt
+./sync-google-group.py \
+    --sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
+    --logfile=$google_logfile \
+    --verbose
+
+exit 0
