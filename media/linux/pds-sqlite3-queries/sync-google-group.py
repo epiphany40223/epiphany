@@ -12,10 +12,16 @@ membership of a Google Group to match.
 - find the preferred email addresses for each of them
 - make the associated Google Group be exactly that set of email addresses
 
+No locking / lockfile is used in this script because it is assumed
+that simultaneous access is prevented by locking at a higher level
+(i.e., ../run-all.py).
+
 -----
 
 This script was developed and tested with Python 3.6.4.  It has not
 been tested with other versions (e.g., Python 2.7.x).
+
+-----
 
 This script requires a "client_id.json" file with the app credentials
 from the Google App dashboard.  This file is not committed here in git
@@ -25,8 +31,8 @@ The client_id.json file is obtained from
 console.developers.google.com, project name "PDS to Google Groups".
 The project is owned by itadmin@epiphanycatholicchurch.org.
 
-This script will fill a "user-credentials.json" file in the same
-directory with the result of getting user consent for the Google
+This script will create/fill a "user-credentials.json" file in the
+same directory with the result of getting user consent for the Google
 Account being used to authenticate.
 
 Note that this script works on Windows, Linux, and OS X.  But first,
@@ -34,6 +40,7 @@ you need to install some Python classes:
 
     pip install --upgrade google-api-python-client
     pip install --upgrade httplib2
+    ^^ NOTE: You may need to "sudo pip3.6 ..." instead of "sudo pip ..."
 
 """
 

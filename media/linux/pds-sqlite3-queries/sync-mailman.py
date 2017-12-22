@@ -1,9 +1,12 @@
 #!/usr/bin/env python3.6
 
-#
-# Run some queries on PDS email data, generate some CSVs with the
-# results of the queries.
-#
+"""Run some queries on PDS email data, generate some CSVs with the
+results of the queries.
+
+No locking / lockfile is used in this script because it is assumed
+that simultaneous access is prevented by locking at a higher level
+(i.e., ../run-all.py).
+"""
 
 import datetime
 import argparse
