@@ -12,10 +12,16 @@ membership of a Google Group to match.
 - find the preferred email addresses for each of them
 - make the associated Google Group be exactly that set of email addresses
 
+No locking / lockfile is used in this script because it is assumed
+that simultaneous access is prevented by locking at a higher level
+(i.e., ../run-all.py).
+
 -----
 
 This script was developed and tested with Python 3.6.4.  It has not
 been tested with other versions (e.g., Python 2.7.x).
+
+-----
 
 This script requires a "client_id.json" file with the app credentials
 from the Google App dashboard.  This file is not committed here in git
@@ -25,8 +31,8 @@ The client_id.json file is obtained from
 console.developers.google.com, project name "PDS to Google Groups".
 The project is owned by itadmin@epiphanycatholicchurch.org.
 
-This script will fill a "user-credentials.json" file in the same
-directory with the result of getting user consent for the Google
+This script will create/fill a "user-credentials.json" file in the
+same directory with the result of getting user consent for the Google
 Account being used to authenticate.
 
 Note that this script works on Windows, Linux, and OS X.  But first,
@@ -34,6 +40,7 @@ you need to install some Python classes:
 
     pip install --upgrade google-api-python-client
     pip install --upgrade httplib2
+    ^^ NOTE: You may need to "sudo pip3.6 ..." instead of "sudo pip ..."
 
 """
 
@@ -66,13 +73,17 @@ log = None
 
 # Default for CLI arguments
 smtp = ["smtp-relay.gmail.com",
-        "jsquyres@epiphanycatholicchurch.org,business-manager@epiphanycatholicchurch.org",
+        "jeff@squyres.com,business-manager@epiphanycatholicchurch.org",
         "no-reply@epiphanycatholicchurch.org"]
 gapp_id='client_id.json'
 guser_cred_file = 'user-credentials.json'
 verbose = True
 debug = False
 logfile = "log.txt"
+
+# Which database number to use?
+# At ECC, the active database is 1.
+database = 1
 
 #-------------------------------------------------------------------
 
@@ -394,9 +405,9 @@ def pds_find_ministry_emails(pds, ministry):
              'WHERE      MinType_DB.Description=\'{ministry}\' AND '
                         'StatusType_DB.Description NOT LIKE \'%occasional%\' AND '
                         'StatusType_DB.Active=1 AND '
-                        'Mem_DB.CensusMember1=1 AND '
+                        'Mem_DB.CensusMember{db}=1 AND '
                         'Mem_DB.deceased=0'
-             .format(ministry=ministry))
+             .format(ministry=ministry, db=database))
 
     # For each Member, we have to find their preferred email address(es)
     for row in pds.execute(query).fetchall():
@@ -563,14 +574,6 @@ def setup_cli_args():
     if l > 0 and l != 3:
         log.error("Need exactly 3 arguments to --smtp: server to from")
         exit(1)
-
-    # We don't have to error if this file is non-existent -- it will
-    # be created if it does not exist.  But it is an error if the file
-    # exists and is not readable.
-    file = args.user_credentials
-    if not os.access(file, os.R_OK):
-        diediedie("Error: User credentials JSON file {0} is not readable"
-                  .format(file))
 
     file = args.app_id
     if not os.path.isfile(file):
