@@ -29,7 +29,7 @@ CREATE TABLE MemKWType_DB (
   unique(DescRec)
 );
 
-Description: "LIST:Tech"
+Description: "LIST:18-Technology Committee"
 DescRec: integer ID
 
 Description: "Parish-wide Email"
@@ -257,7 +257,7 @@ StatusType_DB:
 
 ----------------------
 
-Find all members of a ministry who is:
+Find all Members of a ministry who are:
 - active in the ministry
 - active in the parish
 - not deceased
@@ -275,6 +275,39 @@ WHERE  MinType_DB.Description LIKE '%Technology%' AND
        StatusType_DB.Active = 1 AND
        Mem_DB.CensusMember1 = 1 AND
        Mem_DB.deceased = 0
+
+----------------------
+
+Find all Church Contact ("CC") personnel keywords:
+
+SELECT *
+FROM   CCKWType_DB
+
+Find all church contact ("CC") personnel who have a given keyword
+
+SELECT ChurchContact_DB.Name,
+       CCEmail_DB.EMailAddress
+FROM   ChurchContact_DB
+       INNER JOIN CCKW_DB ON CCKW_DB.CCRec = ChurchContact_DB.CCRec
+       INNER JOIN CCKWType_DB ON CCKWType_DB.CCKWRec = CCKW_DB.CCKWRec
+       INNER JOIN CCEmail_DB ON CCEmail_DB.RecNum = ChurchContact_DB.CCRec
+WHERE  CCKWType_DB.Description = 'LIST:18-Technology Committee' AND
+       CCEmail_DB.EmailOverMail = 1
+
+Background notes:
+
+ChurchContact.Name = 'Mary Downs'
+ChurchContact.CCRec = 572733
+
+CCKW.CCRec = 572733
+CCKW.CCKWRec = 589711
+
+CCKWType.description = '18-Technology Committee'
+CCKWType.CCKWRec = 589711
+
+CCEmail.RecNum = 572733
+CCEmail.EMailAddress = 'business-manager@epiphanycatholicchurch.org'
+CCEmail.EmailOverMail = 1
 
 ----------------------
 
