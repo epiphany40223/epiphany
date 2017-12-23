@@ -251,6 +251,17 @@ def compute_sync(pair, pds_emails, group_emails):
 def do_sync(pair, service, to_add, to_delete):
     email_message = list()
 
+    # Entries in the "to_delete" list are just email addresses (i.e.,
+    # a plain list of strings -- not dictionaries).
+    for email in to_delete:
+        str = "DELETING: {email}".format(email=email)
+
+        log.info(str)
+        email_message.append(str)
+
+        service.members().delete(groupKey=pair['ggroup'],
+                                 memberKey=email).execute()
+
     # Entries in the "to_add" list are dictionaries with a name and
     # email (the name is there solely so that we can include it in the
     # email).
@@ -268,18 +279,6 @@ def do_sync(pair, service, to_add, to_delete):
         }
         service.members().insert(groupKey=pair['ggroup'],
                                  body=group_entry).execute()
-
-
-    # Entries in the "to_delete" list are just email addresses (i.e.,
-    # a plain list of strings -- not dictionaries).
-    for email in to_delete:
-        str = "DELETING: {email}".format(email=email)
-
-        log.info(str)
-        email_message.append(str)
-
-        service.members().delete(groupKey=pair['ggroup'],
-                                 memberKey=email).execute()
 
     # Do we need to send an email?
     if len(email_message) > 0:
