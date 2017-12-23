@@ -372,8 +372,9 @@ def pds_find_preferred_emails(pds, name, id, table, field):
     # If we didn't find any preferred emails, sort the list and take
     # the first one.
     if len(results) == 0 and len(all_emails) > 0:
-        first_record = sorted(all_emails, _sort_by_email)[0]
-        results.append(first_records)
+        sorted_emails = sorted(all_emails, key=_sort_by_email)
+        first_record = sorted_emails[0]
+        results.append(first_record)
 
     log.debug("Returning PDS results for {id} from {table}: {results}"
               .format(id=id, table=table, results=results))
