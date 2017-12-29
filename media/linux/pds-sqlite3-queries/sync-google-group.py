@@ -8,7 +8,9 @@ membership of a Google Group to match.
     match the names in PDS) and their corresponding Google Group email
     address
   - Members must be in a Ministry of that exact name
-  - Church Contacts must have a keyword of "LIST:<ministry_name>"
+  - Church Contacts must have a keyword of "LIST:<ministry_name>" or
+    just "<ministry_name>" (because keywords have a max length, and
+    sometimes "LIST:<ministry_name>" is too long).
 - find the preferred email addresses for each of them
 - make the associated Google Group be exactly that set of email addresses
 
@@ -291,7 +293,8 @@ def do_sync(pair, service, to_add, to_delete):
 These email addresses were obtained from PDS:
 
 1. Members in the "{ministry}" ministry
-2. Church Contacts with the "LIST:{ministry}" keyword"""
+2. Church Contacts with the "LIST:{ministry}" keyword
+   (or just "{ministry}")"""
                 .format(email=pair['ggroup'],
                         ministry=pair['ministry'],
                         lines='\n'.join(email_message)))
@@ -426,12 +429,13 @@ def pds_find_ministry_emails(pds, ministry):
         emails = _list_unique_extend(emails, preferred)
 
     # Now find Church Contacts in this ministry (i.e., that have a
-    # keyword "LIST:<ministry_name>")
+    # keyword "LIST:<ministry_name>" or "<ministry_name>")
     query = ('SELECT     ChurchContact_DB.CCRec,ChurchContact_DB.Name '
              'FROM       ChurchContact_DB '
              'INNER JOIN CCKW_DB ON CCKW_DB.CCRec = ChurchContact_DB.CCRec '
              'INNER JOIN CCKWType_DB ON CCKWType_DB.CCKWRec = CCKW_DB.CCKWRec '
-             'WHERE      CCKWType_DB.Description = \'LIST:{ministry}\''
+             'WHERE      CCKWType_DB.Description = \'LIST:{ministry}\' OR '
+                        'CCKWType_DB.Description = \'{ministry}\''
              .format(ministry=ministry))
 
     # Find the Church Contact preferred email address(es)
@@ -597,7 +601,9 @@ def main():
 
     pairs = [
         { 'ministry' : '18-Technology Committee',
-          'ggroup'   : 'tech-committee@epiphanycatholicchurch.org' }
+          'ggroup'   : 'tech-committee@epiphanycatholicchurch.org' },
+        { 'ministry' : '99-Homebound MP3 Recordings',
+          'ggroup'   : 'mp3-uploads-group@epiphanycatholicchurch.org' }
     ]
 
     for pair in pairs:
