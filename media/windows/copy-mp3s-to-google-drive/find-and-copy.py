@@ -519,8 +519,7 @@ def gtd_upload_files(service, team_drive, scanned_files):
                           file_webviewlink=None)
 
         # Try to upload the file
-        src_filename = ("{0}{1}{2}"
-                        .format(to_gtd_dir, os.path.sep, file.filename))
+        src_filename = os.path.join(to_gtd_dir, file.filename)
         try:
             folder = gtd_create_dest_folder(service, team_drive,
                                             file.year, file.month)
@@ -603,8 +602,7 @@ def ftp_upload_files(ftp, scanned_files):
     ftped_files = []
     for file in scanned_files:
         # Try to upload the file
-        filename = ("{0}{1}{2}"
-                    .format(to_ftp_dir, os.path.sep, file.filename))
+        filename = os.path.join(to_ftp_dir, file.filename)
         try:
             log.debug("Uploading to FTP: {0}/{1}..."
                       .format(args.ftp_cwd, file.filename))
@@ -729,7 +727,7 @@ def check_for_incoming_ftp():
         # and "to Google Team Drive" directories so that they will be
         # processed.
         log.info("Found incoming FTP file: {0}".format(file.filename))
-        filename = "{0}{1}{2}".format(args.incoming_ftp_dir, os.path.sep, file.filename)
+        filename = os.path.join(args.incoming_ftp_dir, file.filename)
         shutil.copy2(src=filename, dst=to_gtd_dir)
         shutil.copy2(src=filename, dst=to_ftp_dir)
 
@@ -869,15 +867,15 @@ def add_cli_args():
 def setup():
     # Make the subdirs in the data dir
     global to_gtd_dir
-    to_gtd_dir = "{0}{1}{2}".format(args.data_dir, os.path.sep, "to-gtd")
+    to_gtd_dir = os.path.join(args.data_dir, "to-gtd")
     safe_mkdir(to_gtd_dir)
 
     global to_ftp_dir
-    to_ftp_dir = "{0}{1}{2}".format(args.data_dir, os.path.sep, "to-ftp")
+    to_ftp_dir = os.path.join(args.data_dir, "to-ftp")
     safe_mkdir(to_ftp_dir)
 
     global archive_dir
-    archive_dir = "{0}{1}{2}".format(args.data_dir, os.path.sep, "archive")
+    archive_dir = os.path.join(args.data_dir, "archive")
     safe_mkdir(archive_dir)
 
 #-------------------------------------------------------------------
