@@ -75,7 +75,6 @@ log = None
 
 # Default for CLI arguments
 smtp = ["smtp-relay.gmail.com",
-        "jeff@squyres.com,business-manager@epiphanycatholicchurch.org",
         "no-reply@epiphanycatholicchurch.org"]
 gapp_id='client_id.json'
 guser_cred_file = 'user-credentials.json'
@@ -87,19 +86,21 @@ logfile = "log.txt"
 # At ECC, the active database is 1.
 database = 1
 
+# JMS Change me to itadmin
+fatal_notify_to = 'jsquyres@gmail.com'
+
 #-------------------------------------------------------------------
 
-def send_mail(subject, message_body, html=False):
+def send_mail(to, subject, message_body, html=False):
     if not args.smtp:
         log.debug('Not sending email "{0}" because SMTP not setup'.format(subject))
         return
 
     smtp_server = args.smtp[0]
-    smtp_to = args.smtp[1]
-    smtp_from = args.smtp[2]
+    smtp_from = args.smtp[1]
 
-    log.info('Sending email to {0}, subject "{1}"'
-                 .format(smtp_to, subject))
+    log.info('Sending email to {to}, subject "{subject}"'
+                 .format(to=to, subject=subject))
     with smtplib.SMTP_SSL(host=smtp_server) as smtp:
         if args.debug:
             smtp.set_debuglevel(2)
@@ -108,7 +109,7 @@ def send_mail(subject, message_body, html=False):
         msg.set_content(message_body)
         msg['Subject'] = subject
         msg['From'] = smtp_from
-        msg['To'] = smtp_to
+        msg['To'] = to
         if html:
             msg.replace_header('Content-Type', 'text/html')
         else:
@@ -122,7 +123,8 @@ def diediedie(msg):
     log.error(msg)
     log.error("Aborting")
 
-    send_mail('Fatal error from PDS<-->Google Group sync', msg)
+    send_mail(fatal_notify_to,
+              'Fatal error from PDS<-->Google Group sync', msg)
 
     exit(1)
 
@@ -219,7 +221,7 @@ def google_login():
 #
 ####################################################################
 
-def compute_sync(pair, pds_emails, group_emails):
+def compute_sync(sync, pds_emails, group_emails):
     # Find all the addresses to add to the google group, and also find
     # all the addresses to remove from the google group.
 
@@ -240,18 +242,21 @@ def compute_sync(pair, pds_emails, group_emails):
     to_delete_from_group = group_emails
 
     log.info("To delete from Google Group {group}:"
-             .format(group=pair['ggroup']))
+             .format(group=sync['ggroup']))
     log.info(to_delete_from_group)
     log.info("To add to Google Group {group}:"
-             .format(group=pair['ggroup']))
+             .format(group=sync['ggroup']))
     log.info(to_add_to_group)
 
     return to_add_to_group, to_delete_from_group
 
 #-------------------------------------------------------------------
 
-def do_sync(pair, service, to_add, to_delete):
+def do_sync(sync, service, to_add, to_delete):
     email_message = list()
+
+    if sync['skip']:
+        return
 
     # Entries in the "to_delete" list are just email addresses (i.e.,
     # a plain list of strings -- not dictionaries).
@@ -261,7 +266,7 @@ def do_sync(pair, service, to_add, to_delete):
         log.info(str)
         email_message.append(str)
 
-        service.members().delete(groupKey=pair['ggroup'],
+        service.members().delete(groupKey=sync['ggroup'],
                                  memberKey=email).execute()
 
     # Entries in the "to_add" list are dictionaries with a name and
@@ -279,13 +284,13 @@ def do_sync(pair, service, to_add, to_delete):
             'email' : record['email'],
             'role'  : 'MEMBER'
         }
-        service.members().insert(groupKey=pair['ggroup'],
+        service.members().insert(groupKey=sync['ggroup'],
                                  body=group_entry).execute()
 
     # Do we need to send an email?
     if len(email_message) > 0:
         subject = ('Update to Google Group for {ministry}'
-                   .format(ministry=pair['ministry']))
+                   .format(ministry=sync['ministry']))
         body = ("""Updates to the Google Group {email}:
 
 {lines}
@@ -295,11 +300,11 @@ These email addresses were obtained from PDS:
 1. Members in the "{ministry}" ministry
 2. Church Contacts with the "LIST:{ministry}" keyword
    (or just "{ministry}")"""
-                .format(email=pair['ggroup'],
-                        ministry=pair['ministry'],
+                .format(email=sync['ggroup'],
+                        ministry=sync['ministry'],
                         lines='\n'.join(email_message)))
 
-        send_mail(subject=subject, message_body=body)
+        send_mail(to=sync['notify'], subject=subject, message_body=body)
 
 ####################################################################
 #
@@ -523,9 +528,9 @@ def setup_cli_args():
     # https://support.google.com/a/answer/2956491
     global smtp
     tools.argparser.add_argument('--smtp',
-                                 nargs=3,
+                                 nargs=2,
                                  default=smtp,
-                                 help='SMTP server hostname, to, and from addresses')
+                                 help='SMTP server hostname and from addresses')
 
     global gapp_id
     tools.argparser.add_argument('--app-id',
@@ -575,8 +580,8 @@ def setup_cli_args():
     l = 0
     if args.smtp:
         l = len(args.smtp)
-    if l > 0 and l != 3:
-        log.error("Need exactly 3 arguments to --smtp: server to from")
+    if l > 0 and l != 2:
+        log.error("Need exactly 2 arguments to --smtp: server from")
         exit(1)
 
     file = args.app_id
@@ -599,19 +604,33 @@ def main():
     pds = pds_connect()
     google = google_login()
 
-    pairs = [
-        { 'ministry' : '18-Technology Committee',
-          'ggroup'   : 'tech-committee@epiphanycatholicchurch.org' },
-        { 'ministry' : '99-Homebound MP3 Recordings',
-          'ggroup'   : 'mp3-uploads-group@epiphanycatholicchurch.org' }
+    synchronizations = [
+        {
+            'ministry' : '18-Technology Committee',
+            'ggroup'   : 'tech-committee@epiphanycatholicchurch.org',
+            'notify'   : 'business-manager@epiphanycatholicchurch.org,jsquyres@gmail.com',
+            'skip'     : False
+        },
+        {
+            'ministry' : '99-Homebound MP3 Recordings',
+            'ggroup'   : 'mp3-uploads-group@epiphanycatholicchurch.org',
+            'notify'   : 'business-manager@epiphanycatholicchurch.org,jsquyres@gmail.com',
+            'skip'     : False
+        },
+        {
+            'ministry' : 'L-Parish Pastoral Council',
+            'ggroup'   : 'ppc@epiphanycatholicchurch.org',
+            'notify'   : 'jsquyres@gmail.com',
+            'skip'     : True
+        }
     ]
 
-    for pair in pairs:
-        pds_emails = pds_find_ministry_emails(pds, pair['ministry'])
-        group_emails = group_find_emails(google, pair['ggroup'])
-        to_add, to_delete = compute_sync(pair, pds_emails, group_emails)
+    for sync in synchronizations:
+        pds_emails = pds_find_ministry_emails(pds, sync['ministry'])
+        group_emails = group_find_emails(google, sync['ggroup'])
+        to_add, to_delete = compute_sync(sync, pds_emails, group_emails)
         if not args.dry_run:
-            do_sync(pair, google, to_add, to_delete)
+            do_sync(sync, google, to_add, to_delete)
 
     pds_disconnect(pds)
 
