@@ -130,6 +130,16 @@ WHERE  (Mem_DB.deceased = 1 OR
        Mem_DB.PDSInactive1 = 1) AND
        Mem_DB.CensusMember1 = 1
 
+# Count of active members with a given member keyword
+# Active members
+SELECT count(MemKW_DB.MemRecNum)
+FROM   MemKW_DB
+       INNER JOIN Mem_DB ON MemKW_DB.MemRecNum = Mem_DB.MemRecNum
+WHERE  Mem_DB.deceased = 0 AND
+       (Mem_DB.PDSInactive1 = 0 OR Mem_DB.PDSInactive1 is null) AND
+       Mem_DB.CensusMember1 = 1 AND
+       MemKW_DB.DescRec = XXXXX  (<--value from MemKWType_DB.DescRec)
+
 ----------------------
 
 Get name and email address for everyone on a given list:
