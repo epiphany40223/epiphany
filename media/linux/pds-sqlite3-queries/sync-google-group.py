@@ -624,6 +624,12 @@ def main():
         {
             'ministry' : 'L-Parish Pastoral Council',
             'ggroup'   : 'ppc@epiphanycatholicchurch.org',
+            'notify'   : 'jsquyres@gmail.com,lynne@epiphanycatholicchurch.org',
+            'skip'     : False,
+        },
+        {
+            'ministry' : '13-Finance Advisory Council',
+            'ggroup'   : 'administration-committee@epiphanycatholicchurch.org',
             'notify'   : 'jsquyres@gmail.com',
             'skip'     : True
         }
