@@ -225,6 +225,7 @@ def compute_sync(sync, pds_emails, group_emails):
     # Find all the addresses to add to the google group, and also find
     # all the addresses to remove from the google group.
 
+    to_delete_from_group = group_emails.copy()
     to_add_to_group = list()
     for pds_email in pds_emails:
         log.debug("Checking PDS mail: {}".format(pds_email))
@@ -232,14 +233,17 @@ def compute_sync(sync, pds_emails, group_emails):
         found = False
         for group_email in group_emails:
             if pds_email['email'] == group_email:
-                group_emails.remove(group_email)
                 found = True
+
+                # Note: we *may* have already deleted this email
+                # address from to_delete_from_group (i.e., if multiple
+                # people are in the group who share an email address)
+                if pds_email['email'] in to_delete_from_group:
+                    to_delete_from_group.remove(group_email)
                 break
 
         if not found and pds_email not in to_add_to_group:
             to_add_to_group.append(pds_email)
-
-    to_delete_from_group = group_emails
 
     log.info("To delete from Google Group {group}:"
              .format(group=sync['ggroup']))
@@ -620,6 +624,12 @@ def main():
         {
             'ministry' : 'L-Parish Pastoral Council',
             'ggroup'   : 'ppc@epiphanycatholicchurch.org',
+            'notify'   : 'jsquyres@gmail.com,lynne@epiphanycatholicchurch.org',
+            'skip'     : False,
+        },
+        {
+            'ministry' : '13-Finance Advisory Council',
+            'ggroup'   : 'administration-committee@epiphanycatholicchurch.org',
             'notify'   : 'jsquyres@gmail.com',
             'skip'     : True
         }
