@@ -632,6 +632,12 @@ def main():
             'ggroup'   : 'administration-committee@epiphanycatholicchurch.org',
             'notify'   : 'jeff@squyres.com',
             'skip'     : True
+        },
+        {
+            'ministry' : '64-Singles Explore Life (SEL)',
+            'ggroup'   : 'sel@epiphanycatholicchurch.org',
+            'notify'   : 'lynne@epiphanycatholicchurch.org,jeff@squyres.com',
+            'skip'     : False
         }
     ]
 
