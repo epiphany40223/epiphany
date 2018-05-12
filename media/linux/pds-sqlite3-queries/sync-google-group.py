@@ -612,25 +612,25 @@ def main():
         {
             'ministry' : '18-Technology Committee',
             'ggroup'   : 'tech-committee@epiphanycatholicchurch.org',
-            'notify'   : 'business-manager@epiphanycatholicchurch.org,jsquyres@gmail.com',
+            'notify'   : 'business-manager@epiphanycatholicchurch.org,jeff@squyres.com',
             'skip'     : False
         },
         {
             'ministry' : '99-Homebound MP3 Recordings',
             'ggroup'   : 'mp3-uploads-group@epiphanycatholicchurch.org',
-            'notify'   : 'business-manager@epiphanycatholicchurch.org,jsquyres@gmail.com',
+            'notify'   : 'business-manager@epiphanycatholicchurch.org,jeff@squyres.com',
             'skip'     : False
         },
         {
             'ministry' : 'L-Parish Pastoral Council',
             'ggroup'   : 'ppc@epiphanycatholicchurch.org',
-            'notify'   : 'jsquyres@gmail.com,lynne@epiphanycatholicchurch.org',
+            'notify'   : 'lynne@epiphanycatholicchurch.org,jeff@squyres.com',
             'skip'     : False,
         },
         {
             'ministry' : '13-Finance Advisory Council',
             'ggroup'   : 'administration-committee@epiphanycatholicchurch.org',
-            'notify'   : 'jsquyres@gmail.com',
+            'notify'   : 'jeff@squyres.com',
             'skip'     : True
         }
     ]
