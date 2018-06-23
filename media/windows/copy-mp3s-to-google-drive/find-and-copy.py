@@ -13,19 +13,15 @@ tested with other versions (e.g., Python 2.7.x).
   Txxx-YYYYMMDD-HHMMSS.mp3.
 - If the file size of the file hasn't changed for 60 seconds, assume
   that the file has finished uploading to this directory, and upload
-  it to both a Google Team Drive folder and (if specified) an FTP
-  server.
+  it to both a Google Team Drive folder.
 - In Google, put the uploaded MP3 file in a YYYY/MM-MONTHNAME folder,
   just to break it up.  Create those folders in the Google Team Drive
   if they don't exist.
-- In FTP, put the file in a CLI-specified subdirectory.
-- Connection+authentication to Google/the FTP server is only done if
-  necessary (i.e., if there are files to upload to either one of
-  them).
+- Connection+authentication to Google is only done if necessary (i.e.,
+  if there are files to upload to either one of them).
 - Send email summaries of the results:
   - Google email will contain links to the Team Drive, destination
     folder, and each uploaded MP3.
-  - FTP email will not include links (because they require passwords).
   - Both emails will contain success/failure indications.
 - If an upload fails, it is abandoned and will be re-tried at the next
   invocation.
@@ -90,7 +86,6 @@ import logging.handlers
 import traceback
 import shutil
 from email.message import EmailMessage
-from ftplib import FTP
 from recordclass import recordclass
 
 from pprint import pprint
@@ -117,7 +112,6 @@ mp3_mime_type = 'audio/mpeg'
 args = None
 log = None
 
-to_ftp_dir = None
 to_gtd_dir = None
 archive_dir = None
 
@@ -129,8 +123,6 @@ incoming_ftp_dir = 'C:\\ftp\\ecc-recordings'
 data_dir = 'data'
 app_id='client_id.json'
 target_team_drive = 'ECC Recordings'
-ftp = None
-ftp_cwd = "from-media-server"
 verbose = True
 debug = False
 logfile = "log.txt"
@@ -571,133 +563,6 @@ def upload_to_gtd():
 
 ####################################################################
 #
-# FTP upload functions
-#
-####################################################################
-
-def ftp_login():
-    ftp_server   = args.ftp[0]
-    ftp_username = args.ftp[1]
-    ftp_password = args.ftp[2]
-    ftp          = FTP(ftp_server)
-
-    try:
-        log.debug("Logging in to ftp://{0}@{1}/".format(ftp_username, ftp_server))
-        ftp.login(user=ftp_username, passwd=ftp_password)
-        cwd =''
-        if args.ftp_cwd:
-            ftp.cwd(args.ftp_cwd)
-            cwd = args.ftp_cwd
-
-        log.info("Logged in to ftp://{0}@{1}/{2}"
-                 .format(ftp_username, ftp_server, cwd))
-        return ftp
-
-    except:
-        diediedie("FTP login or directory change (to {0}) failed.\n\nA human needs to figure this out.".format(ftp_server))
-
-#-------------------------------------------------------------------
-
-def ftp_upload_files(ftp, scanned_files):
-    ftped_files = []
-    for file in scanned_files:
-        # Try to upload the file
-        filename = os.path.join(to_ftp_dir, file.filename)
-        try:
-            log.debug("Uploading to FTP: {0}/{1}..."
-                      .format(args.ftp_cwd, file.filename))
-            fp = open(file=filename, mode='rb')
-            ftp.storbinary(cmd="STOR {0}".format(file.filename), fp=fp)
-            fp.close()
-            log.info("Uploaded {0} to FTP successfully".format(file.filename))
-
-            # From this file from the "to FTP" dir so that we
-            # don't try to upload it again the next time through
-            os.unlink(filename)
-
-            # Happiness!
-            file.uploaded = True
-
-        except:
-            # Sadness :-(
-            file.uploaded = False
-            log.error("Unsuccessful FTP upload of {0}!".format(file.filename))
-
-        ftped_files.append(file)
-
-    # Send a single email with the results of all the FTP uploads
-    ftp_email_results(ftped_files)
-
-#-------------------------------------------------------------------
-
-def ftp_email_results(ftped_files):
-    # Send an email with all the results.
-    subject = "all succeeded"
-    message = "<p>Uploaded files to the FTP server:</p>\n\n"
-
-    count_failed = 0
-    for file in ftped_files:
-        if file.uploaded:
-            status = "Success"
-        else:
-            status = "Failed (will try again later)"
-            count_failed = count_failed + 1
-            subject = 'some failed'
-
-        msg = '''<p>
-<table border="0">
-<tr>
-<td>File:</td>
-<td>{0}</td>
-</tr>
-
-<tr>
-<td>FTP subdirectory:</td>
-<td>{1}</td>
-</tr>
-
-<tr>
-<td>Upload status:</td>
-<td>{2}</td>
-</tr>
-</table>
-</p>\n\n'''.format(file.filename, args.ftp_cwd, status)
-
-        message = message + msg
-
-    if count_failed == len(ftped_files):
-        subject = "all failed!"
-
-    message = message + "<p>Your friendly FTP daemon,<br />Fred</p>"
-
-    send_mail(subject="FTP upload results ({0})".format(subject),
-              message_body=message,
-              html=True)
-
-#-------------------------------------------------------------------
-
-def upload_to_ftp():
-    # If --ftp was not specified, no-op / return
-    if not args.ftp:
-        return
-
-    # If there's no files to upload, return
-    scanned_files = find_mp3_files(to_ftp_dir)
-    if len(scanned_files) == 0:
-        return
-
-    # There's something to do!  So login to the FTP server and cwd to
-    # the right place.
-    ftp = ftp_login()
-
-    # Go through all the files we found in the "to FTP" directory
-    ftp_upload_files(ftp, scanned_files)
-
-    # Logout of the FTP server
-    ftp.quit()
-
-####################################################################
-#
 # Watch for incoming FTP files functions
 #
 ####################################################################
@@ -729,7 +594,6 @@ def check_for_incoming_ftp():
         log.info("Found incoming FTP file: {0}".format(file.filename))
         filename = os.path.join(args.incoming_ftp_dir, file.filename)
         shutil.copy2(src=filename, dst=to_gtd_dir)
-        shutil.copy2(src=filename, dst=to_ftp_dir)
 
         # Finally, move the file to the archive directory for a
         # "permanent" record (and so that we won't see it again on
@@ -804,16 +668,6 @@ def add_cli_args():
                                  default=target_team_drive,
                                  help='Name of Team Drive to upload the found MP3 files to')
 
-    tools.argparser.add_argument('--ftp',
-                                 nargs=3,
-                                 required=False,
-                                 default=ftp,
-                                 help='FTP server, username, and password')
-    tools.argparser.add_argument('--ftp-cwd',
-                                 required=False,
-                                 default=ftp_cwd,
-                                 help='Directory to upload to on the FTP server')
-
     tools.argparser.add_argument('--verbose',
                                  required=False,
                                  action='store_true',
@@ -839,13 +693,6 @@ def add_cli_args():
 
     # Sanity check args
     l = 0
-    if args.ftp:
-        l = len(args.ftp)
-    if l > 0 and l != 3:
-        log.error("Need exactly 3 arguments to --ftp: server username password")
-        exit(1)
-
-    l = 0
     if args.smtp:
         l = len(args.smtp)
     if l > 0 and l != 3:
@@ -869,10 +716,6 @@ def setup():
     global to_gtd_dir
     to_gtd_dir = os.path.join(args.data_dir, "to-gtd")
     safe_mkdir(to_gtd_dir)
-
-    global to_ftp_dir
-    to_ftp_dir = os.path.join(args.data_dir, "to-ftp")
-    safe_mkdir(to_ftp_dir)
 
     global archive_dir
     archive_dir = os.path.join(args.data_dir, "archive")
@@ -930,7 +773,6 @@ def main():
         setup()
         check_for_incoming_ftp()
         upload_to_gtd()
-        upload_to_ftp()
 
     exit(0)
 
