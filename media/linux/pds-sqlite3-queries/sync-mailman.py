@@ -447,7 +447,8 @@ def find_preferred_email(emails):
 
     if preferred_email is None:
         other_emails.sort(reverse=True)
-        preferred_email = other_emails.pop()
+        if len(other_emails) > 0:
+            preferred_email = other_emails.pop()
 
     return preferred_email
 
