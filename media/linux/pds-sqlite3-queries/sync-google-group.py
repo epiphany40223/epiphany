@@ -630,8 +630,8 @@ def main():
         {
             'ministry' : '13-Finance Advisory Council',
             'ggroup'   : 'administration-committee@epiphanycatholicchurch.org',
-            'notify'   : 'jeff@squyres.com',
-            'skip'     : True
+            'notify'   : 'business-manager@epiphanycatholicchurch.org,jeff@squyres.com',
+            'skip'     : False
         },
         {
             'ministry' : '64-Singles Explore Life (SEL)',
