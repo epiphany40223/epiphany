@@ -1,0 +1,349 @@
+'''
+Created on May 20, 2018
+
+@author: fmcke
+'''
+import httplib2
+import sys
+import os
+import json
+import argparse
+import logging
+
+import time
+
+from oauth2client import tools
+from oauth2client.file import Storage
+from oauth2client.client import OAuth2WebServerFlow
+from datetime import datetime,timedelta
+
+from apiclient.discovery import build
+
+app_cred_file = 'client_id.json'
+user_cred_file = 'user-credentials.json'
+user_agent = 'gxcopy'
+
+scope = 'https://www.googleapis.com/auth/drive'
+
+FOLDER = 'application/vnd.google-apps.folder'
+
+def diediedie(msg):
+    print(msg)
+    print("Aborting")
+
+    exit(1)
+    
+    
+def load_app_credentials(app_cred_file):
+    # Read in the JSON file to get the client ID and client secret
+    cwd  = os.getcwd()
+    file = os.path.join(cwd, app_cred_file)
+    if not os.path.isfile(file):
+        diediedie("Error: JSON file {0} does not exist".format(file))
+    if not os.access(file, os.R_OK):
+        diediedie("Error: JSON file {0} is not readable".format(file))
+
+    with open(file) as data_file:
+        app_cred = json.load(data_file)
+
+    return app_cred
+
+
+def load_user_credentials(scope, app_cred):
+    # Get user consent
+    client_id       = app_cred['installed']['client_id']
+    client_secret   = app_cred['installed']['client_secret']
+    flow            = OAuth2WebServerFlow(client_id, client_secret, scope)
+    flow.user_agent = user_agent
+
+    cwd       = os.getcwd()
+    file      = os.path.join(cwd, user_cred_file)
+    storage   = Storage(file)
+    user_cred = storage.get()
+
+    # If no credentials are able to be loaded, fire up a web
+    # browser to get a user login, etc.  Then save those
+    # credentials in the file listed above so that next time we
+    # run, those credentials are available.
+    if user_cred is None or user_cred.invalid:
+        user_cred = tools.run_flow(flow, storage,
+                                        tools.argparser.parse_args())
+
+    return user_cred
+
+def authorize(user_cred):
+    http    = httplib2.Http()
+    http    = user_cred.authorize(http)
+    service = build('drive', 'v3', http=http)
+
+    log.debug('Authorized to Google')
+    
+    return service
+
+def iterfiles(name=None, is_folder=None, parent=None, order_by='folder,name,createdTime'):
+    
+    log.debug ('start iterfiles')    
+    
+    q = []
+    if name is not None:
+        q.append("name = '%s'" % name.replace("'", "\\'"))
+    if is_folder is not None:
+        q.append("mimeType %s '%s'" % ('=' if is_folder else '!=', FOLDER))
+    if parent is not None:
+        q.append("'%s' in parents" % parent.replace("'", "\\'"))
+        #q.append("modifiedTime > '2018-03-12T00:00:00'") 
+       
+    params = {'pageToken': None, 'orderBy': order_by, 'fields' : 'files(kind, id, name, fileExtension, mimeType, modifiedTime)', 'supportsTeamDrives' : True}
+    #params = {'pageToken': None, 'orderBy': order_by, 'fields' : 'files(id, name)'}
+    if q:
+        params['q'] = ' and '.join(q)
+    while True:
+        log.debug ('interfiles - about to call services token %s'%(params['pageToken']))
+        
+        response = service.files().list(**params).execute()
+        for f in response['files']:
+            
+            log.debug ('interfiles - before to call yield file: %s'%(f['name']))
+            yield f
+            log.debug ('interfiles - after to call yield file: %s'%(f['name']))
+        try:
+            log.debug ('interfiles - try ')
+            params['pageToken'] = response['nextPageToken']
+        except KeyError:
+            log.debug ('interfiles - return')
+
+            return
+
+        log.debug ('interfiles - exit')
+
+
+def walk(top):
+    log.debug ('star walk - about to call iterfiles')    
+    
+    top, = iterfiles(name=top, is_folder=True)
+    
+    log.debug ('walk after call iterfiles')    
+    
+    stack = [((top['name'],), [top])]
+    
+    while stack:
+        log.debug ('walk - after while stack')
+        path, tops = stack.pop()
+        
+        for top in tops:
+            log.debug ('walk  after for tops')
+            dirs, files = is_file = [], []
+            for f in iterfiles(parent=top['id']):
+                log.debug ('walk - after for f iterfiles')
+                if f['mimeType'] == FOLDER:
+                    log.debug ('iterfile - folder')
+                else:
+                    log.debug ('iterfile - file')
+                
+                log.debug ('is file %s'%(f['name']))
+                         
+                is_file[f['mimeType'] != FOLDER].append(f)
+            
+            log.debug('walk - before to call yield')    
+            yield path, top, dirs, files
+            log.debug('walk - after call yield')    
+                
+            if dirs:
+                stack.append((path + (top['name'],), dirs))
+
+
+def setup_args():
+
+    parser = argparse.ArgumentParser(description='restore file versions.')
+
+    parser.add_argument('--client_id',
+
+                        default='client_id.json',
+
+                        help='client_id file name')
+    
+    
+    parser.add_argument('--dir',
+
+                        default='2029-03-12T00:00:00',
+
+                        help='directory name')
+    
+    parser.add_argument('--restoreTime',
+
+                        default='xxx',
+
+                        help='restore time')
+    
+    parser.add_argument('--verbose',
+
+                        default=False,
+
+                        action='store_true',
+
+                        help='Enable verbose output')
+    
+    
+        
+    parser.add_argument('--logfile',
+
+                        default=None,
+
+                        help='Optional output logfile')
+        
+
+    parser.add_argument('--debug',
+
+                        default=False,
+
+                        action='store_true',
+
+                        help='Enable extra debugging')
+
+
+
+    args = parser.parse_args()
+
+    return args
+
+def setup_logging(args):
+
+    level=logging.ERROR
+
+
+
+    if args.debug:
+
+        level="DEBUG"
+
+    elif args.verbose:
+
+        level="INFO"
+
+
+
+    global log
+
+    log = logging.getLogger('pds')
+
+    log.setLevel(level)
+
+
+
+    # Make sure to include the timestamp in each message
+
+    f = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
+
+
+
+    # Default log output to stdout
+
+    s = logging.StreamHandler()
+
+    s.setFormatter(f)
+
+    log.addHandler(s)
+
+
+
+    # Optionally save to a rotating logfile
+
+    #if args.logfile:
+
+        #s = logging.handlers.RotatingFileHandler(filename=args.logfile,
+    #    s = logging.handlers.RotatingFileHandler(filename='xxx.log',
+
+    #                                            maxBytes=(pow(2,20) * 10),
+
+    #                                             backupCount=10)
+
+    #    s.setFormatter(f)
+
+    #    log.addHandler(s)
+
+
+
+#datetime_ts1 = datetime.fromtimestamp('2018-03-12 00:00:00')
+
+args = setup_args()
+ 
+setup_logging(args)
+
+#argx = 'client_id.json';
+#app_cred = load_app_credentials(argx)
+app_cred = load_app_credentials(args.client_id)
+
+user_cred = load_user_credentials(scope, app_cred)
+
+service = authorize(user_cred)
+
+cnt = 0;
+fileList = [];  
+#directoryName = 'My Laptop'  
+#directoryName = 'test_new_folder';
+#directoryName = 'music tests'
+
+#for path, root, dirs, files in walk(directoryName):
+for path, root, dirs, files in walk(args.dir):
+    log.debug('%s-%s\t%d %d' % ('/'.join(path), root['name'], len(dirs), len(files)))
+  
+    for d3 in dirs:
+        log.debug('     directory:   %s'%(d3['name']))
+          
+    for f3 in files:
+        fileList.append(f3);
+        log.debug ('     files:   %s'%(f3['name']))
+        
+    cnt = cnt + 1;
+    log.debug('done %d' % (cnt));
+    
+
+log.debug ('file list')  
+
+#datetime_ts1 = datetime.strptime('2018-03-12T00:00:00', '%Y-%m-%dT%H:%M:%S')
+datetime_ts1 = datetime.strptime(args.restoreTime, '%Y-%m-%dT%H:%M:%S')
+#.strftime('%Y-%m-%d %H:%M:%S')  
+
+docFileList = []
+
+for f4 in fileList:
+    
+    datetime_ts2 = datetime.strptime(f4['modifiedTime'], '%Y-%m-%dT%H:%M:%S.%fZ')
+    
+    # mimeType: application/vnd.google-apps.document
+    if (f4['mimeType'] != 'application/vnd.google-apps.document'):
+        continue;
+    
+    file_id = f4['id']
+    
+    params = {'fileId': f4['id']}
+
+    log.debug('     files eligible:   %s, %s %s'%(f4['name'], f4['modifiedTime'], f4['id']))
+     
+    #response = service.files().get(**params).revisions().execute()
+  
+    if (datetime_ts2 < datetime_ts1):
+        docFileList.append(f4)
+        print ('f4 less than 2018-03-04')
+    else:
+        print ('f4 greater than 2018-03-04')  
+        # this is where to replace  
+        
+    revisionsList = service.revisions().list(fileId=file_id).execute()
+    
+    for r1 in revisionsList:
+         log.debug('     revisionList:   %s, %s %s'%(r1['id'], r1['modifiedTime'], f4['id']))
+    #response = service.files().get(**params).revisions().execute()
+    #revisions1 = service.revisions().get(fileId=file_id, revisionId='1').execute()  
+    #revisions2 = service.revisions().update(fileId=file_id, revisionId='1').execute()  
+    #revisions3 =  service.revisions().revert(fileId=file_id, revisionId='21').execute()
+        
+   
+    
+
+    
+
+
+    
+       
+    
