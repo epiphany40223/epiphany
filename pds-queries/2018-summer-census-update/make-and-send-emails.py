@@ -308,7 +308,7 @@ spouse / partner.</p>
 
 <p><em>We realize that you may have received this email in error</em>.
 Even if you no longer attend Epiphany, please take a moment to click
-on the "Household" link below to indicate that you no longer attend,
+on the "home address" link below to indicate that you no longer attend,
 or simply send an email to <a
 href="mailto:mindy@epiphanycatholicchurch.org">Mindy Locke</a> in our
 parish office.</p>
