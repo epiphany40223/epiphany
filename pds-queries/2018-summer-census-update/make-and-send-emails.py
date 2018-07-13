@@ -382,6 +382,9 @@ def _send_family_emails(families, cookies, log=None):
     # interrupted and have to start again, we can do so
     # deterministically.
 
+    email_sent = list()
+    email_not_sent = list()
+
     fids = sorted(families)
     for fid in fids:
         f = families[fid]
@@ -408,18 +411,31 @@ def _send_family_emails(families, cookies, log=None):
                 "url"    : mem_url,
             })
 
+        family_data = {
+            'family'             : f,
+            'family_url'         : fam_url,
+            'family_member_data' : family_member_data,
+
+            'to_emails'          : to_emails,
+        }
+
         if len(to_emails) > 0:
             send_count = send_family_email(to_emails, f, fam_url,
                                            family_member_data, log)
+            email_sent.append(family_data)
 
-        elif len(to_emails) == 0 and log:
-            log.info("    *** Have no HoH/Spouse emails for Family {family}"
-                     .format(family=f['Name']))
+        elif len(to_emails) == 0:
+            if log:
+                log.info("    *** Have no HoH/Spouse emails for Family {family}"
+                         .format(family=f['Name']))
+            email_not_sent.append(family_data)
+
+    return email_sent, email_not_sent
 
 ##############################################################################
 
 def send_all_family_emails(families, cookies, log=None):
-    _send_family_emails(families, cookies, log)
+    return _send_family_emails(families, cookies, log)
 
 def send_some_family_emails(args, families, cookies, log=None):
     target = args.email
@@ -450,7 +466,7 @@ def send_some_family_emails(args, families, cookies, log=None):
         if found:
             some_families[fid] = f
 
-    _send_family_emails(some_families, cookies, log)
+    return _send_family_emails(some_families, cookies, log)
 
 ##############################################################################
 
@@ -515,6 +531,73 @@ def cookiedb_open(filename, log=None):
 
 ##############################################################################
 
+def write_csv(family_data, filename, log=None):
+    csv_family_fields = {
+        "parishKey"        : 'Envelope ID',
+        "fid"              : 'FID',
+        "streetAddress59"  : 'Street address 1',
+        "streetAddress58"  : 'Street address 2',
+        "cityState"        : 'City / State',
+        "zipCode"          : 'Zip code',
+    }
+
+    csv_member_fields = {
+        "mid"              : 'MID',
+        "titleif"          : 'Title',
+        "legalFirst26"     : 'Legal first name',
+        "nicknameonly"     : 'Nickname',
+        "middleName"       : 'Middle name',
+        "lastName5"        : 'Last name',
+        "suffixif"         : 'Suffix',
+
+        "inWhat"           : 'Birth year',
+        "preferredEmail"   : 'Preferred email',
+
+        "maritalStatus"    : 'Marital status',
+        "weddingDate[day]" : 'Wedding day',
+        "weddingDate[month]" : 'Wedding month',
+        "weddingDate[year]" : 'Wedding year',
+
+        "cellPhone13"      : 'Cell phone',
+
+        "occupation"       : 'Occupation',
+    }
+
+    fieldnames = list()
+    for _, name in csv_family_fields.items():
+        fieldnames.append(name)
+    for _, name in csv_member_fields.items():
+        fieldnames.append(name)
+
+    if log:
+        log.info("Writing result CSV: {filename}"
+                 .format(filename=filename))
+
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                quoting=csv.QUOTE_ALL)
+        writer.writeheader()
+
+        for fentry in family_data:
+            row = {}
+
+            family             = fentry['family']
+            family_member_data = fentry['family_member_data']
+
+            for ff, cff in csv_family_fields.items():
+                func = family_fields[ff]
+                row[cff] = func(family)
+
+            for fmd in family_member_data:
+                member = fmd['member']
+                for mf, cmf in csv_member_fields.items():
+                    func = member_fields[mf]
+                    row[cmf] = func(member)
+
+                writer.writerow(row)
+
+##############################################################################
+
 def main():
     global families, members
 
@@ -544,9 +627,15 @@ def main():
 
     # Send the emails
     if args.all:
-        send_all_family_emails(families, cookies, log)
+        sent, not_sent = send_all_family_emails(families, cookies, log)
     else:
-        send_some_family_emails(args, families, cookies, log)
+        sent, not_sent = send_some_family_emails(args, families, cookies, log)
+
+    # Record who/what we sent
+
+    ts = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
+    write_csv(sent,     'emails-sent-{ts}.csv'.format(ts=ts),     log=log)
+    write_csv(not_sent, 'emails-not-sent-{ts}.csv'.format(ts=ts), log=log)
 
     # Close the databases
     cookies.connection.close()
