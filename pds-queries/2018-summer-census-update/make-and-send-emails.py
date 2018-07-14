@@ -596,9 +596,6 @@ def main():
         if 'Squyres,Jeff' in m['Name']:
             log.debug("**** DEBUG: Jeff Squyres member")
             log.debug(pformat(m))
-        elif 'Downs' in m['Name']:
-            log.debug("*** DEBUG Downs")
-            log.debug(pformat(m))
 
     # Open the cookies DB
     if not args.append or not os.path.exists(args.cookie_db):
