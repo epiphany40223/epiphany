@@ -508,37 +508,41 @@ def cookiedb_open(filename, log=None):
 
 def write_csv(family_data, filename, log=None):
     csv_family_fields = {
-        "parishKey"        : 'Envelope ID',
-        "fid"              : 'FID',
-        "streetAddress59"  : 'Street address 1',
-        "streetAddress58"  : 'Street address 2',
-        "cityState"        : 'City / State',
-        "zipCode"          : 'Zip code',
+        "parishKey"          : 'Envelope ID',
+        "fid"                : 'FID',
+        "streetAddress59"    : 'Street address 1',
+        "streetAddress58"    : 'Street address 2',
+        "cityState"          : 'City / State',
+        "zipCode"            : 'Zip code',
     }
 
     csv_member_fields = {
-        "mid"              : 'MID',
-        "titleif"          : 'Title',
-        "legalFirst26"     : 'Legal first name',
-        "nicknameonly"     : 'Nickname',
-        "middleName"       : 'Middle name',
-        "lastName5"        : 'Last name',
-        "suffixif"         : 'Suffix',
+        "mid"                : 'MID',
+        "titleif"            : 'Title',
+        "legalFirst26"       : 'Legal first name',
+        "nicknameonly"       : 'Nickname',
+        "middleName"         : 'Middle name',
+        "lastName5"          : 'Last name',
+        "suffixif"           : 'Suffix',
 
-        "inWhat"           : 'Birth year',
-        "preferredEmail"   : 'Preferred email',
+        "inWhat"             : 'Birth year',
+        "preferredEmail"     : 'Preferred email',
 
-        "maritalStatus"    : 'Marital status',
-        "weddingDate[day]" : 'Wedding day',
+        "maritalStatus"      : 'Marital status',
+        "weddingDate[day]"   : 'Wedding day',
         "weddingDate[month]" : 'Wedding month',
-        "weddingDate[year]" : 'Wedding year',
+        "weddingDate[year]"  : 'Wedding year',
 
-        "cellPhone13"      : 'Cell phone',
+        "cellPhone13"        : 'Cell phone',
 
-        "occupation"       : 'Occupation',
+        "occupation"         : 'Occupation',
     }
 
     fieldnames = list()
+    # This field is not in either of the forms
+    fieldnames.append('Member type')
+
+    # Add the fields from both forms
     for _, name in csv_family_fields.items():
         fieldnames.append(name)
     for _, name in csv_member_fields.items():
@@ -565,6 +569,9 @@ def write_csv(family_data, filename, log=None):
 
             for fmd in family_member_data:
                 member = fmd['member']
+
+                row['Member type'] = member['type']
+
                 for mf, cmf in csv_member_fields.items():
                     func = member_fields[mf]
                     row[cmf] = func(member)
