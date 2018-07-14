@@ -1,1 +1,0 @@
-SUBDIRS = mem-fam-picturefiles

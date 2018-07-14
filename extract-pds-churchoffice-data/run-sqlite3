@@ -1,8 +1,0 @@
-#!/bin/zsh
-
-set -x
-
-time \
-    ./import-pdschurchoffice-to-sqlite3.py \
-    --pxview=/Users/jsquyres/bogus/bin/pxview \
-    --pdsdata-dir=pdschurch-data-current |& tee import.out
