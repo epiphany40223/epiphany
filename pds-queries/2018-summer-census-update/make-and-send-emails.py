@@ -96,7 +96,7 @@ member_fields = {
     "inWhat"           : lambda mem: mem['YearOfBirth'],
 
     # Preferred email
-    "preferredEmail"   : lambda mem: find_preferred_email(mem),
+    "preferredEmail"   : lambda mem: PDSChurch.find_any_email(mem),
 
     # Marital status
     "maritalStatus"    : lambda mem: _mem_marital_status(mem),
@@ -180,33 +180,6 @@ def _make_date(val, key):
         'year'  : year,
     }
     return dates[key]
-
-##############################################################################
-
-def _get_sorted_addrs(entries):
-    addrs = list()
-    for entry in entries:
-        addrs.append(entry['EMailAddress'])
-
-    return addrs
-
-def find_preferred_email(member):
-    # If we have preferred addresses, return a sorted, comma-delimited
-    # list
-    key = 'preferred_emails'
-    if key in member:
-        addrs = _get_sorted_addrs(member[key])
-        return ', '.join(addrs)
-
-    # If non-preferred is all that's left, just return the first one
-    # (sorted)
-    key = 'non_preferred_emails'
-    if key in member:
-        addrs = _get_sorted_addrs(member[key])
-        return addrs[0]
-
-    # Didn't find anything
-    return None
 
 ##############################################################################
 
@@ -394,7 +367,7 @@ def _send_family_emails(families, cookies, log=None):
         family_member_data = list()
         for m in f['members']:
             if _want_to_email_member(m):
-                em = find_preferred_email(m)
+                em = PDSChurch.find_any_email(m)
                 if em:
                     to_emails.append(em)
 
@@ -437,11 +410,13 @@ def _send_family_emails(families, cookies, log=None):
 def send_all_family_emails(families, cookies, log=None):
     return _send_family_emails(families, cookies, log)
 
+#-----------------------------------------------------------------------------
+
 def send_some_family_emails(args, families, cookies, log=None):
     target = args.email
     some_families = dict()
 
-    keys = ['preferred_emails', 'non_preferred_emails']
+    keys = [ PDSChurch.pkey, PDSChurch.npkey ]
 
     log.debug("Looking for email addresses: {e}".format(e=target))
 

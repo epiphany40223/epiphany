@@ -12,10 +12,15 @@ import re
 
 ##############################################################################
 
+# Keys for types of emails
+pkey  = 'preferred_emails'
+npkey = 'non_preferred_emails'
+
+##############################################################################
+
 # Which database number to use?
 # At ECC, the active database is 1.
 _database = 1
-
 
 def get_db_num():
     return _database
@@ -140,9 +145,6 @@ def _delete_non_parishioners(families, members):
 #-----------------------------------------------------------------------------
 
 def _link_family_emails(families, emails):
-    pkey  = 'preferred_emails'
-    npkey = 'non_preferred_emails'
-
     for _, f in families.items():
         f[pkey]  = list()
         f[npkey] = list()
@@ -183,9 +185,6 @@ def _link_member_types(members, types):
 #-----------------------------------------------------------------------------
 
 def _link_member_emails(members, emails):
-    pkey  = 'preferred_emails'
-    npkey = 'non_preferred_emails'
-
     for _, m in members.items():
         m[pkey]  = list()
         m[npkey] = list()
@@ -510,18 +509,26 @@ def load_families_and_members(filename=None, pds=None,
 
 from pprint import pprint
 
-def _email_list(list_of_email_records):
+def _get_sorted_addrs(entries):
     addrs = list()
-    for e in list_of_email_records:
-        addrs.append(e['full_address'])
+    for entry in entries:
+        addrs.append(entry['EMailAddress'])
 
-    return addrs
+    return sorted(addrs)
 
 def find_preferred_email(member_or_family):
     mof = member_or_family
-    if 'preferred_emails' in mof:
-        return ', '.join(_email_list(mof['preferred_emails']))
-    elif 'non_preferred_emails' in mof:
-        return _email_list(mof['non_preferred_emails']).sorted()[0]
+    if pkey in mof and len(mof[pkey]) > 0:
+        return ', '.join(_get_sorted_addrs(mof[pkey]))
+    else:
+        return None
+
+def find_any_email(member_or_family):
+    mof = member_or_family
+    addr = find_preferred_email(mof)
+    if addr:
+        return addr
+    elif npkey in mof and len(mof[npkey]) > 0:
+        return _get_sorted_addrs(mof[npkey])[0]
     else:
         return None
