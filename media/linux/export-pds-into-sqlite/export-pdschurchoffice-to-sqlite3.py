@@ -157,6 +157,69 @@ def open_sqlite3(args):
 
 ###############################################################################
 
+def replace_things_not_in_quotes(line, tokens):
+    # Unfortunately searching for \bTOKEN\b is not sufficient, because
+    # some of these tokens occur inside quoted strings (which we
+    # should not change!).  I can't find a simple regexp that will
+    # ignore things in strings (e.g., python only allows look-behinds
+    # with fixed width patterns), so we're going to do a pedantic -- but
+    # hopefully simple -- approach read/maintain approach:
+    #
+    # 1. We know the line will be well-formed SQL.  Meaning: there
+    # will be no line terminated with an open quote / no line opening
+    # with a previously-unterminated quote.
+    #
+    # 2. Split the line into an array of quoted things and unquoted
+    # things.
+    #
+    # 3. Even number entries will be outside quotes (and we should
+    # search/replace those).  Odd number entries will be inside quotes
+    # (and we should ignore those).
+    #
+    # Not sexy, but effective.  It unfortunately slows things down
+    # compared to a simple regexp, but oh well.  :-(
+
+    f          = re.IGNORECASE
+    quote_expr = re.compile(r"^(.+?)('.*?')(.*)")
+    word_exprs = list()
+    new_tokens = list()
+
+    for token in tokens:
+        expr = re.compile(r'\b{token}\b'.format(token=token), flags=f)
+        word_exprs.append(expr)
+
+        new_token = 'pds{token}'.format(token=token)
+        new_tokens.append(new_token)
+
+    results          = list()
+    still_to_process = line
+    while (True):
+        parts = quote_expr.match(still_to_process)
+
+        # If we didn't match, there were no quotes.  So search the
+        # whole still_to_process.  Otherwise, search the first
+        # matching group.
+        if parts is None:
+            str = still_to_process
+        else:
+            str = parts.group(1)
+
+        # 1st group is what we can search
+        for word_expr, new_token in zip(word_exprs, new_tokens):
+            str = word_expr.sub(new_token, str)
+        results.append(str)
+
+        if parts is None:
+            break
+
+        # 2nd group is what was in the quotes
+        results.append(parts.group(2))
+
+        # 3rd group is what we still have to process
+        still_to_process = parts.group(3)
+
+    return ''.join(results)
+
 def process_db(args, db, sqlite3):
     log.info("=== PDS table: {full}".format(full=db))
 
@@ -237,20 +300,21 @@ def process_db(args, db, sqlite3):
     sf = open(sql_file, 'r', encoding='latin-1')
 
     # Go through all the lines in the file
-    f = re.IGNORECASE
     transaction_started = False
     for line in list(sf):
+        line = line.strip()
 
         # PDS uses some fields named "order", "key", "default", etc.,
         # which are keywords in SQL
-        line = re.sub(r'\border\b', 'pdsorder', line, flags=f)
-        line = re.sub(r'\bkey\b', 'pdskey', line, flags=f)
-        line = re.sub(r'\bdefault\b', 'pdsdefault', line, flags=f)
-        line = re.sub(r'\bcheck\b', 'pdscheck', line, flags=f)
-        line = re.sub(r'\bboth\b', 'pdsboth', line, flags=f)
-        line = re.sub(r'\bowner\b', 'pdsowner', line, flags=f)
-        line = re.sub(r'\baccess\b', 'pdsaccess', line, flags=f)
-        line = re.sub(r'\bsql\b', 'pdssql', line, flags=f)
+        line = replace_things_not_in_quotes(line,
+                                            [ 'order',
+                                              'key',
+                                              'default',
+                                              'check',
+                                              'both',
+                                              'owner',
+                                              'access',
+                                              'sql' ])
 
         # SQLite does not have a boolean class; so turn TRUE and FALSE
         # into 1 and 0.
