@@ -618,7 +618,7 @@ def main():
 
     # Close the databases
     cookies.connection.close()
-    pds.connection.close
+    pds.connection.close()
 
 # Need to make these global for the lambda functions
 members = 1
