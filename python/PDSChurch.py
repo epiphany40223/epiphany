@@ -3,7 +3,10 @@
 '''
 
 Helper for apps that use PDS databases (that were imported into
-SQLite3 databases)
+SQLite3 databases).
+
+Most routines in this module are private to the module (i.e., those
+starting with "_").  There's only a handful of public functions.
 
 '''
 
@@ -11,6 +14,8 @@ import PDS
 import re
 
 ##############################################################################
+#
+# Public values
 
 # Keys for types of emails
 pkey  = 'preferred_emails'
@@ -22,10 +27,10 @@ npkey = 'non_preferred_emails'
 # At ECC, the active database is 1.
 _database = 1
 
-def get_db_num():
+def _get_db_num():
     return _database
 
-##############################################################################
+#-----------------------------------------------------------------------------
 
 # These values are not in the database -- they are hard-coded (!)
 def _find_member_types():
@@ -44,7 +49,7 @@ def _find_member_types():
 
 def _load_families(pds, columns=None,
                    active_only=True, log=None):
-    db_num = get_db_num()
+    db_num = _get_db_num()
 
     if not columns:
         columns = list()
@@ -73,7 +78,7 @@ def _load_families(pds, columns=None,
 
 def _load_members(pds, columns=None,
                   active_only=True, log=None):
-    db_num = get_db_num()
+    db_num = _get_db_num()
 
     if not columns:
         columns = list()
@@ -412,7 +417,7 @@ def _parse_member_names(members):
 
 #-----------------------------------------------------------------------------
 
-def make_emails_lower_case(emails):
+def _make_emails_lower_case(emails):
     key = 'EMailAddress'
     for _, e in emails.items():
         addr = e[key].lower()
@@ -420,6 +425,8 @@ def make_emails_lower_case(emails):
 
 #-----------------------------------------------------------------------------
 
+# Load PDS Families and Members.  Return them as 2 giant hashes,
+# appropriately cross-linked to each other.
 def load_families_and_members(filename=None, pds=None,
                               active_only=True, parishioners_only=True,
                               log=None):
@@ -475,7 +482,7 @@ def load_families_and_members(filename=None, pds=None,
     member_types = _find_member_types()
     mdtid        = _find_member_marriage_date_type(date_types)
 
-    make_emails_lower_case(emails)
+    _make_emails_lower_case(emails)
 
     families = _load_families(pds=pds,
                               active_only=active_only,
@@ -507,8 +514,6 @@ def load_families_and_members(filename=None, pds=None,
 
 ##############################################################################
 
-from pprint import pprint
-
 def _get_sorted_addrs(entries):
     addrs = list()
     for entry in entries:
@@ -516,6 +521,9 @@ def _get_sorted_addrs(entries):
 
     return sorted(addrs)
 
+# If a Member or Family has one or more preferred email addresses,
+# return them (as an array).  If there are no preferred email
+# addresses, return None.
 def find_preferred_email(member_or_family):
     mof = member_or_family
     if pkey in mof and len(mof[pkey]) > 0:
@@ -523,6 +531,10 @@ def find_preferred_email(member_or_family):
     else:
         return None
 
+# Return either the Member/Family preferred email addresses, or, if
+# there are no preferred addresses, return the first (by sorted order)
+# non-preferred email address (if it exists).  If no email addresses
+# exist, return None.
 def find_any_email(member_or_family):
     mof = member_or_family
     addrs = find_preferred_email(mof)
