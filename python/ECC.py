@@ -40,7 +40,9 @@ def setup_logging(info=True, debug=False, logfile=None):
 
     # Optionally save to a rotating logfile
     if logfile:
-        s = logging.FileHandler(filename=logfile)
+        s = logging.handlers.RotatingFileHandler(filename=logfile,
+                                                 maxBytes=(pow(2,20) * 10),
+                                                 backupCount=10)
         s.setFormatter(f)
         log.addHandler(s)
 

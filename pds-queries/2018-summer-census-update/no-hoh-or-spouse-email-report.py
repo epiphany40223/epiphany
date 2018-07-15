@@ -78,7 +78,7 @@ def report(bad_families):
                                  'Family Name'    : f['Name'],
                                  'Relevant Member': m['Name'],
                                  'Member Type'    : m['type'],
-                                 'Family Email'   : family_email})
+                                 'Family Email'   : ', '.join(family_email)})
 
     print("Wrote out {num_families} families ({num_members} members) in {filename}"
           .format(num_families=len(bad_families),

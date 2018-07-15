@@ -4,6 +4,7 @@ import httplib2
 import json
 import os
 
+from apiclient.discovery import build
 from oauth2client import tools
 from oauth2client.file import Storage
 from oauth2client.client import OAuth2WebServerFlow
@@ -32,32 +33,35 @@ drive_scope = 'https://www.googleapis.com/auth/drive'
 
 #-------------------------------------------------------------------
 
-def load_app_credentials(app_cred_file):
+def load_app_credentials(app_cred_file, log=None):
     # Read in the JSON file to get the client ID and client secret
     cwd  = os.getcwd()
     file = os.path.join(cwd, app_cred_file)
     if not os.path.isfile(file):
-        diediedie("Error: JSON file {0} does not exist".format(file))
+        log.error("Error: JSON file {0} does not exist".format(file))
+        exit(1)
     if not os.access(file, os.R_OK):
-        diediedie("Error: JSON file {0} is not readable".format(file))
+        log.error("Error: JSON file {0} is not readable".format(file))
+        exit(1)
 
     with open(file) as data_file:
         app_cred = json.load(data_file)
 
-    log.debug('Loaded application credentials from {0}'
+    if log:
+        log.debug('Loaded application credentials from {0}'
                   .format(file))
+
     return app_cred
 
-def load_user_credentials(scope, app_cred, user_cred_file=default_user_cred_file):
+def load_user_credentials(scope, app_cred,
+                          user_cred_file=default_user_cred_file, log=None):
     # Get user consent
     client_id       = app_cred['installed']['client_id']
     client_secret   = app_cred['installed']['client_secret']
     flow            = OAuth2WebServerFlow(client_id, client_secret, scope)
     flow.user_agent = user_agent
 
-    cwd       = os.getcwd()
-    file      = os.path.join(cwd, user_cred_file)
-    storage   = Storage(file)
+    storage   = Storage(user_cred_file)
     user_cred = storage.get()
 
     # If no credentials are able to be loaded, fire up a web
@@ -68,14 +72,18 @@ def load_user_credentials(scope, app_cred, user_cred_file=default_user_cred_file
         user_cred = tools.run_flow(flow, storage,
                                    tools.argparser.parse_args())
 
-    log.debug('Loaded user credentials from {0}'
-              .format(file))
+    if log:
+        log.debug('Loaded user credentials from {0}'
+                  .format(user_cred_file))
+
     return user_cred
 
-def authorize(user_cred):
+def authorize(user_cred, name, version, log=None):
     http    = httplib2.Http()
     http    = user_cred.authorize(http)
-    service = build('drive', 'v3', http=http)
+    service = build(name, version, http=http)
 
-    log.debug('Authorized to Google')
+    if log:
+        log.debug('Authorized to Google')
+
     return service

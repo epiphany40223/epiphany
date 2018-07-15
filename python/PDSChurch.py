@@ -519,16 +519,17 @@ def _get_sorted_addrs(entries):
 def find_preferred_email(member_or_family):
     mof = member_or_family
     if pkey in mof and len(mof[pkey]) > 0:
-        return ', '.join(_get_sorted_addrs(mof[pkey]))
+        return _get_sorted_addrs(mof[pkey])
     else:
         return None
 
 def find_any_email(member_or_family):
     mof = member_or_family
-    addr = find_preferred_email(mof)
-    if addr:
-        return addr
+    addrs = find_preferred_email(mof)
+    if addrs:
+        return addrs
     elif npkey in mof and len(mof[npkey]) > 0:
-        return _get_sorted_addrs(mof[npkey])[0]
+        addr = _get_sorted_addrs(mof[npkey])[0]
+        return [ addr ]
     else:
         return None
