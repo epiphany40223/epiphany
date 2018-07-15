@@ -96,7 +96,7 @@ member_fields = {
     "inWhat"           : lambda mem: mem['YearOfBirth'],
 
     # Preferred email
-    "preferredEmail"   : lambda mem: PDSChurch.find_any_email(mem),
+    "preferredEmail"   : lambda mem: ', '.join(PDSChurch.find_any_email(mem)),
 
     # Marital status
     "maritalStatus"    : lambda mem: _mem_marital_status(mem),
@@ -369,7 +369,7 @@ def _send_family_emails(families, cookies, log=None):
             if _want_to_email_member(m):
                 em = PDSChurch.find_any_email(m)
                 if em:
-                    to_emails.append(em)
+                    to_emails.extend(em)
 
             if first:
                 log.info("=== Family: {name}".format(name=f['Name']))
