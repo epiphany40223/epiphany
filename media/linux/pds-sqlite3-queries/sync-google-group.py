@@ -97,7 +97,7 @@ fatal_notify_to = 'jsquyres@gmail.com'
 
 #-------------------------------------------------------------------
 
-def send_mail(to, subject, message_body, html=False):
+def send_mail(to, subject, message_body, html=False, log=None):
     if not args.smtp:
         log.debug('Not sending email "{0}" because SMTP not setup'.format(subject))
         return
@@ -105,7 +105,8 @@ def send_mail(to, subject, message_body, html=False):
     smtp_server = args.smtp[0]
     smtp_from = args.smtp[1]
 
-    log.info('Sending email to {to}, subject "{subject}"'
+    if log:
+        log.info('Sending email to {to}, subject "{subject}"'
                  .format(to=to, subject=subject))
     with smtplib.SMTP_SSL(host=smtp_server) as smtp:
         if args.debug:
@@ -236,17 +237,16 @@ def do_sync(sync, service, to_add, to_delete, log=None):
     # Entries in the "to_add" list are dictionaries with a name and
     # email (the name is there solely so that we can include it in the
     # email).
-    for record in to_add:
-        str = ("ADDING: {name} <{email}>"
-               .format(name=record['name'],
-                       email=record['email']))
+    for email in to_add:
+        str = ("ADDING: {email}"
+               .format(email=email))
 
         if log:
             log.info(str)
         email_message.append(str)
 
         group_entry = {
-            'email' : record['email'],
+            'email' : email,
             'role'  : 'MEMBER'
         }
         service.members().insert(groupKey=sync['ggroup'],
@@ -254,20 +254,34 @@ def do_sync(sync, service, to_add, to_delete, log=None):
 
     # Do we need to send an email?
     if len(email_message) > 0:
-        subject = ('Update to Google Group for {ministry}'
-                   .format(ministry=sync['ministry']))
+        subject = 'Update to Google Group for '
         body = ("""Updates to the Google Group {email}:
 
 {lines}
 
 These email addresses were obtained from PDS:
 
-1. Members in the "{ministry}" ministry
-2. Church Contacts with the "LIST:{ministry}" keyword
-   (or just "{ministry}")"""
+"""
                 .format(email=sync['ggroup'],
-                        ministry=sync['ministry'],
                         lines='\n'.join(email_message)))
+
+        count    = 1
+        subj_add = list()
+        if 'ministries' in sync:
+            for m in sync['ministries']:
+                body  = body + ('{i}. Members in the "{m}" ministry\n'
+                                .format(i=count, m=m))
+                count = count + 1
+                subj_add.append(m)
+
+        if 'keywords' in sync:
+            for k in sync['keywords']:
+                body  = body + ('{i}. Members with the "{k}" keyword\n'
+                                .format(i=count, k=k))
+                count = count + 1
+                subj_add.append(k)
+
+        subject = subject + ', '.join(subj_add)
 
         send_mail(to=sync['notify'], subject=subject, message_body=body)
 
@@ -457,39 +471,39 @@ def main():
     ecc = '@epiphanycatholicchurch.org'
     synchronizations = [
         {
-            'ministries' : '18-Technology Committee',
+            'ministries' : [ '18-Technology Committee' ],
             'ggroup'     : 'tech-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
         },
         {
-            'ministries' : '99-Homebound MP3 Recordings',
+            'ministries' : [ '99-Homebound MP3 Recordings' ],
             'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
         },
         {
-            'ministries' : 'L-Parish Pastoral Council',
+            'ministries' : [ 'L-Parish Pastoral Council' ],
             'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
             'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False,
         },
         {
-            'ministries' : '13-Finance Advisory Council',
+            'ministries' : [ '13-Finance Advisory Council' ],
             'ggroup'     : 'administration-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
         },
         {
-            'ministries' : '64-Singles Explore Life (SEL)',
+            'ministries' : [ '64-Singles Explore Life (SEL)' ],
             'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
             'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
         },
         {
-            'keywords'   : 'ECC Sheet Music access',
+            'keywords'   : [ 'ECC Sheet Music access' ],
             'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
-            'notify'     : 'jsquyres@gmail.com',
+            'notify'     : 'linda{ecc},jsquyres@gmail.com'.format(ecc=ecc),
             'skip'       : False
         },
     ]
