@@ -485,7 +485,13 @@ def main():
             'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
             'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
-        }
+        },
+        {
+            'keywords'   : 'ECC Sheet Music access',
+            'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
+            'notify'     : 'jsquyres@gmail.com',
+            'skip'       : False
+        },
     ]
 
     for sync in synchronizations:
