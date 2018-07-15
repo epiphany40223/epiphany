@@ -46,6 +46,9 @@ you need to install some Python classes:
 
 """
 
+import sys
+sys.path.insert(0, '../../../python')
+
 import logging.handlers
 import httplib2
 import smtplib
@@ -55,7 +58,14 @@ import json
 import time
 import os
 
+import ECC
+import PDSChurch
+import GoogleAuth
+
 from email.message import EmailMessage
+
+from pprint import pprint
+from pprint import pformat
 
 from apiclient.discovery import build
 from oauth2client import tools
@@ -81,10 +91,6 @@ guser_cred_file = 'user-credentials.json'
 verbose = True
 debug = False
 logfile = "log.txt"
-
-# Which database number to use?
-# At ECC, the active database is 1.
-database = 1
 
 # JMS Change me to itadmin
 fatal_notify_to = 'jsquyres@gmail.com'
@@ -119,9 +125,9 @@ def send_mail(to, subject, message_body, html=False):
 
 #-------------------------------------------------------------------
 
-def diediedie(msg):
-    log.error(msg)
-    log.error("Aborting")
+def email_and_die(msg):
+    sys.stderr.write(msg)
+    sys.stderr.write("Aborting")
 
     send_mail(fatal_notify_to,
               'Fatal error from PDS<-->Google Group sync', msg)
@@ -135,53 +141,7 @@ def diediedie(msg):
 #
 ####################################################################
 
-def google_load_app_credentials(file):
-    # Read in the JSON file to get the client ID and client secret
-    with open(file) as data_file:
-        app_cred = json.load(data_file)
-
-    log.debug('Loaded application credentials from {0}'
-                  .format(file))
-    return app_cred
-
-#-------------------------------------------------------------------
-
-def google_load_user_credentials(scope, app_cred, user_cred_file):
-    # Get user consent
-    client_id       = app_cred['installed']['client_id']
-    client_secret   = app_cred['installed']['client_secret']
-    flow            = OAuth2WebServerFlow(client_id, client_secret, scope)
-    flow.user_agent = guser_agent
-
-    file      = user_cred_file
-    storage   = Storage(file)
-    user_cred = storage.get()
-
-    # If no credentials are able to be loaded, fire up a web
-    # browser to get a user login, etc.  Then save those
-    # credentials in the file listed above so that next time we
-    # run, those credentials are available.
-    if user_cred is None or user_cred.invalid:
-        user_cred = tools.run_flow(flow, storage,
-                                        tools.argparser.parse_args())
-
-    log.debug('Loaded user credentials from {0}'
-                  .format(file))
-    return user_cred
-
-#-------------------------------------------------------------------
-
-def google_authorize(user_cred):
-    http    = httplib2.Http()
-    http    = user_cred.authorize(http)
-    service = build('admin', 'directory_v1', http=http)
-
-    log.debug('Authorized to Google')
-    return service
-
-#-------------------------------------------------------------------
-
-def google_login():
+def google_login(scope, log):
     # Put a loop around this so that it can re-authenticate via the
     # OAuth refresh token when possible.  Real errors will cause the
     # script to abort, which will notify a human to fix whatever the
@@ -190,11 +150,11 @@ def google_login():
     while auth_count < gauth_max_attempts:
         try:
             # Authorize the app and provide user consent to Google
-            log.debug("Authenticating to Google...")
-            app_cred = google_load_app_credentials(args.app_id)
-            user_cred = google_load_user_credentials(gscope, app_cred,
-                                                     args.user_credentials)
-            service = google_authorize(user_cred)
+            app_cred = GoogleAuth.load_app_credentials(args.app_id)
+            user_cred = GoogleAuth.load_user_credentials(scope, app_cred,
+                                                         args.user_credentials)
+            service = GoogleAuth.authorize(user_cred, 'admin',
+                                           'directory_v1')
             log.info("Authenticated to Google")
             break
 
@@ -210,7 +170,7 @@ def google_login():
         auth_count = auth_count + 1
 
     if auth_count > gauth_max_attempts:
-        diediedie("Failed to authenticate to Google {0} times.\nA human needs to figure this out."
+        email_and_die("Failed to authenticate to Google {0} times.\nA human needs to figure this out."
                   .format(gauth_max_attempts))
 
     return service
@@ -221,42 +181,41 @@ def google_login():
 #
 ####################################################################
 
-def compute_sync(sync, pds_emails, group_emails):
+def compute_sync(sync, pds_emails, group_emails, log=None):
     # Find all the addresses to add to the google group, and also find
     # all the addresses to remove from the google group.
 
+    to_add_to_group      = list()
     to_delete_from_group = group_emails.copy()
-    to_add_to_group = list()
     for pds_email in pds_emails:
         log.debug("Checking PDS mail: {}".format(pds_email))
 
         found = False
-        for group_email in group_emails:
-            if pds_email['email'] == group_email:
-                found = True
+        if pds_email in group_emails:
+            found = True
 
-                # Note: we *may* have already deleted this email
-                # address from to_delete_from_group (i.e., if multiple
-                # people are in the group who share an email address)
-                if pds_email['email'] in to_delete_from_group:
-                    to_delete_from_group.remove(group_email)
-                break
+            # Note: we *may* have already deleted this email
+            # address from to_delete_from_group (i.e., if multiple
+            # people are in the group who share an email address)
+            if pds_email in to_delete_from_group:
+                to_delete_from_group.remove(pds_email)
 
         if not found and pds_email not in to_add_to_group:
             to_add_to_group.append(pds_email)
 
-    log.info("To delete from Google Group {group}:"
-             .format(group=sync['ggroup']))
-    log.info(to_delete_from_group)
-    log.info("To add to Google Group {group}:"
-             .format(group=sync['ggroup']))
-    log.info(to_add_to_group)
+    if log:
+        log.info("To delete from Google Group {group}:"
+                 .format(group=sync['ggroup']))
+        log.info(to_delete_from_group)
+        log.info("To add to Google Group {group}:"
+                 .format(group=sync['ggroup']))
+        log.info(to_add_to_group)
 
     return to_add_to_group, to_delete_from_group
 
 #-------------------------------------------------------------------
 
-def do_sync(sync, service, to_add, to_delete):
+def do_sync(sync, service, to_add, to_delete, log=None):
     email_message = list()
 
     if sync['skip']:
@@ -267,7 +226,8 @@ def do_sync(sync, service, to_add, to_delete):
     for email in to_delete:
         str = "DELETING: {email}".format(email=email)
 
-        log.info(str)
+        if log:
+            log.info(str)
         email_message.append(str)
 
         service.members().delete(groupKey=sync['ggroup'],
@@ -281,7 +241,8 @@ def do_sync(sync, service, to_add, to_delete):
                .format(name=record['name'],
                        email=record['email']))
 
-        log.info(str)
+        if log:
+            log.info(str)
         email_message.append(str)
 
         group_entry = {
@@ -316,7 +277,7 @@ These email addresses were obtained from PDS:
 #
 ####################################################################
 
-def group_find_emails(service, group_email_address):
+def google_group_find_emails(service, sync, log=None):
     emails = list()
 
     # Iterate over all (pages of) group members
@@ -325,7 +286,7 @@ def group_find_emails(service, group_email_address):
         response = (service
                     .members()
                     .list(pageToken=page_token,
-                          groupKey=group_email_address,
+                          groupKey=sync['ggroup'],
                           fields='members(email)').execute())
         for group in response.get('members', []):
             emails.append(group['email'].lower())
@@ -334,9 +295,10 @@ def group_find_emails(service, group_email_address):
         if page_token is None:
             break
 
-    log.info("Google Group membership for {group}"
-             .format(group=group_email_address))
-    log.info(emails)
+    if log:
+        log.info("Google Group membership for {group}"
+                 .format(group=sync['ggroup']))
+        log.info(emails)
 
     return emails
 
@@ -346,185 +308,68 @@ def group_find_emails(service, group_email_address):
 #
 ####################################################################
 
-def _sort_by_email(record):
-    # Helper for Python built-in "sorted()" function
-    return record['email']
+def _member_in_any_ministry(member, ministries):
+    if 'active_ministries' not in member:
+        return False
 
-def pds_find_preferred_emails(pds, name, id, table, field):
-    # PDS allows storing multiple emails per Member / Church Contact.
-    # It has a secondary field "EmailOverMail" that is the "preferred"
-    # checkmark in the PDS GUI: 0 or more of the email addresses
-    # associated with a Member or Church Contact may be checked.  Our
-    # algorithm will therefore be: take all the preferred email
-    # addresses.  If no address is preferred, sort the (non-preferred)
-    # addresses and take the first one.
+    for m in member['active_ministries']:
+        mname = m['Description']
+        if mname in ministries:
+            return True
 
-    all_emails = list()
-    results = list()
+    return False
 
-    query = ('SELECT EmailAddress,EmailOverMail '
-             'FROM   {table} '
-             'WHERE  {field}={id}'
-             .format(id=id, table=table, field=field))
+def _member_has_any_keyword(member, keywords):
+    if 'keywords' not in member:
+        return False
 
-    log.debug(query)
-    for row in pds.execute(query).fetchall():
-        record = {
-            'name'      : name,
-            'email'     : row[0],
-            'preferred' : row[1]
-        }
-        email = row[0].lower()
-        preferred = row[1]
+    for k in member['keywords']:
+        if k in keywords:
+            return True
 
-        all_emails.append(record)
-        if preferred:
-            results.append(record)
+    return False
 
-    # If we didn't find any preferred emails, sort the list and take
-    # the first one.
-    if len(results) == 0 and len(all_emails) > 0:
-        sorted_emails = sorted(all_emails, key=_sort_by_email)
-        first_record = sorted_emails[0]
-        results.append(first_record)
+def pds_find_ministry_emails(members, sync, log=None):
+    emails     = list()
+    ministries = list()
+    keywords   = list()
 
-    log.debug("Returning PDS results for {id} from {table}: {results}"
-              .format(id=id, table=table, results=results))
-    return results
+    # Make the sync ministries be an array
+    if 'ministries' in sync:
+        if type(sync['ministries']) is list:
+            ministries = sync['ministries']
+        else:
+            ministries = [ sync['ministries'] ]
 
-#-------------------------------------------------------------------
+    # Make the sync keywords be a group
+    if 'keywords' in sync:
+        if type(sync['keywords']) is list:
+            keywords = sync['keywords']
+        else:
+            keywords = [ sync['keywords'] ]
 
-def _list_unique_extend(source, new_entries):
-    # Add all the entries from new_entries to the source list, but
-    # only if they aren't already in the source list.
-    for entry in new_entries:
-        if entry not in source:
-            source.append(entry)
+    # Walk all members looking for those in any of the ministries or
+    # those that have any of the keywords.
+    for mid, member in members.items():
+        if (_member_in_any_ministry(member, ministries) or
+            _member_has_any_keyword(member, keywords)):
+            em = PDSChurch.find_any_email(member)
+            log.info("Found PDS email: {}".format(em))
+            if em:
+                emails.extend(em)
 
-    return source
-
-#-------------------------------------------------------------------
-
-def pds_find_ministry_emails(pds, ministry):
-    emails = list()
-
-    # First, we have to find the Members in this ministry.
-    query = ('SELECT     Mem_DB.MemRecNum,Mem_DB.Name '
-             'FROM       MemMin_DB '
-             'INNER JOIN MinType_DB ON MinType_DB.MinDescRec=MemMin_DB.MinDescRec '
-             'INNER JOIN Mem_DB ON Mem_DB.MemRecNum=MemMin_DB.MemRecNum '
-             'INNER JOIN StatusType_DB ON StatusType_DB.StatusDescRec=MemMin_DB.StatusDescRec '
-             'WHERE      MinType_DB.Description=\'{ministry}\' AND '
-                        'StatusType_DB.Description NOT LIKE \'%occasional%\' AND '
-                        'StatusType_DB.Active=1 AND '
-                        'Mem_DB.CensusMember{db}=1 AND '
-                        'Mem_DB.deceased=0'
-             .format(ministry=ministry, db=database))
-
-    # For each Member, we have to find their preferred email address(es)
-    for row in pds.execute(query).fetchall():
-        member_id   = row[0]
-        member_name = row[1]
-
-        preferred = pds_find_preferred_emails(pds=pds,
-                                              name=member_name,
-                                              table='MemEmail_DB',
-                                              field='MemRecNum',
-                                              id=member_id)
-
-        # Make sure we don't get duplicate emails in the result list
-        # (e.g., if we add Members with the same email address, such
-        # as husband+wife that share an email account).
-        emails = _list_unique_extend(emails, preferred)
-
-    # Now find Church Contacts in this ministry (i.e., that have a
-    # keyword "LIST:<ministry_name>" or "<ministry_name>")
-    query = ('SELECT     ChurchContact_DB.CCRec,ChurchContact_DB.Name '
-             'FROM       ChurchContact_DB '
-             'INNER JOIN CCKW_DB ON CCKW_DB.CCRec = ChurchContact_DB.CCRec '
-             'INNER JOIN CCKWType_DB ON CCKWType_DB.CCKWRec = CCKW_DB.CCKWRec '
-             'WHERE      CCKWType_DB.Description = \'LIST:{ministry}\' OR '
-                        'CCKWType_DB.Description = \'{ministry}\''
-             .format(ministry=ministry))
-
-    # Find the Church Contact preferred email address(es)
-    for row in pds.execute(query).fetchall():
-        cc_id   = row[0]
-        cc_name = row[1]
-
-        preferred = pds_find_preferred_emails(pds=pds,
-                                              name=cc_name,
-                                              table='CCEmail_DB',
-                                              field='RecNum',
-                                              id=cc_id)
-
-        # Make sure we don't get duplicate emails in the result list
-        # (e.g., if we add Church Contacts that are also Members).
-        emails = _list_unique_extend(emails, preferred)
-
-    global log
-    log.info("PDS emails for ministry {ministry}".format(ministry=ministry))
-    log.info(emails)
+    if log:
+        log.info("PDS emails for ministries {m} and keywords {k}"
+                 .format(m=ministries, k=keywords))
+        log.info(emails)
 
     return emails
-
-####################################################################
-#
-# PDS setup functions
-#
-# (i.e., open/close SQLite3 database that was previously created from
-# the PDS database)
-#
-####################################################################
-
-def pds_connect():
-    global args
-
-    pds_conn = sqlite3.connect(args.sqlite3_db)
-    pds_cur = pds_conn.cursor()
-
-    return pds_cur
-
-#-------------------------------------------------------------------
-
-def pds_disconnect(pds):
-    pds.close()
 
 ####################################################################
 #
 # Setup functions
 #
 ####################################################################
-
-def setup_logging(args):
-    level=logging.ERROR
-
-    if args.debug:
-        level="DEBUG"
-    elif args.verbose:
-        level="INFO"
-
-    global log
-    log = logging.getLogger('mp3')
-    log.setLevel(level)
-
-    # Make sure to include the timestamp in each message
-    f = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
-
-    # Default log output to stdout
-    s = logging.StreamHandler()
-    s.setFormatter(f)
-    log.addHandler(s)
-
-    # Optionally save to a rotating logfile
-    if args.logfile:
-        s = logging.handlers.RotatingFileHandler(filename=args.logfile,
-                                                 maxBytes=(pow(2,20) * 10),
-                                                 backupCount=10)
-        s.setFormatter(f)
-        log.addHandler(s)
-
-#-------------------------------------------------------------------
 
 def setup_cli_args():
     # Be sure to check the Google SMTP relay documentation for
@@ -578,7 +423,6 @@ def setup_cli_args():
     # --debug also implies --verbose
     if args.debug:
         args.verbose = True
-    setup_logging(args)
 
     # Sanity check args
     l = 0
@@ -588,13 +432,7 @@ def setup_cli_args():
         log.error("Need exactly 2 arguments to --smtp: server from")
         exit(1)
 
-    file = args.app_id
-    if not os.path.isfile(file):
-        diediedie("Error: App ID JSON file {0} does not exist"
-                  .format(file))
-    if not os.access(file, os.R_OK):
-        diediedie("Error: App ID credentials JSON file {0} is not readable"
-                  .format(file))
+    return args
 
 ####################################################################
 #
@@ -603,52 +441,64 @@ def setup_cli_args():
 ####################################################################
 
 def main():
-    setup_cli_args()
+    args = setup_cli_args()
 
-    pds = pds_connect()
-    google = google_login()
+    log = ECC.setup_logging(info=args.verbose,
+                            debug=args.verbose,
+                            logfile=args.logfile)
 
+    (pds, pds_families,
+     pds_members) = PDSChurch.load_families_and_members(filename=args.sqlite3_db,
+                                                        parishioners_only=False,
+                                                        log=log)
+
+    google = google_login(gscope, log)
+
+    ecc = '@epiphanycatholicchurch.org'
     synchronizations = [
         {
-            'ministry' : '18-Technology Committee',
-            'ggroup'   : 'tech-committee@epiphanycatholicchurch.org',
-            'notify'   : 'business-manager@epiphanycatholicchurch.org,jeff@squyres.com',
-            'skip'     : False
+            'ministries' : '18-Technology Committee',
+            'ggroup'     : 'tech-committee{ecc}'.format(ecc=ecc),
+            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
         },
         {
-            'ministry' : '99-Homebound MP3 Recordings',
-            'ggroup'   : 'mp3-uploads-group@epiphanycatholicchurch.org',
-            'notify'   : 'business-manager@epiphanycatholicchurch.org,jeff@squyres.com',
-            'skip'     : False
+            'ministries' : '99-Homebound MP3 Recordings',
+            'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
+            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
         },
         {
-            'ministry' : 'L-Parish Pastoral Council',
-            'ggroup'   : 'ppc@epiphanycatholicchurch.org',
-            'notify'   : 'lynne@epiphanycatholicchurch.org,jeff@squyres.com',
-            'skip'     : False,
+            'ministries' : 'L-Parish Pastoral Council',
+            'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
+            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False,
         },
         {
-            'ministry' : '13-Finance Advisory Council',
-            'ggroup'   : 'administration-committee@epiphanycatholicchurch.org',
-            'notify'   : 'business-manager@epiphanycatholicchurch.org,jeff@squyres.com',
-            'skip'     : False
+            'ministries' : '13-Finance Advisory Council',
+            'ggroup'     : 'administration-committee{ecc}'.format(ecc=ecc),
+            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
         },
         {
-            'ministry' : '64-Singles Explore Life (SEL)',
-            'ggroup'   : 'sel@epiphanycatholicchurch.org',
-            'notify'   : 'lynne@epiphanycatholicchurch.org,jeff@squyres.com',
-            'skip'     : False
+            'ministries' : '64-Singles Explore Life (SEL)',
+            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
+            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
         }
     ]
 
     for sync in synchronizations:
-        pds_emails = pds_find_ministry_emails(pds, sync['ministry'])
-        group_emails = group_find_emails(google, sync['ggroup'])
-        to_add, to_delete = compute_sync(sync, pds_emails, group_emails)
-        if not args.dry_run:
-            do_sync(sync, google, to_add, to_delete)
+        pds_emails = pds_find_ministry_emails(pds_members, sync, log=log)
+        group_emails = google_group_find_emails(google, sync, log=log)
 
-    pds_disconnect(pds)
+        to_add, to_delete = compute_sync(sync, pds_emails, group_emails,
+                                         log=log)
+        if not args.dry_run:
+            do_sync(sync, google, to_add, to_delete, log=log)
+
+    # All done
+    pds.connection.close()
 
 if __name__ == '__main__':
     main()
