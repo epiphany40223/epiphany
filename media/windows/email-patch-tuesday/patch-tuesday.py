@@ -28,7 +28,7 @@ from email.message import EmailMessage
 
 smtp_server = 'smtp-relay.gmail.com'
 smtp_from   = 'Epiphany reminder <no-reply@epiphanycatholicchurch.org>'
-smtp_to     = 'staff@epiphanycatholicchurch.org,tech-committee@epiphanycatholicchurch.org'
+smtp_to     = 'staff@epiphanycatholicchurch.org,itadmin@epiphanycatholicchurch.org'
 subject     = 'Epiphany patch Tuesday reminder'
 
 body        = '''<h1>REMINDER!</h1>
