@@ -503,7 +503,19 @@ def main():
         {
             'keywords'   : [ 'ECC Sheet Music access' ],
             'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jsquyres@gmail.com'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
+        },
+        {
+            'keywords'   : [ 'ECC Liturgy Plans editor' ],
+            'ggroup'     : 'worship-liturgy-planning{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
+        },
+        {
+            'keywords'   : [ 'ECC Liturgy Plans reader' ],
+            'ggroup'     : 'worship-liturgy-planning-guest{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
         },
     ]
