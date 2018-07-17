@@ -14,29 +14,6 @@ cd $prog_dir
 
 ################################################################################
 #
-# Synchronize PDS and mailman for the parishioner listserve.
-#
-# NOTE: Processing the results of the SQL queries from the PDS
-# database requires ssh and sudo credential on the mailman server
-# (i.e., the scp and ssh commands, below).
-################################################################################
-
-# Generate the list of email addresses from PDS data
-mailman_logfile=$prog_dir/sync-mailman-logfile.txt
-./sync-mailman.py \
-    --sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
-    --logfile=$mailman_logfile \
-    --verbose
-
-# This generated mailman-parishioner.txt.
-# Copy this file up to the mailman server.
-file=mailman-parishioner.txt
-scp $file jeff@lists.epiphanycatholicchurch.org:ecc
-# Now update the list
-ssh jeff@lists.epiphanycatholicchurch.org ecc/replace-parishioners.sh ecc/$file
-
-################################################################################
-#
 # Synchronize PDS and select Google Groups.
 #
 # NOTE: This script requires Google credentials.  See the comments at
