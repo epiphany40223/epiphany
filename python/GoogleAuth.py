@@ -2,11 +2,13 @@
 
 import httplib2
 import json
+import time
 import os
 
 from apiclient.discovery import build
 from oauth2client import tools
 from oauth2client.file import Storage
+from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
 
 #-------------------------------------------------------------------
@@ -87,3 +89,40 @@ def authorize(user_cred, name, version, log=None):
         log.debug('Authorized to Google')
 
     return service
+
+#-------------------------------------------------------------------
+
+def google_login(scope, api_name, api_version,
+                 app_json, user_json,
+                 gauth_max_attempts=3, log=None):
+    # Put a loop around this so that it can re-authenticate via the
+    # OAuth refresh token when possible.  Real errors will cause the
+    # script to abort, which will notify a human to fix whatever the
+    # problem was.
+    auth_count = 0
+    while auth_count < gauth_max_attempts:
+        try:
+            # Authorize the app and provide user consent to Google
+            app_cred  = load_app_credentials(app_json)
+            user_cred = load_user_credentials(scope, app_cred, user_json)
+            service   = authorize(user_cred, api_name, api_version)
+            log.info("Authenticated to Google")
+            break
+
+        except AccessTokenRefreshError:
+            # The AccessTokenRefreshError exception is raised if the
+            # credentials have been revoked by the user or they have
+            # expired.
+            log.error("Failed to authenticate to Google (will sleep and try again)")
+
+            # Delay a little and try to authenticate again
+            time.sleep(10)
+
+        auth_count = auth_count + 1
+
+    if auth_count > gauth_max_attempts:
+        email_and_die("Failed to authenticate to Google {0} times.\nA human needs to figure this out."
+                  .format(gauth_max_attempts))
+
+    return service
+
