@@ -485,7 +485,13 @@ def main():
         {
             'ministries' : [ 'L-Parish Pastoral Council' ],
             'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
-            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False,
+        },
+        {
+            'keywords'   : [ 'PPC Executive Committee' ],
+            'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
+            'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False,
         },
         {
