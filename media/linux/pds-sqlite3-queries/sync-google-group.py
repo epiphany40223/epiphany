@@ -477,7 +477,7 @@ def main():
             'skip'       : False
         },
         {
-            'ministries' : [ '99-Homebound MP3 Recordings' ],
+            'keywords'   : [ 'Homebound MP3 Recordings' ],
             'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
