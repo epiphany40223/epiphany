@@ -477,7 +477,7 @@ def main():
             'skip'       : False
         },
         {
-            'ministries' : [ '99-Homebound MP3 Recordings' ],
+            'keywords'   : [ 'Homebound MP3 Recordings' ],
             'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
@@ -485,7 +485,13 @@ def main():
         {
             'ministries' : [ 'L-Parish Pastoral Council' ],
             'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
-            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False,
+        },
+        {
+            'keywords'   : [ 'PPC Executive Committee' ],
+            'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
+            'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False,
         },
         {
