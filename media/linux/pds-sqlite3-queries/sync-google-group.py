@@ -369,8 +369,7 @@ def pds_find_ministry_emails(members, sync, log=None):
             _member_has_any_keyword(member, keywords)):
             em = PDSChurch.find_any_email(member)
             log.info("Found PDS email: {}".format(em))
-            if em:
-                emails.extend(em)
+            emails.extend(em)
 
     if log:
         log.info("PDS emails for ministries {m} and keywords {k}"

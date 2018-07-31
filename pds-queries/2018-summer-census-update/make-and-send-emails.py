@@ -368,8 +368,7 @@ def _send_family_emails(families, cookies, log=None):
         for m in f['members']:
             if _want_to_email_member(m):
                 em = PDSChurch.find_any_email(m)
-                if em:
-                    to_emails.extend(em)
+                to_emails.extend(em)
 
             if first:
                 log.info("=== Family: {name}".format(name=f['Name']))

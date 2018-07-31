@@ -323,18 +323,16 @@ def compare_members(google, start, end, pds_members, jotform_members):
 
         emails = PDSChurch.find_preferred_email(member)
         email = None
-        if emails:
-            for em in emails:
-                if em == row['Email']:
-                    email = em
-                    break
+        for em in emails:
+            if em == row['Email']:
+                email = em
+                break
         if email is None:
             emails = PDSChurch.find_any_email(member)
-            if emails:
-                for em in emails:
-                    if em == row['Email']:
-                        email = em + " (NOT PREFERRED)"
-                        break
+            for em in emails:
+                if em == row['Email']:
+                    email = em + " (NOT PREFERRED)"
+                    break
         _compare(changes, 'Preferred Email', row['Email'], email)
 
         phone = None

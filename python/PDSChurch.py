@@ -529,7 +529,7 @@ def find_preferred_email(member_or_family):
     if pkey in mof and len(mof[pkey]) > 0:
         return _get_sorted_addrs(mof[pkey])
     else:
-        return None
+        return [ ]
 
 # Return either the Member/Family preferred email addresses, or, if
 # there are no preferred addresses, return the first (by sorted order)
@@ -544,4 +544,4 @@ def find_any_email(member_or_family):
         addr = _get_sorted_addrs(mof[npkey])[0]
         return [ addr ]
     else:
-        return None
+        return [ ]
