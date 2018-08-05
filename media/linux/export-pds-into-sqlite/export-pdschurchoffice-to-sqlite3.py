@@ -184,12 +184,8 @@ def replace_things_not_in_quotes(line, tokens):
     word_exprs = list()
     new_tokens = list()
 
-    for token in tokens:
-        expr = re.compile(r'\b{token}\b'.format(token=token), flags=f)
-        word_exprs.append(expr)
-
-        new_token = 'pds{token}'.format(token=token)
-        new_tokens.append(new_token)
+    token_str = r'\b(' + '|'.join(tokens) + r')\b'
+    token_expr = re.compile(token_str, flags=f)
 
     results          = list()
     still_to_process = line
@@ -205,8 +201,12 @@ def replace_things_not_in_quotes(line, tokens):
             str = parts.group(1)
 
         # 1st group is what we can search
-        for word_expr, new_token in zip(word_exprs, new_tokens):
-            str = word_expr.sub(new_token, str)
+        match = token_expr.search(str)
+        if match:
+            # If we found one of the tokens, replace it with the same
+            # token but with a "pds" prefix.
+            replace = 'pds' + match.group(1).lower()
+            str = token_expr.sub(replace, str)
         results.append(str)
 
         if parts is None:
@@ -230,7 +230,6 @@ def process_db(args, db, sqlite3):
     # skip "PDS[digit]" tables.  Sigh.  Ditto for RE, SCH.
     if (re.search('^PDS\d+$', table_base, flags=re.IGNORECASE) or
         re.search('^RE\d+$', table_base, flags=re.IGNORECASE) or
-        re.search('^RE\d+.DB$', table_base, flags=re.IGNORECASE) or
         re.search('^SCH\d+$', table_base, flags=re.IGNORECASE)):
         log.info("   ==> Skipping bogus {short} table".format(short=table_base))
         return
