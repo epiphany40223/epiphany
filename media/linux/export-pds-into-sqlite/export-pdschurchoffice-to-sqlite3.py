@@ -230,7 +230,6 @@ def process_db(args, db, sqlite3):
     # skip "PDS[digit]" tables.  Sigh.  Ditto for RE, SCH.
     if (re.search('^PDS\d+$', table_base, flags=re.IGNORECASE) or
         re.search('^RE\d+$', table_base, flags=re.IGNORECASE) or
-        re.search('^RE\d+.DB$', table_base, flags=re.IGNORECASE) or
         re.search('^SCH\d+$', table_base, flags=re.IGNORECASE)):
         log.info("   ==> Skipping bogus {short} table".format(short=table_base))
         return
