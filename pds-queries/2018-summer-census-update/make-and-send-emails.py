@@ -260,7 +260,9 @@ def send_family_email(to_addresses, family, family_url, family_member_data,
                            parKey=_pkey(family['ParKey']),
                            fid=family['FamRecNum']))
 
-    message_body = ("""<html><body>
+    # This was the original message sent on 12 July 2018
+    if False:
+        message_body = ("""<html><body>
 <p><img src="http://api.epiphanycatholicchurch.org/summer2018/ecc-update-your-parishioner-info-summer-2018.jpeg"</p>
 
 <p>Dear {family_names} household:</p>
@@ -302,6 +304,73 @@ address</a>.</li></p>
 </ul></li>
 
 <p><li><a href="{general_form_url}">Click here if you have any other updates</a>, such as adding or removing household members.</li></p>
+</ol>
+</p>
+
+<p><strong>NOTE:</strong> We are hoping to have the updates completed
+by the end of August; <em>these links will only work until August 27,
+2018</em>.  Should you have any questions, please contact either
+myself or Mindy Locke, our Administrative Assistant, at +1
+502-245-9733, extension 26.</p>
+
+<p>Thanks again for your time in helping us update our records.</p>
+
+<p>Sincerely,</p>
+
+<p>Mary A. Downs<br />
+<em>Business Manager</em><br />
+Epiphany Catholic Church<br />
++1 502-245-9733 ext. 12</p></body></html>"""
+                    .format(family_names=" / ".join(to_names),
+                            family_url=family_url,
+                            member_links=member_links,
+                            general_form_url=general_url))
+
+    # This is the reminder message sent on 6 July 2018
+    message_body = ("""<html><body>
+<p><img src="http://api.epiphanycatholicchurch.org/summer2018/ecc-update-your-parishioner-info-summer-2018.jpeg"</p>
+
+<p>Dear {family_names} household:</p>
+
+<p>Just a friendly reminder that we haven't yet heard from you
+regarding the information update email sent earlier in July.
+<strong>Please take a moment to respond</strong>; after reviewing both
+your HOME information <strong>and</strong> the individual HOUSEHOLD
+MEMBERS info using the links below, being sure to click "Submit" on
+each of them so that we know you've responded (even if there are no
+changes!).</p>
+
+<p>As mentioned in the bulletin, this is Epiphany's "Summer Clean-Up
+of Our Church Records".  We are asking our parishioners to review what
+we currently have on file for them and their family, to make any
+corrections, and also to "fill-in-the-blanks" for us. This email was
+only sent to parishioners who Epiphany has on record as "head of
+household" and the corresponding spouse / partner.</p>
+
+<p><em>We realize that you may have received this email in error</em>.
+<strong>Even if you no longer attend Epiphany, please take a moment to
+click on the "home address" link below to indicate that you no longer
+attend</strong>, or simply send an email to <a
+href="mailto:mindy@epiphanycatholicchurch.org">Mindy Locke</a> in our
+parish office.</p>
+
+<p
+style="font-variant:small-caps;font-weight:bold;font-size:large;color:red">Please
+update <span style="text-decoration:underline">three</span> sets
+of information for us:</p>
+
+<ol>
+
+<p><li><a href="{family_url}">Click here to update your home
+address</a>.</li></p>
+
+<p><li>Click each of the links below to update your household members:</li>
+<ul>
+{member_links}
+</ul></li>
+
+<p><li><a href="{general_form_url}">Click here if you have any other
+updates</a>, such as adding or removing household members.</li></p>
 </ol>
 </p>
 
@@ -411,6 +480,27 @@ def send_all_family_emails(families, cookies, log=None):
 
 #-----------------------------------------------------------------------------
 
+def send_file_family_emails(args, families, cookies, log=None):
+    some_families = dict()
+
+    log.debug("Reading Envelope ID file...")
+    env_ids = list()
+    with open(args.env_id_file, "r") as ef:
+        lines = ef.readlines()
+        for line in lines:
+            env_ids.append(line.strip())
+    log.info(env_ids)
+
+    log.debug("Looking for Envelope IDs...")
+    for fid, f in families.items():
+        env = f['ParKey'].strip()
+        if env in env_ids:
+            log.info("Found Envelope ID {eid} in list (Family: {name})"
+                     .format(eid=env, name=f['Name']))
+            some_families[fid] = f
+
+    return _send_family_emails(some_families, cookies, log)
+
 def send_some_family_emails(args, families, cookies, log=None):
     target = args.email
     some_families = dict()
@@ -451,6 +541,8 @@ def setup_args():
     parser.add_argument('--email',
                         action='append',
                         help='Send only to this email address')
+    parser.add_argument('--env-id-file',
+                        help='Send only to families with envelope IDs in the file')
 
     parser.add_argument('--cookie-db', required=True,
                         help='Name of the SQLite3 database to output to')
@@ -466,10 +558,15 @@ def setup_args():
         print("Cowardly refusing to do anything")
         exit(1)
 
-    # Need either --all or --email
-    if not args.all and not args.email:
+    # Need either --all or --email or --env-id-file
+    if not args.all and not args.email and not args.env_id_file:
         print("Error: must specify either --all or --email")
         print("Cowardly refusing to do anything")
+        exit(1)
+
+    if args.env_id_file and not os.path.exists(args.env_id_file):
+        print("Error: file '{file}' is not readable"
+              .format(args.env_id_file))
         exit(1)
 
     return args
@@ -606,6 +703,8 @@ def main():
     # Send the emails
     if args.all:
         sent, not_sent = send_all_family_emails(families, cookies, log)
+    elif args.env_id_file:
+        sent, not_sent = send_file_family_emails(args, families, cookies, log)
     else:
         sent, not_sent = send_some_family_emails(args, families, cookies, log)
 
