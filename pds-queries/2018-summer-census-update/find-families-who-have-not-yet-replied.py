@@ -212,6 +212,9 @@ def main():
     for fid, f in pds_families.items():
         envid_to_fid[f['ParKey'].strip()] = fid
 
+    # Strategy: if a family replied to the home address link *or* any
+    # of its member links, don't send them another email.
+
     # Delete all families and members of families who have already
     # responded
     for family in jotform_family_csv:
@@ -224,13 +227,33 @@ def main():
         fid = envid_to_fid[env]
         if fid in pds_families:
             f = pds_families[fid]
-            log.info("*** Family replied: {eid} ({name})"
+            log.info("*** Family replied (home address): {eid} ({name})"
                      .format(eid=env, name=f['Name']))
 
-            mids = list()
             for m in f['members']:
-                mids.append(m['MemRecNum'])
-            for mid in mids:
+                mid = m['MemRecNum']
+                if mid in pds_members:
+                    del pds_members[mid]
+
+            del pds_families[fid]
+
+    # Some people submitted members but not home addresses.  So go
+    # delete all of them, too.
+    for member in jotform_member_csv:
+        env = member['EnvId'].strip()
+
+        # First row is just the titles
+        if 'Parish key' in env:
+            continue
+
+        fid = envid_to_fid[env]
+        if fid in pds_families:
+            f = pds_families[fid]
+            log.info("*** Family replied (member): {eid} ({name})"
+                     .format(eid=env, name=f['Name']))
+
+            for m in f['members']:
+                mid = m['MemRecNum']
                 if mid in pds_members:
                     del pds_members[mid]
 
