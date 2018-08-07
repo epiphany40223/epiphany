@@ -281,12 +281,26 @@ def compare_members(google, start, end, pds_members, jotform_members):
     csv_rows    = list()
     blank       = dict()
     for mid, row in jm.items():
-        member = pds_members[mid]
-
         # Is this submission between start and end?
         submit_date = _convert_date(row['SubmitDate'])
         if submit_date < start or submit_date > end:
             continue
+
+        # Here's something that can happen: the MID may not be found
+        # because the member may actually have been deleted from PDS
+        # since the census email was sent out (!).  So if we don't
+        # find a MID, log it as an error.
+        if mid not in pds_members:
+            env_id = member['family']['ParKey'].strip()
+            message = ("<li><strong>ID {env}:</strong> <font color=\"red\">{name} has been deleted from PDS and cannot be matched to their form submission</font><br />Stale member number: {mid}<br /></li><br />\n"
+                   .format(name=member['Name'],
+                           env=env_id,
+                           mid=mid))
+            print(message)
+            email_lines.append(message)
+            continue
+
+        member = pds_members[mid]
 
         # If we got here, we have a submission within the window
         changes = list()
