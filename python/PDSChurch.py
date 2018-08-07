@@ -375,7 +375,10 @@ def _parse_name(name, log=None):
     if len(parts) > 1:
         more = parts[1]
         result = re.match('([^\(\{\[]+)', more)
-        first = result[1]
+        if result:
+            first = result[1]
+        else:
+            first = 'Unknown'
 
         result = re.search('\{(.+)\}', more)
         if result:
