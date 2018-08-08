@@ -523,6 +523,12 @@ def main():
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
         },
+        {
+            'keywords'   : [ 'Liturgy Transcriptions' ],
+            'ggroup'     : 'liturgy-transcriptions{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
+        },
     ]
 
     for sync in synchronizations:
