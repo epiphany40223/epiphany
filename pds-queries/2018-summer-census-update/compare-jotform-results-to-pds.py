@@ -209,12 +209,22 @@ def compare_families(google, start, end, pds_families, jotform_families):
     csv_rows    = list()
     blank       = dict()
     for fid, row in jf.items():
-        family = pds_families[fid]
-
         # Is this submission between start and end?
         submit_date = _convert_date(row['SubmitDate'])
         if submit_date < start or submit_date > end:
             continue
+
+        if fid not in pds_families:
+            env_id = row['EnvId'].strip()
+            message = ("<li><strong>ID {env}:</strong> <font color=\"red\">Family {name} has been deleted from PDS and cannot be matched to their form submission</font><br />Stale family number: {fid}<br /></li><br />\n"
+                   .format(name=family['Name'],
+                           env=env_id,
+                           fid=fid))
+            print(message)
+            email_lines.append(message)
+            continue
+
+        family = pds_families[fid]
 
         # If we got here, we have a submission within the window
         changes = list()
