@@ -506,6 +506,12 @@ def main():
             'skip'       : False
         },
         {
+            'ministries' : [ 'L-Worship Committee' ],
+            'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
+        },
+        {
             'keywords'   : [ 'ECC Sheet Music access' ],
             'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
