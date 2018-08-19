@@ -47,49 +47,6 @@ gscope = 'https://www.googleapis.com/auth/drive'
 
 ##############################################################################
 
-def send_results_email(to, id, type, start, end, time_period, lines):
-    body = list()
-
-    body.append("""<html>
-<body>
-<h2>{type} data update</h2>
-<h3>Time period: {start} through {end}</h3>
-<p>Only showing results with changes compared to the data in the PDS database.</p>"""
-                       .format(type=type, start=start, end=end))
-    if id:
-        url = 'https://docs.google.com/spreadsheets/d/{id}'.format(id=id)
-        body.append('<p><a href="{url}">Link to spreadsheet containing these results</a>.</p>'
-                     .format(url=url))
-    body.append("<ol>")
-
-    if lines is None or len(lines) == 0:
-        body.append("<li>No {type} changes submitted during this time period</li>".format(type=type))
-    else:
-        body.extend(lines)
-
-    body.append("""</ol>
-</body>
-</html>""")
-
-    subject = '{type} census updates ({t})'.format(type=type, t=time_period)
-    try:
-        print('Sending "{subject}" email to {to}'
-              .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
-            msg = EmailMessage()
-            msg['Subject'] = subject
-            msg['From'] = smtp_from
-            msg['To'] = to
-            msg.set_content('\n'.join(body))
-            msg.replace_header('Content-Type', 'text/html')
-
-            smtp.send_message(msg)
-    except:
-        print("==== Error with {email}".format(email=to))
-        print(traceback.format_exc())
-
-##############################################################################
-
 def export_gsheet_to_csv(service, google_sheet_id, fieldnames):
     response = service.files().export(fileId=google_sheet_id,
                                       mimeType='text/csv').execute()
