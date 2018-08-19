@@ -598,6 +598,75 @@ def send_family_email(to_addresses, family, family_url, family_member_data,
                                           head=head,
                                           font=font)
 
+    # This is the reminder message sent on 18 Aug 2018
+    message_body = ("""<html><body>
+<p><img src="http://api.epiphanycatholicchurch.org/summer2018/ecc-update-your-parishioner-info-summer-2018.jpeg"</p>
+
+<p>Dear {family_names} household:</p>
+
+<p>Just a friendly reminder that we haven't yet heard from you
+regarding the information update email sent earlier in July.  Our
+parishioner data update campaign is nearly over -- <em>the electronic
+submission will no longer work after August 27th!</em>.
+<strong>Please take a moment to respond</strong>; after reviewing both
+your HOME information <strong>and</strong> the individual HOUSEHOLD
+MEMBERS info using the links below, being sure to click "Submit" on
+each of them so that we know you've responded <strong>(even if there
+are no changes!)</strong>.</p>
+
+<p>As mentioned in the bulletin, this is Epiphany's "Summer Clean-Up
+of Our Church Records".  We are asking our parishioners to review what
+we currently have on file for them and their family, to make any
+corrections, and also to "fill-in-the-blanks" for us. This email was
+only sent to parishioners who Epiphany has on record as "head of
+household" and the corresponding spouse / partner.</p>
+
+<p><em>We realize that you may have received this email in error</em>.
+<strong>Even if you no longer attend Epiphany, please take a moment to
+click on the "home address" link below to indicate that you no longer
+attend</strong>, or simply send an email to <a
+href="mailto:mindy@epiphanycatholicchurch.org">Mindy Locke</a> in our
+parish office.</p>
+
+<p
+style="font-variant:small-caps;font-weight:bold;font-size:large;color:red">Please
+update <span style="text-decoration:underline">three</span> sets
+of information for us:</p>
+
+<ol>
+
+<p><li><a href="{family_url}">Click here to update your home
+address</a>.</li></p>
+
+<p><li>Click each of the links below to update your household members:</li>
+<ul>
+{member_links}
+</ul></li>
+
+<p><li><a href="{general_form_url}">Click here if you have any other
+updates</a>, such as adding or removing household members.</li></p>
+</ol>
+</p>
+
+<p><strong>NOTE:</strong> We are hoping to have the updates completed
+by the end of August; <em>these links will only work until August 27,
+2018</em>.  Should you have any questions, please contact either
+myself or Mindy Locke, our Administrative Assistant, at +1
+502-245-9733, extension 26.</p>
+
+<p>Thanks again for your time in helping us update our records.</p>
+
+<p>Sincerely,</p>
+
+<p>Mary A. Downs<br />
+<em>Business Manager</em><br />
+Epiphany Catholic Church<br />
++1 502-245-9733 ext. 12</p></body></html>"""
+                    .format(family_names=" / ".join(to_names),
+                            family_url=family_url,
+                            member_links=member_links,
+                            general_form_url=general_url))
+
     try:
         with smtplib.SMTP_SSL(host=smtp_server) as smtp:
             msg = EmailMessage()
