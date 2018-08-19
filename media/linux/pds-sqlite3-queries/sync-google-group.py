@@ -176,7 +176,7 @@ def compute_sync(sync, pds_emails, group_emails, log=None):
 def do_sync(sync, service, to_add, to_delete, log=None):
     email_message = list()
 
-    if sync['skip']:
+    if 'skip' in sync and sync['skip']:
         return
 
     # Entries in the "to_delete" list are just email addresses (i.e.,
@@ -435,73 +435,61 @@ def main():
             'ministries' : [ '18-Technology Committee' ],
             'ggroup'     : 'tech-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'keywords'   : [ 'Homebound MP3 Recordings' ],
             'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'ministries' : [ 'L-Parish Pastoral Council' ],
             'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False,
         },
         {
             'keywords'   : [ 'PPC Executive Committee' ],
             'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False,
         },
         {
             'ministries' : [ '13-Finance Advisory Council' ],
             'ggroup'     : 'administration-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'ministries' : [ '64-Singles Explore Life (SEL)' ],
             'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
             'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'ministries' : [ 'L-Worship Committee' ],
             'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'keywords'   : [ 'ECC Sheet Music access' ],
             'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'keywords'   : [ 'ECC Liturgy Plans editor' ],
             'ggroup'     : 'worship-liturgy-planning{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'keywords'   : [ 'ECC Liturgy Plans reader' ],
             'ggroup'     : 'worship-liturgy-planning-guest{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'ministries' : [ '58-Prayer Chain Ministry' ],
             'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'keywords'   : [ 'Liturgy Transcriptions' ],
             'ggroup'     : 'liturgy-transcriptions{ecc}'.format(ecc=ecc),
             'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
-            'skip'       : False
         },
         {
             'ministries' : [ '31-Adult Choir' ],
