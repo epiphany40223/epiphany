@@ -182,6 +182,7 @@ def main():
         if 'Parish key' in env:
             continue
 
+        # The family may have been deleted
         if env not in envid_to_fid:
             continue
 
@@ -208,6 +209,7 @@ def main():
         if 'Parish key' in env:
             continue
 
+        # The family may have been deleted
         if env not in envid_to_fid:
             continue
 
