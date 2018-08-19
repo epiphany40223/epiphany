@@ -284,7 +284,12 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
             mem_list_name = ikey
 
         ministry_id = mm['MinDescRec']
-        ministry = ministries[ministry_id]
+
+        # Deep copy the ministry record so that we can add some more
+        # data in it about this specific member
+        ministry = ministries[ministry_id].copy()
+        ministry['active'] = status['Active']
+        ministry['status'] = status['Description']
 
         m[mem_list_name].append(ministry)
 
