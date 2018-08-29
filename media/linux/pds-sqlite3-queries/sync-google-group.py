@@ -530,6 +530,12 @@ def main():
             'skip'       : False
         },
         {
+            'ministries' : [ '58 Prayer Chain Ministry' ],
+            'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'skip'       : False
+        },
+        {
             'keywords'   : [ 'Liturgy Transcriptions' ],
             'ggroup'     : 'liturgy-transcriptions{ecc}'.format(ecc=ecc),
             'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
