@@ -196,13 +196,13 @@ def main():
     #---------------------------------------------------------------
     # Debug
     for _, m in pds_members.items():
-        if 'Squyres,Jeff' in m['Name']:
+        if False and 'Squyres,Jeff' in m['Name']:
             log.debug("**** DEBUG: Jeff Squyres member")
             log.debug(pformat(m))
 
     log.debug("**** Looking for family...")
     for fid, f in pds_families.items():
-        if 26561 == fid:
+        if False and 26561 == fid:
             log.debug("**** DEBUG: Family")
             log.debug(pformat(f))
     #---------------------------------------------------------------
@@ -214,6 +214,7 @@ def main():
 
     # Strategy: if a family replied to the home address link *or* any
     # of its member links, don't send them another email.
+    families_who_responded = dict()
 
     # Delete all families and members of families who have already
     # responded
@@ -224,8 +225,12 @@ def main():
         if 'Parish key' in env:
             continue
 
+        if env not in envid_to_fid:
+            continue
+
         fid = envid_to_fid[env]
         if fid in pds_families:
+            families_who_responded[env] = True
             f = pds_families[fid]
             log.info("*** Family replied (home address): {eid} ({name})"
                      .format(eid=env, name=f['Name']))
@@ -248,6 +253,7 @@ def main():
 
         fid = envid_to_fid[env]
         if fid in pds_families:
+            families_who_responded[env] = True
             f = pds_families[fid]
             log.info("*** Family replied (member): {eid} ({name})"
                      .format(eid=env, name=f['Name']))
@@ -259,14 +265,51 @@ def main():
 
             del pds_families[fid]
 
+    #################################################################
+
     # All the families left are the ones who have not yet replied
-    with open('families-who-have-not-yet-responded.csv', 'w') as fwhnyr:
+    filename = 'families-who-have-not-yet-responded.csv'
+    log.info("Writing: {f}".format(f=filename))
+    with open(filename, 'w') as fwhnyr:
         for fid, f in pds_families.items():
             env = f['ParKey'].strip()
 
             log.info("Not responded: {env} ({name})"
                      .format(env=env, name=f['Name']))
             fwhnyr.write("{env}\n".format(env=env))
+
+    filename = 'one-long-line-families-who-responded.txt'
+    log.info("Number of families who responded: {num}"
+             .format(num=len(families_who_responded)))
+    log.info("Writing: {f}".format(f=filename))
+    with open(filename, 'w') as f:
+        first = True
+        line = ''
+        for env in sorted(families_who_responded):
+            if first:
+                first = False
+                line  = env
+            else:
+                line += ', ' + env
+        line += '\n'
+        f.write(line)
+
+    filename = 'one-long-line-families-who-did-not-respond.txt'
+    log.info("Number of families who did not respond: {num}"
+             .format(num=len(pds_families)))
+    log.info("Writing: {f}".format(f=filename))
+    with open(filename, 'w') as f:
+        first = True
+        line = ''
+        for fid, family in pds_families.items():
+            env = family['ParKey'].strip()
+            if first:
+                first = False
+                line  = env
+            else:
+                line += ', ' + env
+        line += '\n'
+        f.write(line)
 
     # Close the databases
     pds.connection.close()
