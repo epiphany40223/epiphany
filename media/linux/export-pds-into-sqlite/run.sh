@@ -18,3 +18,13 @@ cd $prog_dir
     --pdsdata-dir=$pds_input_dir \
     --logfile=$logfile \
     |& tee export.out
+
+# If this is the first run after midnight, save a copy for archival
+# purposes.
+t=`date '+%H%M'`
+yes=`expr $t \< 5`
+if test $yes -eq 1; then
+    d=`date '+%Y-%m-%d'`
+    cp $sqlite_out_dir/pdschurch.sqlite3 \
+	$sqlite_out_dir/archives/$d-pdschurch.sqlite3
+fi
