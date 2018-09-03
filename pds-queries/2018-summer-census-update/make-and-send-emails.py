@@ -3,6 +3,7 @@
 import sys
 sys.path.insert(0, '../../python')
 
+import traceback
 import datetime
 import calendar
 import argparse
@@ -24,7 +25,7 @@ from email.message import EmailMessage
 # SMTP / email basics
 smtp_server  = 'smtp-relay.gmail.com'
 smtp_from    = '"Epiphany Catholic Church" <email-update@epiphanycatholicchurch.org>'
-smtp_subject = 'Epiphany Parishioner Information Update'
+smtp_subject = 'Epiphany Parishioner Update: Last Call!'
 
 family_base_url  = 'https://form.jotform.com/81854311884159'
 member_base_url  = 'https://form.jotform.com/80584122392152'
@@ -227,42 +228,9 @@ def make_member_form_url(member, cookies, log=None):
 
 ##############################################################################
 
-def send_family_email(to_addresses, family, family_url, family_member_data,
-                      log=None):
-    # We won't get here unless there's at least one email address to
-    # which to send.  But do a sanity check anyway.
-    if len(to_addresses) == 0:
-        return 0
-
-    to_names = dict()
-    member_links = ''
-    for member_data in family_member_data:
-        m    = member_data['member']
-        name = m['email_name']
-        url  = member_data['url']
-
-        to_names[m['last']] = True
-
-        member_links += ("<li><a href=\"{url}\">{name}</a></li>\n"
-                         .format(url=url, name=name))
-
-    smtp_to = ",".join(to_addresses)
-    # JMS DEBUG
-    #log.info("Sending to: {to} (JMS OVERRIDDEN)".format(to=smtp_to))
-    #smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
-
-    if log:
-        log.info("    Sending to Family {names} at {emails}"
-                 .format(names=' / '.join(to_names), emails=smtp_to))
-
-    general_url = ("{base}?envelope_id={parKey}&fid={fid}"
-                   .format(base=general_base_url,
-                           parKey=_pkey(family['ParKey']),
-                           fid=family['FamRecNum']))
-
-    # This was the original message sent on 12 July 2018
-    if False:
-        message_body = ("""<html><body>
+# This is the initial message sent on 12 July 2018
+def message_2018_07_12(family_names, family_url, member_links, general_form_url):
+    message_body = ("""<html><body>
 <p><img src="http://api.epiphanycatholicchurch.org/summer2018/ecc-update-your-parishioner-info-summer-2018.jpeg"</p>
 
 <p>Dear {family_names} household:</p>
@@ -321,12 +289,17 @@ myself or Mindy Locke, our Administrative Assistant, at +1
 <em>Business Manager</em><br />
 Epiphany Catholic Church<br />
 +1 502-245-9733 ext. 12</p></body></html>"""
-                    .format(family_names=" / ".join(to_names),
+                    .format(family_names=family_names,
                             family_url=family_url,
                             member_links=member_links,
-                            general_form_url=general_url))
+                            general_form_url=general_form_url))
 
-    # This is the reminder message sent on 6 July 2018
+    return message_body
+
+#-----------------------------------------------------------------------------
+
+# This is the reminder message sent on 6 August 2018
+def message_2018_08_06(family_names, family_url, member_links, general_form_url):
     message_body = ("""<html><body>
 <p><img src="http://api.epiphanycatholicchurch.org/summer2018/ecc-update-your-parishioner-info-summer-2018.jpeg"</p>
 
@@ -388,10 +361,242 @@ myself or Mindy Locke, our Administrative Assistant, at +1
 <em>Business Manager</em><br />
 Epiphany Catholic Church<br />
 +1 502-245-9733 ext. 12</p></body></html>"""
-                    .format(family_names=" / ".join(to_names),
+                    .format(family_names=family_names,
                             family_url=family_url,
                             member_links=member_links,
-                            general_form_url=general_url))
+                            general_form_url=general_form_url))
+
+    return message_body
+
+#-----------------------------------------------------------------------------
+
+# This is the reminder message sent on 18 Aug 2018
+def message_2018_08_18(family_names, family_url, member_links, general_form_url):
+    message_body = ("""<html><body>
+<p><img src="http://api.epiphanycatholicchurch.org/summer2018/ecc-update-your-parishioner-info-summer-2018.jpeg"</p>
+
+<p>Dear {family_names} household:</p>
+
+<p>Just a friendly reminder that we haven't yet heard from you
+regarding the information update email sent earlier in July.  Our
+parishioner data update campaign is nearly over -- <em>the electronic
+submission will no longer work after August 27th!</em>.
+<strong>Please take a moment to respond</strong>; after reviewing both
+your HOME information <strong>and</strong> the individual HOUSEHOLD
+MEMBERS info using the links below, being sure to click "Submit" on
+each of them so that we know you've responded <strong>(even if there
+are no changes!)</strong>.</p>
+
+<p>As mentioned in the bulletin, this is Epiphany's "Summer Clean-Up
+of Our Church Records".  We are asking our parishioners to review what
+we currently have on file for them and their family, to make any
+corrections, and also to "fill-in-the-blanks" for us. This email was
+only sent to parishioners who Epiphany has on record as "head of
+household" and the corresponding spouse / partner.</p>
+
+<p><em>We realize that you may have received this email in error</em>.
+<strong>Even if you no longer attend Epiphany, please take a moment to
+click on the "home address" link below to indicate that you no longer
+attend</strong>, or simply send an email to <a
+href="mailto:mindy@epiphanycatholicchurch.org">Mindy Locke</a> in our
+parish office.</p>
+
+<p
+style="font-variant:small-caps;font-weight:bold;font-size:large;color:red">Please
+update <span style="text-decoration:underline">three</span> sets
+of information for us:</p>
+
+<ol>
+
+<p><li><a href="{family_url}">Click here to update your home
+address</a>.</li></p>
+
+<p><li>Click each of the links below to update your household members:</li>
+<ul>
+{member_links}
+</ul></li>
+
+<p><li><a href="{general_form_url}">Click here if you have any other
+updates</a>, such as adding or removing household members.</li></p>
+</ol>
+</p>
+
+<p><strong>NOTE:</strong> We are hoping to have the updates completed
+by the end of August; <em>these links will only work until August 27,
+2018</em>.  Should you have any questions, please contact either
+myself or Mindy Locke, our Administrative Assistant, at +1
+502-245-9733, extension 26.</p>
+
+<p>Thanks again for your time in helping us update our records.</p>
+
+<p>Sincerely,</p>
+
+<p>Mary A. Downs<br />
+<em>Business Manager</em><br />
+Epiphany Catholic Church<br />
++1 502-245-9733 ext. 12</p></body></html>"""
+                    .format(family_names=family_names,
+                            family_url=family_url,
+                            member_links=member_links,
+                            general_form_url=general_form_url))
+
+    return message_body
+
+#-----------------------------------------------------------------------------
+
+# This is the final final final followup on Monday, Sep 3 2018
+# (Labor Day!).
+def message_2018_09_03(family_names, family_url, member_links, general_form_url,
+                       head, font):
+    message_body = ("""<html>{head}<body>
+<p><img src="http://api.epiphanycatholicchurch.org/summer2018/ecc-update-your-parishioner-info-summer-2018.jpeg"</p>
+
+<p>{font}Dear {family_names} household:</span></p>
+
+<p>{font}Nearly 60% of our registered families have responded to our
+electronic request for updates...but we still need to hear from
+you!</span></p>
+
+<p>{font}<em>(NOTE: if you sent us a paper form updating your
+information, we got it!  You can disregard this email)</em></span></p>
+
+<p>{font}<strong>We know it is Labor Day weekend, and you might be on
+your way home from travelling or relaxing at home... this will only
+take a moment to respond, <span style='text-decoration:
+underline;'>and you can do right from your phone!</span></strong>
+After reviewing both your HOME information <strong>and</strong> the
+individual HOUSEHOLD MEMBERS info using the links below, <strong><font
+color='#ff0000'>be sure to click "Submit" on each of
+them</font></strong> so that we know you've responded <strong>(even if
+there are no changes)</strong>.</span></p>
+
+<p>{font}In an effort to be good stewards of our resources, we opted
+for this electronic method rather than using costly postage and paper
+to mail out reminders.  We have extended the availability of the
+electronic links for two more weeks, so please help us by responding
+soon.</span></p>
+
+<p>{font}<em>We realize that you may have received this
+email in error</em>.  <strong>Even if you no longer attend Epiphany,
+please take a moment to click on the "home address" link below to
+indicate that you no longer attend</strong>, or simply send an email
+to <a href="mailto:mindy@epiphanycatholicchurch.org">Mindy Locke</a>
+in our parish office.</span></p>
+
+<p>{font} <span
+style="font-variant:small-caps;font-weight:bold;font-size:large;color:red">Please
+review and update <span style="text-decoration:underline">three</span>
+sets of information for us:</span></span></p>
+
+<ol>
+
+<p><li>{font}<a href="{family_url}">Click here to update your home
+address</a>.</span></li></p>
+
+<p><li>{font}Click each of the links below to update your
+household members:</span></li>
+<ul>
+{member_links}
+</ul></li>
+
+<p><li>{font}<a href="{general_form_url}">Click here if you
+have any other updates</a>, such as adding or removing household
+ members.</span></li></p>
+
+</ol>
+</p>
+
+<p>{font}Should you have any questions, please contact either
+myself or Mindy Locke, our Administrative Assistant, at +1
+502-245-9733, extension 26.</span></p>
+
+<p>{font}Thanks again for your time in helping us update our
+records.</span></p>
+
+<p>{font}Sincerely,</span></p>
+
+<p>{font}Mary A. Downs<br />
+<em>Business Manager</em><br />
+Epiphany Catholic Church<br />
++1 502-245-9733 ext. 12</span></p></body></html>"""
+                    .format(family_names=family_names,
+                            family_url=family_url,
+                            member_links=member_links,
+                            general_form_url=general_form_url,
+                            head=head,
+                            font=font))
+
+    return message_body
+
+#-----------------------------------------------------------------------------
+
+def send_family_email(to_addresses, family, family_url, family_member_data,
+                      log=None):
+    # We won't get here unless there's at least one email address to
+    # which to send.  But do a sanity check anyway.
+    if len(to_addresses) == 0:
+        return 0
+
+    font = '<span style="font-size:11.0pt;font-family:&quot;Segoe UI Historic&quot;,sans-serif">'
+
+    to_names = dict()
+    member_links = ''
+    for member_data in family_member_data:
+        m    = member_data['member']
+        name = m['email_name']
+        url  = member_data['url']
+
+        to_names[m['last']] = True
+
+        member_links += ("<li>{font}<a href=\"{url}\">{name}</a></font></li>\n"
+                         .format(url=url, name=name, font=font))
+
+    smtp_to = ",".join(to_addresses)
+    # JMS DEBUG
+    #log.info("Sending to: {to} (JMS OVERRIDDEN)".format(to=smtp_to))
+    #smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
+
+    if log:
+        log.info("    Sending to Family {names} at {emails}"
+                 .format(names=' / '.join(to_names), emails=smtp_to))
+
+    general_url = ("{base}?envelope_id={parKey}&fid={fid}"
+                   .format(base=general_base_url,
+                           parKey=_pkey(family['ParKey']),
+                           fid=family['FamRecNum']))
+
+    # This was the original message sent on 12 July 2018
+    if False:
+        message_body = message_2018_07_12(family_names=" / ".join(to_names),
+                                          family_url=family_url,
+                                          member_links=member_links,
+                                          general_form_url=general_url)
+    elif False:
+        message_body = message_2018_08_06(family_names=" / ".join(to_names),
+                                          family_url=family_url,
+                                          member_links=member_links,
+                                          general_form_url=general_url)
+
+    elif False:
+        message_body = message_2018_08_18(family_names=" / ".join(to_names),
+                                          family_url=family_url,
+                                          member_links=member_links,
+                                          general_form_url=general_url)
+
+    else:
+        head = '''<head>
+<style><!--
+@font-face
+	{font-family:"Segoe UI Historic";
+	panose-1:2 11 5 2 4 2 4 2 2 3;}
+--></style>
+</head>'''
+        message_body = message_2018_09_03(family_names=" / ".join(to_names),
+                                          family_url=family_url,
+                                          member_links=member_links,
+                                          general_form_url=general_url,
+                                          head=head,
+                                          font=font)
 
     try:
         with smtplib.SMTP_SSL(host=smtp_server) as smtp:
@@ -407,6 +612,9 @@ Epiphany Catholic Church<br />
         log.error("==== Error with {email}"
                   .format(email=smtp_to))
         log.error(traceback.format_exc())
+
+    # JMS DEBUG
+    #exit(0)
 
     return len(to_addresses)
 
@@ -566,7 +774,7 @@ def setup_args():
 
     if args.env_id_file and not os.path.exists(args.env_id_file):
         print("Error: file '{file}' is not readable"
-              .format(args.env_id_file))
+              .format(file=args.env_id_file))
         exit(1)
 
     return args
