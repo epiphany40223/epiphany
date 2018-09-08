@@ -251,6 +251,9 @@ def main():
         if 'Parish key' in env:
             continue
 
+        if env not in envid_to_fid:
+            continue
+
         fid = envid_to_fid[env]
         if fid in pds_families:
             families_who_responded[env] = True

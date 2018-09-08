@@ -138,46 +138,6 @@ def email_and_die(msg):
 
 ####################################################################
 #
-# Google setup / auth functions
-#
-####################################################################
-
-def google_login(scope, log):
-    # Put a loop around this so that it can re-authenticate via the
-    # OAuth refresh token when possible.  Real errors will cause the
-    # script to abort, which will notify a human to fix whatever the
-    # problem was.
-    auth_count = 0
-    while auth_count < gauth_max_attempts:
-        try:
-            # Authorize the app and provide user consent to Google
-            app_cred = GoogleAuth.load_app_credentials(args.app_id)
-            user_cred = GoogleAuth.load_user_credentials(scope, app_cred,
-                                                         args.user_credentials)
-            service = GoogleAuth.authorize(user_cred, 'admin',
-                                           'directory_v1')
-            log.info("Authenticated to Google")
-            break
-
-        except AccessTokenRefreshError:
-            # The AccessTokenRefreshError exception is raised if the
-            # credentials have been revoked by the user or they have
-            # expired.
-            log.error("Failed to authenticate to Google (will sleep and try again)")
-
-            # Delay a little and try to authenticate again
-            time.sleep(10)
-
-        auth_count = auth_count + 1
-
-    if auth_count > gauth_max_attempts:
-        email_and_die("Failed to authenticate to Google {0} times.\nA human needs to figure this out."
-                  .format(gauth_max_attempts))
-
-    return service
-
-####################################################################
-#
 # Sync functions
 #
 ####################################################################
@@ -465,7 +425,12 @@ def main():
                                                         parishioners_only=False,
                                                         log=log)
 
-    google = google_login(gscope, log)
+    google = GoogleAuth.google_login(scope=gscope,
+                                     api_name="admin",
+                                     api_version="directory_v1",
+                                     app_json=args.app_id,
+                                     user_json=args.user_credentials,
+                                     log=log)
 
     ecc = '@epiphanycatholicchurch.org'
     synchronizations = [

@@ -121,8 +121,10 @@ def google_login(scope, api_name, api_version,
         auth_count = auth_count + 1
 
     if auth_count > gauth_max_attempts:
-        email_and_die("Failed to authenticate to Google {0} times.\nA human needs to figure this out."
-                  .format(gauth_max_attempts))
+        message = ("Failed to authenticate to Google {num} times.  A human needs to figure this out."
+                   .format(num=gauth_max_attempts))
+        log.error(message)
+        email_and_die(message)
 
     return service
 
