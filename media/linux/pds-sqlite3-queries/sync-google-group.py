@@ -76,9 +76,6 @@ from oauth2client.client import OAuth2WebServerFlow
 # Globals
 gauth_max_attempts = 3
 guser_agent = 'pds_google_group_sync'
-# Scopes documented here:
-# https://developers.google.com/drive/v3/web/about-auth
-gscope = 'https://www.googleapis.com/auth/admin.directory.group'
 
 args = None
 log = None
@@ -425,12 +422,12 @@ def main():
                                                         parishioners_only=False,
                                                         log=log)
 
-    google = GoogleAuth.google_login(scope=gscope,
-                                     api_name="admin",
-                                     api_version="directory_v1",
-                                     app_json=args.app_id,
-                                     user_json=args.user_credentials,
-                                     log=log)
+    google = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['admin'],
+                                            api_name='admin',
+                                            api_version='directory_v1',
+                                            app_json=args.app_id,
+                                            user_json=args.user_credentials,
+                                            log=log)
 
     ecc = '@epiphanycatholicchurch.org'
     synchronizations = [

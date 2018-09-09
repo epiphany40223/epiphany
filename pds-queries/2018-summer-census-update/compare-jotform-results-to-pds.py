@@ -39,11 +39,6 @@ upload_team_drive_folder_id = '0ACmEer0DmBh4Uk9PVA'
 
 gapp_id         = 'client_id.json'
 guser_cred_file = 'user-credentials.json'
-gsheet_mime_type= 'application/vnd.google-apps.spreadsheet'
-
-# Scopes documented here:
-# https://developers.google.com/drive/v3/web/about-auth
-gscope = 'https://www.googleapis.com/auth/drive'
 
 ##############################################################################
 
@@ -116,12 +111,12 @@ def upload_to_gsheet(google, folder_id, filename, csv_rows):
               .format(file=filename))
         metadata = {
             'name'     : filename,
-            'mimeType' : gsheet_mime_type,
+            'mimeType' : GoogleAuth.sheet_mime_type,
             'parents'  : [ folder_id ],
             'supportsTeamDrives' : True,
             }
         media = MediaFileUpload(csv_filename,
-                                mimetype=gsheet_mime_type,
+                                mimetype=GoogleAuth.sheet_mime_type,
                                 resumable=True)
         file = google.files().create(body=metadata,
                                      media_body=media,
@@ -528,12 +523,12 @@ def main():
 
     log = ECC.setup_logging(debug=True)
 
-    google = GoogleAuth.google_login(scope=gscope,
-                                     app_json=args.app_id,
-                                     user_json=args.user_credentials,
-                                     api_name='drive',
-                                     api_version='v3',
-                                     log=log)
+    google = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['drive'],
+                                            app_json=args.app_id,
+                                            user_json=args.user_credentials,
+                                            api_name='drive',
+                                            api_version='v3',
+                                            log=log)
 
     jotform_family_csv, jotform_member_csv = read_jotform(google,
                                                           jotform_family_gfile_id,
