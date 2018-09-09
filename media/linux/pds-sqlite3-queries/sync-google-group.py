@@ -1,18 +1,24 @@
 #!/usr/bin/env python3.6
 
-"""Script to iterate through ministries from PDS and sync the
-membership of a Google Group to match.
+"""Script to iterate through ministries and Member keywords from PDS and
+sync the membership of a Google Group to match.
 
-- find all Members and Church Contacts (i.e., staff) in the ministry
-  - there is a hard-coded list of Ministry names (which must exactly
-    match the names in PDS) and their corresponding Google Group email
-    address
-  - Members must be in a Ministry of that exact name
-  - Church Contacts must have a keyword of "LIST:<ministry_name>" or
-    just "<ministry_name>" (because keywords have a max length, and
-    sometimes "LIST:<ministry_name>" is too long).
-- find the preferred email addresses for each of them
-- make the associated Google Group be exactly that set of email addresses
+- Use a hard-coded list of ministries+keywords and associated Google
+  Groups.  NOTE: the ministries, keywords, and Google Group names must
+  match EXACTLY.
+- For each:
+
+  - Determine if the Google Group is a Broadcast (only manager/owers
+    can post) or Discussion group (anyone can post).
+  - Find all PDS Members in a given ministry and/or have a given
+    keyword.
+  - Find all members of the Google Group
+  - Compare the two:
+    - Find which PDS members should be added to the Google Group
+    - Find which email addresses should be removed from the Google Group
+    - Find which email addresses in the Google Group need to change
+      role (from member -> owner or owner -> member)
+  - If not a dry run, do the actions found above
 
 No locking / lockfile is used in this script because it is assumed
 that simultaneous access is prevented by locking at a higher level
@@ -25,9 +31,10 @@ been tested with other versions (e.g., Python 2.7.x).
 
 -----
 
-This script requires a "client_id.json" file with the app credentials
-from the Google App dashboard.  This file is not committed here in git
-for obvious reasons (!).
+This script uses Google OAuth authentication; it requires a
+"client_id.json" file with the app credentials from the Google App
+dashboard.  This file is not committed here in git for obvious reasons
+(!).
 
 The client_id.json file is obtained from
 console.developers.google.com, project name "PDS to Google Groups".
@@ -62,20 +69,13 @@ import ECC
 import PDSChurch
 import GoogleAuth
 
+from oauth2client import tools
 from email.message import EmailMessage
 
 from pprint import pprint
 from pprint import pformat
 
-from apiclient.discovery import build
-from oauth2client import tools
-from oauth2client.file import Storage
-from oauth2client.client import AccessTokenRefreshError
-from oauth2client.client import OAuth2WebServerFlow
-
 # Globals
-gauth_max_attempts = 3
-guser_agent = 'pds_google_group_sync'
 
 args = None
 log = None
@@ -92,11 +92,16 @@ logfile = "log.txt"
 # JMS Change me to itadmin
 fatal_notify_to = 'jsquyres@gmail.com'
 
+# Google Group permissions
+BROADCAST  = 1
+DISCUSSION = 2
+
 #-------------------------------------------------------------------
 
 def send_mail(to, subject, message_body, html=False, log=None):
     if not args.smtp:
-        log.debug('Not sending email "{0}" because SMTP not setup'.format(subject))
+        if log:
+            log.debug('Not sending email "{0}" because SMTP not setup'.format(subject))
         return
 
     smtp_server = args.smtp[0]
@@ -139,108 +144,300 @@ def email_and_die(msg):
 #
 ####################################################################
 
-def compute_sync(sync, pds_emails, group_emails, log=None):
-    # Find all the addresses to add to the google group, and also find
-    # all the addresses to remove from the google group.
+def compute_sync(sync, pds_members, group_members, log=None):
+    actions = list()
 
-    to_add_to_group      = list()
-    to_delete_from_group = group_emails.copy()
-    for pds_email in pds_emails:
-        log.debug("Checking PDS mail: {}".format(pds_email))
+    for pm in pds_members:
+        found_in_google_group = False
+        for gm in group_members:
+            if pm['email'] == gm['email']:
+                found_in_google_group = True
+                gm['sync_found'] = True
 
-        found = False
-        if pds_email in group_emails:
-            found = True
+                if pm['leader'] and gm['role'] != 'owner':
+                    # In this case, the PDS Member is in the group,
+                    # but they need to be changed to a Google Group
+                    # OWNER.
+                    actions.append({
+                        'action'              : 'change role',
+                        'email'               : pm['email'],
+                        'role'                : 'OWNER',
+                        'pds_ministry_member' : pm,
+                    })
 
-            # Note: we *may* have already deleted this email
-            # address from to_delete_from_group (i.e., if multiple
-            # people are in the group who share an email address)
-            if pds_email in to_delete_from_group:
-                to_delete_from_group.remove(pds_email)
+                elif not pm['leader'] and gm['role'] == 'owner':
+                    # In this case, the PDS Member is in the group,
+                    # but they need to be changed to a Google Group
+                    # MEMBER.
+                    actions.append({
+                        'action'              : 'change role',
+                        'email'               : pm['email'],
+                        'role'                : 'MEMBER',
+                        'pds_ministry_member' : pm,
+                    })
 
-        if not found and pds_email not in to_add_to_group:
-            to_add_to_group.append(pds_email)
+        if not found_in_google_group:
+            # In this case, we have an email address that needs to be
+            # added to the Google Group.
+            role = 'MEMBER'
+            if pm['leader']:
+                role = 'OWNER'
 
-    if log:
-        log.info("To delete from Google Group {group}:"
-                 .format(group=sync['ggroup']))
-        log.info(to_delete_from_group)
-        log.info("To add to Google Group {group}:"
-                 .format(group=sync['ggroup']))
-        log.info(to_add_to_group)
+            actions.append({
+                'action'              : 'add',
+                'email'               : pm['email'],
+                'role'                : role,
+                'pds_ministry_member' : pm,
+            })
 
-    return to_add_to_group, to_delete_from_group
+    # Now go through all the group members and see who wasn't
+    # 'sync_found' (above).  These are the emails we need to delete
+    # from the Google Group.
+    for gm in group_members:
+        if 'sync_found' in gm and gm['sync_found']:
+            continue
+
+        actions.append({
+            'action'              : 'delete',
+            'email'               : gm['email'],
+            'role'                : None,
+            'pds_ministry_member' : None,
+        })
+
+    return actions
 
 #-------------------------------------------------------------------
 
-def do_sync(sync, service, to_add, to_delete, log=None):
-    email_message = list()
+def do_sync(sync, group_permissions, service, actions, log=None):
+    ministries = sync['ministries'] if 'ministries' in sync else 'None'
+    keywords   = sync['keywords']   if 'keywords'   in sync else 'None'
 
-    if 'skip' in sync and sync['skip']:
-        return
+    type_str   = 'Broadcast' if group_permissions == BROADCAST else 'Discussion'
 
-    # Entries in the "to_delete" list are just email addresses (i.e.,
-    # a plain list of strings -- not dictionaries).
-    for email in to_delete:
-        str = "DELETING: {email}".format(email=email)
+    log.info("Synchronizing ministries: {min}, keywords: {key}, group: {ggroup}, type {type}"
+             .format(min=ministries, key=keywords, ggroup=sync['ggroup'],
+                     type=type_str))
 
-        if log:
-            log.info(str)
-        email_message.append(str)
+    # Process each of the actions
+    changes     = list()
+    for action in actions:
+        a = action['action']
+        r = action['role']
 
-        service.members().delete(groupKey=sync['ggroup'],
-                                 memberKey=email).execute()
+        # Remember: the pds_ministry_member contains an array of PDS
+        # members (because there may be more than one PDS Member that
+        # shares the same email address).
+        mem_names = None
+        key = 'pds_ministry_member'
+        if key in action and action[key]:
+            for mem in action[key]['pds_members']:
+                if mem_names is None:
+                    mem_names = mem['Name']
+                else:
+                    mem_names += ', {name}'.format(name=mem['Name'])
 
-    # Entries in the "to_add" list are dictionaries with a name and
-    # email (the name is there solely so that we can include it in the
-    # email).
-    for email in to_add:
-        str = ("ADDING: {email}"
-               .format(email=email))
+        log.info("Processing action: {action} / {email} / {role}".
+                 format(action=action['action'],
+                        email=action['email'],
+                        role=action['role']))
+        # JMS This outputs PDS Members (and their families!) -- very
+        # lengthy output.
+        #log.debug("Processing full action: {action}".
+        #          format(action=pformat(action)))
 
-        if log:
-            log.info(str)
-        email_message.append(str)
+        msg = None
+        if a == 'change role':
+            if r == 'OWNER':
+                msg = _sync_member_to_owner(sync, group_permissions,
+                                            service, action, mem_names, log)
+            elif r == 'MEMBER':
+                msg = _sync_owner_to_member(sync, group_permissions,
+                                            service, action, mem_names, log)
+            else:
+                log.error("Action: change role, unknown role: {role} -- PDS Member {name} (skipped)"
+                          .format(role=r, name=mem_names))
+                continue
 
-        group_entry = {
-            'email' : email,
-            'role'  : 'MEMBER'
-        }
-        service.members().insert(groupKey=sync['ggroup'],
-                                 body=group_entry).execute()
+        elif a == 'add':
+            msg = _sync_add(sync, group_permissions,
+                            service, action, mem_names, log)
 
-    # Do we need to send an email?
-    if len(email_message) > 0:
+        elif a == 'delete':
+            msg = _sync_delete(sync, service, action, mem_names, log)
+
+        else:
+            log.error("Unknown action: {action} -- PDS Member {name} (skipped)"
+                      .format(action=a, name=mem_names))
+
+        if msg:
+            email = action['email']
+            i     = len(changes) + 1
+            changes.append("<tr>\n<td>{i}.</td>\n<td>{name}</td>\n<td>{email}</td>\n<td>{msg}</td>\n</tr>"
+                           .format(i=i,
+                                   name=mem_names,
+                                   email=action['email'],
+                                   msg=msg))
+
+    # If we have changes to report, email them
+    if len(changes) > 0:
         subject = 'Update to Google Group for '
-        body = ("""Updates to the Google Group {email}:
 
-{lines}
-
-These email addresses were obtained from PDS:
-
-"""
-                .format(email=sync['ggroup'],
-                        lines='\n'.join(email_message)))
-
-        count    = 1
-        subj_add = list()
+        subject_add = list()
+        rationale   = list()
         if 'ministries' in sync:
             for m in sync['ministries']:
-                body  = body + ('{i}. Members in the "{m}" ministry\n'
-                                .format(i=count, m=m))
-                count = count + 1
-                subj_add.append(m)
+                rationale.append('<li> Members in the "{m}" ministry</li>'
+                                 .format(m=m))
+                subject_add.append(m)
 
         if 'keywords' in sync:
             for k in sync['keywords']:
-                body  = body + ('{i}. Members with the "{k}" keyword\n'
-                                .format(i=count, k=k))
-                count = count + 1
-                subj_add.append(k)
+                rationale.append('<li> Members with the "{k}" keyword</li>'
+                                .format(k=k))
+                subject_add.append(k)
 
-        subject = subject + ', '.join(subj_add)
+        # Assemble the final subject line
+        subject = subject + ', '.join(subject_add)
 
-        send_mail(to=sync['notify'], subject=subject, message_body=body)
+        # Assemble the final email body
+        style = r'''table { border-collapse: collapse; }
+th, td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+tr:nth-child(even) { background-color: #f2f2f2; }'''
+
+        body = ("""<html>
+<head>
+<style>
+{style}
+</style>
+</head>
+<body>
+<p>The following changes were made to the {type} Google Group {email}:</p>
+
+<p><table border=0>
+<tr>
+<th>&nbsp;</th>
+<th>Name</th>
+<th>Email address</th>
+<th>Action</th>
+</tr>
+{changes}
+</table></p>
+
+<p>These email addresses were obtained from PDS:</p>
+
+<p><ol>
+{rationale}
+</ol></p>
+</body>
+</html>
+"""
+                .format(type=type_str,
+                        style=style,
+                        email=sync['ggroup'],
+                        changes='\n'.join(changes),
+                        rationale='\n'.join(rationale)))
+
+        # Send the email
+        send_mail(to=sync['notify'], subject=subject, message_body=body,
+                  html=True, log=log)
+
+#-------------------------------------------------------------------
+
+def _sync_member_to_owner(sync, group_permissions,
+                          service, action, name, item_number, log=None):
+    email = action['email']
+    if log:
+        log.info("Changing PDS Member {name} ({email}) from Google Group Member to Owner"
+                 .format(name=name, email=email))
+
+    # Per
+    # https://stackoverflow.com/questions/31552146/group-as-owner-or-manager-fails-with-400-error,
+    # we can't set a Group as an OWNER or MANAGER of another Group
+    # (e.g., director-worship@ecc.org can't be the owner of one of the
+    # ministry groups).  As of Aug 2018, you can still do it in the
+    # Google Web dashboard (i.e., remove the Group, then re-add the
+    # Group as an OWNER), but you can't do it via the API.  Apparently
+    # this is Google's intended behavior -- the fact that it works on
+    # the Google Web dashboard is a fluke.  :-( So we just have to
+    # plan on not being able to set Groups to be OWNER or MANAGER of
+    # another Group.  Sigh.
+
+    group_entry = {
+        'email' : email,
+        'role'  : 'OWNER',
+    }
+    service.members().update(groupKey=sync['ggroup'],
+                             memberKey=email,
+                             body=group_entry).execute()
+
+    if group_permissions == BROADCAST:
+        msg = "Change to: owner (can post to this group)"
+    else:
+        msg = "Change to: owner"
+
+    return msg
+
+def _sync_owner_to_member(sync, group_permissions,
+                          service, action, name, item_number, log=None):
+    email = action['email']
+    if log:
+        log.info("Changing PDS Member {name} ({email}) from Google Group Owner to Member"
+                 .format(name=name, email=email))
+
+    group_entry = {
+        'email' : email,
+        'role'  : 'MEMBER',
+    }
+    service.members().update(groupKey=sync['ggroup'],
+                             memberKey=email,
+                             body=group_entry).execute()
+
+    if group_permissions == BROADCAST:
+        msg = "Change to: member (can <strong><em>not</em></strong> post to this group)"
+    else:
+        msg = "Change to: member"
+
+    return msg
+
+def _sync_add(sync, group_permissions,
+              service, action, name, item_number, log=None):
+    email = action['email']
+    role  = action['role']
+    if log:
+        log.info("Adding PDS Member {name} ({email}) as Google Group {role}"
+                 .format(name=name, email=email, role=role.lower()))
+
+    group_entry = {
+        'email' : email,
+        'role'  : role,
+    }
+    service.members().insert(groupKey=sync['ggroup'],
+                             body=group_entry).execute()
+
+    if group_permissions == BROADCAST:
+        if role == 'OWNER':
+            msg = "Added to group (can post to this group)"
+        else:
+            msg = "Added to group (can <strong><em>not</em></strong> post to this group)"
+    else:
+        msg = "Added to group"
+    return msg
+
+def _sync_delete(sync, service, action, name, item_number, log=None):
+    email = action['email']
+    if log:
+        log.info("Deleting PDS Member {name} ({email})"
+                 .format(name=name, email=email))
+
+    service.members().delete(groupKey=sync['ggroup'],
+                             memberKey=email).execute()
+
+    msg = "Removed from the group"
+    return msg
 
 ####################################################################
 #
@@ -248,8 +445,27 @@ These email addresses were obtained from PDS:
 #
 ####################################################################
 
-def google_group_find_emails(service, sync, log=None):
-    emails = list()
+def google_group_get_permissions(service, group_email, log=None):
+    response = (service
+                .groups()
+                .get(groupUniqueId=group_email,
+                     fields='whoCanPostMessage')
+                .execute())
+
+    who = response.get('whoCanPostMessage')
+    if log:
+        log.info("Group permissions for {email}: {who}"
+                 .format(email=group_email, who=who))
+
+    if who == 'ANYONE_CAN_POST' or who == 'ALL_MEMBERS_CAN_POST':
+        return DISCUSSION
+    else:
+        return BROADCAST
+
+#-------------------------------------------------------------------
+
+def google_group_find_members(service, sync, log=None):
+    group_members = list()
 
     # Iterate over all (pages of) group members
     page_token = None
@@ -258,9 +474,12 @@ def google_group_find_emails(service, sync, log=None):
                     .members()
                     .list(pageToken=page_token,
                           groupKey=sync['ggroup'],
-                          fields='members(email)').execute())
+                          fields='members(email,role)').execute())
         for group in response.get('members', []):
-            emails.append(group['email'].lower())
+            group_members.append({
+                'email' : group['email'].lower(),
+                'role'  : group['role'].lower(),
+            })
 
         page_token = response.get('nextPageToken', None)
         if page_token is None:
@@ -269,9 +488,9 @@ def google_group_find_emails(service, sync, log=None):
     if log:
         log.info("Google Group membership for {group}"
                  .format(group=sync['ggroup']))
-        log.info(emails)
+        log.info(group_members)
 
-    return emails
+    return group_members
 
 ####################################################################
 #
@@ -279,31 +498,54 @@ def google_group_find_emails(service, sync, log=None):
 #
 ####################################################################
 
+# Returns two values:
+# Boolean: if the Member is in any of the ministry names provided
+#          --> I.e., if the Member is in the ministry
+# Boolean: if the Member is Chairperson in any of the ministry names provided
+#          --> I.e., if the Member should be able to post to the Google Group
 def _member_in_any_ministry(member, ministries):
     if 'active_ministries' not in member:
-        return False
+        return False, False
 
-    for m in member['active_ministries']:
-        mname = m['Description']
-        if mname in ministries:
-            return True
+    found = False
+    chair_of_any = False
+    for member_ministry in member['active_ministries']:
+        member_ministry_name = member_ministry['Description']
+        if member_ministry_name in ministries:
+            found = True
+            if 'Chair' in member_ministry['status']:
+                chair_of_any = True
+    if found:
+        return found, chair_of_any
 
-    return False
+    # Didn't find the Member in any of the ministries
+    return False, False
 
+# Returns two values:
+# Boolean: if the member has any KEYWORD or "KEYWORD Ldr"  from those provided
+#          --> I.e., if the Member has the base keyword
+# Boolean: if the member has "KEYWORD Ldr" from those provided
+#          --> I.e., if the Member should be able to post to the Google Group
 def _member_has_any_keyword(member, keywords):
     if 'keywords' not in member:
-        return False
+        return False, False
 
-    for k in member['keywords']:
-        if k in keywords:
-            return True
+    found_any  = False
+    poster_of_any = False
+    for k in keywords:
+        if k in member['keywords']:
+            found_any     = True
+        if '{key} Ldr'.format(key=k) in member['keywords']:
+            found_any     = True
+            poster_of_any = True
 
-    return False
+    return found_any, poster_of_any
 
-def pds_find_ministry_emails(members, sync, log=None):
-    emails     = list()
-    ministries = list()
-    keywords   = list()
+def pds_find_ministry_members(members, sync, log=None):
+    ministry_members = list()
+    ministries       = list()
+    keywords         = list()
+    found_emails     = dict()
 
     # Make the sync ministries be an array
     if 'ministries' in sync:
@@ -322,18 +564,59 @@ def pds_find_ministry_emails(members, sync, log=None):
     # Walk all members looking for those in any of the ministries or
     # those that have any of the keywords.
     for mid, member in members.items():
-        if (_member_in_any_ministry(member, ministries) or
-            _member_has_any_keyword(member, keywords)):
-            em = PDSChurch.find_any_email(member)
-            log.info("Found PDS email: {}".format(em))
-            emails.extend(em)
+        min_any, chair_of_any  = _member_in_any_ministry(member, ministries)
+        key_any, poster_of_any = _member_has_any_keyword(member, keywords)
+
+        if not min_any and not key_any:
+            continue
+
+        leader = False
+        if chair_of_any or poster_of_any:
+            leader = True
+
+        emails = PDSChurch.find_any_email(member)
+        for email in emails:
+            e = email.lower()
+            new_entry = {
+                'pds_members' : [ member ],
+                'email'       : e,
+                'leader'      : leader,
+            }
+
+            # Here's a kicker: some PDS Members share an email
+            # address.  This means we might find multiple Members with
+            # the same email address who are in the same ministry.
+            # ...and they might have different permissions (one may be
+            # a poster and one may not)!  Since Google Groups will
+            # treat these multiple Members as a single email address,
+            # we just have to take the most permissive Member's
+            # permission for the shared email address.
+
+            if e in found_emails:
+                index = found_emails[e]
+                leader = chair or ministry_members[index]['leader']
+                ministry_members[index]['leader'] = leader
+                ministry_members[index]['pds_members'].append(member)
+            else:
+                ministry_members.append(new_entry)
+                found_emails[e] = len(ministry_members) - 1
 
     if log:
-        log.info("PDS emails for ministries {m} and keywords {k}"
+        log.info("PDS members for ministries {m} and keywords {k}:"
                  .format(m=ministries, k=keywords))
-        log.info(emails)
+        for m in ministry_members:
+            name_str = ''
+            for pm in m['pds_members']:
+                if len(name_str) > 0:
+                    name_str = name_str + ' or '
+                name_str = name_str + pm['Name']
 
-    return emails
+            log.info('  {name} <{email}> leader: {leader}'
+                     .format(name=name_str,
+                             email=m['email'],
+                             leader=m['leader']))
+
+    return ministry_members
 
 ####################################################################
 #
@@ -422,12 +705,19 @@ def main():
                                                         parishioners_only=False,
                                                         log=log)
 
-    google = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['admin'],
-                                            api_name='admin',
-                                            api_version='directory_v1',
-                                            app_json=args.app_id,
-                                            user_json=args.user_credentials,
-                                            log=log)
+    service_admin = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['admin'],
+                                                   api_name='admin',
+                                                   api_version='directory_v1',
+                                                   app_json=args.app_id,
+                                                   user_json=args.user_credentials,
+                                                   log=log)
+
+    service_group = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['group'],
+                                                   api_name='groupssettings',
+                                                   api_version='v1',
+                                                   app_json=args.app_id,
+                                                   user_json=args.user_credentials,
+                                                   log=log)
 
     ecc = '@epiphanycatholicchurch.org'
     synchronizations = [
@@ -498,15 +788,19 @@ def main():
             'skip'       : False
         },
     ]
-
     for sync in synchronizations:
-        pds_emails = pds_find_ministry_emails(pds_members, sync, log=log)
-        group_emails = google_group_find_emails(google, sync, log=log)
+        group_permissions = google_group_get_permissions(service_group,
+                                                         sync['ggroup'],
+                                                         log)
+        pds_ministry_members = pds_find_ministry_members(pds_members,
+                                                         sync, log=log)
+        group_members = google_group_find_members(service_admin, sync, log=log)
 
-        to_add, to_delete = compute_sync(sync, pds_emails, group_emails,
-                                         log=log)
+        actions = compute_sync(sync,
+                               pds_ministry_members,
+                               group_members, log=log)
         if not args.dry_run:
-            do_sync(sync, google, to_add, to_delete, log=log)
+            do_sync(sync, group_permissions, service_admin, actions, log=log)
 
     # All done
     pds.connection.close()
