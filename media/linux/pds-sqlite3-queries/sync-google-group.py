@@ -787,6 +787,16 @@ def main():
             'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
             'skip'       : False
         },
+        {
+            'keywords'   : [ 'YouthMin parent: Jr high' ],
+            'ggroup'     : 'youth-ministry-parents-jr-high{ecc}'.format(ecc=ecc),
+            'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'YouthMin parent: Sr high' ],
+            'ggroup'     : 'youth-ministry-parents-sr-high{ecc}'.format(ecc=ecc),
+            'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
