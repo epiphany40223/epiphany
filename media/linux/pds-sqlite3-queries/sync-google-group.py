@@ -796,6 +796,11 @@ def main():
             'ggroup'     : 'youth-ministry-parents-sr-high{ecc}'.format(ecc=ecc),
             'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+        {
+            'ministries' : [ '39-Lectors  MASTER LIST' ],
+            'ggroup'     : 'lectors{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
