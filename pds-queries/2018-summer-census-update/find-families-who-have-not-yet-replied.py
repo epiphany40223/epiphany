@@ -21,7 +21,6 @@ from datetime import datetime
 from datetime import timedelta
 
 from oauth2client import tools
-from apiclient.http import MediaFileUpload
 from email.message import EmailMessage
 
 # SMTP / email basics
@@ -39,54 +38,6 @@ upload_team_drive_folder_id = '0ACmEer0DmBh4Uk9PVA'
 
 gapp_id         = 'client_id.json'
 guser_cred_file = 'user-credentials.json'
-gsheet_mime_type= 'application/vnd.google-apps.spreadsheet'
-
-# Scopes documented here:
-# https://developers.google.com/drive/v3/web/about-auth
-gscope = 'https://www.googleapis.com/auth/drive'
-
-##############################################################################
-
-def send_results_email(to, id, type, start, end, time_period, lines):
-    body = list()
-
-    body.append("""<html>
-<body>
-<h2>{type} data update</h2>
-<h3>Time period: {start} through {end}</h3>
-<p>Only showing results with changes compared to the data in the PDS database.</p>"""
-                       .format(type=type, start=start, end=end))
-    if id:
-        url = 'https://docs.google.com/spreadsheets/d/{id}'.format(id=id)
-        body.append('<p><a href="{url}">Link to spreadsheet containing these results</a>.</p>'
-                     .format(url=url))
-    body.append("<ol>")
-
-    if lines is None or len(lines) == 0:
-        body.append("<li>No {type} changes submitted during this time period</li>".format(type=type))
-    else:
-        body.extend(lines)
-
-    body.append("""</ol>
-</body>
-</html>""")
-
-    subject = '{type} census updates ({t})'.format(type=type, t=time_period)
-    try:
-        print('Sending "{subject}" email to {to}'
-              .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
-            msg = EmailMessage()
-            msg['Subject'] = subject
-            msg['From'] = smtp_from
-            msg['To'] = to
-            msg.set_content('\n'.join(body))
-            msg.replace_header('Content-Type', 'text/html')
-
-            smtp.send_message(msg)
-    except:
-        print("==== Error with {email}".format(email=to))
-        print(traceback.format_exc())
 
 ##############################################################################
 
@@ -178,12 +129,12 @@ def main():
 
     log = ECC.setup_logging(debug=True)
 
-    google = GoogleAuth.google_login(scope=gscope,
-                                     app_json=args.app_id,
-                                     user_json=args.user_credentials,
-                                     api_name='drive',
-                                     api_version='v3',
-                                     log=log)
+    google = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['drive'],
+                                            app_json=args.app_id,
+                                            user_json=args.user_credentials,
+                                            api_name='drive',
+                                            api_version='v3',
+                                            log=log)
 
     jotform_family_csv, jotform_member_csv = read_jotform(google,
                                                           jotform_family_gfile_id,
@@ -225,6 +176,7 @@ def main():
         if 'Parish key' in env:
             continue
 
+        # The family may have been deleted
         if env not in envid_to_fid:
             continue
 
@@ -251,6 +203,7 @@ def main():
         if 'Parish key' in env:
             continue
 
+        # The family may have been deleted
         if env not in envid_to_fid:
             continue
 
