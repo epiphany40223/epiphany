@@ -415,16 +415,20 @@ def _sync_add(sync, group_permissions,
         'email' : email,
         'role'  : role,
     }
-    service.members().insert(groupKey=sync['ggroup'],
-                             body=group_entry).execute()
+    try:
+        service.members().insert(groupKey=sync['ggroup'],
+                                 body=group_entry).execute()
 
-    if group_permissions == BROADCAST:
-        if role == 'OWNER':
-            msg = "Added to group (can post to this group)"
+        if group_permissions == BROADCAST:
+            if role == 'OWNER':
+                msg = "Added to group (can post to this group)"
+            else:
+                msg = "Added to group (can <strong><em>not</em></strong> post to this group)"
         else:
-            msg = "Added to group (can <strong><em>not</em></strong> post to this group)"
-    else:
-        msg = "Added to group"
+            msg = "Added to group"
+    except:
+        msg = "FAILED to add this member -- Google error!"
+
     return msg
 
 def _sync_delete(sync, service, action, name, item_number, log=None):
