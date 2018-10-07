@@ -598,7 +598,7 @@ def pds_find_ministry_members(members, sync, log=None):
 
             if e in found_emails:
                 index = found_emails[e]
-                leader = chair or ministry_members[index]['leader']
+                leader = leader or ministry_members[index]['leader']
                 ministry_members[index]['leader'] = leader
                 ministry_members[index]['pds_members'].append(member)
             else:
