@@ -226,6 +226,15 @@ def process_db(args, db, sqlite3):
     results = re.search('(.+).DB$', os.path.basename(db))
     table_base = results.group(1)
 
+    # Oct 2018: There's a @Mem.DB file.  I'm *guessing* that this
+    # is an error of some type...?  Skip it.
+    if table_base.startswith('@'):
+        log.info("  ==> Skipping bogus {short} table".format(short=table_base))
+        return
+    if table_base.startswith('SPECIAL'):
+        log.info("  ==> Skipping bogus {short} table".format(short=table_base))
+        return
+
     # PDS has "PDS" and "PDS[digit]" tables.  "PDS" is the real one;
     # skip "PDS[digit]" tables.  Sigh.  Ditto for RE, SCH.
     if (re.search('^PDS\d+$', table_base, flags=re.IGNORECASE) or
@@ -375,6 +384,7 @@ def main():
     for db in dbs:
         process_db(args, db, sqlite3)
     close_sqlite3(sqlite3)
+    log.info("Finished converting DB --> Sqlite")
     rename_sqlite3_database(args)
 
 if __name__ == '__main__':
