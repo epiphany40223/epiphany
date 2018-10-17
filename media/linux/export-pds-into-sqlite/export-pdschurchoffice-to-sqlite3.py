@@ -384,6 +384,7 @@ def main():
     for db in dbs:
         process_db(args, db, sqlite3)
     close_sqlite3(sqlite3)
+    log.info("Finished converting DB --> Sqlite")
     rename_sqlite3_database(args)
 
 if __name__ == '__main__':
