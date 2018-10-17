@@ -736,7 +736,7 @@ def main():
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ 'L-Parish Pastoral Council' ],
+            'ministries' : [ '05-Parish Pastoral Council' ],
             'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
@@ -756,7 +756,7 @@ def main():
             'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ 'L-Worship Committee' ],
+            'ministries' : [ '23-Worship Committee' ],
             'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
