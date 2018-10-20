@@ -27,4 +27,23 @@ if test $yes -eq 1; then
     d=`date '+%Y-%m-%d'`
     cp $sqlite_out_dir/pdschurch.sqlite3 \
 	$sqlite_out_dir/archives/$d-pdschurch.sqlite3
+
+    # Also make a full backup of the actual data files, too
+    date
+    echo "Copying all PDS data files for a backup..."
+    outdir="$sqlite_out_dir/archives/$d-pds-raw-data"
+    mkdir -p "$outdir"
+    cp -r "$pds_input_dir" "$outdir"
+
+    date
+    echo "Tarring up PDS data files for backup..."
+    cd "$outdir"
+    cd ..
+    p=`pwd`
+    b=`basename $outdir`
+    tar jcvf "$p/$b.tar.bz2" "$b"
+    rm -rf "$b"
+
+    date
+    echo "Done with PDS files backup"
 fi
