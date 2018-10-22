@@ -811,6 +811,11 @@ def main():
             'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+        {
+            'keywords'   : [ '10 Pct Emergency Assistance' ],
+            'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
+            'notify'     : 'jsquyres@gmail.com'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
