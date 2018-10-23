@@ -806,6 +806,11 @@ def main():
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'ministries' : [ '90-Young Adult Ministry' ],
+            'ggroup'     : 'young-adults{ecc}'.format(ecc=ecc),
+            'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '38-Instrumentalists & Cantors' ],
             'keywords'   : [ 'Musicians email list' ],
             'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
@@ -814,7 +819,7 @@ def main():
         {
             'keywords'   : [ '10 Pct Emergency Assistance' ],
             'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
-            'notify'     : 'jsquyres@gmail.com'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
     ]
     for sync in synchronizations:
