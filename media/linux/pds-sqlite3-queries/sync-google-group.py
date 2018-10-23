@@ -806,6 +806,11 @@ def main():
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'ministries' : [ '90-Young Adult Ministry' ],
+            'ggroup'     : 'young-adults{ecc}'.format(ecc=ecc),
+            'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '38-Instrumentalists & Cantors' ],
             'keywords'   : [ 'Musicians email list' ],
             'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
