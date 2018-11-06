@@ -11,6 +11,9 @@ tested with other versions (e.g., Python 2.7.x).
   (e.g., every 5 minutes via cron or the Windows scheduler).
 - Watch a directory for new MP3 files named of the form
   Txxx-YYYYMMDD-HHMMSS.mp3.
+  --> As of Nov 2018, the recorder spontaneously decided to rename the
+      files from Txxx to Rxxx.  So I've upaded the regular expression
+      below to just ignore the first character of the filename.
 - If the file size of the file hasn't changed for 60 seconds, assume
   that the file has finished uploading to this directory, and upload
   it to both a Google Team Drive folder.
@@ -191,7 +194,7 @@ def find_mp3_files(dir):
             continue
 
         # Only a specific name format
-        m = re.match(pattern='^T\d+-(\d\d\d\d)(\d\d)\d\d-\d\d\d\d\d\d.mp3$',
+        m = re.match(pattern='^.\d+-(\d\d\d\d)(\d\d)\d\d-\d\d\d\d\d\d.mp3$',
                      flags=re.IGNORECASE,
                      string=entry.name)
         if m is None:
