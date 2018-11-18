@@ -811,6 +811,11 @@ def main():
             'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'ministries' : [ '62-Men of Epiphany' ],
+            'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
+            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '38-Instrumentalists & Cantors' ],
             'keywords'   : [ 'Musicians email list' ],
             'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
