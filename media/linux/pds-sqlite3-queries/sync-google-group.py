@@ -788,7 +788,7 @@ def main():
         {
             'ministries' : [ '31-Adult Choir' ],
             'ggroup'     : 'choir{ecc}'.format(ecc=ecc),
-            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'keywords'   : [ 'YouthMin parent: Jr high' ],
