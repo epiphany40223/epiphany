@@ -813,7 +813,7 @@ def main():
         {
             'ministries' : [ '62-Men of Epiphany' ],
             'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
-            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'polly{ecc},brayton@howlandgroup.com,jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'ministries' : [ '38-Instrumentalists & Cantors' ],
