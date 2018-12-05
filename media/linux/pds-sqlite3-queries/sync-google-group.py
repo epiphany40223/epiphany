@@ -816,6 +816,11 @@ def main():
             'notify'     : 'polly{ecc},brayton@howlandgroup.com,jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'ministries' : [ '72-Epiphany Backside Ministry' ],
+            'ggroup'     : 'ebm{ecc}'.format(ecc=ecc),
+            'notify'     : 'polly{ecc},brayton@howlandgroup.com,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '38-Instrumentalists & Cantors' ],
             'keywords'   : [ 'Musicians email list' ],
             'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
