@@ -829,7 +829,7 @@ def main():
         {
             'keywords'   : [ '10 Pct Emergency Assistance' ],
             'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
-            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'frrandy{ecc},erin{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
     ]
     for sync in synchronizations:
