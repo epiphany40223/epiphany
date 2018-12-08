@@ -831,6 +831,21 @@ def main():
             'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
             'notify'     : 'frrandy{ecc},erin{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+        {
+            'ministries' : [ '32-Bell Choir' ],
+            'ggroup'     : 'bell-ringers{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '14-Garden & Grounds' ],
+            'ggroup'     : 'garden-and-grounds{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},emswine2@gmail.com,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '78-Ten Percent Committee' ],
+            'ggroup'     : 'ten-percent-committee{ecc}'.format(ecc=ecc),
+            'notify'     : 'frrandy{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
