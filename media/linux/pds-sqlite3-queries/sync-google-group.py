@@ -833,6 +833,7 @@ def main():
         },
         {
             'ministries' : [ '32-Bell Choir' ],
+            'keywords'   : [ 'Bell choir email list' ],
             'ggroup'     : 'bell-ringers{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
