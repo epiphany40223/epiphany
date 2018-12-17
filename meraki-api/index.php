@@ -140,8 +140,9 @@ require($file);
 #logme("REQUEST is: " . print_r($_REQUEST, true));
 
 # If this is a GET, print the validator
-if (isset($GLOBALS["HTTP_RAW_POST_DATA"])) {
-    do_post($GLOBALS["HTTP_RAW_POST_DATA"]);
+$postdata = file_get_contents("php://input");
+if ($postdata != "") {
+    do_post($postdata);
 } else {
     do_get();
 }
