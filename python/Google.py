@@ -3,6 +3,21 @@
 # Utility Google functions
 #
 
+mime_types = {
+    'doc'        : 'application/vnd.google-apps.document',
+    'sheet'      : 'application/vnd.google-apps.spreadsheet',
+    'folder'     : 'application/vnd.google-apps.folder',
+
+    'json'       : 'application/json',
+
+    'mp3'        : 'audio/mpeg',
+
+    'csv'        : 'text/csv',
+
+    # JMS this is probably a lie, but it's useful for comparisons
+    'team_drive' : 'application/vnd.google-apps.team_drive',
+}
+
 # Scopes documented here:
 # https://developers.google.com/drive/v3/web/about-auth
 scopes = {

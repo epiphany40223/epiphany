@@ -44,7 +44,7 @@ guser_cred_file = 'user-credentials.json'
 
 def export_gsheet_to_csv(service, google_sheet_id, fieldnames):
     response = service.files().export(fileId=google_sheet_id,
-                                      mimeType='text/csv').execute()
+                                      mimeType=Google.mime_types['csv']).execute()
 
     csvreader = csv.DictReader(response.decode('utf-8').splitlines(),
                                fieldnames=fieldnames)

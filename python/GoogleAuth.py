@@ -20,14 +20,6 @@ from oauth2client.client import OAuth2WebServerFlow
 
 #-------------------------------------------------------------------
 
-# Globals
-doc_mime_type = 'application/vnd.google-apps.document';
-sheet_mime_type = 'application/vnd.google-apps.spreadsheet';
-folder_mime_type = 'application/vnd.google-apps.folder'
-
-# JMS this is probably a lie, but it's useful for comparisons
-team_drive_mime_type = 'application/vnd.google-apps.team_drive'
-
 # JMS Should these really be globals?
 app_cred_file = 'client_id.json'
 default_user_cred_file = 'user-credentials.json'

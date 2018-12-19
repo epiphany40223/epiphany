@@ -112,12 +112,12 @@ def upload_to_gsheet(google, folder_id, filename, csv_rows):
               .format(file=filename))
         metadata = {
             'name'     : filename,
-            'mimeType' : GoogleAuth.sheet_mime_type,
+            'mimeType' : Google.mime_types['sheet'],
             'parents'  : [ folder_id ],
             'supportsTeamDrives' : True,
             }
         media = MediaFileUpload(csv_filename,
-                                mimetype=GoogleAuth.sheet_mime_type,
+                                mimetype=Google.mime_types['sheet'],
                                 resumable=True)
         file = google.files().create(body=metadata,
                                      media_body=media,
@@ -422,7 +422,7 @@ def compare_members(google, start, end, pds_members, jotform_members):
 
 def export_gsheet_to_csv(service, google_sheet_id, fieldnames):
     response = service.files().export(fileId=google_sheet_id,
-                                      mimeType='text/csv').execute()
+                                      mimeType=Google.mime_types['csv']).execute()
 
     csvreader = csv.DictReader(response.decode('utf-8').splitlines(),
                                fieldnames=fieldnames)
