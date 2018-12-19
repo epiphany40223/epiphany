@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
+#
+# Various Google authentication utility functions.
+#
+# Needs:
+#
+# pip3 install --upgrade httplib2 google-api-python-client oauth2client
+#
 
-import httplib2
+import os
 import json
 import time
-import os
+import httplib2
 
 from apiclient.discovery import build
 from oauth2client import tools
@@ -13,26 +20,10 @@ from oauth2client.client import OAuth2WebServerFlow
 
 #-------------------------------------------------------------------
 
-# Globals
-doc_mime_type = 'application/vnd.google-apps.document';
-sheet_mime_type = 'application/vnd.google-apps.spreadsheet';
-folder_mime_type = 'application/vnd.google-apps.folder'
-
-# JMS this is probably a lie, but it's useful for comparisons
-team_drive_mime_type = 'application/vnd.google-apps.team_drive'
-
 # JMS Should these really be globals?
 app_cred_file = 'client_id.json'
 default_user_cred_file = 'user-credentials.json'
 user_agent = 'gxcopy'
-
-# Scopes documented here:
-# https://developers.google.com/drive/v3/web/about-auth
-scopes = {
-    'drive' : 'https://www.googleapis.com/auth/drive',
-    'admin' : 'https://www.googleapis.com/auth/admin.directory.group',
-    'group' : 'https://www.googleapis.com/auth/apps.groups.settings',
-}
 
 #-------------------------------------------------------------------
 
@@ -94,20 +85,45 @@ def _authorize_user(user_cred, name, version, log=None):
 
 #-------------------------------------------------------------------
 
-def service_oauth_login(scope, api_name, api_version,
-                        app_json, user_json,
+# Login multiple scopes and return multiple Google service objects.
+#
+# "apis" is a dictionary where each entry is of the form:
+#
+# 'name' : { 'scope'       : Google scope,
+#            'api_name'    : Name of the Google API,
+#            'api_version' : Version of the Google API, }
+#
+# A dictionary is returned with Google service objects, indexed by the
+# same 'name' keys from the "apis" input dictionary.
+#
+def service_oauth_login(apis, app_json, user_json,
                         gauth_max_attempts=3, log=None):
+    # Load the application credentials
+    app_cred  = _load_app_credentials(app_json)
+
+    # Collate all the scopes that we need
+    scopes = list()
+    for data in apis.values():
+        if data['scope'] not in scopes:
+            scopes.append(data['scope'])
+
     # Put a loop around this so that it can re-authenticate via the
     # OAuth refresh token when possible.  Real errors will cause the
     # script to abort, which will notify a human to fix whatever the
     # problem was.
-    auth_count = 0
-    while auth_count < gauth_max_attempts:
+    services = None
+    happy    = False
+    for count in range(gauth_max_attempts):
         try:
-            # Authorize the app and provide user consent to Google
-            app_cred  = _load_app_credentials(app_json)
-            user_cred = _load_user_credentials(scope, app_cred, user_json)
-            service   = _authorize_user(user_cred, api_name, api_version, log=log)
+            # Authorize the user with all the scopes
+            user_cred = _load_user_credentials(scopes, app_cred, user_json)
+
+            # Now make a service object for each of the desired APIs
+            services  = dict()
+            for name, data in apis.items():
+                services[name] = _authorize_user(user_cred, data['api_name'],
+                                                 data['api_version'], log=log)
+            happy = True
             break
 
         except AccessTokenRefreshError:
@@ -119,15 +135,13 @@ def service_oauth_login(scope, api_name, api_version,
             # Delay a little and try to authenticate again
             time.sleep(10)
 
-        auth_count = auth_count + 1
-
-    if auth_count > gauth_max_attempts:
+    if not happy:
         message = ("Failed to authenticate to Google {num} times.  A human needs to figure this out."
                    .format(num=gauth_max_attempts))
         log.error(message)
         email_and_die(message)
 
-    return service
+    return services
 
 #===================================================================
 

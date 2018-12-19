@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 
-"""Script to "xcopy" a Google Drive folder to a Team Drive.
+"""
+
+
+
+NOTE: A lot of this functionality has been subsumed into Google.py and
+friends.  You should be using those modules rather than blindly
+copying from this file!!
+
+
+
+
+Script to "xcopy" a Google Drive folder to a Team Drive.
 
 This script developed and tested with Python 3.6.x.  It has not been
 tested with other versions (e.g., Python 2.7.x).

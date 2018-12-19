@@ -66,6 +66,7 @@ import time
 import os
 
 import ECC
+import Google
 import PDSChurch
 import GoogleAuth
 
@@ -709,19 +710,20 @@ def main():
                                                         parishioners_only=False,
                                                         log=log)
 
-    service_admin = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['admin'],
-                                                   api_name='admin',
-                                                   api_version='directory_v1',
-                                                   app_json=args.app_id,
-                                                   user_json=args.user_credentials,
-                                                   log=log)
-
-    service_group = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['group'],
-                                                   api_name='groupssettings',
-                                                   api_version='v1',
-                                                   app_json=args.app_id,
-                                                   user_json=args.user_credentials,
-                                                   log=log)
+    apis = {
+        'admin' : { 'scope'       : Google.scopes['admin'],
+                    'api_name'    : 'admin',
+                    'api_version' : 'directory_v1', },
+        'group' : { 'scope'       : Google.scopes['group'],
+                    'api_name'    : 'groupssettings',
+                    'api_version' : 'v1', },
+    }
+    services = GoogleAuth.service_oauth_login(apis,
+                                              app_json=args.app_id,
+                                              user_json=args.user_credentials,
+                                              log=log)
+    service_admin = services['admin']
+    service_group = services['group']
 
     ecc = '@epiphanycatholicchurch.org'
     synchronizations = [

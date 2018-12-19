@@ -12,6 +12,7 @@ import os
 import re
 
 import ECC
+import Google
 import PDSChurch
 import GoogleAuth
 
@@ -43,7 +44,7 @@ guser_cred_file = 'user-credentials.json'
 
 def export_gsheet_to_csv(service, google_sheet_id, fieldnames):
     response = service.files().export(fileId=google_sheet_id,
-                                      mimeType='text/csv').execute()
+                                      mimeType=Google.mime_types['csv']).execute()
 
     csvreader = csv.DictReader(response.decode('utf-8').splitlines(),
                                fieldnames=fieldnames)
@@ -129,12 +130,16 @@ def main():
 
     log = ECC.setup_logging(debug=True)
 
-    google = GoogleAuth.service_oauth_login(scope=GoogleAuth.scopes['drive'],
-                                            app_json=args.app_id,
-                                            user_json=args.user_credentials,
-                                            api_name='drive',
-                                            api_version='v3',
-                                            log=log)
+    apis = {
+        'drive' : { 'scope'       : Google.scopes['drive'],
+                    'api_name'    : 'drive',
+                    'api_version' : 'v3', },
+    }
+    services = GoogleAuth.service_oauth_login(apis,
+                                              app_json=args.app_id,
+                                              user_json=args.user_credentials,
+                                              log=log)
+    google = services['drive']
 
     jotform_family_csv, jotform_member_csv = read_jotform(google,
                                                           jotform_family_gfile_id,
