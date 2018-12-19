@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 
-"""Script to upload specific MP3 files to Google Drive.
+"""
+
+
+NOTE: A lot of this functionality has been subsumed into Google.py and
+friends.  You should be using those modules rather than blindly
+copying from this file!!
+
+
+
+Script to upload specific MP3 files to Google Drive.
 
 This script developed and tested with Python 3.6.x.  It has not been
 tested with other versions (e.g., Python 2.7.x).
