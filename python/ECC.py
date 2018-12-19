@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-
-'''
-
-Utility functions and helpers for all ECC code
-
-'''
+#
+# Utility functions and helpers for all ECC code.
+#
+# Needs:
+#
+# pip3 install --upgrade pytz
+#
 
 import logging
 import logging.handlers
+
+import pytz
+
+local_tz_name = 'America/Louisville'
+local_tz = pytz.timezone(local_tz_name)
 
 #-------------------------------------------------------------------
 
