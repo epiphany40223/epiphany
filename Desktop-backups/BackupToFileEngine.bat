@@ -22,10 +22,11 @@ goto :Done
 
 
 :BackupNow
-call :DoTheBackup	"C:\WinDSX"					"WinDSX"
-call :DoTheBackup	"C:\media"					"Media"
-call :DoTheBackup	"%USERPROFILE%\Desktop"		"Desktop"
-call :DoTheBackup	"%USERPROFILE%\Documents"	"Documents"
+call :DoTheBackup	"C:\WinDSX"				"WinDSX"
+call :DoTheBackup	"C:\media"				"Media"
+call :DoTheBackup	"%USERPROFILE%\Desktop"			"Desktop"
+call :DoTheBackup	"%USERPROFILE%\Documents"		"Documents"
+call :DoTheBackup	"%USERPROFILE%\Documents\Pictures"	"Pictures"
 
 
 echo .
