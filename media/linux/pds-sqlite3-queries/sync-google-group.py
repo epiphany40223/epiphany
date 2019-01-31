@@ -778,6 +778,11 @@ def main():
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'ministries' : [ '25-Liturgical Planning' ],
+            'ggroup'     : 'liturgy-planning{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '58-Prayer Chain Ministry' ],
             'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
