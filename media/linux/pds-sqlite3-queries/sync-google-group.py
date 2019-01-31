@@ -735,7 +735,7 @@ def main():
         {
             'keywords'   : [ 'Homebound MP3 Recordings' ],
             'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
-            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'ministries' : [ '05-Parish Pastoral Council' ],
@@ -761,6 +761,27 @@ def main():
             'ministries' : [ '23-Worship Committee' ],
             'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Homebound recipients email lst' ],
+            'ggroup'     : 'ministry-homebound-liturgy-recipients@{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '35-Communion Ministers'],
+            'ggroup'     : 'communion-ministers{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '41-Epiphany Youth Band'],
+            'keywords'   : [ 'EYB email list' ],
+            'ggroup'     : 'eyb{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jimd{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '35-Communion Min. Coordinator'],
+            'ggroup'     : 'communion-ministers-coordinators{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'keywords'   : [ 'ECC Sheet Music access' ],
@@ -793,9 +814,16 @@ def main():
             'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'ministries' : [ '30A-Acolyte Ministry 5:30P',
+                             '30B-Acolyte Ministry  9:00A',
+                             '30C-Acolyte Ministry 11:30A' ],
+            'ggroup'     : 'acolytes{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '31-Adult Choir' ],
             'ggroup'     : 'choir{ecc}'.format(ecc=ecc),
-            'notify'     : 'faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'keywords'   : [ 'YouthMin parent: Jr high' ],
@@ -863,6 +891,11 @@ def main():
             'keywords'   : [ 'Wedding Ministries email list' ],
             'ggroup'     : 'wedding-ministries{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ '26-Movers Ministry' ],
+            'ggroup'     : 'movers{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},awsimpson57@gmail.com,jeff@squyres.com'.format(ecc=ecc),
         },
     ]
     for sync in synchronizations:
