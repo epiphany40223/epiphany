@@ -69,6 +69,7 @@ import ECC
 import Google
 import PDSChurch
 import GoogleAuth
+import googleapiclient
 
 from oauth2client import tools
 from email.message import EmailMessage
@@ -237,10 +238,10 @@ def do_sync(sync, group_permissions, service, actions, log=None):
                 else:
                     mem_names += ', {name}'.format(name=mem['Name'])
 
-        log.info("Processing action: {action} / {email} / {role}".
-                 format(action=action['action'],
-                        email=action['email'],
-                        role=action['role']))
+        log.debug("Processing action: {action} / {email} / {role}".
+                  format(action=action['action'],
+                         email=action['email'],
+                         role=action['role']))
         # JMS This outputs PDS Members (and their families!) -- very
         # lengthy output.
         #log.debug("Processing full action: {action}".
@@ -261,7 +262,8 @@ def do_sync(sync, group_permissions, service, actions, log=None):
 
         elif a == 'add':
             msg = _sync_add(sync, group_permissions,
-                            service, action, mem_names, log)
+                            service=service, action=action,
+                            name=mem_names, log=log)
 
         elif a == 'delete':
             msg = _sync_delete(sync, service, action, mem_names, log)
@@ -349,7 +351,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
 #-------------------------------------------------------------------
 
 def _sync_member_to_owner(sync, group_permissions,
-                          service, action, name, item_number, log=None):
+                          service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Member to Owner"
@@ -383,7 +385,7 @@ def _sync_member_to_owner(sync, group_permissions,
     return msg
 
 def _sync_owner_to_member(sync, group_permissions,
-                          service, action, name, item_number, log=None):
+                          service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Owner to Member"
@@ -405,7 +407,7 @@ def _sync_owner_to_member(sync, group_permissions,
     return msg
 
 def _sync_add(sync, group_permissions,
-              service, action, name, item_number, log=None):
+              service, action, name, log=None):
     email = action['email']
     role  = action['role']
     if log:
@@ -427,12 +429,32 @@ def _sync_add(sync, group_permissions,
                 msg = "Added to group (can <strong><em>not</em></strong> post to this group)"
         else:
             msg = "Added to group"
+
+    except googleapiclient.errors.HttpError as e:
+        # NOTE: If we failed because this is a duplicate, then don't
+        # worry about it.
+        msg = "FAILED to add this member -- Google error:"
+
+        j = json.loads(e.content)
+        for err in j['error']['errors']:
+            if err['reason'] == 'duplicate':
+                if log:
+                    log.info("Google says a duplicate of {email} "
+                             "already in the group -- ignoring"
+                             .format(email=email))
+                return None
+
+            msg += " {msg} ({reason})".format(msg=err['message'],
+                                              reason=err['reason'])
     except:
-        msg = "FAILED to add this member -- Google error!"
+        all = sys.exc_info()
+        msg = ("FAILED to add this member -- unknown Google error! "
+               "({a} / {b} / {c})"
+               .format(a=all[0], b=all[1], c=all[2]))
 
     return msg
 
-def _sync_delete(sync, service, action, name, item_number, log=None):
+def _sync_delete(sync, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Deleting PDS Member {name} ({email})"
@@ -764,7 +786,7 @@ def main():
         },
         {
             'keywords'   : [ 'Homebound recipients email lst' ],
-            'ggroup'     : 'ministry-homebound-liturgy-recipients@{ecc}'.format(ecc=ecc),
+            'ggroup'     : 'ministry-homebound-liturgy-recipients{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
