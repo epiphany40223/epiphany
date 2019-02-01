@@ -237,10 +237,10 @@ def do_sync(sync, group_permissions, service, actions, log=None):
                 else:
                     mem_names += ', {name}'.format(name=mem['Name'])
 
-        log.info("Processing action: {action} / {email} / {role}".
-                 format(action=action['action'],
-                        email=action['email'],
-                        role=action['role']))
+        log.debug("Processing action: {action} / {email} / {role}".
+                  format(action=action['action'],
+                         email=action['email'],
+                         role=action['role']))
         # JMS This outputs PDS Members (and their families!) -- very
         # lengthy output.
         #log.debug("Processing full action: {action}".
