@@ -69,6 +69,7 @@ import ECC
 import Google
 import PDSChurch
 import GoogleAuth
+import googleapiclient
 
 from oauth2client import tools
 from email.message import EmailMessage
@@ -428,8 +429,28 @@ def _sync_add(sync, group_permissions,
                 msg = "Added to group (can <strong><em>not</em></strong> post to this group)"
         else:
             msg = "Added to group"
+
+    except googleapiclient.errors.HttpError as e:
+        # NOTE: If we failed because this is a duplicate, then don't
+        # worry about it.
+        msg = "FAILED to add this member -- Google error:"
+
+        j = json.loads(e.content)
+        for err in j['error']['errors']:
+            if err['reason'] == 'duplicate':
+                if log:
+                    log.info("Google says a duplicate of {email} "
+                             "already in the group -- ignoring"
+                             .format(email=email))
+                return None
+
+            msg += " {msg} ({reason})".format(msg=err['message'],
+                                              reason=err['reason'])
     except:
-        msg = "FAILED to add this member -- Google error!"
+        all = sys.exc_info()
+        msg = ("FAILED to add this member -- unknown Google error! "
+               "({a} / {b} / {c})"
+               .format(a=all[0], b=all[1], c=all[2]))
 
     return msg
 
