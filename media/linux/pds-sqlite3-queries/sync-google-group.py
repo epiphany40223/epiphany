@@ -764,7 +764,7 @@ def main():
         },
         {
             'keywords'   : [ 'Homebound recipients email lst' ],
-            'ggroup'     : 'ministry-homebound-liturgy-recipients@{ecc}'.format(ecc=ecc),
+            'ggroup'     : 'ministry-homebound-liturgy-recipients{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
