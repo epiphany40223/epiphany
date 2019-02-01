@@ -261,7 +261,8 @@ def do_sync(sync, group_permissions, service, actions, log=None):
 
         elif a == 'add':
             msg = _sync_add(sync, group_permissions,
-                            service, action, mem_names, log)
+                            service=service, action=action,
+                            name=mem_names, log=log)
 
         elif a == 'delete':
             msg = _sync_delete(sync, service, action, mem_names, log)
@@ -349,7 +350,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
 #-------------------------------------------------------------------
 
 def _sync_member_to_owner(sync, group_permissions,
-                          service, action, name, item_number, log=None):
+                          service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Member to Owner"
@@ -383,7 +384,7 @@ def _sync_member_to_owner(sync, group_permissions,
     return msg
 
 def _sync_owner_to_member(sync, group_permissions,
-                          service, action, name, item_number, log=None):
+                          service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Owner to Member"
@@ -405,7 +406,7 @@ def _sync_owner_to_member(sync, group_permissions,
     return msg
 
 def _sync_add(sync, group_permissions,
-              service, action, name, item_number, log=None):
+              service, action, name, log=None):
     email = action['email']
     role  = action['role']
     if log:
@@ -432,7 +433,7 @@ def _sync_add(sync, group_permissions,
 
     return msg
 
-def _sync_delete(sync, service, action, name, item_number, log=None):
+def _sync_delete(sync, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Deleting PDS Member {name} ({email})"
