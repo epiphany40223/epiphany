@@ -750,49 +750,101 @@ def main():
     ecc = '@epiphanycatholicchurch.org'
     synchronizations = [
         {
+            'ministries' : [ '13-Finance Advisory Council' ],
+            'ggroup'     : 'administration-committee{ecc}'.format(ecc=ecc),
+            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '14-Garden & Grounds' ],
+            'ggroup'     : 'garden-and-grounds{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},emswine2@gmail.com,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '18-Technology Committee' ],
             'ggroup'     : 'tech-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+
         {
-            'keywords'   : [ 'Homebound MP3 Recordings' ],
-            'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'keywords'   : [ 'Liturgy Transcriptions' ],
+            'ggroup'     : 'liturgy-transcriptions{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+
+        #############################
+
         {
             'ministries' : [ '05-Parish Pastoral Council' ],
             'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'keywords'   : [ 'PPC Executive Committee' ],
-            'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
-            'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '13-Finance Advisory Council' ],
-            'ggroup'     : 'administration-committee{ecc}'.format(ecc=ecc),
-            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
             'ministries' : [ '64-Singles Explore Life (SEL)' ],
             'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
             'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+
+        {
+            'keywords'   : [ 'PPC Executive Committee' ],
+            'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
+            'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
         {
             'ministries' : [ '23-Worship Committee' ],
             'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'keywords'   : [ 'Homebound recipients email lst' ],
-            'ggroup'     : 'ministry-homebound-liturgy-recipients{ecc}'.format(ecc=ecc),
+            'ministries' : [ '25-Liturgical Planning' ],
+            'ggroup'     : 'liturgy-planning{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '35-Communion Ministers'],
+            'ministries' : [ '26-Movers Ministry' ],
+            'ggroup'     : 'movers{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},awsimpson57@gmail.com,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '30A-Acolyte Ministry 5:30P',
+                             '30B-Acolyte Ministry  9:00A',
+                             '30C-Acolyte Ministry 11:30A' ],
+            'ggroup'     : 'acolytes{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '31-Adult Choir' ],
+            'ggroup'     : 'choir{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '32-Bell Choir' ],
+            'keywords'   : [ 'Bell choir email list' ],
+            'ggroup'     : 'bell-ringers{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '34-Communion Ministers' ],
             'ggroup'     : 'communion-ministers{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '35-Communion Min. Coordinator'],
+            'ggroup'     : 'communion-ministers-coordinators{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '38-Instrumentalists & Cantors' ],
+            'keywords'   : [ 'Musicians email list' ],
+            'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '39-Lectors  MASTER LIST' ],
+            'ggroup'     : 'lectors{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'ministries' : [ '41-Epiphany Youth Band'],
@@ -801,9 +853,25 @@ def main():
             'notify'     : 'linda{ecc},jimd{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '35-Communion Min. Coordinator'],
-            'ggroup'     : 'communion-ministers-coordinators{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+            'ministries' : [ '58-Prayer Chain Ministry' ],
+            'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        {
+            'keywords'   : [ 'Wedding Ministries email list' ],
+            'ggroup'     : 'wedding-ministries{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Homebound MP3 Recordings' ],
+            'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Homebound recipients email lst', 'Homebound MP3 Recordings' ],
+            'ggroup'     : 'ministry-homebound-liturgy-recipients{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'keywords'   : [ 'ECC Sheet Music access' ],
@@ -820,33 +888,15 @@ def main():
             'ggroup'     : 'worship-liturgy-planning-guest{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+
+        #############################
+
         {
-            'ministries' : [ '25-Liturgical Planning' ],
-            'ggroup'     : 'liturgy-planning{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'ministries' : [ '90-Young Adult Ministry' ],
+            'ggroup'     : 'young-adults{ecc}'.format(ecc=ecc),
+            'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
-        {
-            'ministries' : [ '58-Prayer Chain Ministry' ],
-            'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'Liturgy Transcriptions' ],
-            'ggroup'     : 'liturgy-transcriptions{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '30A-Acolyte Ministry 5:30P',
-                             '30B-Acolyte Ministry  9:00A',
-                             '30C-Acolyte Ministry 11:30A' ],
-            'ggroup'     : 'acolytes{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '31-Adult Choir' ],
-            'ggroup'     : 'choir{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
-        },
+
         {
             'keywords'   : [ 'YouthMin parent: Jr high' ],
             'ggroup'     : 'youth-ministry-parents-jr-high{ecc}'.format(ecc=ecc),
@@ -857,16 +907,9 @@ def main():
             'ggroup'     : 'youth-ministry-parents-sr-high{ecc}'.format(ecc=ecc),
             'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
-        {
-            'ministries' : [ '39-Lectors  MASTER LIST' ],
-            'ggroup'     : 'lectors{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '90-Young Adult Ministry' ],
-            'ggroup'     : 'young-adults{ecc}'.format(ecc=ecc),
-            'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
+
+        #############################
+
         {
             'ministries' : [ '62-Men of Epiphany' ],
             'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
@@ -877,47 +920,27 @@ def main():
             'ggroup'     : 'ebm{ecc}'.format(ecc=ecc),
             'notify'     : 'polly{ecc},brayton@howlandgroup.com,jeff@squyres.com'.format(ecc=ecc),
         },
-        {
-            'ministries' : [ '38-Instrumentalists & Cantors' ],
-            'keywords'   : [ 'Musicians email list' ],
-            'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ '10 Pct Emergency Assistance' ],
-            'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
-            'notify'     : 'frrandy{ecc},erin{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '32-Bell Choir' ],
-            'keywords'   : [ 'Bell choir email list' ],
-            'ggroup'     : 'bell-ringers{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '14-Garden & Grounds' ],
-            'ggroup'     : 'garden-and-grounds{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},emswine2@gmail.com,jeff@squyres.com'.format(ecc=ecc),
-        },
+
+        #############################
+
         {
             'ministries' : [ '78-Ten Percent Committee' ],
             'ggroup'     : 'ten-percent-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'frrandy{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+
+        {
+            'keywords'   : [ '10 Pct Emergency Assistance' ],
+            'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
+            'notify'     : 'frrandy{ecc},erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
         {
             'ministries' : [ '57-Healing Blanket Ministry' ],
             'ggroup'     : 'seamstresses{ecc}'.format(ecc=ecc),
             'notify'     : 'julie{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'Wedding Ministries email list' ],
-            'ggroup'     : 'wedding-ministries{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ '26-Movers Ministry' ],
-            'ggroup'     : 'movers{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},awsimpson57@gmail.com,jeff@squyres.com'.format(ecc=ecc),
         },
     ]
     for sync in synchronizations:
