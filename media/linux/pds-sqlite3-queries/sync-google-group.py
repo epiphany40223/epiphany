@@ -793,6 +793,11 @@ def main():
         #############################
 
         {
+            'ministries' : [ '22-Bread Baking Ministry' ],
+            'ggroup'     : 'breadmakers{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '23-Worship Committee' ],
             'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
