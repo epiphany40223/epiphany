@@ -78,8 +78,9 @@ def reverse_lookup(ip_address):
 # Read / parse the XML files.
 # Make a list dicts that we'll output to a CSV.
 
-# Flatten the DMARC data into what can be output as a single row
-def make_dmarc_row(d, domain):
+# Flatten the DMARC data from a single file into what can be output as
+# a series of rows
+def make_dmarc_rows(d, domain):
 
     def _make_template(d, domain):
         template = dict()
@@ -96,13 +97,13 @@ def make_dmarc_row(d, domain):
         template['Reporting Org Name'] = rm['org_name']
         template['Reporting Domain']   = domain
         template['Reporting Email']    = rm['email']
-        template['Report ID ']         = rm['report_id']
+        template['Report ID']          = rm['report_id']
         ds = datetime.datetime.fromtimestamp(int(rm['date_range']['begin']),
                                              tz=local_tz)
-        template['Report Date Start '] = ds
+        template['Report Date Start']  = ds
         de = datetime.datetime.fromtimestamp(int(rm['date_range']['end']),
                                              tz=local_tz)
-        template['Report Date End ']   = de
+        template['Report Date End']    = de
 
         # Extract:
         # - policy_published.domain
@@ -190,6 +191,11 @@ def make_dmarc_row(d, domain):
         if 'spf' in ar:
             _process_auth_results(out_row, ar['spf'], 'SPF')
 
+        # JMS
+        if (out_row['Policy Domain'] == 'churchofepiphany.com' and
+            out_row['Reporting Org Name'] == 'Yahoo! Inc.'):
+            pprint(out_row)
+
         return out_row
 
     #------------------------------------------------------
@@ -234,29 +240,49 @@ for list_item in args.file:
             xml_string = f.read()
             d = xmltodict.parse(xml_string)
 
-            rows = make_dmarc_row(d, domain)
+            rows = make_dmarc_rows(d, domain)
             for row in rows:
                 out_rows.append(row)
 
 #---------------------------------------------------------------
 
-# Make a union of all the column names
+# We're going to group results that have an ending reporting date on
+# the same day into a single file.  So go build up a list of all the
+# "Report Date End" dates.
+#
+# At the same time, make a union of all the column names.  Do it in a
+# complete overkill way to ensure to get all the field names (because
+# now all rows will have all columns).
 fieldnames = dict()
+date_rows = dict()
 for row in out_rows:
     for name in row:
         fieldnames[name] = True
 
+    end_dt = row['Report Date End']
+    pprint(end_dt)
+    end_date = end_dt.date()
+    pprint(end_date)
+    if end_date not in date_rows:
+        date_rows[end_date] = dict()
+    if end_dt not in date_rows[end_date]:
+        date_rows[end_date][end_dt] = list()
+
+    date_rows[end_date][end_dt].append(row)
+
 #---------------------------------------------------------------
 
-out_file = 'results.csv'
-if os.path.exists(out_file):
-    os.unlink(out_file)
-with open(out_file, 'w') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
-                            quoting=csv.QUOTE_ALL)
-    writer.writeheader()
+for date in sorted(date_rows):
+    out_file = 'results-{d}.csv'.format(d=date.isoformat())
+    if os.path.exists(out_file):
+        os.unlink(out_file)
+    with open(out_file, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                quoting=csv.QUOTE_ALL)
+        writer.writeheader()
 
-    for row in out_rows:
-        writer.writerow(row)
+        for dt in sorted(date_rows[date]):
+            for row in date_rows[date][dt]:
+                writer.writerow(row)
 
-print("Wrote results to: {f}".format(f=out_file))
+    print("Wrote results to: {f}".format(f=out_file))
