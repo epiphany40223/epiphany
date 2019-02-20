@@ -125,7 +125,7 @@ def make_dmarc_rows(d, domain):
     def _make_out_row(template, record):
 
         # Auth results may be one or more domains
-        def _process_auth_results(out_row, data, label):
+        def _process_auth_results(out_row, data, label, want_selector):
             selector = None
 
             if type(data) is list:
@@ -152,8 +152,9 @@ def make_dmarc_rows(d, domain):
                     .format(label=label)] = domain
             out_row['Auth Results {label} Result'
                     .format(label=label)] = result
-            out_row['Auth Results {label} Selector'
-                    .format(label=label)] = selector
+            if want_selector:
+                out_row['Auth Results {label} Selector'
+                        .format(label=label)] = selector
 
         #------------------------------------------------------
 
@@ -178,23 +179,18 @@ def make_dmarc_rows(d, domain):
         out_row['Source IP name'] = ip_name
         out_row['Count']          = row['count']
         pe = row['policy_evaluated']
-        out_row['Evaluated Policy Disposition'] = pe['disposition']
-        out_row['Evaluated Policy DKIM']        = pe['dkim']
-        out_row['Evaluated Policy SPF']         = pe['spf']
+        out_row['DMARC Evaluated Policy Disposition'] = pe['disposition']
+        out_row['DMARC Evaluated Policy DKIM']        = pe['dkim']
+        out_row['DMARC Evaluated Policy SPF']         = pe['spf']
 
         i = record['identifiers']
         out_row['Identifiers Header From'] = i['header_from']
 
         ar = record['auth_results']
         if 'dkim' in ar:
-            _process_auth_results(out_row, ar['dkim'], 'DKIM')
+            _process_auth_results(out_row, ar['dkim'], 'DKIM', True)
         if 'spf' in ar:
-            _process_auth_results(out_row, ar['spf'], 'SPF')
-
-        # JMS
-        if (out_row['Policy Domain'] == 'churchofepiphany.com' and
-            out_row['Reporting Org Name'] == 'Yahoo! Inc.'):
-            pprint(out_row)
+            _process_auth_results(out_row, ar['spf'], 'SPF', False)
 
         return out_row
 
@@ -260,9 +256,7 @@ for row in out_rows:
         fieldnames[name] = True
 
     end_dt = row['Report Date End']
-    pprint(end_dt)
     end_date = end_dt.date()
-    pprint(end_date)
     if end_date not in date_rows:
         date_rows[end_date] = dict()
     if end_dt not in date_rows[end_date]:
