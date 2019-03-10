@@ -725,7 +725,7 @@ def main():
     args = setup_cli_args()
 
     log = ECC.setup_logging(info=args.verbose,
-                            debug=args.verbose,
+                            debug=args.debug,
                             logfile=args.logfile)
 
     (pds, pds_families,
