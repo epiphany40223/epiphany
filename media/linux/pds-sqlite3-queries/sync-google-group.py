@@ -880,6 +880,11 @@ def main():
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'keywords'   : [ 'Recordings access' ],
+            'ggroup'     : 'recordings-viewer{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'keywords'   : [ 'ECC Sheet Music access' ],
             'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
