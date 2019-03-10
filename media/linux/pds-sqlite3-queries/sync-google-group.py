@@ -484,7 +484,8 @@ def google_group_get_permissions(service, group_email, log=None):
         log.info("Group permissions for {email}: {who}"
                  .format(email=group_email, who=who))
 
-    if who == 'ANYONE_CAN_POST' or who == 'ALL_MEMBERS_CAN_POST':
+    if (who == 'ANYONE_CAN_POST' or who == 'ALL_MEMBERS_CAN_POST' or
+        who == 'ALL_IN_DOMAIN_CAN_POST'):
         return DISCUSSION
     else:
         return BROADCAST
