@@ -484,7 +484,8 @@ def google_group_get_permissions(service, group_email, log=None):
         log.info("Group permissions for {email}: {who}"
                  .format(email=group_email, who=who))
 
-    if who == 'ANYONE_CAN_POST' or who == 'ALL_MEMBERS_CAN_POST':
+    if (who == 'ANYONE_CAN_POST' or who == 'ALL_MEMBERS_CAN_POST' or
+        who == 'ALL_IN_DOMAIN_CAN_POST'):
         return DISCUSSION
     else:
         return BROADCAST
@@ -876,6 +877,11 @@ def main():
         {
             'keywords'   : [ 'Homebound recipients email lst', 'Homebound MP3 Recordings' ],
             'ggroup'     : 'ministry-homebound-liturgy-recipients{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Recordings access' ],
+            'ggroup'     : 'recordings-viewer{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
