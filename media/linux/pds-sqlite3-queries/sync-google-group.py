@@ -439,9 +439,9 @@ def _sync_add(sync, group_permissions,
         for err in j['error']['errors']:
             if err['reason'] == 'duplicate':
                 if log:
-                    log.info("Google says a duplicate of {email} "
-                             "already in the group -- ignoring"
-                             .format(email=email))
+                    log.error("Google says a duplicate of {email} "
+                              "already in the group -- ignoring"
+                              .format(email=email))
                 return None
 
             msg += " {msg} ({reason})".format(msg=err['message'],
@@ -514,9 +514,9 @@ def google_group_find_members(service, sync, log=None):
             break
 
     if log:
-        log.info("Google Group membership for {group}"
-                 .format(group=sync['ggroup']))
-        log.info(group_members)
+        log.debug("Google Group membership for {group}"
+                  .format(group=sync['ggroup']))
+        log.debug(group_members)
 
     return group_members
 
@@ -630,8 +630,8 @@ def pds_find_ministry_members(members, sync, log=None):
                 found_emails[e] = len(ministry_members) - 1
 
     if log:
-        log.info("PDS members for ministries {m} and keywords {k}:"
-                 .format(m=ministries, k=keywords))
+        log.debug("PDS members for ministries {m} and keywords {k}:"
+                  .format(m=ministries, k=keywords))
         for m in ministry_members:
             name_str = ''
             for pm in m['pds_members']:
@@ -639,10 +639,10 @@ def pds_find_ministry_members(members, sync, log=None):
                     name_str = name_str + ' or '
                 name_str = name_str + pm['Name']
 
-            log.info('  {name} <{email}> leader: {leader}'
-                     .format(name=name_str,
-                             email=m['email'],
-                             leader=m['leader']))
+            log.debug('  {name} <{email}> leader: {leader}'
+                      .format(name=name_str,
+                              email=m['email'],
+                              leader=m['leader']))
 
     return ministry_members
 
