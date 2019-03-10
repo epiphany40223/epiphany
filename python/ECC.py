@@ -48,7 +48,7 @@ def setup_logging(info=True, debug=False, logfile=None):
     if logfile:
         s = logging.handlers.RotatingFileHandler(filename=logfile,
                                                  maxBytes=(pow(2,20) * 10),
-                                                 backupCount=10)
+                                                 backupCount=50)
         s.setFormatter(f)
         log.addHandler(s)
 
