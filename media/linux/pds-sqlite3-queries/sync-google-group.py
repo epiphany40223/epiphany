@@ -953,6 +953,11 @@ def main():
             'ggroup'     : 'seamstresses{ecc}'.format(ecc=ecc),
             'notify'     : 'julie{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+        {
+            'ministries' : [ '63-Sages (for 50 yrs. +)' ],
+            'ggroup'     : 'sages{ecc}'.format(ecc=ecc),
+            'notify'     : 'joanhagedorn46@gmail.com,jeff@squyres.com'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
