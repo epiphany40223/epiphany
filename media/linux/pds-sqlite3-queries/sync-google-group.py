@@ -950,8 +950,8 @@ def main():
 
         {
             'ministries' : [ '57-Healing Blanket Ministry' ],
-            'ggroup'     : 'seamstresses{ecc}'.format(ecc=ecc),
-            'notify'     : 'julie{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'ggroup'     : 'healing-blankets-ministry{ecc}'.format(ecc=ecc),
+            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'ministries' : [ '63-Sages (for 50 yrs. +)' ],
