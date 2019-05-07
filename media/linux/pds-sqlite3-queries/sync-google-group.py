@@ -958,6 +958,14 @@ def main():
             'ggroup'     : 'sages{ecc}'.format(ecc=ecc),
             'notify'     : 'joanhagedorn46@gmail.com,jeff@squyres.com'.format(ecc=ecc),
         },
+
+        #############################
+
+        {
+            'keywords'   : [ 'Apply@ECC email list' ],
+            'ggroup'     : 'apply{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
