@@ -610,7 +610,14 @@ def check_for_incoming_ftp():
         # Finally, move the file to the archive directory for a
         # "permanent" record (and so that we won't see it again on
         # future passes through this directory).
+        global archive_dir
+        archive_filename = os.path.join(archive_dir, file.filename)
+        log.info("Checking to make sure archive file does not already exist: {}".format(archive_filename))
+        if os.path.exists(archive_filename):
+            log.info("Removing already-existing archive file: {}".format(archive_filename))
+            os.remove(archive_filename)
         shutil.move(src=filename, dst=archive_dir)
+        log.info("Moved file to archive: {}".format(file.filename))
 
 ####################################################################
 #
