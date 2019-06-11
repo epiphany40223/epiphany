@@ -966,6 +966,19 @@ def main():
             'ggroup'     : 'apply{ecc}'.format(ecc=ecc),
             'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+
+        #############################
+
+        {
+            'keywords'   : [ 'Pastoral staff email list' ],
+            'ggroup'     : 'pastoral-staff{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Support staff email list' ],
+            'ggroup'     : 'support-staff{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
