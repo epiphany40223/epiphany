@@ -444,6 +444,13 @@ def _sync_add(sync, group_permissions,
                               .format(email=email))
                 return None
 
+            elif err['reason'] == 'backendError':
+                if log:
+                    log.error("Google had an internal error while processing"
+                              "{email} -- ignoring"
+                              .format(email=email))
+                return None
+
             msg += " {msg} ({reason})".format(msg=err['message'],
                                               reason=err['reason'])
     except:
