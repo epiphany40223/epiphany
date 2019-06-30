@@ -10,8 +10,10 @@ starting with "_").  There's only a handful of public functions.
 
 '''
 
-import PDS
 import re
+import pathlib
+
+import PDS
 
 ##############################################################################
 #
@@ -47,6 +49,41 @@ def _find_member_types():
 
 #-----------------------------------------------------------------------------
 
+# Normalize some flags to actual Python booleans
+def _normalize_boolean(item, src, dest=None) -> None:
+    if dest is None:
+        dest=src
+
+    if src not in item:
+        item[dest] = False
+    elif item[src] == '' or item[src] == 0:
+        item[dest] = False
+        if src != dest:
+            del item[src]
+    elif item[src] == 1:
+        item[dest] = True
+        if src != dest:
+            del item[src]
+    else:
+        log.info("Unrecognized {f} value: {v}"
+                 .format(f=field, v=item[src]))
+
+#-----------------------------------------------------------------------------
+
+# Represent filenames with a Pathlib object, so that it's equally accessible
+# when running on Windows and Linux.
+def _normalize_filename(item, src) -> None:
+    if src not in item:
+        return
+
+    if not item[src]:
+        del item[src]
+        return
+
+    item[src] = pathlib.PureWindowsPath(item[src])
+
+#-----------------------------------------------------------------------------
+
 def _load_families(pds, columns=None,
                    active_only=True, log=None):
     db_num = _get_db_num()
@@ -59,6 +96,8 @@ def _load_families(pds, columns=None,
     columns.append('StreetAddress2')
     columns.append('StreetCityRec')
     columns.append('StreetZip')
+    columns.append('PictureFile')
+    columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
              .format(db_num=db_num))
@@ -72,6 +111,11 @@ def _load_families(pds, columns=None,
                               columns=columns, log=log,
                               where=where)
 
+    for f in families.values():
+        _normalize_boolean(f, src='PDSInactive{n}'.format(n=db_num),
+                    dest="Inactive")
+        _normalize_filename(f, src='PictureFile')
+
     return families
 
 #-----------------------------------------------------------------------------
@@ -84,10 +128,16 @@ def _load_members(pds, columns=None,
         columns = list()
     columns.append('Name')
     columns.append('FamRecNum')
+    columns.append('DateOfBirth')
+    columns.append('MonthOfBirth')
+    columns.append('DayOfBirth')
     columns.append('YearOfBirth')
     columns.append('MaritalStatusRec')
     columns.append('MemberType')
+    columns.append('PictureFile')
     columns.append('User4DescRec')
+    columns.append('Deceased')
+    columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Mem_DB.CensusMember{db_num}=1'
              .format(db_num=db_num))
@@ -101,6 +151,12 @@ def _load_members(pds, columns=None,
     members = PDS.read_table(pds, 'Mem_DB', 'MemRecNum',
                              columns=columns, log=log,
                              where=where)
+
+    for m in members.values():
+        _normalize_boolean(m, src='Deceased')
+        _normalize_boolean(m, src='PDSInactive{n}'.format(n=db_num),
+                    dest="Inactive")
+        _normalize_filename(m, src='PictureFile')
 
     return members
 
@@ -417,6 +473,23 @@ def _parse_member_names(members):
         m['maiden']   = maiden
         m['prefix']   = prefix
         m['suffix']   = suffix
+
+        field = 'full_name'
+        m[field]     = ''
+        if prefix:
+            m[field] += prefix + ' '
+        if first:
+            m[field] += first + ' '
+        if nickname:
+            m[field] += '("' + nickname + '") '
+        if middle:
+            m[field] += middle + ' '
+        if last:
+            m[field] += last
+        if maiden:
+            m[field] += ' (maiden: ' + maiden + ')'
+        if suffix:
+            m[field] += ', ' + suffix
 
         if nickname:
             m['email_name'] = '{nick} {last}'.format(nick=nickname, last=last)
