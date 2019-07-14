@@ -59,7 +59,7 @@ if test $yes -eq 1; then
     tar jcf "$b.tar.bz2" "$b"
     rm -rf "$b"
 
-    # Now upload that tarfile to a Google Team Drive
+    # Now upload that tarfile to a Google Shared Drive
     cd "$uploader_dir"
     $script \
         --app-id $client_id \
