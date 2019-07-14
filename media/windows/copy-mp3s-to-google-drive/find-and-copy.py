@@ -15,7 +15,7 @@ This script developed and tested with Python 3.6.x.  It has not been
 tested with other versions (e.g., Python 2.7.x).
 
 - This script takes a single pass through the incoming FTP dir, the
-  outgoing Google Team Drive dir, and the outgoing FTP dir.  It is
+  outgoing Google Shared Drive dir, and the outgoing FTP dir.  It is
   intended to be launched periodically via some external mechanism
   (e.g., every 5 minutes via cron or the Windows scheduler).
 - Watch a directory for new MP3 files named of the form
@@ -25,14 +25,14 @@ tested with other versions (e.g., Python 2.7.x).
       below to just ignore the first character of the filename.
 - If the file size of the file hasn't changed for 60 seconds, assume
   that the file has finished uploading to this directory, and upload
-  it to both a Google Team Drive folder.
+  it to both a Google Shared Drive folder.
 - In Google, put the uploaded MP3 file in a YYYY/MM-MONTHNAME folder,
-  just to break it up.  Create those folders in the Google Team Drive
+  just to break it up.  Create those folders in the Google Shared Drive
   if they don't exist.
 - Connection+authentication to Google is only done if necessary (i.e.,
   if there are files to upload to either one of them).
 - Send email summaries of the results:
-  - Google email will contain links to the Team Drive, destination
+  - Google email will contain links to the Shared Drive, destination
     folder, and each uploaded MP3.
   - Both emails will contain success/failure indications.
 - If an upload fails, it is abandoned and will be re-tried at the next
@@ -230,7 +230,7 @@ def find_mp3_files(dir):
 
 ####################################################################
 #
-# Google Team Drive functions
+# Google Shared Drive functions
 #
 ####################################################################
 
@@ -324,7 +324,7 @@ def gtd_login():
 #===================================================================
 
 def gtd_find_team_drive(service, target_name):
-    # Iterate over all (pages of) Team Drives, looking for one in
+    # Iterate over all (pages of) Shared Drives, looking for one in
     # particular
     page_token = None
     while True:
@@ -332,7 +332,7 @@ def gtd_find_team_drive(service, target_name):
                     .list(pageToken=page_token).execute())
         for team_drive in response.get('teamDrives', []):
             if team_drive['name'] == target_name:
-                log.debug('Found target Team Drive: "{0}" (ID: {1})'
+                log.debug('Found target Shared Drive: "{0}" (ID: {1})'
                           .format(target_name, team_drive['id']))
                 return team_drive
 
@@ -341,7 +341,7 @@ def gtd_find_team_drive(service, target_name):
             break
 
     # If we get here, we didn't find the target team drive
-    diediedie("Error: Could not find the target Team Drive ({0})"
+    diediedie("Error: Could not find the target Shared Drive ({0})"
               .format(args.target_team_drive))
 
 #===================================================================
@@ -447,7 +447,7 @@ def gtd_create_dest_folder(service, team_drive, year, month):
 def gtd_email_results(team_drive, gtded_files):
     # Send an email with all the results.
     subject = "all succeeded"
-    message = '''<p>Uploaded files to the Google Team Drive:</p>
+    message = '''<p>Uploaded files to the Google Shared Drive:</p>
 
 <p>
 <table border="0">
@@ -456,7 +456,7 @@ def gtd_email_results(team_drive, gtded_files):
 </tr>
 
 <tr>
-<td>Team Drive:</td>
+<td>Shared Drive:</td>
 <td><a href="{0}">{1}</a></td>
 </tr>
 
@@ -506,10 +506,10 @@ def gtd_email_results(team_drive, gtded_files):
     message = message + '''</table>
 </p>
 
-<p>Your friendly Google Team Drive daemon,<br />
+<p>Your friendly Google Shared Drive daemon,<br />
 Greg</p>'''
 
-    send_mail(subject="Google Team Drive upload results ({0})".format(subject),
+    send_mail(subject="Google Shared Drive upload results ({0})".format(subject),
               message_body=message,
               html=True)
 
@@ -601,7 +601,7 @@ def check_for_incoming_ftp():
             continue
 
         # If we got here, the file is good! Copy it to the "to FTP"
-        # and "to Google Team Drive" directories so that they will be
+        # and "to Google Shared Drive" directories so that they will be
         # processed.
         log.info("Found incoming FTP file: {0}".format(file.filename))
         filename = os.path.join(args.incoming_ftp_dir, file.filename)
@@ -685,7 +685,7 @@ def add_cli_args():
     tools.argparser.add_argument('--target-team-drive',
                                  required=False,
                                  default=target_team_drive,
-                                 help='Name of Team Drive to upload the found MP3 files to')
+                                 help='Name of Shared Drive to upload the found MP3 files to')
 
     tools.argparser.add_argument('--verbose',
                                  required=False,
