@@ -849,6 +849,11 @@ def main():
             'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
+            'ministries' : [ '36-Funeral Mass Ministry' ],
+            'ggroup'     : 'funeral-mass-ministry{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
             'ministries' : [ '38-Instrumentalists & Cantors' ],
             'keywords'   : [ 'Musicians email list' ],
             'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
