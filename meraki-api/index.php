@@ -67,6 +67,10 @@ function log_json($apMac, $data)
     if (!$db) {
         my_die("Error: unable to write to sqlite table\n");
     }
+    $db->busyTimeout(5000);
+    // WAL mode has better control over concurrency.
+    // Source: https://www.sqlite.org/wal.html
+    $db->exec('PRAGMA journal_mode = wal;');
 
     # ID will auto-increment if not specified
     $str = "INSERT INTO data (timestamp, apMac, clientMac, ipv4, ipv6, seenTime, seenEpoch, ssid, rssi, manufacturer, os, location_lat, location_lng, location_unc) VALUES (" .
