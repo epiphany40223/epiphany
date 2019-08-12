@@ -787,15 +787,17 @@ def main():
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '64-Singles Explore Life (SEL)' ],
-            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
-            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-
-        {
             'keywords'   : [ 'PPC Executive Committee' ],
             'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '64-Singles Explore Life (SEL)' ],
+            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
+            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         #############################
