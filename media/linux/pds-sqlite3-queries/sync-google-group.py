@@ -791,6 +791,11 @@ def main():
             'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+        {
+            'keywords'   : [ 'Long Range Planning' ],
+            'ggroup'     : 'long-range-planning{ecc}'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
 
         #############################
 
