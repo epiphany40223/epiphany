@@ -974,6 +974,14 @@ def main():
         #############################
 
         {
+            'ministries' : [ '48-Stewardship & E Committee' ],
+            'ggroup'     : 'stewardship{ecc}'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
             'keywords'   : [ 'Apply@ECC email list' ],
             'ggroup'     : 'apply{ecc}'.format(ecc=ecc),
             'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
