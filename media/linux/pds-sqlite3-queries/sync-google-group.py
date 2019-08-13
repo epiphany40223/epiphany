@@ -787,15 +787,22 @@ def main():
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '64-Singles Explore Life (SEL)' ],
-            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
-            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-
-        {
             'keywords'   : [ 'PPC Executive Committee' ],
             'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Long Range Planning' ],
+            'ggroup'     : 'long-range-planning{ecc}'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '64-Singles Explore Life (SEL)' ],
+            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
+            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         #############################
@@ -969,6 +976,14 @@ def main():
             'ministries' : [ '63-Sages (for 50 yrs. +)' ],
             'ggroup'     : 'sages{ecc}'.format(ecc=ecc),
             'notify'     : 'joanhagedorn46@gmail.com,jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '48-Stewardship & E Committee' ],
+            'ggroup'     : 'stewardship{ecc}'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         #############################
