@@ -402,7 +402,8 @@ def _link_member_occupations(members, occupations):
 #       'FEAmt', 'FEComment', 'FEDate' are probably the only relevant fields
 #       from this dictionary.
 def _link_family_funds(funds, fund_periods, fund_activities,
-                       families, all_family_funds, all_family_fund_history, log):
+                       families, all_family_funds, all_family_fund_rates,
+                       all_family_fund_history, log):
     # Make a cross reference dictionary of funds by fund ID+year.  It will be
     # used below.
     fund_xref = dict()
@@ -417,6 +418,13 @@ def _link_family_funds(funds, fund_periods, fund_activities,
             fund_xref[fund_year][fund_id] = dict()
 
         fund_xref[fund_year][fund_id] = fund
+
+    # Similarly, make a family fund rate cross reference dictionary indexed by
+    # family fund IDs, to be used for direct lookups, below.
+    family_fund_rate_xref = dict()
+    for family_fund_rate in all_family_fund_rates.values():
+        family_fund_id = family_fund_rate['FundRecNum']
+        family_fund_rate_xref[family_fund_id] = family_fund_rate
 
     # Do the main work of this method in a standalone dictionary for simplicity.
     # We'll link it into the main "families" dictionary at the end.
@@ -444,6 +452,13 @@ def _link_family_funds(funds, fund_periods, fund_activities,
         else:
             activity = 'None'
 
+        # If the family pledged, they'll have a fund_rate.  If not, they won't.
+        family_fund_id = family_fund['FDRecNum']
+        if family_fund_id in family_fund_rate_xref:
+            fund_rate = family_fund_rate_xref[family_fund_id]
+        else:
+            fund_rate = None
+
         # Create the multi-levels in the output
         if fid not in funding:
             funding[fid] = dict()
@@ -451,8 +466,9 @@ def _link_family_funds(funds, fund_periods, fund_activities,
             funding[fid][year] = dict()
         if fund_id not in funding[fid][year]:
             funding[fid][year][fund_id] = {
-                "fund"    : fund,
-                "history" : list(),
+                "fund"      : fund,
+                "fund_rate" : fund_rate,
+                "history"   : list(),
             }
 
         funding[fid][year][fund_id]['history'].append({
@@ -676,6 +692,12 @@ def load_families_and_members(filename=None, pds=None,
                             columns=['FDFamRec', 'FDYear', 'FDFund',
                                     'FDOrder', 'MemRecNum', 'Comment'],
                             log=log)
+    # Pledging information from the family
+    fam_fund_rates = PDS.read_table(pds, 'FamFundRate_DB', 'RateRecNum',
+                            columns=['FundRecNum', 'FDStartDate', 'FDEndDate',
+                                    'FDRate', 'FDRateAdj', 'FDNumber',
+                                    'FDPeriod', 'FDTotal',
+                                    'Batch', 'BatchDate'])
     # A listing of each individual contribution from each family,
     # cross-referenced to fam_funds.
     fam_fund_history = PDS.read_table(pds, 'FamFundHist_DB', 'FERecNum',
@@ -716,7 +738,8 @@ def load_families_and_members(filename=None, pds=None,
     _link_member_occupations(members, mem_4kw)
 
     _link_family_funds(funds, fund_periods, fund_activities,
-                       families, fam_funds, fam_fund_history, log)
+                       families, fam_funds, fam_fund_rates, fam_fund_history,
+                       log)
 
     return pds, families, members
 
