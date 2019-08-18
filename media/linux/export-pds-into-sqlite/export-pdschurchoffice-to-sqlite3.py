@@ -251,12 +251,6 @@ def process_db(args, db, sqlite3):
         log.info("   ==> Skipping bogus {short} table".format(short=table_base))
         return
 
-    # We dont' currently care about the *GIANT* databases (that take
-    # -- literally -- hours to import on an RPi).
-    if (re.search('fund', table_base, flags=re.IGNORECASE)):
-        log.info("   ==> Skipping giant {short} table".format(short=table_base))
-        return
-
     # We have the PDS SMB file share opened as read-only, and pxview
     # doesn't like opening files in read-only mode.  So we have to
     # copy the files to a read-write location first.

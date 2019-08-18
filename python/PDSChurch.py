@@ -13,6 +13,8 @@ starting with "_").  There's only a handful of public functions.
 import re
 import pathlib
 
+from datetime import datetime
+
 import PDS
 
 ##############################################################################
@@ -384,6 +386,95 @@ def _link_member_occupations(members, occupations):
 
 #-----------------------------------------------------------------------------
 
+# Transform the list of all family fund history (i.e., individual
+# contributions) to be:
+#
+# families['funding'][fid][year][fund_id], a dictionary containing:
+#
+# * 'fund': PDS DB entry from FundSetup_DB
+# * 'history': array of entries, one per contribution of the family that year
+# on that fund, each entry containing a dictionary of:
+#     * 'activity': name of fund from FuncAct (don't both copying over
+#        other data -- the fund name is really the only important thing)
+#     * 'fund_id': same as fund_id index in "funding"
+#     * 'year': same as year index in "fundung"
+#     * 'item': detailed dictionary of information about the contribution.
+#       'FEAmt', 'FEComment', 'FEDate' are probably the only relevant fields
+#       from this dictionary.
+def _link_family_funds(funds, fund_periods, fund_activities,
+                       families, all_family_funds, all_family_fund_history, log):
+    # Make a cross reference dictionary of funds by fund ID+year.  It will be
+    # used below.
+    fund_xref = dict()
+    for period in fund_periods.values():
+        fund_id = period['FundNumber']
+        fund_year = period['FundYear']
+        fund = funds[period['SetupRecNum']]
+
+        if fund_year not in fund_xref:
+            fund_xref[fund_year] = dict()
+        if fund_id not in fund_xref[fund_year]:
+            fund_xref[fund_year][fund_id] = dict()
+
+        fund_xref[fund_year][fund_id] = fund
+
+    # Do the main work of this method in a standalone dictionary for simplicity.
+    # We'll link it into the main "families" dictionary at the end.
+    funding = dict()
+    for item in all_family_fund_history.values():
+        # Make sure this family is in the families dictionary (e.g., if we only
+        # have the active families, make sure this is an active family)
+        fid = item['FEFamRec']
+        if fid not in families:
+            continue
+
+        # Transform the item date string into a datetime.date
+        d = datetime.strptime(item['FEDate'], '%Y-%m-%d')
+        item['FEDate'] = d
+
+        family_fund = all_family_funds[item['FEFundRec']]
+        fund_id     = family_fund['FDFund']
+        year        = family_fund['FDYear']
+        fund        = fund_xref[year][fund_id]
+
+        # Sometimes activity_id will be None.  Thanks PDS!
+        activity_id = item['ActRecNum']
+        if activity_id:
+            activity = fund_activities[activity_id]['Activity']
+        else:
+            activity = 'None'
+
+        # Create the multi-levels in the output
+        if fid not in funding:
+            funding[fid] = dict()
+        if year not in funding[fid]:
+            funding[fid][year] = dict()
+        if fund_id not in funding[fid][year]:
+            funding[fid][year][fund_id] = {
+                "fund"    : fund,
+                "history" : list(),
+            }
+
+        funding[fid][year][fund_id]['history'].append({
+            "fund_id"  : fund_id,
+            "year"     : year,
+            "activity" : activity,
+            "item"     : item,
+        })
+
+    # Now assign the results back to families[fid]['funding']
+    for fid in funding:
+        # Make sure this family is in the families dictionary (e.g., if we only
+        # have the active families, make sure this is an active family). This is
+        # technicaly redundant with above, but hey -- defensive programming,
+        # right?
+        if fid not in families:
+            continue
+
+        families[fid]['funds'] = funding[fid]
+
+#-----------------------------------------------------------------------------
+
 def _find_member_marriage_date_type(date_types):
     for dtid, dt in date_types.items():
         if dt['Description'] == 'Marriage':
@@ -559,6 +650,39 @@ def load_families_and_members(filename=None, pds=None,
                                         columns=['Description'], log=log)
     marital_statuses = PDS.read_table(pds, 'MemStatType_DB', 'MaritalStatusRec',
                                       columns=['Description'], log=log)
+    # Descriptions of each fund
+    funds = PDS.read_table(pds, 'FundSetup_DB', 'SetupRecNum',
+                                      columns=['FundNumber',
+                                                'FundKey',
+                                                'FundName'], log=log)
+    # Each fund also has one or more time periods associated with it
+    fund_periods = PDS.read_table(pds, 'FundPeriod_DB', 'FundPeriodRecNum',
+                                columns=['SetupRecNum', 'FundNumber',
+                                         'FundYear', 'FundStart', 'FundEnd'],
+                                log=log)
+    # When a Family contributes, each contribution is assocaited with
+    # a "funding activity"
+    fund_activities = PDS.read_table(pds, 'FundAct_DB', 'ActRecNum',
+                                  columns=['FundRecNum',
+                                            'GroupName',
+                                            'Activity',
+                                            'Function',
+                                            'GroupOrder',
+                                            'pdsorder'], log=log)
+
+    # Families' activities with relation to the established funds (there is one
+    # entry for each family for each fund to which that family has contributed).
+    fam_funds = PDS.read_table(pds, 'FamFund_DB', 'FDRecNum',
+                            columns=['FDFamRec', 'FDYear', 'FDFund',
+                                    'FDOrder', 'MemRecNum', 'Comment'],
+                            log=log)
+    # A listing of each individual contribution from each family,
+    # cross-referenced to fam_funds.
+    fam_fund_history = PDS.read_table(pds, 'FamFundHist_DB', 'FERecNum',
+                                columns=['FEDate', 'ActRecNum', 'FEFundRec',
+                                        'FEFamRec', 'FEAmt', 'FEBatch',
+                                        'MemRecNum', 'FEChk', 'FEComment'],
+                                log=log)
 
     member_types = _find_member_types()
     mdtid        = _find_member_marriage_date_type(date_types)
@@ -590,6 +714,9 @@ def load_families_and_members(filename=None, pds=None,
     _link_member_marital_statuses(members, marital_statuses)
     _link_member_marriage_dates(members, mem_dates, mdtid)
     _link_member_occupations(members, mem_4kw)
+
+    _link_family_funds(funds, fund_periods, fund_activities,
+                       families, fam_funds, fam_fund_history, log)
 
     return pds, families, members
 
