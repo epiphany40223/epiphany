@@ -985,6 +985,11 @@ def main():
             'ggroup'     : 'stewardship{ecc}'.format(ecc=ecc),
             'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+        {
+            'ministries' : [ '77-St. Vincent DePaul' ],
+            'ggroup'     : 'SVDPConference{ecc}'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
 
         #############################
 
