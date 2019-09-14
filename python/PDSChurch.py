@@ -544,21 +544,21 @@ def _parse_name(name, log=None):
         more = parts[1]
         result = re.match('([^\(\{\[]+)', more)
         if result:
-            first = result[1]
+            first = result.group(1)
         else:
             first = 'Unknown'
 
         result = re.search('\{(.+)\}', more)
         if result:
-            middle = result[1]
+            middle = result.group(1)
 
         result = re.search('\((.+)\)', more)
         if result:
-            nickname = result[1]
+            nickname = result.group(1)
 
         result = re.search('\[(.+)\]', more)
         if result:
-            maiden = result[1]
+            maiden = result.group(1)
 
 
     if log:
