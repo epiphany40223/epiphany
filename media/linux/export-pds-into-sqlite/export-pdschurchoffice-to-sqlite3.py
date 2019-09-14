@@ -306,6 +306,14 @@ def process_db(args, db, sqlite3):
     for line in list(sf):
         line = line.strip()
 
+        # Starting with PDS 9.0G, some table names are "resttemp.DB", instead of
+        # matching whatever the filename is (e.g., Mem.DB has a table name of
+        # "resttemp.DB").  Needless to say, having a bunch of tables with the same
+        # filename creates problems when we insert them all into a single database.
+        # So intercept those and rename them back to their filename.
+        table_name = table_base + "_DB"
+        line = re.sub('resttemp_DB', table_name, line)
+
         # PDS uses some fields named "order", "key", "default", etc.,
         # which are keywords in SQL
         line = replace_things_not_in_quotes(line,
