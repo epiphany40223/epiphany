@@ -813,7 +813,7 @@ def main():
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '308-Worship&Music Support Team' ],
+            'ministries' : [ '103-Worship Committee' ],
             'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
