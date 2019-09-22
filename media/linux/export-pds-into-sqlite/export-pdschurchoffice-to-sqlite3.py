@@ -226,8 +226,9 @@ def process_db(args, db, sqlite3):
     results = re.search('(.+).DB$', os.path.basename(db))
     table_base = results.group(1)
 
-    # Oct 2018: There's a @Mem.DB file.  I'm *guessing* that this
-    # is an error of some type...?  Skip it.
+    # There are sometimes DB filenames that begin with "@".  These are
+    # apparently temporary / scratch files (so says PDS support), and
+    # should be skipped.
     if table_base.startswith('@'):
         log.info("  ==> Skipping bogus {short} table".format(short=table_base))
         return
@@ -240,14 +241,6 @@ def process_db(args, db, sqlite3):
     if (re.search('^PDS\d+$', table_base, flags=re.IGNORECASE) or
         re.search('^RE\d+$', table_base, flags=re.IGNORECASE) or
         re.search('^SCH\d+$', table_base, flags=re.IGNORECASE)):
-        log.info("   ==> Skipping bogus {short} table".format(short=table_base))
-        return
-
-    # PDS also has a duplicate table "resttemp_db" in the AskRecNum
-    # and RecNum databases.  They appear to be empty, so just skip
-    # them.
-    if (re.search('^AskRecNum$', table_base, flags=re.IGNORECASE) or
-        re.search('^RecNum$', table_base, flags=re.IGNORECASE)):
         log.info("   ==> Skipping bogus {short} table".format(short=table_base))
         return
 
@@ -306,11 +299,12 @@ def process_db(args, db, sqlite3):
     for line in list(sf):
         line = line.strip()
 
-        # Starting with PDS 9.0G, some table names are "resttemp.DB", instead of
-        # matching whatever the filename is (e.g., Mem.DB has a table name of
-        # "resttemp.DB").  Needless to say, having a bunch of tables with the same
-        # filename creates problems when we insert them all into a single database.
-        # So intercept those and rename them back to their filename.
+        # Starting with PDS 9.0G, some table names are "resttemp.DB",
+        # instead of matching whatever the filename is (e.g., Mem.DB
+        # has a table name of "resttemp.DB").  Needless to say, having
+        # a bunch of tables with the same name creates problems when
+        # we insert them all into a single database.  So intercept
+        # those and rename them back to their filename.
         table_name = table_base + "_DB"
         line = re.sub('resttemp_DB', table_name, line)
 
