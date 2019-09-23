@@ -956,13 +956,13 @@ def main():
         {
             'ministries' : [ '708-Ten Percent Committee' ],
             'ggroup'     : 'ten-percent-committee{ecc}'.format(ecc=ecc),
-            'notify'     : 'frrandy{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'polly{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         {
             'keywords'   : [ '10 Pct Emergency Assistance' ],
             'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
-            'notify'     : 'frrandy{ecc},erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'polly{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         #############################
@@ -970,12 +970,12 @@ def main():
         {
             'ministries' : [ '505-Healing Blanket Ministry' ],
             'ggroup'     : 'healing-blankets-ministry{ecc}'.format(ecc=ecc),
-            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'frtony{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
             'ministries' : [ '601-Sages (for 50 yrs. +)' ],
             'ggroup'     : 'sages{ecc}'.format(ecc=ecc),
-            'notify'     : 'joanhagedorn46@gmail.com,jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'joanhagedorn46@gmail.com,angie{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         #############################
