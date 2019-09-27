@@ -22,7 +22,7 @@ cd $prog_dir
 # If this is the first run after midnight, save a copy for archival
 # purposes.
 t=`date '+%H%M'`
-yes=`expr $t \< 5`
+yes=`expr $t \<= 14`
 if test $yes -eq 1; then
     # Upload some files to a Google drive
     archive_dir="`readlink -f $sqlite_out_dir/archives`"
