@@ -29,7 +29,9 @@ def gd_find_folder(service, folder_id, log):
                     .get(fileId=folder_id,
                          supportsTeamDrives=True).execute())
     except:
-        log.error("Failed to find Google Drive ID {f}".format(f=folder_id))
+        all = sys.exc_info()
+        log.error("Failed to find Google Drive ID {f}: {a} {b} {c}"
+                  .format(f=folder_id,a=all[0], b=all[1], c=all[2]))
         exit(1)
 
     log.debug("Validated Google Drive destination ID exists: {id}"
