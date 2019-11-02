@@ -98,6 +98,7 @@ def _load_families(pds, columns=None,
     columns.append('StreetAddress2')
     columns.append('StreetCityRec')
     columns.append('StreetZip')
+    columns.append('StatDescRec')
     columns.append('PictureFile')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
@@ -238,6 +239,14 @@ def _link_family_city_states(families, city_states):
         csid = f['StreetCityRec']
         if csid:
             f['city_state'] = city_states[csid]['CityState']
+
+#-----------------------------------------------------------------------------
+
+def _link_family_statuses(families, fam_status_types):
+    for f in families.values():
+        id = f['StatDescRec']
+        if id in fam_status_types:
+            f['status'] = fam_status_types[id]['Description']
 
 #-----------------------------------------------------------------------------
 
@@ -666,6 +675,10 @@ def load_families_and_members(filename=None, pds=None,
                                         columns=['Description'], log=log)
     marital_statuses = PDS.read_table(pds, 'MemStatType_DB', 'MaritalStatusRec',
                                       columns=['Description'], log=log)
+
+    fam_status_types = PDS.read_table(pds, 'FamStatType_DB', 'StatDescRec',
+                                      columns=['Description'], log=log)
+
     # Descriptions of each fund
     funds = PDS.read_table(pds, 'FundSetup_DB', 'SetupRecNum',
                                       columns=['FundNumber',
@@ -725,6 +738,7 @@ def load_families_and_members(filename=None, pds=None,
 
     _link_family_emails(families, emails)
     _link_family_city_states(families, city_states)
+    _link_family_statuses(families, fam_status_types)
 
     _parse_member_names(members)
     _link_member_types(members, member_types)
