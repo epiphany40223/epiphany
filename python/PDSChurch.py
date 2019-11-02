@@ -251,6 +251,20 @@ def _link_family_statuses(families, fam_status_types):
 
 #-----------------------------------------------------------------------------
 
+def _link_family_keywords(families, keywords, fam_keywords):
+    for fk in fam_keywords.values():
+        fid = fk['FamRecNum']
+        if fid not in families:
+            continue
+
+        f = families[fid]
+        if 'keywords' not in f:
+            f['keywords'] = list()
+        keyword = keywords[fk['DescRec']]['Description']
+        f['keywords'].append(keyword)
+
+#-----------------------------------------------------------------------------
+
 def _link_member_types(members, types):
     for m in members.values():
         m['type'] = types[m['MemberType']]
@@ -712,8 +726,6 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['Description', 'Active'], log=log)
     ministries  = PDS.read_table(pds, 'MinType_DB', 'MinDescRec',
                                  columns=['Description'], log=log)
-    keywords    = PDS.read_table(pds, 'MemKWType_DB', 'DescRec',
-                                 columns=['Description'], log=log)
     birth_places= PDS.read_table(pds, 'Ask_DB', 'AskRecNum',
                                  columns=['AskMemNum', 'BirthPlace'], log=log)
     date_places = PDS.read_table(pds, 'DatePlace_DB', 'DatePlaceRecNum',
@@ -729,6 +741,8 @@ def load_families_and_members(filename=None, pds=None,
     mem_phones  = PDS.read_table(pds, 'MemPhone_DB', 'PhoneRec',
                                  columns=['Rec', 'Number', 'PhoneTypeRec'],
                                  log=log)
+    mem_keyword_types = PDS.read_table(pds, 'MemKWType_DB', 'DescRec',
+                                 columns=['Description'], log=log)
     mem_keywords= PDS.read_table(pds, 'MemKW_DB', 'MemKWRecNum',
                                  columns=['MemRecNum', 'DescRec'],
                                  log=log)
@@ -748,6 +762,11 @@ def load_families_and_members(filename=None, pds=None,
     marital_statuses = PDS.read_table(pds, 'MemStatType_DB', 'MaritalStatusRec',
                                       columns=['Description'], log=log)
 
+    fam_keyword_types = PDS.read_table(pds, 'FamKWType_DB', 'DescRec',
+                                 columns=['Description'], log=log)
+    fam_keywords= PDS.read_table(pds, 'FamKW_DB', 'FamKWRecNum',
+                                 columns=['FamRecNum', 'DescRec'],
+                                 log=log)
     fam_status_types = PDS.read_table(pds, 'FamStatType_DB', 'StatDescRec',
                                       columns=['Description'], log=log)
 
@@ -811,12 +830,13 @@ def load_families_and_members(filename=None, pds=None,
     _link_family_emails(families, emails)
     _link_family_city_states(families, city_states)
     _link_family_statuses(families, fam_status_types)
+    _link_family_keywords(families, fam_keyword_types, fam_keywords)
 
     _parse_member_names(members)
     _link_member_types(members, member_types)
     _link_member_emails(members, emails)
     _link_member_phones(members, mem_phones, phone_types)
-    _link_member_keywords(members, keywords, mem_keywords)
+    _link_member_keywords(members, mem_keyword_types, mem_keywords)
     _link_member_birth_places(members, birth_places)
     _link_member_ministries(members, ministries, mem_ministries, statuses)
     _link_member_marital_statuses(members, marital_statuses)
