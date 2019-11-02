@@ -101,6 +101,7 @@ def _load_families(pds, columns=None,
     columns.append('StreetZip')
     columns.append('StatDescRec')
     columns.append('PictureFile')
+    columns.append('EnvelopeUser')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
