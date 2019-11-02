@@ -209,11 +209,11 @@ def _delete_non_parishioners(families, members):
 #-----------------------------------------------------------------------------
 
 def _link_family_emails(families, emails):
-    for _, f in families.items():
+    for f in families.values():
         f[pkey]  = list()
         f[npkey] = list()
 
-    for _, e in emails.items():
+    for e in emails.values():
         if not e['FamEmail']:
             continue
 
@@ -235,7 +235,7 @@ def _link_family_emails(families, emails):
 #-----------------------------------------------------------------------------
 
 def _link_family_city_states(families, city_states):
-    for _, f in families.items():
+    for f in families.values():
         csid = f['StreetCityRec']
         if csid:
             f['city_state'] = city_states[csid]['CityState']
@@ -251,17 +251,17 @@ def _link_family_statuses(families, fam_status_types):
 #-----------------------------------------------------------------------------
 
 def _link_member_types(members, types):
-    for _, m in members.items():
+    for m in members.values():
         m['type'] = types[m['MemberType']]
 
 #-----------------------------------------------------------------------------
 
 def _link_member_emails(members, emails):
-    for _, m in members.items():
+    for m in members.values():
         m[pkey]  = list()
         m[npkey] = list()
 
-    for _, e in emails.items():
+    for e in emails.values():
         if e['FamEmail']:
             continue
 
@@ -283,7 +283,7 @@ def _link_member_emails(members, emails):
 #-----------------------------------------------------------------------------
 
 def _link_member_phones(members, phones, phone_types):
-    for _, p in phones.items():
+    for p in phones.values():
         mid = p['Rec']
         if mid not in members:
             continue
@@ -304,7 +304,7 @@ def _link_member_phones(members, phones, phone_types):
 #-----------------------------------------------------------------------------
 
 def _link_member_keywords(members, keywords, mem_keywords):
-    for _, mk in mem_keywords.items():
+    for mk in mem_keywords.values():
         mid = mk['MemRecNum']
         if mid not in members:
             continue
@@ -318,7 +318,7 @@ def _link_member_keywords(members, keywords, mem_keywords):
 #-----------------------------------------------------------------------------
 
 def _link_member_birth_places(members, birth_places):
-    for _, b in birth_places.items():
+    for b in birth_places.values():
         mid = b['AskMemNum']
         if mid not in members:
             continue
@@ -332,11 +332,11 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
     akey = 'active_ministries'
     ikey = 'inactive_ministries'
 
-    for _, m in members.items():
+    for m in members.values():
         m[akey] = list()
         m[ikey] = list()
 
-    for _, mm in mem_ministries.items():
+    for mm in mem_ministries.values():
         mid = mm['MemRecNum']
         if mid not in members:
             continue
@@ -363,7 +363,7 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
 #-----------------------------------------------------------------------------
 
 def _link_member_marital_statuses(members, statuses):
-    for _, m in members.items():
+    for m in members.values():
         ms = m['MaritalStatusRec']
         if ms:
             m['marital_status'] = statuses[ms]['Description']
@@ -371,7 +371,7 @@ def _link_member_marital_statuses(members, statuses):
 #-----------------------------------------------------------------------------
 
 def _link_member_marriage_dates(members, mem_dates, mdtid):
-    for _, md in mem_dates.items():
+    for md in mem_dates.values():
         if md['DescRec'] != mdtid:
             continue
 
@@ -384,7 +384,7 @@ def _link_member_marriage_dates(members, mem_dates, mdtid):
 #-----------------------------------------------------------------------------
 
 def _link_member_occupations(members, occupations):
-    for _, m in members.items():
+    for m in members.values():
 
         oid = m['User4DescRec']
         if not oid:
