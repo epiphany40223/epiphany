@@ -93,6 +93,7 @@ def _load_families(pds, columns=None,
     if not columns:
         columns = list()
     columns.append('Name')
+    columns.append('MailingName')
     columns.append('ParKey')
     columns.append('StreetAddress1')
     columns.append('StreetAddress2')
@@ -509,7 +510,78 @@ def _find_member_marriage_date_type(date_types):
 
 #-----------------------------------------------------------------------------
 
-# A full name will be formatted:
+# A full Family name will be formatted:
+#
+#    Last,First(spouse last,spouse first,spouse title,spouse suffix),Title,Suffix
+#
+# (spouse) information may not be there
+# (spouse last) will not be there if the info is the same
+#
+# If Middle, Nickname, or Maiden are not provided, those terms
+# (including "{}", "()", and "[]") are not included.  E.g., if only
+# the nickname is provided:
+#
+#    Squyres,Jeffrey(Jeff)
+#
+# If Prefix and Suffix are not provided, those terms are not there,
+# either (including the commas).  If only Suffix is supplied, then the
+# comma will be there for the Prefix, but it will be empty.  Example:
+#
+#    Squyres,Jeffrey{Michael}(Jeff),,Esq.
+#
+# There are no cases in Epiphany's database where someone does not
+# have both a first and a last name.  So I didn't even bother trying
+# to figure out how that would be stored.
+
+def _parse_family_name(name, log=None):
+    parts = name.split(',')
+    last = parts[0]
+
+    prefix = None
+    if len(parts) > 2:
+        prefix = parts[2]
+        if prefix == '':
+            prefix = None
+
+    suffix = None
+    if len(parts) > 3:
+        suffix = parts[3]
+
+    # The "more" field may have the middle, nickname, and maiden name.
+    # Parse those out.
+    first = None
+    middle = None
+    nickname = None
+    maiden = None
+    if len(parts) > 1:
+        more = parts[1]
+        result = re.match('([^\(\{\[]+)', more)
+        if result:
+            first = result[1]
+        else:
+            first = 'Unknown'
+
+        result = re.search('\{(.+)\}', more)
+        if result:
+            middle = result[1]
+
+        result = re.search('\((.+)\)', more)
+        if result:
+            nickname = result[1]
+
+        result = re.search('\[(.+)\]', more)
+        if result:
+            maiden = result[1]
+
+    if log:
+        log.debug("Last: {l}, First: {f}, Middle: {m}, Nickname: {n}, Maiden: {maiden}, Prefix: {pre}, Suffix: {suff}"
+                  .format(l=last,f=first,m=middle,n=nickname,maiden=maiden,pre=prefix,suff=suffix))
+
+    return last, first, middle, nickname, maiden, prefix, suffix
+
+#-----------------------------------------------------------------------------
+
+# A full Member name will be formatted:
 #
 #    Last,First{Middle}(Nickname}[Maiden],Prefix,Suffix
 #
@@ -529,7 +601,7 @@ def _find_member_marriage_date_type(date_types):
 # have both a first and a last name.  So I didn't even bother trying
 # to figure out how that would be stored.
 
-def _parse_name(name, log=None):
+def _parse_member_name(name, log=None):
     parts = name.split(',')
     last = parts[0]
 
@@ -580,7 +652,7 @@ def _parse_member_names(members):
     for _, m in members.items():
         name = m['Name']
         (last, first, middle, nickname, maiden,
-         prefix, suffix) = _parse_name(name)
+         prefix, suffix) = _parse_member_name(name)
 
         m['first']    = first
         m['middle']   = middle
