@@ -93,12 +93,15 @@ def _load_families(pds, columns=None,
     if not columns:
         columns = list()
     columns.append('Name')
+    columns.append('MailingName')
     columns.append('ParKey')
     columns.append('StreetAddress1')
     columns.append('StreetAddress2')
     columns.append('StreetCityRec')
     columns.append('StreetZip')
+    columns.append('StatDescRec')
     columns.append('PictureFile')
+    columns.append('EnvelopeUser')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
@@ -208,11 +211,11 @@ def _delete_non_parishioners(families, members):
 #-----------------------------------------------------------------------------
 
 def _link_family_emails(families, emails):
-    for _, f in families.items():
+    for f in families.values():
         f[pkey]  = list()
         f[npkey] = list()
 
-    for _, e in emails.items():
+    for e in emails.values():
         if not e['FamEmail']:
             continue
 
@@ -234,25 +237,47 @@ def _link_family_emails(families, emails):
 #-----------------------------------------------------------------------------
 
 def _link_family_city_states(families, city_states):
-    for _, f in families.items():
+    for f in families.values():
         csid = f['StreetCityRec']
         if csid:
             f['city_state'] = city_states[csid]['CityState']
 
 #-----------------------------------------------------------------------------
 
+def _link_family_statuses(families, fam_status_types):
+    for f in families.values():
+        id = f['StatDescRec']
+        if id in fam_status_types:
+            f['status'] = fam_status_types[id]['Description']
+
+#-----------------------------------------------------------------------------
+
+def _link_family_keywords(families, keywords, fam_keywords):
+    for fk in fam_keywords.values():
+        fid = fk['FamRecNum']
+        if fid not in families:
+            continue
+
+        f = families[fid]
+        if 'keywords' not in f:
+            f['keywords'] = list()
+        keyword = keywords[fk['DescRec']]['Description']
+        f['keywords'].append(keyword)
+
+#-----------------------------------------------------------------------------
+
 def _link_member_types(members, types):
-    for _, m in members.items():
+    for m in members.values():
         m['type'] = types[m['MemberType']]
 
 #-----------------------------------------------------------------------------
 
 def _link_member_emails(members, emails):
-    for _, m in members.items():
+    for m in members.values():
         m[pkey]  = list()
         m[npkey] = list()
 
-    for _, e in emails.items():
+    for e in emails.values():
         if e['FamEmail']:
             continue
 
@@ -274,7 +299,7 @@ def _link_member_emails(members, emails):
 #-----------------------------------------------------------------------------
 
 def _link_member_phones(members, phones, phone_types):
-    for _, p in phones.items():
+    for p in phones.values():
         mid = p['Rec']
         if mid not in members:
             continue
@@ -295,7 +320,7 @@ def _link_member_phones(members, phones, phone_types):
 #-----------------------------------------------------------------------------
 
 def _link_member_keywords(members, keywords, mem_keywords):
-    for _, mk in mem_keywords.items():
+    for mk in mem_keywords.values():
         mid = mk['MemRecNum']
         if mid not in members:
             continue
@@ -309,7 +334,7 @@ def _link_member_keywords(members, keywords, mem_keywords):
 #-----------------------------------------------------------------------------
 
 def _link_member_birth_places(members, birth_places):
-    for _, b in birth_places.items():
+    for b in birth_places.values():
         mid = b['AskMemNum']
         if mid not in members:
             continue
@@ -323,11 +348,11 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
     akey = 'active_ministries'
     ikey = 'inactive_ministries'
 
-    for _, m in members.items():
+    for m in members.values():
         m[akey] = list()
         m[ikey] = list()
 
-    for _, mm in mem_ministries.items():
+    for mm in mem_ministries.values():
         mid = mm['MemRecNum']
         if mid not in members:
             continue
@@ -354,7 +379,7 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
 #-----------------------------------------------------------------------------
 
 def _link_member_marital_statuses(members, statuses):
-    for _, m in members.items():
+    for m in members.values():
         ms = m['MaritalStatusRec']
         if ms:
             m['marital_status'] = statuses[ms]['Description']
@@ -362,7 +387,7 @@ def _link_member_marital_statuses(members, statuses):
 #-----------------------------------------------------------------------------
 
 def _link_member_marriage_dates(members, mem_dates, mdtid):
-    for _, md in mem_dates.items():
+    for md in mem_dates.values():
         if md['DescRec'] != mdtid:
             continue
 
@@ -375,7 +400,7 @@ def _link_member_marriage_dates(members, mem_dates, mdtid):
 #-----------------------------------------------------------------------------
 
 def _link_member_occupations(members, occupations):
-    for _, m in members.items():
+    for m in members.values():
 
         oid = m['User4DescRec']
         if not oid:
@@ -500,9 +525,12 @@ def _find_member_marriage_date_type(date_types):
 
 #-----------------------------------------------------------------------------
 
-# A full name will be formatted:
+# A full Family name will be formatted:
 #
-#    Last,First{Middle}(Nickname}[Maiden],Prefix,Suffix
+#    Last,First(spouse last,spouse first,spouse title,spouse suffix),Title,Suffix
+#
+# (spouse) information may not be there
+# (spouse last) will not be there if the info is the same
 #
 # If Middle, Nickname, or Maiden are not provided, those terms
 # (including "{}", "()", and "[]") are not included.  E.g., if only
@@ -520,7 +548,7 @@ def _find_member_marriage_date_type(date_types):
 # have both a first and a last name.  So I didn't even bother trying
 # to figure out how that would be stored.
 
-def _parse_name(name, log=None):
+def _parse_family_name(name, log=None):
     parts = name.split(',')
     last = parts[0]
 
@@ -560,6 +588,74 @@ def _parse_name(name, log=None):
         if result:
             maiden = result[1]
 
+    if log:
+        log.debug("Last: {l}, First: {f}, Middle: {m}, Nickname: {n}, Maiden: {maiden}, Prefix: {pre}, Suffix: {suff}"
+                  .format(l=last,f=first,m=middle,n=nickname,maiden=maiden,pre=prefix,suff=suffix))
+
+    return last, first, middle, nickname, maiden, prefix, suffix
+
+#-----------------------------------------------------------------------------
+
+# A full Member name will be formatted:
+#
+#    Last,First{Middle}(Nickname}[Maiden],Prefix,Suffix
+#
+# If Middle, Nickname, or Maiden are not provided, those terms
+# (including "{}", "()", and "[]") are not included.  E.g., if only
+# the nickname is provided:
+#
+#    Squyres,Jeffrey(Jeff)
+#
+# If Prefix and Suffix are not provided, those terms are not there,
+# either (including the commas).  If only Suffix is supplied, then the
+# comma will be there for the Prefix, but it will be empty.  Example:
+#
+#    Squyres,Jeffrey{Michael}(Jeff),,Esq.
+#
+# There are no cases in Epiphany's database where someone does not
+# have both a first and a last name.  So I didn't even bother trying
+# to figure out how that would be stored.
+
+def _parse_member_name(name, log=None):
+    parts = name.split(',')
+    last = parts[0]
+
+    prefix = None
+    if len(parts) > 2:
+        prefix = parts[2]
+        if prefix == '':
+            prefix = None
+
+    suffix = None
+    if len(parts) > 3:
+        suffix = parts[3]
+
+    # The "more" field may have the middle, nickname, and maiden name.
+    # Parse those out.
+    first = None
+    middle = None
+    nickname = None
+    maiden = None
+    if len(parts) > 1:
+        more = parts[1]
+        result = re.match('([^\(\{\[]+)', more)
+        if result:
+            first = result.group(1)
+        else:
+            first = 'Unknown'
+
+        result = re.search('\{(.+)\}', more)
+        if result:
+            middle = result.group(1)
+
+        result = re.search('\((.+)\)', more)
+        if result:
+            nickname = result.group(1)
+
+        result = re.search('\[(.+)\]', more)
+        if result:
+            maiden = result.group(1)
+
 
     if log:
         log.debug("Last: {l}, First: {f}, Middle: {m}, Nickname: {n}, Maiden: {maiden}, Prefix: {pre}, Suffix: {suff}"
@@ -571,7 +667,7 @@ def _parse_member_names(members):
     for _, m in members.items():
         name = m['Name']
         (last, first, middle, nickname, maiden,
-         prefix, suffix) = _parse_name(name)
+         prefix, suffix) = _parse_member_name(name)
 
         m['first']    = first
         m['middle']   = middle
@@ -631,8 +727,6 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['Description', 'Active'], log=log)
     ministries  = PDS.read_table(pds, 'MinType_DB', 'MinDescRec',
                                  columns=['Description'], log=log)
-    keywords    = PDS.read_table(pds, 'MemKWType_DB', 'DescRec',
-                                 columns=['Description'], log=log)
     birth_places= PDS.read_table(pds, 'Ask_DB', 'AskRecNum',
                                  columns=['AskMemNum', 'BirthPlace'], log=log)
     date_places = PDS.read_table(pds, 'DatePlace_DB', 'DatePlaceRecNum',
@@ -648,6 +742,8 @@ def load_families_and_members(filename=None, pds=None,
     mem_phones  = PDS.read_table(pds, 'MemPhone_DB', 'PhoneRec',
                                  columns=['Rec', 'Number', 'PhoneTypeRec'],
                                  log=log)
+    mem_keyword_types = PDS.read_table(pds, 'MemKWType_DB', 'DescRec',
+                                 columns=['Description'], log=log)
     mem_keywords= PDS.read_table(pds, 'MemKW_DB', 'MemKWRecNum',
                                  columns=['MemRecNum', 'DescRec'],
                                  log=log)
@@ -666,6 +762,15 @@ def load_families_and_members(filename=None, pds=None,
                                         columns=['Description'], log=log)
     marital_statuses = PDS.read_table(pds, 'MemStatType_DB', 'MaritalStatusRec',
                                       columns=['Description'], log=log)
+
+    fam_keyword_types = PDS.read_table(pds, 'FamKWType_DB', 'DescRec',
+                                 columns=['Description'], log=log)
+    fam_keywords= PDS.read_table(pds, 'FamKW_DB', 'FamKWRecNum',
+                                 columns=['FamRecNum', 'DescRec'],
+                                 log=log)
+    fam_status_types = PDS.read_table(pds, 'FamStatType_DB', 'StatDescRec',
+                                      columns=['Description'], log=log)
+
     # Descriptions of each fund
     funds = PDS.read_table(pds, 'FundSetup_DB', 'SetupRecNum',
                                       columns=['FundNumber',
@@ -725,12 +830,14 @@ def load_families_and_members(filename=None, pds=None,
 
     _link_family_emails(families, emails)
     _link_family_city_states(families, city_states)
+    _link_family_statuses(families, fam_status_types)
+    _link_family_keywords(families, fam_keyword_types, fam_keywords)
 
     _parse_member_names(members)
     _link_member_types(members, member_types)
     _link_member_emails(members, emails)
     _link_member_phones(members, mem_phones, phone_types)
-    _link_member_keywords(members, keywords, mem_keywords)
+    _link_member_keywords(members, mem_keyword_types, mem_keywords)
     _link_member_birth_places(members, birth_places)
     _link_member_ministries(members, ministries, mem_ministries, statuses)
     _link_member_marital_statuses(members, marital_statuses)
