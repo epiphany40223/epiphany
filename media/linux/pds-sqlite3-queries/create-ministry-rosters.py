@@ -58,6 +58,11 @@ ministries = [
         "gsheet_id" : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
         "birthday"  : False,
     },
+    {
+        "ministry"  : '207-Technology Committee',
+        "gsheet_id" : '1Gn2m2VMabPkWJWg_NTs6XeGPf_Qi7qPELLxyOx9Q0vU',
+        "birthday"  : False,
+    },
 ]
 
 ####################################################################
