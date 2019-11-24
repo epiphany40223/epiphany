@@ -306,16 +306,19 @@ def _link_member_phones(members, phones, phone_types):
 
         m = members[mid]
         if 'phones' not in m:
-            m['phones'] = dict()
+            m['phones'] = list()
 
         ptr = p['PhoneTypeRec']
         phone_type = ''
         if ptr in phone_types:
             phone_type = phone_types[ptr]['Description']
-        m['phones'][p['Rec']] = {
-            'number' : p['Number'],
-            'type'   : phone_type,
-        }
+
+        _normalize_boolean(p, 'Unlisted')
+        m['phones'].append({
+            'number'   : p['Number'],
+            'type'     : phone_type,
+            'unlisted' : p['Unlisted'],
+        })
 
 #-----------------------------------------------------------------------------
 
@@ -740,7 +743,7 @@ def load_families_and_members(filename=None, pds=None,
                                           'EMailOverMail', 'FamEmail'],
                                  log=log)
     mem_phones  = PDS.read_table(pds, 'MemPhone_DB', 'PhoneRec',
-                                 columns=['Rec', 'Number', 'PhoneTypeRec'],
+                                 columns=['Rec', 'Number', 'PhoneTypeRec', 'Unlisted'],
                                  log=log)
     mem_keyword_types = PDS.read_table(pds, 'MemKWType_DB', 'DescRec',
                                  columns=['Description'], log=log)
