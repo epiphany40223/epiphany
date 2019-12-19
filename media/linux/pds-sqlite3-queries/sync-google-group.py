@@ -792,9 +792,9 @@ def main():
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'keywords'   : [ 'Long Range Planning' ],
+            'ministries' : [ '101-Long Range Plan Team' ],
             'ggroup'     : 'long-range-planning{ecc}'.format(ecc=ecc),
-            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         #############################
