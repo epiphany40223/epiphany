@@ -63,6 +63,11 @@ ministries = [
         "gsheet_id" : '1Gn2m2VMabPkWJWg_NTs6XeGPf_Qi7qPELLxyOx9Q0vU',
         "birthday"  : False,
     },
+    {
+        "ministry"  : '102-Finance Advisory Council',
+        "gsheet_id" : '1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0',
+        "birthday"  : False,
+    },
 ]
 
 ####################################################################
