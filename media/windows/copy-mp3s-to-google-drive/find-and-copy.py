@@ -56,7 +56,6 @@ Note that this script works on Windows, Linux, and OS X.  But first,
 you need to install some Python classes:
 
     pip install --upgrade google-api-python-client
-    pip install --upgrade recordclass
 
 Regarding Google Drive / Google Python API documentation:
 
@@ -98,7 +97,6 @@ import logging.handlers
 import traceback
 import shutil
 from email.message import EmailMessage
-from recordclass import recordclass
 
 from pprint import pprint
 
@@ -140,18 +138,20 @@ debug = False
 logfile = "log.txt"
 file_stable_secs = 60
 
-ScannedFile = recordclass('ScannedFile',
-                         ['filename',
-                          'year',
-                          'month',
-                          'size',
-                          'mtime',
-                          'uploaded'])
+class ScannedFile:
+    def __init__(filename, year, month, size, mtime, uploaded):
+        self.filename = filename
+        self.year     = year
+        self.month    = month
+        self.size     = size
+        self.mtime    = mtime
+        self.uploaded = uploaded
 
-GTDFile = recordclass('GTDFile',
-                      ['scannedfile',
-                       'folder_webviewlink',
-                       'file_webviewlink'])
+class GTDFile:
+    def __init__(scannedfile, folder_webviewlink, file_webviewlink):
+        self.scannedfile        = scannedfile
+        self.folder_webviewlink = folder_webviewlink
+        self.file_webviewlink   = file_webviewlink
 
 #-------------------------------------------------------------------
 
