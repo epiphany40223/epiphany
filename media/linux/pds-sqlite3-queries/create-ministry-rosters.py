@@ -39,9 +39,21 @@ guser_cred_file = 'user-credentials.json'
 
 ministries = [
     {
-        "ministry"  : '317-Instrumentalists & Cantors',
-        "gsheet_id" : '1YP3sC4dcOWH9Li1rJV8D5FI9mef50xvxqOf6K1K54_U',
-        "birthday"  : True,
+        "ministry"  : '102-Finance Advisory Council',
+        "gsheet_id" : '1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0',
+        "birthday"  : False,
+    },
+
+    {
+        "ministry"  : '207-Technology Committee',
+        "gsheet_id" : '1Gn2m2VMabPkWJWg_NTs6XeGPf_Qi7qPELLxyOx9Q0vU',
+        "birthday"  : False,
+    },
+
+    {
+        "ministry"  : '310-Adult Choir',
+        "gsheet_id" : '1ku8Aq9dXm_mrOq421MWVk7hAqV2Am5FFSgUACOYs2WU',
+        "birthday"  : False,
     },
     {
         "ministry"  : '311-Bell Choir',
@@ -49,23 +61,19 @@ ministries = [
         "birthday"  : True,
     },
     {
-        "ministry"  : '310-Adult Choir',
-        "gsheet_id" : '1ku8Aq9dXm_mrOq421MWVk7hAqV2Am5FFSgUACOYs2WU',
-        "birthday"  : False,
+        "ministry"  : '317-Instrumentalists & Cantors',
+        "gsheet_id" : '1YP3sC4dcOWH9Li1rJV8D5FI9mef50xvxqOf6K1K54_U',
+        "birthday"  : True,
     },
     {
         "ministry"  : '318-Lectors  MASTER LIST',
         "gsheet_id" : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
         "birthday"  : False,
     },
+
     {
-        "ministry"  : '207-Technology Committee',
-        "gsheet_id" : '1Gn2m2VMabPkWJWg_NTs6XeGPf_Qi7qPELLxyOx9Q0vU',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '102-Finance Advisory Council',
-        "gsheet_id" : '1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0',
+        "ministry"  : '600-Men of Epiphany',
+        "gsheet_id" : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
         "birthday"  : False,
     },
 ]
