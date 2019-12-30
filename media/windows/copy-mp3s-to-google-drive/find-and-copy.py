@@ -139,7 +139,7 @@ logfile = "log.txt"
 file_stable_secs = 60
 
 class ScannedFile:
-    def __init__(filename, year, month, size, mtime, uploaded):
+    def __init__(self, filename, year, month, size, mtime, uploaded):
         self.filename = filename
         self.year     = year
         self.month    = month
@@ -148,7 +148,7 @@ class ScannedFile:
         self.uploaded = uploaded
 
 class GTDFile:
-    def __init__(scannedfile, folder_webviewlink, file_webviewlink):
+    def __init__(self, scannedfile, folder_webviewlink, file_webviewlink):
         self.scannedfile        = scannedfile
         self.folder_webviewlink = folder_webviewlink
         self.file_webviewlink   = file_webviewlink
@@ -584,6 +584,7 @@ def check_for_incoming_ftp():
 
     scanned_files = find_mp3_files(args.incoming_ftp_dir)
     if len(scanned_files) == 0:
+        log.debug("No files found");
         return
 
     for file in scanned_files:
