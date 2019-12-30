@@ -239,7 +239,7 @@ def _link_family_emails(families, emails):
 def _link_family_city_states(families, city_states):
     for f in families.values():
         csid = f['StreetCityRec']
-        if csid:
+        if csid and csid in city_states:
             f['city_state'] = city_states[csid]['CityState']
 
 #-----------------------------------------------------------------------------
@@ -364,6 +364,8 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
         status_id = mm['StatusDescRec']
         if not status_id:
             continue
+        if status_id not in statuses:
+            continue
         status = statuses[status_id]
         mem_list_name = akey
         if status['Active'] != 1:
@@ -384,7 +386,7 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
 def _link_member_marital_statuses(members, statuses):
     for m in members.values():
         ms = m['MaritalStatusRec']
-        if ms:
+        if ms and ms in statuses:
             m['marital_status'] = statuses[ms]['Description']
 
 #-----------------------------------------------------------------------------
@@ -395,7 +397,7 @@ def _link_member_marriage_dates(members, mem_dates, mdtid):
             continue
 
         mid = md['MemRecNum']
-        if mid not in members:
+        if mid and mid not in members:
             continue
         m = members[mid]
         m['marriage_date'] = md['Date']
@@ -406,11 +408,9 @@ def _link_member_occupations(members, occupations):
     for m in members.values():
 
         oid = m['User4DescRec']
-        if not oid:
-            continue
-
-        occupation = occupations[oid]
-        m['occupation'] = occupation['Description']
+        if oid and oid in occupations:
+            occupation = occupations[oid]
+            m['occupation'] = occupation['Description']
 
 #-----------------------------------------------------------------------------
 
@@ -475,7 +475,7 @@ def _link_family_funds(funds, fund_periods, fund_activities,
 
         # Sometimes activity_id will be None.  Thanks PDS!
         activity_id = item['ActRecNum']
-        if activity_id:
+        if activity_id and activity_id in fund_activities:
             activity = fund_activities[activity_id]['Activity']
         else:
             activity = 'None'
