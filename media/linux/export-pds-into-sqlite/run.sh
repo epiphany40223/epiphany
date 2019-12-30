@@ -1,10 +1,16 @@
 #!/bin/zsh
+#
+# In WSL:
+#
+# sudo mkdir /mnt/pdschurch
+# sudo mount -t drvfs '\\media-o3020\pdschurch' /mnt/pdschurch
+#
 
 set -x
 
-pds_input_dir=/media/sf_pdschurch/Data
+pds_input_dir=/mnt/pdschurch/Data
 
-base=/home/itadmin/git/epiphany/media/linux
+base=/home/coeadmin/git/epiphany/media/linux
 prog_dir=$base/export-pds-into-sqlite
 logfile=$base/logfile.txt
 sqlite_out_dir=$base/pds-data

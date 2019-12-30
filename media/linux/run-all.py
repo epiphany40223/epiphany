@@ -73,7 +73,7 @@ def main():
     c = os.getcwd()
     filename = '{dir}/pds-run-all.lock'.format(dir=c)
     with LockFile(filename) as lockfile:
-        os.chdir("/home/itadmin/git/epiphany/media/linux")
+        os.chdir("/home/coeadmin/git/epiphany/media/linux")
 
         # Export the PDS database into an SQLite3 database
         os.chdir("export-pds-into-sqlite")

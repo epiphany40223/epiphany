@@ -33,7 +33,7 @@ Conflicts=shutdown.target
 After=local-fs.target
 
 [Service]
-ExecStart=/usr/bin/rm -f /home/itadmin/pds-run-all.lock
+ExecStart=/usr/bin/rm -f /home/coeadmin/pds-run-all.lock
 Type=oneshot
 
 [Install]
