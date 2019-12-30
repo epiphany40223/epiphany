@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;epiphany/extract/__init__.py&apos; to &apos;extract_db.py&apos;" description="Rename resource &apos;__init__.py&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="extract/__init__.py" name="extract_db.py" stamp="1514127186199" updateReferences="true"/>
-</session>
