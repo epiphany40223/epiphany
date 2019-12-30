@@ -4,7 +4,7 @@ set -x
 
 pds_input_dir=/media/sf_pdschurch/Data
 
-base=/home/itadmin/git/epiphany/media/linux
+base=/home/coeadmin/git/epiphany/media/linux
 prog_dir=$base/export-pds-into-sqlite
 logfile=$base/logfile.txt
 sqlite_out_dir=$base/pds-data

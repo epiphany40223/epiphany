@@ -6,7 +6,7 @@
 
 set -x
 
-base=/home/itadmin/git/epiphany/media/linux
+base=/home/coeadmin/git/epiphany/media/linux
 prog_dir=$base/pds-sqlite3-queries
 sqlite_dir=$base/pds-data
 
