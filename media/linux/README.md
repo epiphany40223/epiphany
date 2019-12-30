@@ -1,4 +1,5 @@
-These scripts run in a Linux VM on Epiphany's \\media-o3020 server.
+These scripts run in a Linux environment on Epiphany's \\media-o3020
+server.
 
 The `run-all.py` script runs via cron.  It uses a lockfile to ensure
 that if one copy of it runs long (i.e., for more than 10 minutes), the
