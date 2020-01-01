@@ -33,4 +33,3 @@ root	ALL=(ALL:ALL) ALL
 %sudo ALL=NOPASSWD: /etc/init.d/cron start
 %sudo ALL=NOPASSWD: /etc/init.d/postfix start
 %sudo ALL=NOPASSWD: /etc/init.d/ssh start
-%sudo ALL=NOPASSWD: /bin/mount

@@ -21,10 +21,7 @@ manually!).
 Don't forget to add pinholes in the Windows firewall for ssh and
 postfix (TCP/22 and TCP/25, respectively).
 
-We also do two other actions in this same Task Manager entry:
+We also do other actions in this same Task Manager entry:
 
 1. Remove the export-PDS-data file lock (if it's still there).
    This is just a failsafe.
-2. Mount the \\media-o3020\pdschurch on /mnt/pdschurch.
-   This is temporary and will go away when the PDS Church data
-   is moved to this new server.
