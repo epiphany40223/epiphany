@@ -8,7 +8,10 @@ relays out to smtp.gmail.com for the actual delivery.
 We use the "konica-minolta@epiphanycatholicchurch.org" G Suite user to
 send these emails (i.e., the "from" address corresponds to a real G
 Suite account so that we can set to use "less secure apps" on that
-account).
+account).  Note that it was necessary to generate an app-specifici
+password for the konica-minolta@ecc user (which isn't saved in lastpass)
+because that user uses 2FA.  If this password is lost, just delete it
+and re-generate a new one.
 
 See the "Epiphany" and "ECC" comments in this file for more details
 about:

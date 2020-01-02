@@ -41,6 +41,9 @@ smtp_sasl_auth_enable = yes
 #
 # [smtp.gmail.com]:587  konica-minolta@epiphanycatholicchurch.org:PASSWORD
 #
+# NOTE: The PASSWORD may need to be an app-specific password if the
+# account uses 2FA.
+#
 # after editing, must run: postmap /etc/postfix/sasl/konica-minolta-passwd
 # Google requires "Allow less secure apps" on the account used
 smtp_sasl_password_maps = hash:/etc/postfix/sasl/konica-minolta-passwd
