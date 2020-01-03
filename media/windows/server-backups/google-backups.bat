@@ -13,4 +13,4 @@ robocopy "C:\WinDSX" "C:\Epiphany_Backups\WinSX" /mir /e /r:0 /w:0
 robocopy "C:\PDSChurch\Data" "C:\Epiphany_Backups\PDSChurch\Data" /mir /e /r:0 /w:0
 robocopy "C:\PDSChurch\Backup" "C:\Epiphany_Backups\PDSChurch\Backup" /mir /e /r:0 /w:0
 
-xcopy "C:\Users\coeadmin\Ubuntu1804\rootfs\home\coeadmin\git\epiphany\media\windows\ECC-Ecobee\ECCEcobee.db" "C:\Epiphany_Backups\ECCEcobee"	
+xcopy "C:\Users\coeadmin\Ubuntu1804\rootfs\home\coeadmin\git\epiphany\media\windows\ECC-Ecobee\ECCEcobee.db" "C:\Epiphany_Backups\ECCEcobee" /y
