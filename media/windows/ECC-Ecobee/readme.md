@@ -13,6 +13,30 @@ The application will first poll the historical runtime information for each ther
 If no runtime information is currently available in the database, the application will default to using the first-reported date retrieved for this thermostat from the Ecobee service (essentially the in-service date).  Data requests for the runtime information only support up to 31 days retrieval per request; therefore, larger requests must be broken up into smaller ones not to exceed this limit.  The application automatically determines the retrieval window and will adjust the polling requests to accomodate this restriction.  This is generally only an issue during the first-run, when several months of data is to be retrieved for each thermostat, beginning with the in-service date.
 
 Following the polling of the runtime information, data is retrieved for the point-in-time or snapshot data.  One record is written for each data-type retrieved for each thermostat; so, the number of records written for each data-type is determined by the frequency by which the application is run.  That is, if it is run hourly, one record will be retrieved per thermostat, per data-type, for each hour.  Or, one per day, per thermostat, per data-type if run daily.
+
+## Updated 07-Jan-2020 (v03.01)
+The v03.01 version includes the following changes:
+1.  The authorization tokens are now stored in a JSON file vs. the original method of using the Python shelve small-database format.
+2.  Command-line parameters can now be specified to indicate the location of files used by the application:
+   * log file (**-l**, **-log**, **--log_file_path=***{file path}*)
+   * database file (**-d**, **-db**, **--database_file_path=***{file path}*)
+   * authorization token file (**-a**, **-auth**, **--authorize_file_path=***{file path}*)
+   * default API key file (**-api**, **--api_file_path=***{file path}*)
+   * thermostat revision intervals (**-i**, **-int**, **--int_file_path=***{file path}*)
+   
+   If not specified, defaults will be provided for each.  Parsing of the command-line is handled with the Python module argparse, and includes brief help for each optional parameter.  In addition to the command-line parameters for file locations, **-h (or --help)** will display help, and **-v (or -ver, --version)** will display the current application version and date or release.
+   
+3.  Default file names no longer contain embedded spaces for better cross-platform support.  Some of the file names used in prior versions of the
+application were renamed for consistency (e.g, .json extensions for JSON-formatted files).  **Before updating to the current release, ensure that either command-line parameters are used for invocation to ensure the existing files are correctly identified, or rename the existing files to match the default names:**
+   * ECCEcobee.log (log file)
+   * ECCEcobee.db (SQLite3 DB)
+   * ECCEcobee_tkn.json (JSON authorization token file)
+   * ECCEcobee_API.txt (default API key file)
+   * ECCEcobee_therm_interval.json (JSON thermostat revision intervals working file)
+4.  In the event of repeated time-outs on the API calls, the prior release would attempt an HTTPS connection and run a series of PING tests to the site *google.com* as additional diagnostic information.  This has been enhanced to include the site *ecobee.com*, and an additional DNS resolution test is performed to verify name-resolution functionality.
+
+**Note:  Due to the change in the storage format for the authorization tokens, upon upgrading to this release the existing authorization token files should be deleted, then the application run with the proper *new* file path specifications.  This initial iteration will prompt for the application to be re-authorized and log the authorization PIN to the log file.  At that time, an administrator will need to log onto the Ecobee portal and re-add the application along with the authorization PIN.**
+
 ## Updated 02-Jan-2020 (v02.09)
 The v02.09 version of the application polls and records most, if not all, of the useful information from the thermostats.  While v01.00 recorded historical runtime information and basic thermostat settings, this version adds support for virtually all of the instantaneous (or snapshot) data provided by the Ecobee service.  This includes polling, deserialization, and recording over 40 SQLite3 databases.  See information below regarding data structure for further details.
 
@@ -37,7 +61,7 @@ Note that the Pyecobee library located in the PyPi package repository is NOT the
    * urllib3
    * certifi
    * pythonping
-3. Edit the application to configure various settings (ECCPycobee v02.09.py); all files will be created by the app if they do not exist, with the exception of the default API key file.
+3. Edit the application to configure various settings (ECC Pycobee Data.py); all files will be created by the app if they do not exist, with the exception of the default API key file.
    * log file path
    * logging level
    * database file location
