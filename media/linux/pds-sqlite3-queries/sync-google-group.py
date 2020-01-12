@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 """Script to iterate through ministries and Member keywords from PDS and
 sync the membership of a Google Group to match.
@@ -202,6 +202,7 @@ def compute_sync(sync, pds_members, group_members, log=None):
         actions.append({
             'action'              : 'delete',
             'email'               : gm['email'],
+            'id'                  : gm['id'],
             'role'                : None,
             'pds_ministry_member' : None,
         })
@@ -463,12 +464,31 @@ def _sync_add(sync, group_permissions,
 
 def _sync_delete(sync, service, action, name, log=None):
     email = action['email']
+
+    # We delete by ID (instead of by email address) because of a weird
+    # corner case:
+    #
+    # - foo@example.com (a non-gmail address) is in a google group,
+    #   but has no Google account
+    # - later, foo@example.com visits
+    #   https://accounts.google.com/SignupWithoutGmail and gets a
+    #   Google account associated with that email address
+    #
+    # In this case, Google seems to be somewhat confused:
+    # foo@example.com is still associated with the Group, but it's the
+    # non-Google-account foo@example.com.  But if we attempt to move
+    # that email address, it'll try to remove the Google-account
+    # foo@example.com (and therefore fail).
+    #
+    # So we remove by ID, and that unambiguously removes the correct
+    # member from the Group.
+    id    = action['id']
     if log:
-        log.info("Deleting PDS Member {name} ({email})"
-                 .format(name=name, email=email))
+        log.info("Deleting PDS Member {name} ({email}) from group {group}"
+                 .format(name=name, email=email, group=sync['ggroup']))
 
     service.members().delete(groupKey=sync['ggroup'],
-                             memberKey=email).execute()
+                             memberKey=id).execute()
 
     msg = "Removed from the group"
     return msg
@@ -509,11 +529,12 @@ def google_group_find_members(service, sync, log=None):
                     .members()
                     .list(pageToken=page_token,
                           groupKey=sync['ggroup'],
-                          fields='members(email,role)').execute())
+                          fields='members(email,role,id)').execute())
         for group in response.get('members', []):
             group_members.append({
                 'email' : group['email'].lower(),
                 'role'  : group['role'].lower(),
+                'id'    : group['id'].lower(),
             })
 
         page_token = response.get('nextPageToken', None)
