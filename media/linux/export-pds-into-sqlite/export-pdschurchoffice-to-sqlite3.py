@@ -356,7 +356,7 @@ def process_db(args, db, sqlite3):
 
 # Close down sqlite3
 def close_sqlite3(sqlite3):
-    sqlite3.stdin.write('.exit\n')
+    sqlite3.stdin.write('\n.exit\n')
     sqlite3.communicate()
 
 # Rename the temp database to the final database name
