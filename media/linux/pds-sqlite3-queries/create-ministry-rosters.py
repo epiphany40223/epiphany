@@ -195,11 +195,22 @@ def write_xlsx(members, ministry, want_birthday, log):
                 val = '{ph} {type}'.format(ph=phone['number'], type=phone['type'])
                 last_row = _append(col=col, row=last_row, value=val)
 
+        # If we have any preferred emails, list them all
         key = 'preferred_emails'
-        if key in m:
+        if key in m and len(m[key]) > 0:
             for email in m[key]:
                 last_row = _append(col=col, row=last_row, value=email['EMailAddress'])
-        email_last_row = last_row
+                email_last_row = last_row
+
+        # If we have no preferred emails, list the first alphabetic
+        # non-preferred email
+        else:
+            key = 'non_preferred_emails'
+            if key in m and len(m[key]) > 0:
+                emails   = sorted([x['EMailAddress'] for x in m[key]])
+                last_row = _append(col=col, row=last_row,
+                                   value=emails[0])
+                email_last_row = last_row
 
         # The birthday will only be 1 row
         if want_birthday:
