@@ -72,6 +72,39 @@
         4) Enhanced Internet connectivity checking to add DNS lookup checks.  Checks now include google.com and
            ecobee.com if repeated timeout errors are detected.
             Modified by DK Fowler ... 06-Jan-2020       --- v03.01
+
+    Modified to correct minor bug where the Internet connectivity checking was not being called if a timeout or
+    connection error occurred while polling for the thermostat details (flag indicating error occurred was not set).
+    Also added additional checking to the Internet connectivity routine to list the DNS resolver(s), and to perform
+    a brief ping test on these if found.  Note the additional module dnspython is required.
+            Modified by DK Fowler ... 08-Jan-2020       --- v03.02
+
+    Modified to correct minor bug that occurred on rare occasions where a timeout or connection error occurred
+    while requesting the runtime report from the Ecobee service.  Previously this would cause the application to
+    exit after one failure; added logic to retry up to 4 times before failing.  If repeated timeouts occur, then
+    the Internet connectivity check will also be run now to provide additional diagnostic information in the log.
+            Modified by DK Fowler ... 09-Jan-2020       --- v03.03
+
+    Modified to refactor code for producing the JSON-formatted thermostat revision interval file.  The new, more
+    simplified approach uses a list of dictionary elements, vs. the original "brute-force" string construction.
+    Also added additional logic to the Internet connectivity check routine to check for null returns from the
+    DNS resolver function.
+            Modified by DK Fowler ... 15-Jan-2020       --- v03.04
+
+    Modified to include some suggestions from Jeff Squyres regarding common conventions for command-line
+    switches.  Changed "_" in parameters to "-" instead for consistency with Linux conventions.  Modified
+    the check for Internet connectivity to resequence the various checks, such that the order now is DNS,
+    PING, then HTTPS connectivity checks.  If any prior check fails, then the next test is not performed.
+    Modified uses of "with open" to remove redundant file "close" commands, as these are performed automatically.
+    Added more detailed error message for attempt to retrieve access tokens from Ecobee when the connection
+    is down.  Added a database archival routine that will automatically archive (rename) the database file
+    if the size exceeds the maximum size specified in the global variable "max_db_file_size_bytes" (default
+    value of approximately 1GB).  As a result of adding the database archival routine, logic changes were made
+    to retrieve the last revision interval from the archival file if a new database is created and archival
+    files exist in the current directory; note this is dependent on the these files having the same filename
+    root (minus file extension).
+            Modified by DK Fowler ... 24-Feb-2020       --- v03.05
+
 """
 
 from datetime import datetime
@@ -79,6 +112,7 @@ from datetime import timedelta
 import pytz
 import json
 import os
+import fnmatch
 import sys
 import argparse
 
@@ -90,11 +124,13 @@ from sqlite3 import Error
 import urllib3
 import certifi
 import socket
+import dns.resolver
+from dns.exception import DNSException
 from pythonping import ping
 
 # Define version
-eccpycobee_version = "03.01"
-eccpycobee_date = "06-Jan-2020"
+eccpycobee_version = "03.05"
+eccpycobee_date = "24-Feb-2020"
 
 # Parse the command line arguments for the filename locations, if present
 parser = argparse.ArgumentParser(description='''Epiphany Catholic Church Ecobee Thermostat Polling Application.
@@ -102,16 +138,16 @@ parser = argparse.ArgumentParser(description='''Epiphany Catholic Church Ecobee 
                                             write the data to a SQLite3 database.''',
                                  epilog='''Filename parameters may be specified on the command line at invocation, 
                                         or default values will be used for each.''')
-parser.add_argument("-l", "-log", "--log_file_path", default="ECCEcobee.log",
+parser.add_argument("-l", "-log", "--log-file-path", dest="log_file_path", default="ECCEcobee.log",
                     help="log filename path")
-parser.add_argument("-d", "-db", "--database_file_path", default="ECCEcobee.db",
+parser.add_argument("-d", "-db", "--db", "--database-file-path", dest="database_file_path", default="ECCEcobee.db",
                     help="Ecobee SQLite3 database filename path")
-parser.add_argument("-a", "-auth", "--authorize_file_path", default="ECCEcobee_tkn.json",
-                    help="authorization tokens JSON filename path")
-parser.add_argument("-api", "--api_file_path", default="ECCEcobee_API.txt",
+parser.add_argument("-a", "-auth", "--auth", "--authorize-file-path", dest="authorize_file_path",
+                    default="ECCEcobee_tkn.json", help="authorization tokens JSON filename path")
+parser.add_argument("-api", "--api", "--api-file-path", dest="api_file_path", default="ECCEcobee_API.txt",
                     help="default API key filename path")
-parser.add_argument("-i", "-int", "--int_file_path", default="ECCEcobee_therm_interval.json",
-                    help="thermostat revision interval filename path")
+parser.add_argument("-i", "-int", "--interval-file", "--int-file-path", dest="int_file_path",
+                    default="ECCEcobee_therm_interval.json", help="thermostat revision interval filename path")
 parser.add_argument("-v", "-ver", "--version", action="store_true",
                     help="display application version information")
 
@@ -406,6 +442,10 @@ def main():
     # Define a couple of variables to be used in determining the number of bytes written to the database...
     global db_open_size_bytes
     global db_close_size_bytes
+    # Global to define the database archival threshold
+    global max_db_file_size_bytes
+    # Flag indicating whether a new database was created this iteration
+    global created_new_db
 
     dup_update_cnt_total = 0
     dup_update_cnt_this_thermostat = 0
@@ -416,6 +456,9 @@ def main():
 
     db_open_size_bytes = 0
     db_close_size_bytes = 0
+    max_db_file_size_bytes = 1073741824  # Maximum database file size in bytes before archival; 1GB at 4K cluster size
+
+    created_new_db = False
 
     list_parent_written_UTC_dict = {}  # Initialize a dictionary for storing parent record's date/time written
     list_parent_to_child_dict = {}  # Initialize a table to link parent/child records for lists
@@ -437,6 +480,7 @@ def main():
     try:
         with open(ECCAuthorize, "r") as read_auth:
             json_auth_dict = json.load(read_auth)
+
     # Handle [Errno 2] No such file or directory, JSON decoding error (syntax error in file)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         logger.error(F"Missing or invalid authorization token JSON file...")
@@ -462,9 +506,8 @@ def main():
             logger.debug(F"...JSON auth contents: {pelement}:  {json_auth_dict.get(pelement)}")
             # print(F"...JSON auth contents: {pelement}:  {json_auth_dict.get(pelement)}")
         app_key = json_auth_dict['application_key']
-        # close the JSON authorization token file
-        read_auth.close()
-    except (UnboundLocalError, NameError) as e:     # if not defined or referenced before assignment, then continue
+
+    except (UnboundLocalError, NameError) as e:  # if not defined or referenced before assignment, then continue
         pass
 
     # initialize an Ecobee service object
@@ -667,6 +710,7 @@ def main():
             if (conn_err_msg in e.__str__()) or \
                     (read_timeout_err_msg in e.__str__()) or \
                     (connection_timeout_err_msg in e.__str__()):
+                timeout_err_occurred = True
                 logger.error(F"...site not responding, or Internet connection down?")
                 print(F"...site not responding, or Internet connection down?")
                 logger.error(F"...thermostat details API request, attempt {sum_err_cnt}")
@@ -741,7 +785,7 @@ def main():
     # print(F"Test:  {read_interval_JSON['revisionList'][1]['thermostatName']}")
     # Create latest runtime interval dictionary from the JSON data returned
     latest_runtime_intervals_dict = {}
-    for thermo in read_interval_JSON['revisionList']:
+    for thermo in read_interval_JSON:
         logger.info(F"Thermo interval data:  {thermo['thermostatName']} : {thermo['intervalRevision']}")
         latest_runtime_intervals_dict.update({thermo['thermostatName']: thermo['intervalRevision']})
 
@@ -760,7 +804,7 @@ def main():
     # Retrieve the latest revision dates/times written for each thermostat from the db
     logger.debug("Retrieving last written revision dates/times")
     last_rev_dict = {}  # Initialize a dictionary to hold the last revision dates
-    for thermo in read_interval_JSON['revisionList']:
+    for thermo in read_interval_JSON:
         last_db_revision = select_db_last_runtime_interval(conn, thermo['thermostatName'])
         last_rev_dict.update({thermo['thermostatName']: last_db_revision})
         logger.debug(F"Last revision date written in db:  {thermo['thermostatName']}: '{last_db_revision}'")
@@ -779,7 +823,7 @@ def main():
     # (30 days used here for safety).
     eastern = pytz.timezone('US/Eastern')
     recs_written_total = 0
-    for thermo in read_interval_JSON['revisionList']:
+    for thermo in read_interval_JSON:
         logger.info(F"Beginning Ecobee runtime historical data processing for thermostat:  {thermo['thermostatName']}")
         print(F"\nBeginning Ecobee runtime historical data processing for thermostat:  {thermo['thermostatName']}")
         # Initialize the informational counters for this thermostat
@@ -844,6 +888,7 @@ def main():
 
                 runtime_err_cnt = 0
                 runtime_err_occurred = True  # falsely set for initial loop iteration
+                timeout_err_occurred = False  # flag to indicate a timeout error occurred
                 while runtime_err_occurred and runtime_err_cnt <= 3:
                     runtime_err_occurred = False  # reset to assume success
                     try:
@@ -853,10 +898,11 @@ def main():
                                 selection_match=thermo['thermostatID']),
                             start_date_time=start_datetime,
                             end_date_time=end_datetime,
-                            columns='auxHeat1,auxHeat2,auxHeat3,compCool1,compCool2,compHeat1,compHeat2,dehumidifier,dmOffset,'
-                                    'economizer,fan,humidifier,hvacMode,outdoorHumidity,outdoorTemp,sky,ventilator,wind,'
-                                    'zoneAveTemp,zoneCalendarEvent,zoneClimate,zoneCoolTemp,zoneHeatTemp,zoneHumidity,'
-                                    'zoneHumidityHigh,zoneHumidityLow,zoneHvacMode,zoneOccupancy',
+                            columns='auxHeat1,auxHeat2,auxHeat3,compCool1,compCool2,compHeat1,compHeat2,dehumidifier,'
+                                    'dmOffset,economizer,fan,humidifier,hvacMode,outdoorHumidity,outdoorTemp,sky,'
+                                    'ventilator,wind,zoneAveTemp,zoneCalendarEvent,zoneClimate,zoneCoolTemp,'
+                                    'zoneHeatTemp,zoneHumidity,zoneHumidityHigh,zoneHumidityLow,zoneHvacMode,'
+                                    'zoneOccupancy',
                             timeout=45)  # timeout for read; longer time required here due to potential large return
 
                     except EcobeeApiException as e:
@@ -902,14 +948,23 @@ def main():
                                 runtime_report_response.pretty_format())
                         sys.exit(1)
                     except Exception as e:  # handle HTTP timeout errors
+                        runtime_err_occurred = True
+                        runtime_err_cnt += 1
                         logger.error(F"Error occurred during Ecobee runtime report API request...{e}")
                         print(F"Error occurred during Ecobee runtime report API request...{e}")
-                        timeout_err_msg = "'ReadTimeout' object"
-                        timeout_err_msg2 = "timed out"
-                        if (timeout_err_msg in e.__str__()) or \
-                                (timeout_err_msg2 in e.__str__()):
-                            runtime_err_occurred = True
-                            runtime_err_cnt += 1
+                        conn_err_msg = "'ConnectionError' object has no attribute 'message'"
+                        read_timeout_err_msg = "'ReadTimeout' object has no attribute 'message'"
+                        connection_timeout_err_msg = "'ConnectTimeout' object has no attribute 'message'"
+                        timeout_err_msg = "timed out"
+                        empty_return_err_msg = "Expecting value: line 1 column 1 (char 0)"
+                        # The following are the most common errors encountered...handle connection/read timeouts
+                        # and "empty" returns
+                        if (conn_err_msg in e.__str__()) or \
+                                (read_timeout_err_msg in e.__str__()) or \
+                                (connection_timeout_err_msg in e.__str__()) or \
+                                (timeout_err_msg in e.__str__()) or \
+                                (empty_return_err_msg in e.__str__()):
+                            timeout_err_occurred = True  # set flag to indicate a timeout error occurred
                             logger.error(F"...timeout error on request, attempt {runtime_err_cnt}")
                             print(F"...timeout error on request, attempt {runtime_err_cnt}")
                 else:
@@ -918,6 +973,15 @@ def main():
                                      F"API request...")
                         logger.error(F"...maximum retry attempts exceeded, aborting (try again later)")
                         print(F"...maximum retry attempts exceeded, aborting (try again later)")
+                        if timeout_err_occurred:
+                            logger.error(F"...checking Internet connectivity...")
+                            print(F"...checking Internet connectivity...")
+                            google_status = check_internet_connect("google.com")
+                            ecobee_status = check_internet_connect("ecobee.com")
+                            if google_status and ecobee_status:
+                                logger.error(F"...connection to Internet OK...")
+                            else:
+                                logger.error(F"...connection to Internet down...")
                         sys.exit(1)
 
                 # Debug logic...should never reach here without a valid response for the thermostat runtime report;
@@ -965,9 +1029,10 @@ def main():
 
             else:
                 logger.debug(
-                    F"Polling start date {fmt_start_datetime} later than last revision interval date {latest_runtime_intervals_dict.get(thermo['thermostatName'])}")
+                    F"Polling start date {fmt_start_datetime} later than last revision interval date "
+                    F"{latest_runtime_intervals_dict.get(thermo['thermostatName'])}")
 
-            # Move reporting window to the next 30 days if necessary
+                # Move reporting window to the next 30 days if necessary
             start_datetime = end_datetime
             start_datetime_utc = start_datetime.astimezone(pytz.utc)  # for next check against last rev interval
 
@@ -990,7 +1055,8 @@ def main():
         logger.info(F"Blank runtime records skipped for thermostat {thermo['thermostatName']}:  "
                     F"{blank_rec_cnt_this_thermostat}")
         print(
-            F"Blank runtime records skipped for thermostat {thermo['thermostatName']}:  {blank_rec_cnt_this_thermostat}")
+            F"Blank runtime records skipped for thermostat {thermo['thermostatName']}:  "
+            F"{blank_rec_cnt_this_thermostat}")
         logger.info(
             F"Total historical runtime rows returned from API call for thermostat {thermo['thermostatName']}: "
             F"{total_rows_returned_this_thermostat}")
@@ -1092,6 +1158,16 @@ def main():
     db_bytes_increase = db_close_size_bytes - db_open_size_bytes
     logger.info(F"Database size increased by {db_bytes_increase} bytes...")
     print(F"\nDatabase size increased by {db_bytes_increase} bytes...")
+
+    # Check the size of the database; if greater than the maximum file size parameter specified, then rename
+    # the file so that the next execution will create a new file.
+    if db_close_size_bytes >= max_db_file_size_bytes:
+        logger.info(F"Database size of {db_close_size_bytes} exceeds maximum ({max_db_file_size_bytes}), "
+                    F"archiving file...")
+        print(F"Database size of {db_close_size_bytes} exceeds maximum ({max_db_file_size_bytes}), "
+              F"archiving file...")
+        archive_db()
+
     now = datetime.now()
     date_now_str = now.strftime("%Y-%m-%d %H:%M:%S")
     print(F"*** Execution completed at:  {date_now_str} ***")
@@ -1110,16 +1186,15 @@ def persist_to_json(auth_json_file_name, ecobee_service):
             json_auth_dict['access_token'] = ecobee_service.access_token
             json_auth_dict['refresh_token'] = ecobee_service.refresh_token
             json_auth_dict['authorization_token'] = ecobee_service.authorization_token
-    
+
             json.dump(json_auth_dict, write_auth)
+
     except Exception as e:
         logger.error(F"Error occurred while attempting to write JSON tokens file...{e}")
         logger.error(F"...aborting...")
         print(F"Error occurred while attempting to write JSON tokens file...{e}")
         print(F"...aborting...")
         sys.exit(1)
- 
-    write_auth.close()
 
 
 def refresh_tokens(ecobee_service):
@@ -1228,8 +1303,14 @@ def request_tokens(ecobee_service):
         print(F"Error during request for Ecobee access tokens, aborting:  {e}")
         sys.exit(1)
     except Exception as e:
-        logger.error(F"Error occurred during request for Ecobee access tokens, aborting:  {e}")
-        print(F"Error occurred during request for Ecobee access tokens, aborting:  {e}")
+        if 'ConnectionError' in e.__str__():
+            logger.error(F"Error during request for Ecobee access tokens...error connecting to service...")
+            logger.error(F"...error:  {e}, aborting...")
+            print(F"Error during request for Ecobee access tokens...error connecting to service...")
+            print(F"...error:  {e}, aborting...")
+        else:
+            logger.error(F"Error during request for Ecobee access tokens, aborting:  {e}")
+            print(F"Error during request for Ecobee access tokens, aborting:  {e}")
         sys.exit(1)
 
 
@@ -1243,7 +1324,8 @@ def authorize(ecobee_service):
         logger.info(
             F"...Apps widget is enabled. If it is not click on the My Apps option in the menu on the left. In the ")
         logger.info(
-            F"...My Apps widget paste '{authorize_response.ecobee_pin}' and in the textbox labeled 'Enter your 4 digit ")
+            F"...My Apps widget paste '{authorize_response.ecobee_pin}' and in the textbox labeled "
+            F"'Enter your 4 digit ")
         logger.info(
             F"...pin to install your third party app' and then click 'Install App'.  The next screen will display any ")
         logger.info(F"...permissions the app requires and will ask you to click 'Authorize' to add the application.")
@@ -1281,7 +1363,7 @@ def create_thermostat_summary_JSON(thermostat_summary_response, thermostat_JSON_
         used to determine when new data is available and should be written to the local database.
         (See https://www.ecobee.com/home/developer/api/documentation/v1/operations/get-thermostat-summary.shtml
         for recommendations on how thermostat polling should be conducted to not overload the Ecobee service.
-            Written by DK Fowler 09-Oct-2019
+                Written by DK Fowler    ... 09-Jan-2020
     :param: thermostat_summary_response     thermostat summary object containing JSON revision interval data
     :param: json_interval_file              JSON output file to which JSON formatted interval data is stored
     :return:
@@ -1294,42 +1376,34 @@ def create_thermostat_summary_JSON(thermostat_summary_response, thermostat_JSON_
                                  'runtimeRevision',
                                  'intervalRevision'
                                  ]
-    # summaryJSON = {}
-    summaryJSONstring = '{ "revisionList" : ['
-    recIndex = 0
-    for thermostatRevisionRec in thermostat_summary_response.revision_list:
-        summaryJSONstring = summaryJSONstring + '{'
-        revSplit = thermostatRevisionRec.split(':')
-        fieldCntRange = range(7)
-        for fieldCnt in fieldCntRange:
-            summaryJSONstring = summaryJSONstring \
-                                + '"' + thermostat_summary_fields[fieldCnt] \
-                                + '" : "' + revSplit[fieldCnt] + '"'
-            if fieldCnt != 6:
-                summaryJSONstring = summaryJSONstring + ", "
-            else:
-                if recIndex == len(thermostat_summary_response.revision_list) - 1:
-                    summaryJSONstring = summaryJSONstring + "} "
-                else:
-                    summaryJSONstring = summaryJSONstring + "}, "
-        # summaryJSONstring = summaryJSONstring + '\n'
-        recIndex += 1
 
-    summaryJSONstring = summaryJSONstring + '] }'
+    # revisionList = [dict(thermostatRevisionRec.split(':') for thermostatRevisionRec in
+    #                         thermostat_summary_response.revision_list.split(','))]
+    # test_list = [x.split(':') for x in thermostat_summary_response.revision_list]
+    # [{(field_nm for field_nm in thermostat_summary_fields): x.split(':') for x in
+    # thermostat_summary_response.revision_list}]
 
+    revisionList = []
+    for thermo_idx, thermo in enumerate(thermostat_summary_response.revision_list):
+        revisionList.append([])
+        revisionList[thermo_idx] = revisionDict = {}
+        for rev_idx, rev_key in enumerate(thermostat_summary_fields):
+            revisionDict[rev_key] = thermo.split(':')[rev_idx]
     try:
-        logger.debug(F"Summary JSON string follows: \n{summaryJSONstring}")
-        JSONrevisionList = json.loads(summaryJSONstring)
-        # logger.debug(F"Serialized JSON revision list: {JSONrevisionList}")
+        # Try converting the created revision list to JSON before further processing to ensure no
+        # errors occurred.
+        # logger.debug(F"Summary JSON string follows: \n{summaryJSONstring}")
+        JSONrevisionList = json.dumps(revisionList)
+        # print(F"Serialized JSON revision list: {JSONrevisionList}")
     except ValueError as e:
         logger.exception(F"Error occurred while converting interval data to JSON...{e}")
         return False
 
-    logger.debug(F"Final serialized JSON revision list: {json.dumps(JSONrevisionList, indent=4)}")
-    # logger.debug(json.dumps(JSONrevisionList, indent=4))
+    logger.debug(F"Final serialized JSON revision list: {json.dumps(revisionList, indent=4)}")
+    # print(F"Final serialized JSON revision list: {json.dumps(revisionList, indent=4)}")
 
     # Now write the JSON interval information for the thermostats to a file for use in the next polling iteration
-    interval_config_from_file(thermostat_JSON_interval_file, JSONrevisionList)
+    interval_config_from_file(thermostat_JSON_interval_file, revisionList)
 
 
 def interval_config_from_file(filename, config=None):
@@ -1449,6 +1523,7 @@ def connectdb_create_runtime_table():
     """
 
     global db_open_size_bytes
+    global created_new_db
 
     sql_create_ecobee_runtime_table = """CREATE TABLE IF NOT EXISTS runtime (
                                             record_written_UTC TEXT NOT NULL,
@@ -1505,6 +1580,9 @@ def connectdb_create_runtime_table():
         table_exists = check_if_table_exists(conn, db_table, ECCEcobeeDatabase)
         if not table_exists:
             table_success = create_table(conn, sql_create_ecobee_runtime_table)
+            # Flag to indicate we created a new db; used later for retrieving last revision interval written to db
+            # as might happen if the last db was archived.
+            created_new_db = True
             # Create secondary indicies
             try:
                 indices_success = conn.execute(sql_create_ecobee_runtime_index1)
@@ -1512,6 +1590,7 @@ def connectdb_create_runtime_table():
             except sqlite3.Error as e:
                 logger.error(F"Error creating secondary indicies for table {db_table}, {e}")
         else:
+            created_new_db = False
             logger.debug(F"Database table {db_table} exists...opening connection")
     else:
         logger.error("Error...cannot create the Ecobee database connection.")
@@ -1834,12 +1913,19 @@ def select_db_last_runtime_interval(conn, thermostatName):
     on previous calls to the Ecobee request runtime API.  The intent is to provide the last
     runtime interval written for this thermostat to prevent redundant attempts to record data already
     written.
-        Written by DK Fowler ... 8-Oct-2019
+            Written by DK Fowler ... 8-Oct-2019
+
+    Modified to check for the last runtime interval written also in any database archival files if we've
+    just created a new database.  Due to implementation of a db archival routine, the last runtime interval
+    written may not be in the current (new) database, and we need to search for it elsewhere.
+            Modified by DK Fowler ... 24-Feb-2020
 
     :param conn: the Connection object
     :param thermostatName: the name of the thermostat
     :return: the last runtime interval recorded, or '00000000' if none
     """
+
+    global created_new_db
 
     cur = conn.cursor()
     # Build SQL query string, including exclusion of "blank" records...
@@ -1879,6 +1965,12 @@ def select_db_last_runtime_interval(conn, thermostatName):
         last_run = datetime.strptime(str_last_run, "%Y-%m-%d %H:%M:%S")
         # Format it to match the revision date/time reported by Ecobee
         last_runtime_interval = last_run.strftime("%y%m%d%H%M%S")
+
+    # Check to see if we returned 0 records currently in the database; this could happen if the last database
+    # was archived, or at the initial execution of this routine.  If a new database was created, check to see
+    # if we have any archived databases.
+    if row_cnt == 0 and created_new_db:
+        last_runtime_interval = check_for_archival_database_revision_records(thermostatName)
 
     cur.close()
     return last_runtime_interval
@@ -2410,79 +2502,50 @@ def get_snapshot(conn,
     return lists_dict  # Dictionary with more data to process in lists
 
 
-def check_internet_connect(url_root):
+def check_internet_connect(chk_host_name):
     """
-        This routine will attempt a connection to the passed URL in order to validate if the Internet connection
+        This routine will attempt a connection to the passed host name in order to validate if the Internet connection
         is available.  It will return True if a connection succeeds, or False if it fails.
                 Written by DK Fowler ... 21-Dec-2019
-        :param url_root          The site used to validate the connection; should be in the form of 'google.com'
-        :returns                 True if success, otherwise False
+        :param chk_host_name          The site used to validate the connection; should be in the form of 'google.com'
+        :returns                      True if success, otherwise False
 
-        Modified to add additional checking; this routine will now go through a series of checks for the passed
-        URL, including attempting a secure HTTP connection; next, it will attempt a series of ping requests to
-        the site; and finally, it will attempt a DNS resolution for the passed host.  If an error occurs on any
-        of these tests, the routine returns FALSE; else TRUE.  Note that as this is a black/white assessment of
-        the connectivity tests, it does not accommodate such issues as overly-long ping returns, or "mostly
-        good" results, such as being able to connect via HTTPS for 8 out of 10 tries.  However, all details of
-        the tests are logged both to the error log and the console for further analysis.
-                Modified by DK Fowler ... 05-Jan-2020
-    """
+    Modified to add additional checking; this routine will now go through a series of checks for the passed
+    URL, including attempting a secure HTTP connection; next, it will attempt a series of ping requests to
+    the site; and finally, it will attempt a DNS resolution for the passed host.  If an error occurs on any
+    of these tests, the routine returns FALSE; else TRUE.  Note that as this is a black/white assessment of
+    the connectivity tests, it does not accommodate such issues as overly-long ping returns, or "mostly
+    good" results, such as being able to connect via HTTPS for 8 out of 10 tries.  However, all details of
+    the tests are logged both to the error log and the console for further analysis.
+            Modified by DK Fowler ... 05-Jan-2020
 
-    test_success = True       # assume good test
+    Modified to add additional checking; added attempt to find DNS resolvers, and ping tests for these if
+    found.
+            Modified by DK Fowler ... 08-Jan-2020
 
-    # Try connecting via HTTPS
-    logger.info(F"*** Attempting HTTPS site connections...")
-    print(F"*** Attempting HTTPS site connections...")
-    url = 'https://www.' + url_root
-    logger.info(F"")
-    print(F"")
-    check_cnt = 0
-    while check_cnt < 10:
-        check_cnt += 1
-        try:
-            logger.info(F"Connection attempt {check_cnt} for url:  {url}...")
-            print(F"Connection attempt {check_cnt} for url:  {url}...")
-            http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
-            response = http.request('GET', url)
-            logger.info(F"Internet connection good!")
-            logger.info(F"{response.headers}")
-            print(F"Internet connection good!")
-            print(F"{response.headers}")
-        except (Exception, Error, AttributeError, socket.error) as e:
-            logger.error(F"Error attempting to establish HTTPS connection...{e}")
-            print(F"Error attempting to establish HTTPS connection...{e}")
-            test_success = False
+    Modified to reorder tests.  As successful DNS resolution is a prerequisite for PING'ing the passed
+    site as well as HTTP connection, the tests are now performed in this order:
+        1) DNS test and resolver information
+        2) Site PING
+        3) HTTPS connection
+    If a failure occurs in any of the prerequisite tests, the following test(s) are not performed.
+            Modified by DK Fowler ... 24-Feb-2020
+"""
 
-    # Try pinging sites
-    logger.info(F"*** Attempting site pings...")
-    print(F"\n\n*** Attempting site pings...")
-    if 'microsoft.com' in url_root:
-        logger.info(F"...skipping ping test for {url_root}, as site drops ping requests...")
-        print(F"\n...skipping ping test for {url_root}, as site drops ping requests...")
-    else:
-        logger.info(F"Ping test for '{url_root}'...")
-        print(F"\nPing test for '{url_root}'...")
-        try:
-            response_list = ping(url_root, verbose=True, count=15)
-            logger.info(F"Average ping response:  {response_list.rtt_avg_ms}ms.")
-            print(F"Average ping response:  {response_list.rtt_avg_ms}ms.")
-        except (Exception, Error, AttributeError, socket.error) as e:
-            logger.error(F"Error occurred during ping attempt, {e}")
-            print(F"Error occurred during ping attempt, {e}")
-            test_success = False
+    test_success = True  # assume good test
 
-    # Finally, try doing DNS lookups
+    # Try doing DNS lookups
     logger.info(F"*** Attempting DNS lookups...")
     print(F"\n\n*** Attempting DNS lookups...")
     try:
-        addr1 = socket.gethostbyname(url_root)
-        logger.info(F"Primary DNS resolution for host {url_root} is {addr1}...")
-        print(F"\nPrimary DNS resolution for host {url_root} is {addr1}...")
-        fqdn = socket.getfqdn(url_root)
-        hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(url_root)
-        logger.info(F"Full DNS resolution for host {url_root} is:  host={hostname}...")
+        addr1 = socket.gethostbyname(chk_host_name)
+        logger.info(F"Primary DNS resolution for host {chk_host_name} is {addr1}...")
+        print(F"\nPrimary DNS resolution for host {chk_host_name} is {addr1}...")
+        fqdn = socket.getfqdn(chk_host_name)
+        hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(chk_host_name)
+        logger.info(F"Full DNS resolution for host {chk_host_name} is:  host={hostname}...")
         logger.info(F"...fully qualified name is {fqdn}...")
-        print(F"Full DNS resolution for host {url_root} is:  host={hostname}...")
+        print(F"Full DNS resolution for host {chk_host_name} is:  host={hostname}...")
         print(F"...fully qualified name is {fqdn}...")
         if len(aliaslist) == 0:
             logger.info(F"...no aliases...")
@@ -2494,9 +2557,94 @@ def check_internet_connect(url_root):
             logger.info(F"...additional address(es):  {ipaddrlist}")
             print(F"...additional address(es):  {ipaddrlist}")
     except (Exception, Error, AttributeError, socket.error) as e:
-        logger.error(F"DNS resolution for host {url} failed...{e}.")
-        print(F"DNS resolution for host {url} failed...{e}.")
+        logger.error(F"DNS resolution for host {chk_host_name} failed...{e}.")
+        print(F"DNS resolution for host {chk_host_name} failed...{e}.")
         test_success = False
+
+    # Try finding the DNS resolver
+    logger.info(F"*** Attempting to find DNS resolver(s)...")
+    print(F"\n*** Attempting to find DNS resolver(s)...")
+    try:
+        resolvers = dns.resolver.get_default_resolver()
+    except (Exception, DNSException, socket.error) as e:
+        logger.error(F"Finding DNS resolvers failed...{e}")
+        print(F"Finding DNS resolvers failed...{e}")
+        test_success = False
+
+    try:
+        resolvers.nameservers  # test to see if the resolvers object exists; else, a TypeError occurs
+        logger.info(F"DNS resolver(s):  {resolvers.nameservers}")
+        print(F"DNS resolver(s):  {resolvers.nameservers}")
+        # Now ping the DNS resolvers to see what the average response is
+        logger.info(F"*** Attempting DNS server pings...")
+        print(F"\n*** Attempting DNS server pings...")
+        for ns in resolvers.nameservers:
+            logger.info(F"Ping test for '[{ns}]'...")
+            print(F"\nPing test for '[{ns}]'...")
+            try:
+                response_list = ping(ns, verbose=True, count=15)
+                logger.info(F"Average ping response:  {response_list.rtt_avg_ms}ms.")
+                print(F"Average ping response:  {response_list.rtt_avg_ms}ms.")
+            except (Exception, Error, AttributeError, socket.error) as e:
+                logger.error(F"Error occurred during ping attempt, {e}")
+                print(F"Error occurred during ping attempt, {e}")
+                test_success = False
+    except TypeError as e:
+        # a TypeError indicates that the resolvers object does not exist, which would happen if the name resolution
+        # fails
+        logger.info(F"...No DNS resolvers found to ping...")
+        print(F"...No DNS resolvers found to ping...")
+        test_success = False
+    except (Exception, Error, AttributeError, socket.error) as e:
+        # Handle other miscellaneous errors that may occur
+        logger.error(F"...Error occurred while attempting to identify DNS resolvers...{e}")
+        print(F"...Error occurred while attempting to identify DNS resolvers...{e}")
+        test_success = False
+
+    # If prior test was successful, next attempt PING of site...
+    if test_success:
+        # Try pinging sites
+        logger.info(F"*** Attempting site pings...")
+        print(F"\n\n*** Attempting site pings...")
+        if 'microsoft.com' in chk_host_name:
+            logger.info(F"...skipping ping test for {chk_host_name}, as site drops ping requests...")
+            print(F"\n...skipping ping test for {chk_host_name}, as site drops ping requests...")
+        else:
+            logger.info(F"Ping test for '{chk_host_name}'...")
+            print(F"\nPing test for '{chk_host_name}'...")
+            try:
+                response_list = ping(chk_host_name, verbose=True, count=15)
+                logger.info(F"Average ping response:  {response_list.rtt_avg_ms}ms.")
+                print(F"Average ping response:  {response_list.rtt_avg_ms}ms.")
+            except (Exception, Error, AttributeError, socket.error) as e:
+                logger.error(F"Error occurred during ping attempt, {e}")
+                print(F"Error occurred during ping attempt, {e}")
+                test_success = False
+
+    # If prior tests were successful, then attempt HTTPS connection to site...
+    if test_success:
+        # Try connecting via HTTPS
+        logger.info(F"*** Attempting HTTPS site connections...")
+        print(F"\n*** Attempting HTTPS site connections...")
+        url = 'https://www.' + chk_host_name
+        logger.info(F"")
+        print(F"")
+        check_cnt = 0
+        while check_cnt < 10:
+            check_cnt += 1
+            try:
+                logger.info(F"Connection attempt {check_cnt} for url:  {url}...")
+                print(F"Connection attempt {check_cnt} for url:  {url}...")
+                http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+                response = http.request('GET', url)
+                logger.info(F"Internet connection good!")
+                logger.info(F"{response.headers}")
+                print(F"Internet connection good!")
+                print(F"{response.headers}")
+            except (Exception, Error, AttributeError, socket.error) as e:
+                logger.error(F"Error attempting to establish HTTPS connection...{e}")
+                print(F"Error attempting to establish HTTPS connection...{e}")
+                test_success = False
 
     return test_success
 
@@ -2511,7 +2659,7 @@ def get_api():
     try:
         with open(ECCEcobeeAPIkey, 'r', encoding='utf-8') as f:
             try:
-                api_key = f.readline(32)      # default API key should be 32 bytes in length
+                api_key = f.readline(32)  # default API key should be 32 bytes in length
                 return api_key
             except Exception as e:
                 logger.error(F"Error occurred during attempt to read default Ecobee API key from file...")
@@ -2527,6 +2675,90 @@ def get_api():
         print(F"Error during attempt to open default Ecobee API key file...{e}")
         print(F"...aborting...")
         sys.exit(1)
+
+
+def archive_db():
+    """
+        This routine will "archive" the existing database file by renaming it, such that the next
+        program iteration will re-create a new one.  The archival file name will be in the form:
+        {db filename}-{create-date/time}-{mod-date/time}.{db extension}, where
+        create-date/time is the database creation date/time in the form "YYYYMMDDHHMM", and
+        mod-date/time is the database last-modified date/time in the form "YYYYMMDDHHMM".
+                Written by DK Fowler ... 24-Feb-2020
+    """
+
+    logger.info(F"Beginning database archival...")
+    print(F"Beginning database archival...")
+
+    # Get the creation / last modified date/time of the existing file for use in constructing the archival file name...
+    db_modified_time = os.path.getmtime(ECCEcobeeDatabase)
+    db_create_time = os.path.getctime(ECCEcobeeDatabase)
+    # Convert timestamps to strings in proper form
+    db_create_string = datetime.fromtimestamp(db_create_time).strftime('%Y%m%d%H%M')
+    db_modified_string = datetime.fromtimestamp(db_modified_time).strftime('%Y%m%d%H%M')
+    # Get the filename/ext string of the existing database
+    db_basename = os.path.basename(ECCEcobeeDatabase)
+    # Split the filename into name/extension components
+    fn = os.path.splitext(db_basename)
+    db_filename = fn[0]
+    db_ext = fn[1]
+    # Construct the new archival filename
+    archival_db_name = db_filename + "-" + db_create_string + "-" + db_modified_string + db_ext
+    print(F"Archival database name:  {archival_db_name}.")
+
+    # Attempt to rename the existing database
+    try:
+        os.rename(ECCEcobeeDatabase, archival_db_name)
+        logger.info(F"Renamed database to: {archival_db_name}.")
+        print(F"Renamed database to:  {archival_db_name}.")
+    except Error as e:
+        logger.error(F"Error attempting to archive (rename) database file: {e}...")
+        logger.error(F"...original database name:  {ECCEcobeeDatabase}")
+        logger.error(F"...archival database name:  {archival_db_name}")
+        print(F"Error attempting to archive (rename) database file: {e}...")
+        print(F"...original database name:  {ECCEcobeeDatabase}")
+        print(F"...archival database name:  {archival_db_name}")
+
+
+def check_for_archival_database_revision_records(thermostatName):
+    """
+        This routine will attempt to locate the latest database archival file if one exists, and from it
+        retrieve the latest revision interval for the passed thermostat.  This would occur at first
+        script execution following a database archival, where the new database is empty.
+                Written by DK Fowler ... 24-Feb-2020
+        :param thermostatName         The thermostat name for which the latest revision interval is begin retrieved
+        :returns last_db_revision     The last revision interval in the database, if it exists; otherwise
+                                      "000000000000" is returned
+    """
+
+    # Get a list of databases that match in the current directory
+    #   First, assume the root of the filename is the same as it is currently.  So, get the current filename
+    #   without extension.
+    db_basename = os.path.basename(ECCEcobeeDatabase)
+    # Split the filename into name/extension components
+    fn = os.path.splitext(db_basename)
+    db_filename = fn[0]
+    db_ext = fn[1]
+    #   Get a list of the current directory's files
+    file_list = os.listdir('.')  # note this assumes the current working directory
+    #   Narrow this down to the ECC Ecobee database files
+    db_files_str = db_filename + '*.db'
+    db_files = fnmatch.filter(file_list, db_files_str)
+    # If we don't find any matching files, assume this is the first iteration of the program and the database
+    # has just been initialized.
+    if len(db_files) == 0:
+        last_db_revision = "000000000000"
+    else:
+        # Sort the list of files returned
+        sorted(db_files, reverse=True)  # reverse sort, newest filename on top
+        # Get the latest filename (archival filenames contain date/time)
+        last_archival_db_file = db_files[0]
+
+        # Connect to this database and get a connection object
+        conn = create_connection(last_archival_db_file)
+        last_db_revision = select_db_last_runtime_interval(conn, thermostatName)
+
+    return last_db_revision
 
 
 if __name__ == '__main__':
