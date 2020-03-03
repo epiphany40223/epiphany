@@ -1,3 +1,16 @@
 .DS_Store
 
 __pycache__
+
+*.sqlite3
+ECC census update - Sheet1.csv
+familychangelog.txt
+memberchangelog.txt
+unresponsives.csv
+unresponsives.txt
+unresponsives0.txt
+.gitignore
+pds-queries/2020-spring-census/pprint-family-test.py
+pds-queries/2020-spring-census/print-member.py
+familychangelog.csv
+memberchangelog.csv
