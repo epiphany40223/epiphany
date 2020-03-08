@@ -111,8 +111,7 @@ def write_xlsx(members, ministry, want_birthday, log):
     timestamp = ('{year:04}-{mon:02}-{day:02} {hour:02}:{min:02}'
                 .format(year=now.year, mon=now.month, day=now.day,
                         hour=now.hour, min=now.minute))
-    filename = ('{ministry} members as of {timestamp}.xlsx'
-                .format(ministry=ministry, timestamp=timestamp))
+    filename = (f'{ministry} members as of {timestamp}.xlsx')
 
     # Put the members in a sortable form (they're currently sorted by MID)
     sorted_members = dict()
@@ -132,23 +131,33 @@ def write_xlsx(members, ministry, want_birthday, log):
     if want_birthday:
         last_col = 'D'
 
-    ws.merge_cells('A1:{l}1'.format(l=last_col))
-    cell = 'A1'
-    ws[cell] = 'Last updated: {now}'.format(now=now)
+    row = 1
+    ws.merge_cells(f'A{row}:{last_col}{row}')
+    cell = f'A{row}'
+    ws[cell] = f'Ministry: {ministry}'
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 
-    ws.merge_cells('A2:{l}2'.format(l=last_col))
-    cell = 'A2'
+    row = row + 1
+    ws.merge_cells(f'A{row}:{last_col}{row}')
+    cell = f'A{row}'
+    ws[cell] = f'Last updated: {now}'
+    ws[cell].fill = title_fill
+    ws[cell].font = title_font
+
+    row = row + 1
+    ws.merge_cells(f'A{row}:{last_col}{row}')
+    cell = f'A{row}'
     ws[cell] = ''
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 
-    columns = [('A3', 'Member name', 30),
-               ('B3', 'Address', 30),
-               ('C3', 'Phone / email', 50)]
+    row = row + 1
+    columns = [(f'A{row}', 'Member name', 30),
+               (f'B{row}', 'Address', 30),
+               (f'C{row}', 'Phone / email', 50)]
     if want_birthday:
-        columns.append(('D3', 'Birthday', 30))
+        columns.append((f'D{row}', 'Birthday', 30))
 
     for cell,value,width in columns:
         ws[cell] = value
@@ -158,7 +167,8 @@ def write_xlsx(members, ministry, want_birthday, log):
         ws.column_dimensions[cell[0]].width = width
 
     # Freeze the title row
-    ws.freeze_panes = ws['A4']
+    row = row + 1
+    ws.freeze_panes = ws[f'A{row}']
 
     #---------------------------------------------------------------------
 
@@ -170,7 +180,6 @@ def write_xlsx(members, ministry, want_birthday, log):
         return row + 1
 
     # Data rows
-    row = 4
     for name in sorted(sorted_members):
         m = sorted_members[name]
         # The name will take 1 row
@@ -235,7 +244,7 @@ def write_xlsx(members, ministry, want_birthday, log):
     #---------------------------------------------------------------------
 
     wb.save(filename)
-    log.info('Wrote {filename}'.format(filename=filename))
+    log.info(f'Wrote {filename}')
 
     return filename
 
