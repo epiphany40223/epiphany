@@ -4,3 +4,4 @@ pytz
 urllib3
 pyecobee
 requests>=2,<3
+dnspython
