@@ -943,6 +943,38 @@ def main():
         #############################
 
         {
+            'ministries' : [ '800-ChildrenFormationCatechist' ],
+            'ggroup'     : 'childrens-formation-catechists{ecc}'.format(ecc=ecc),
+            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        {
+            'ministries' : [ '807-RCIA Team' ],
+            'ggroup'     : 'rcia-team{ecc}'.format(ecc=ecc),
+            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        {
+            'ministries' : [ '810-Childrens Form. Workng Grp' ],
+            'ggroup'     : 'childrens-formation-working-group{ecc}'.format(ecc=ecc),
+            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        {
+            'ministries' : [ '811-Family Form. Working Group' ],
+            'ggroup'     : 'family-formation-working-group{ecc}'.format(ecc=ecc),
+            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        {
+            'ministries' : [ '812-Adult Form. Working Group' ],
+            'ggroup'     : 'adult-formation-working-group{ecc}'.format(ecc=ecc),
+            'notify'     : 'jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
             'ministries' : [ '808-Young Adult Ministry' ],
             'ggroup'     : 'young-adults{ecc}'.format(ecc=ecc),
             'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
