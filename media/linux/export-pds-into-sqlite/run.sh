@@ -2,9 +2,9 @@
 
 set -x
 
-pds_input_dir=/media/sf_pdschurch/Data
+pds_input_dir=/mnt/c/pdschurch/Data
 
-base=/home/itadmin/git/epiphany/media/linux
+base=/home/coeadmin/git/epiphany/media/linux
 prog_dir=$base/export-pds-into-sqlite
 logfile=$base/logfile.txt
 sqlite_out_dir=$base/pds-data
@@ -22,7 +22,7 @@ cd $prog_dir
 # If this is the first run after midnight, save a copy for archival
 # purposes.
 t=`date '+%H%M'`
-yes=`expr $t \< 5`
+yes=`expr $t \<= 14`
 if test $yes -eq 1; then
     # Upload some files to a Google drive
     archive_dir="`readlink -f $sqlite_out_dir/archives`"
@@ -59,7 +59,7 @@ if test $yes -eq 1; then
     tar jcf "$b.tar.bz2" "$b"
     rm -rf "$b"
 
-    # Now upload that tarfile to a Google Team Drive
+    # Now upload that tarfile to a Google Shared Drive
     cd "$uploader_dir"
     $script \
         --app-id $client_id \

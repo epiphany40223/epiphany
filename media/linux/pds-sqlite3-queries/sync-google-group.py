@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 """Script to iterate through ministries and Member keywords from PDS and
 sync the membership of a Google Group to match.
@@ -202,6 +202,7 @@ def compute_sync(sync, pds_members, group_members, log=None):
         actions.append({
             'action'              : 'delete',
             'email'               : gm['email'],
+            'id'                  : gm['id'],
             'role'                : None,
             'pds_ministry_member' : None,
         })
@@ -439,9 +440,16 @@ def _sync_add(sync, group_permissions,
         for err in j['error']['errors']:
             if err['reason'] == 'duplicate':
                 if log:
-                    log.info("Google says a duplicate of {email} "
-                             "already in the group -- ignoring"
-                             .format(email=email))
+                    log.error("Google says a duplicate of {email} "
+                              "already in the group -- ignoring"
+                              .format(email=email))
+                return None
+
+            elif err['reason'] == 'backendError':
+                if log:
+                    log.error("Google had an internal error while processing"
+                              "{email} -- ignoring"
+                              .format(email=email))
                 return None
 
             msg += " {msg} ({reason})".format(msg=err['message'],
@@ -456,12 +464,31 @@ def _sync_add(sync, group_permissions,
 
 def _sync_delete(sync, service, action, name, log=None):
     email = action['email']
+
+    # We delete by ID (instead of by email address) because of a weird
+    # corner case:
+    #
+    # - foo@example.com (a non-gmail address) is in a google group,
+    #   but has no Google account
+    # - later, foo@example.com visits
+    #   https://accounts.google.com/SignupWithoutGmail and gets a
+    #   Google account associated with that email address
+    #
+    # In this case, Google seems to be somewhat confused:
+    # foo@example.com is still associated with the Group, but it's the
+    # non-Google-account foo@example.com.  But if we attempt to move
+    # that email address, it'll try to remove the Google-account
+    # foo@example.com (and therefore fail).
+    #
+    # So we remove by ID, and that unambiguously removes the correct
+    # member from the Group.
+    id    = action['id']
     if log:
-        log.info("Deleting PDS Member {name} ({email})"
-                 .format(name=name, email=email))
+        log.info("Deleting PDS Member {name} ({email}) from group {group}"
+                 .format(name=name, email=email, group=sync['ggroup']))
 
     service.members().delete(groupKey=sync['ggroup'],
-                             memberKey=email).execute()
+                             memberKey=id).execute()
 
     msg = "Removed from the group"
     return msg
@@ -484,7 +511,8 @@ def google_group_get_permissions(service, group_email, log=None):
         log.info("Group permissions for {email}: {who}"
                  .format(email=group_email, who=who))
 
-    if who == 'ANYONE_CAN_POST' or who == 'ALL_MEMBERS_CAN_POST':
+    if (who == 'ANYONE_CAN_POST' or who == 'ALL_MEMBERS_CAN_POST' or
+        who == 'ALL_IN_DOMAIN_CAN_POST'):
         return DISCUSSION
     else:
         return BROADCAST
@@ -501,11 +529,12 @@ def google_group_find_members(service, sync, log=None):
                     .members()
                     .list(pageToken=page_token,
                           groupKey=sync['ggroup'],
-                          fields='members(email,role)').execute())
+                          fields='members(email,role,id)').execute())
         for group in response.get('members', []):
             group_members.append({
                 'email' : group['email'].lower(),
                 'role'  : group['role'].lower(),
+                'id'    : group['id'].lower(),
             })
 
         page_token = response.get('nextPageToken', None)
@@ -513,9 +542,9 @@ def google_group_find_members(service, sync, log=None):
             break
 
     if log:
-        log.info("Google Group membership for {group}"
-                 .format(group=sync['ggroup']))
-        log.info(group_members)
+        log.debug("Google Group membership for {group}"
+                  .format(group=sync['ggroup']))
+        log.debug(group_members)
 
     return group_members
 
@@ -629,8 +658,8 @@ def pds_find_ministry_members(members, sync, log=None):
                 found_emails[e] = len(ministry_members) - 1
 
     if log:
-        log.info("PDS members for ministries {m} and keywords {k}:"
-                 .format(m=ministries, k=keywords))
+        log.debug("PDS members for ministries {m} and keywords {k}:"
+                  .format(m=ministries, k=keywords))
         for m in ministry_members:
             name_str = ''
             for pm in m['pds_members']:
@@ -638,10 +667,10 @@ def pds_find_ministry_members(members, sync, log=None):
                     name_str = name_str + ' or '
                 name_str = name_str + pm['Name']
 
-            log.info('  {name} <{email}> leader: {leader}'
-                     .format(name=name_str,
-                             email=m['email'],
-                             leader=m['leader']))
+            log.debug('  {name} <{email}> leader: {leader}'
+                      .format(name=name_str,
+                              email=m['email'],
+                              leader=m['leader']))
 
     return ministry_members
 
@@ -724,7 +753,7 @@ def main():
     args = setup_cli_args()
 
     log = ECC.setup_logging(info=args.verbose,
-                            debug=args.verbose,
+                            debug=args.debug,
                             logfile=args.logfile)
 
     (pds, pds_families,
@@ -750,17 +779,17 @@ def main():
     ecc = '@epiphanycatholicchurch.org'
     synchronizations = [
         {
-            'ministries' : [ '13-Finance Advisory Council' ],
+            'ministries' : [ '102-Finance Advisory Council' ],
             'ggroup'     : 'administration-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '14-Garden & Grounds' ],
+            'ministries' : [ '203-Garden & Grounds' ],
             'ggroup'     : 'garden-and-grounds{ecc}'.format(ecc=ecc),
             'notify'     : 'mary{ecc},emswine2@gmail.com,jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '18-Technology Committee' ],
+            'ministries' : [ '207-Technology Committee' ],
             'ggroup'     : 'tech-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
@@ -774,91 +803,103 @@ def main():
         #############################
 
         {
-            'ministries' : [ '05-Parish Pastoral Council' ],
+            'ministries' : [ '100-Parish Pastoral Council' ],
             'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
-        {
-            'ministries' : [ '64-Singles Explore Life (SEL)' ],
-            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
-            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
-        },
-
         {
             'keywords'   : [ 'PPC Executive Committee' ],
             'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+        {
+            'ministries' : [ '101-Long Range Plan Team' ],
+            'ggroup'     : 'long-range-planning{ecc}'.format(ecc=ecc),
+            'notify'     : 'business-manager{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
 
         #############################
 
         {
-            'ministries' : [ '22-Bread Baking Ministry' ],
+            'ministries' : [ '602-Singles Explore Life (SEL)' ],
+            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
+            'notify'     : 'lynne{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '302-Bread Baking Ministry' ],
             'ggroup'     : 'breadmakers{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '23-Worship Committee' ],
+            'ministries' : [ '103-Worship Committee' ],
             'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '25-Liturgical Planning' ],
+            'ministries' : [ '304-Liturgical Planning' ],
             'ggroup'     : 'liturgy-planning{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '26-Movers Ministry' ],
+            'ministries' : [ '305-Movers Ministry' ],
             'ggroup'     : 'movers{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},awsimpson57@gmail.com,jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '30A-Acolyte Ministry 5:30P',
-                             '30B-Acolyte Ministry  9:00A',
-                             '30C-Acolyte Ministry 11:30A' ],
+            'ministries' : [ '309A-Acolyte Ministry 5:30P',
+                             '309B-Acolyte Ministry  9:00A',
+                             '309C-Acolyte Ministry 11:30A' ],
             'ggroup'     : 'acolytes{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '31-Adult Choir' ],
+            'ministries' : [ '310-Adult Choir' ],
             'ggroup'     : 'choir{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '32-Bell Choir' ],
+            'ministries' : [ '311-Bell Choir' ],
             'keywords'   : [ 'Bell choir email list' ],
             'ggroup'     : 'bell-ringers{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '34-Communion Ministers' ],
+            'ministries' : [ '313-Communion Ministers' ],
             'ggroup'     : 'communion-ministers{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '35-Communion Min. Coordinator'],
+            'ministries' : [ '314-Communion Min. Coordinator'],
             'ggroup'     : 'communion-ministers-coordinators{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},stephen@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '38-Instrumentalists & Cantors' ],
+            'ministries' : [ '315-Funeral Mass Ministry' ],
+            'ggroup'     : 'funeral-mass-ministry{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '317-Instrumentalists & Cantors' ],
             'keywords'   : [ 'Musicians email list' ],
             'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '39-Lectors  MASTER LIST' ],
+            'ministries' : [ '318-Lectors  MASTER LIST' ],
             'ggroup'     : 'lectors{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
+#        {
+#            'ministries' : [ '41-Epiphany Youth Band'],
+#            'keywords'   : [ 'EYB email list' ],
+#            'ggroup'     : 'eyb{ecc}'.format(ecc=ecc),
+#            'notify'     : 'linda{ecc},jimd{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
+#        },
         {
-            'ministries' : [ '41-Epiphany Youth Band'],
-            'keywords'   : [ 'EYB email list' ],
-            'ggroup'     : 'eyb{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},jimd{ecc},faith@feetwashers.org,jeff@squyres.com'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '58-Prayer Chain Ministry' ],
+            'ministries' : [ '506-Prayer Chain Ministry' ],
             'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
@@ -876,6 +917,11 @@ def main():
         {
             'keywords'   : [ 'Homebound recipients email lst', 'Homebound MP3 Recordings' ],
             'ggroup'     : 'ministry-homebound-liturgy-recipients{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Recordings access' ],
+            'ggroup'     : 'recordings-viewer{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
         {
@@ -897,7 +943,7 @@ def main():
         #############################
 
         {
-            'ministries' : [ '90-Young Adult Ministry' ],
+            'ministries' : [ '808-Young Adult Ministry' ],
             'ggroup'     : 'young-adults{ecc}'.format(ecc=ecc),
             'notify'     : 'tasha{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
@@ -916,12 +962,12 @@ def main():
         #############################
 
         {
-            'ministries' : [ '62-Men of Epiphany' ],
+            'ministries' : [ '600-Men of Epiphany' ],
             'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
             'notify'     : 'polly{ecc},brayton@howlandgroup.com,jeff@squyres.com'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '72-Epiphany Backside Ministry' ],
+            'ministries' : [ '702-Epiphany Backside Ministry' ],
             'ggroup'     : 'ebm{ecc}'.format(ecc=ecc),
             'notify'     : 'polly{ecc},brayton@howlandgroup.com,jeff@squyres.com'.format(ecc=ecc),
         },
@@ -929,23 +975,62 @@ def main():
         #############################
 
         {
-            'ministries' : [ '78-Ten Percent Committee' ],
+            'ministries' : [ '708-Ten Percent Committee' ],
             'ggroup'     : 'ten-percent-committee{ecc}'.format(ecc=ecc),
-            'notify'     : 'frrandy{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'polly{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         {
             'keywords'   : [ '10 Pct Emergency Assistance' ],
             'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
-            'notify'     : 'frrandy{ecc},erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'notify'     : 'polly{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
 
         #############################
 
         {
-            'ministries' : [ '57-Healing Blanket Ministry' ],
-            'ggroup'     : 'seamstresses{ecc}'.format(ecc=ecc),
-            'notify'     : 'julie{ecc},jeff@squyres.com'.format(ecc=ecc),
+            'ministries' : [ '505-Healing Blanket Ministry' ],
+            'ggroup'     : 'healing-blankets-ministry{ecc}'.format(ecc=ecc),
+            'notify'     : 'frtony{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '601-Sages (for 50 yrs. +)' ],
+            'ggroup'     : 'sages{ecc}'.format(ecc=ecc),
+            'notify'     : 'joanhagedorn46@gmail.com,angie{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '104-Stewardship & E Committee' ],
+            'ggroup'     : 'stewardship{ecc}'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '707-St. Vincent DePaul' ],
+            'ggroup'     : 'SVDPConference{ecc}'.format(ecc=ecc),
+            'notify'     : 'erin{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
+            'keywords'   : [ 'Apply@ECC email list' ],
+            'ggroup'     : 'apply{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
+            'keywords'   : [ 'Pastoral staff email list' ],
+            'ggroup'     : 'pastoral-staff{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'Support staff email list' ],
+            'ggroup'     : 'support-staff{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},jeff@squyres.com'.format(ecc=ecc),
         },
     ]
     for sync in synchronizations:

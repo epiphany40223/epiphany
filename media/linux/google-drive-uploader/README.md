@@ -1,9 +1,10 @@
 # Google Uploader Python client
 
-## Instructions to setup Fedora
+## Instructions to setup Ubuntu
 
 ```
-sudo yum install -y python3-google-api-client python3-httplib2
+# pip3 install --upgrade httplib2
+# pip3 install --upgrade google-api-python-client oauth2client
 ```
 
 ## Setting up credentials

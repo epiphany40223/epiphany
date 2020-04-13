@@ -10,7 +10,7 @@ import http.client
 import urllib.parse
 
 last_state = None
-external_url = "https://status.github.com/api/status.json"
+external_url = "https://www.githubstatus.com/"
 timestamp_format = "%m/%d/%Y %H:%M:%S"
 
 # Hand-set values from the Google Form
@@ -51,7 +51,7 @@ def submit_google_form(outage_start, outage_end):
                      body=body,
                      headers=headers)
         response = conn.getresponse()
-        if response and response.status == 200:
+        if response and response.status >= 200 and response.status < 400:
             return True
     except:
         # If we get an exception, just fall through so that all errors

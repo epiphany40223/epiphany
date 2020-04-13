@@ -1,0 +1,6 @@
+pythonping
+certifi
+pytz
+urllib3
+pyecobee
+requests>=2,<3
