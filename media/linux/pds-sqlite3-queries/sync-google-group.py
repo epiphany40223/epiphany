@@ -953,22 +953,24 @@ def main():
             'ggroup'     : 'rcia-team{ecc}'.format(ecc=ecc),
             'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
-
         {
             'ministries' : [ '810-Childrens Form. Workng Grp' ],
             'ggroup'     : 'childrens-formation-working-group{ecc}'.format(ecc=ecc),
             'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
-
         {
             'ministries' : [ '811-Family Form. Working Group' ],
             'ggroup'     : 'family-formation-working-group{ecc}'.format(ecc=ecc),
             'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
-
         {
             'ministries' : [ '812-Adult Form. Working Group' ],
             'ggroup'     : 'adult-formation-working-group{ecc}'.format(ecc=ecc),
+            'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ '813-Visual Faith Group' ],
+            'ggroup'     : 'visual-faith{ecc}'.format(ecc=ecc),
             'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
