@@ -1066,6 +1066,11 @@ def main():
             'ggroup'     : 'support-staff{ecc}'.format(ecc=ecc),
             'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
+        {
+            'keywords'   : [ 'Maintenance staff email list' ],
+            'ggroup'     : 'maintenance-staff{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+        },
     ]
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
