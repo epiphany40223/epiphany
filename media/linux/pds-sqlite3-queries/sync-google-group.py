@@ -925,8 +925,14 @@ def main():
             'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
         {
+            # JMS To be deleted after 30 May 2020
             'keywords'   : [ 'ECC Sheet Music access' ],
             'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+        },
+        {
+            'keywords'   : [ 'ECC Musicians Info editor' ],
+            'ggroup'     : 'music-ministry-musicians-information-editor{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
         {
