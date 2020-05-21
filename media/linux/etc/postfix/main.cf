@@ -44,8 +44,10 @@ smtp_sasl_auth_enable = yes
 # NOTE: The PASSWORD may need to be an app-specific password if the
 # account uses 2FA.
 #
-# after editing, must run: postmap /etc/postfix/sasl/konica-minolta-passwd
-# Google requires "Allow less secure apps" on the account used
+# After editing, must run: postmap /etc/postfix/sasl/konica-minolta-passwd
+# Google requires "Allow less secure apps" on the account used.
+# You may also need to run: service postfix reload
+# You can force any pending emails to try sending again via: postfix flush
 smtp_sasl_password_maps = hash:/etc/postfix/sasl/konica-minolta-passwd
 
 # Epiphany / ECC
