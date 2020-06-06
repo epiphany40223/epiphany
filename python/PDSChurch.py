@@ -439,6 +439,38 @@ def _link_member_marriage_dates(members, mem_dates, mdtid):
 
 #-----------------------------------------------------------------------------
 
+_req_result = {
+    8  : "Cleared / Restrictions",
+    13 : "Expired",
+}
+
+def _link_member_requirements(members, mem_reqs, req_types):
+    for mr in mem_reqs.values():
+        mid = mr['MemRecNum']
+        if mid not in members:
+            continue
+
+        id = mr['ReqResult']
+        if id in _req_result:
+            result = _req_result[id]
+        else:
+            result = f'Unknown result {id}'
+
+        m = members[mid]
+        key = 'requirements'
+        if key not in m:
+            m[key] = list()
+
+        m[key].append({
+            'description' : req_types[mr['ReqDescRec']]['Description'],
+            'start_date'  : _normalize_date(mr['ReqDate']),
+            'end_date'    : _normalize_date(mr['ExpirationDate']),
+            'result'      : result,
+            'note'        : mr['ReqNote'],
+        })
+
+#-----------------------------------------------------------------------------
+
 def _link_member_id(members, member_source_field, member_dest_field,
                     values, value_source_field='Description'):
     for member in members.values():
@@ -774,6 +806,8 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['Description'], log=log)
     phone_types = PDS.read_table(pds, 'PhoneTyp_DB', 'PhoneTypeRec',
                                  columns=['Description'], log=log)
+    req_types   = PDS.read_table(pds, 'ReqType_DB', 'ReqDescRec',
+                                 columns=['Description', 'Expires'], log=log)
     emails      = PDS.read_table(pds, 'MemEMail_DB', 'EMailRec',
                                  columns=['MemRecNum', 'EMailAddress',
                                           'EMailOverMail', 'FamEmail'],
@@ -807,6 +841,10 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['Description'], log=log)
     mem_4kw     = PDS.read_table(pds, 'User4KW_DB', 'User4DescRec',
                                  columns=['Description'], log=log)
+    mem_reqs    = PDS.read_table(pds, 'MemReq_DB', 'MemReqRecNum',
+                                 columns=['MemRecNum', 'ReqDescRec',
+                                          'ReqDate', 'ReqResult',
+                                          'ReqNote', 'ExpirationDate'])
 
     relationship_types = PDS.read_table(pds, 'RelType_DB', 'RelDescRec',
                                         columns=['Description'], log=log)
@@ -896,6 +934,7 @@ def load_families_and_members(filename=None, pds=None,
     _link_member_ministries(members, ministries, mem_ministries, statuses)
     _link_member_talents(members, talents, mem_talents, statuses)
     _link_member_marriage_dates(members, mem_dates, mdtid)
+    _link_member_requirements(members, mem_reqs, req_types)
 
     _link_member_id(members, 'MaritalStatusRec', 'marital_status', marital_statuses)
     _link_member_id(members, 'LanguageRec', 'language', languages)
