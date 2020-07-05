@@ -439,9 +439,22 @@ def _link_member_marriage_dates(members, mem_dates, mdtid):
 
 #-----------------------------------------------------------------------------
 
-_req_result = {
-    8  : "Cleared / Restrictions",
-    13 : "Expired",
+training_req_results = {
+    0   :   "Pending",
+    1   :   "Yes",
+    2   :   "No",
+    3   :   "Positive",
+    4   :   "Negative",
+    5   :   "Received",
+    6   :   "Incomplete",
+    7   :   "Cleared",
+    8   :   "Cleared / Restrictions",
+    9   :   "Not Cleared",
+    10  :   "Illegible",
+    11  :   "Submitted",
+    12  :   "Inactive",
+    13  :   "Expired",
+    14  :   "Archived",
 }
 
 def _link_member_requirements(members, mem_reqs, req_types):
@@ -451,8 +464,8 @@ def _link_member_requirements(members, mem_reqs, req_types):
             continue
 
         id = mr['ReqResult']
-        if id in _req_result:
-            result = _req_result[id]
+        if id in training_req_results:
+            result = training_req_results[id]
         else:
             result = f'Unknown result {id}'
 

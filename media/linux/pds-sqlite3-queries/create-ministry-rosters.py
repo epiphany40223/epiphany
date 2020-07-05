@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 #
 # See https://openpyxl.readthedocs.io/en/stable/index.html

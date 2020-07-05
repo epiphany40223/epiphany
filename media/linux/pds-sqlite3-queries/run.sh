@@ -46,6 +46,12 @@ if test $h -eq 2 -a $m -lt 15; then
 	--logfile=$roster_logfile \
 	--app-id ../google-drive-uploader/google-uploader-client-id.json \
 	--user-credentials ../google-drive-uploader/google-uploader-user-credentials.json
+
+    ./create-training-rosters.py \
+	--sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
+	--logfile=$roster_logfile \
+	--app-id ../google-drive-uploader/google-uploader-client-id.json \
+	--user-credentials ../google-drive-uploader/google-uploader-user-credentials.json
 fi
 
 exit 0
