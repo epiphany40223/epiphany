@@ -77,13 +77,13 @@ def main():
 
         # Export the PDS database into an SQLite3 database
         os.chdir("export-pds-into-sqlite")
-        subprocess.run(["./run.sh"])
+        subprocess.run(["./run.sh"], env=os.environ)
         os.chdir("..")
 
         # Run some queries (and act on the results) from that SQLite3
         # database
         os.chdir("pds-sqlite3-queries")
-        subprocess.run(["./run.sh"])
+        subprocess.run(["./run.sh"], env=os.environ)
         os.chdir("..")
 
 if __name__ == '__main__':
