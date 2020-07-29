@@ -39,6 +39,11 @@ guser_cred_file = 'user-credentials.json'
 
 ministries = [
     {
+        "ministry"  : '100-Parish Pastoral Council',
+        "gsheet_id" : '1aIoStpSOsup8XL5eNd8nhpJwM-IqN2gTkwVf_Qvlylc',
+        "birthday"  : False,
+    },
+    {
         "ministry"  : '102-Finance Advisory Council',
         "gsheet_id" : '1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0',
         "birthday"  : False,
