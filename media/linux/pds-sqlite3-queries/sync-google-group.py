@@ -106,8 +106,10 @@ def send_mail(to, subject, message_body, html=False, log=None):
             log.debug('Not sending email "{0}" because SMTP not setup'.format(subject))
         return
 
-    smtp_server = args.smtp[0]
-    smtp_from = args.smtp[1]
+    smtp_server   = args.smtp[0]
+    smtp_from     = args.smtp[1]
+    smtp_username = args.smtp[2]
+    smtp_password = args.smtp[3]
 
     if log:
         log.info('Sending email to {to}, subject "{subject}"'
@@ -115,6 +117,13 @@ def send_mail(to, subject, message_body, html=False, log=None):
     with smtplib.SMTP_SSL(host=smtp_server) as smtp:
         if args.debug:
             smtp.set_debuglevel(2)
+
+        # Login; we can't rely on being IP whitelisted.
+        try:
+            smtp.login(smtp_username, smtp_password)
+        except Exception as e:
+            log.error(f'Error: failed to SMTP login: {e}')
+            exit(1)
 
         msg = EmailMessage()
         msg.set_content(message_body)
@@ -684,11 +693,22 @@ def setup_cli_args():
     # Be sure to check the Google SMTP relay documentation for
     # non-authenticated relaying instructions:
     # https://support.google.com/a/answer/2956491
+    # We are using the following settings:
+    # - Allowed senders: only addresses in my domains
+    # - Only accept mail from the specified IP addresses: No
+    # - Require SMTP Authentication: yes
+    #   |--> This means that you have to specify an ECC Google Account email
+    #        address as an argument to --smtp, and you must also specify
+    #        a 2FA app-specific password as the password.  Do NOT use
+    #        "allow less-secure apps", because Google is deprecating that
+    #        functionality and it will disappear someday.  Use 2FA
+    #        app-specific passwords.
+    # - Require TLS encryption: yes
     global smtp
     tools.argparser.add_argument('--smtp',
-                                 nargs=2,
+                                 nargs=4,
                                  default=smtp,
-                                 help='SMTP server hostname and from addresses')
+                                 help='SMTP server hostname, from addresses, login address, and login password')
 
     global gapp_id
     tools.argparser.add_argument('--app-id',
@@ -737,8 +757,8 @@ def setup_cli_args():
     l = 0
     if args.smtp:
         l = len(args.smtp)
-    if l > 0 and l != 2:
-        log.error("Need exactly 2 arguments to --smtp: server from")
+    if l > 0 and l != 4:
+        log.error("Need exactly 4 arguments to --smtp: server from_addr login_addr login_pw")
         exit(1)
 
     return args
