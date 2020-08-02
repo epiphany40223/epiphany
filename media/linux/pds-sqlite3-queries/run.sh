@@ -22,7 +22,11 @@ cd $prog_dir
 
 # Generate the list of email addresses from PDS data and sync
 google_logfile=$prog_dir/sync-google-group-logfile.txt
+tokens=`cat smtp-auth.txt`
+username=`echo $tokens | cut -d: -f1`
+password=`echo $tokens | cut -d: -f2`
 ./sync-google-group.py \
+    --smtp smtp-relay.gmail.com no-reply@epiphanycatholicchurch.org $username $password \
     --sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
     --logfile=$google_logfile \
     --verbose
