@@ -108,8 +108,6 @@ def send_mail(to, subject, message_body, html=False, log=None):
 
     smtp_server   = args.smtp[0]
     smtp_from     = args.smtp[1]
-    smtp_username = args.smtp[2]
-    smtp_password = args.smtp[3]
 
     if log:
         log.info('Sending email to {to}, subject "{subject}"'
@@ -117,6 +115,11 @@ def send_mail(to, subject, message_body, html=False, log=None):
     with smtplib.SMTP_SSL(host=smtp_server) as smtp:
         if args.debug:
             smtp.set_debuglevel(2)
+
+        # This assumes that the file has a single line in the format of username:password.
+        with open(args.smtp_auth_file) as f:
+            line = f.read()
+            smtp_username, smtp_password = line.split(':')
 
         # Login; we can't rely on being IP whitelisted.
         try:
@@ -706,9 +709,12 @@ def setup_cli_args():
     # - Require TLS encryption: yes
     global smtp
     tools.argparser.add_argument('--smtp',
-                                 nargs=4,
+                                 nargs=2,
                                  default=smtp,
-                                 help='SMTP server hostname, from addresses, login address, and login password')
+                                 help='SMTP server hostname, from addresses')
+    tools.argparser.add_argument('--smtp-auth-file',
+                                 required=True,
+                                 help='File containing SMTP AUTH username:password')
 
     global gapp_id
     tools.argparser.add_argument('--app-id',
@@ -757,8 +763,8 @@ def setup_cli_args():
     l = 0
     if args.smtp:
         l = len(args.smtp)
-    if l > 0 and l != 4:
-        log.error("Need exactly 4 arguments to --smtp: server from_addr login_addr login_pw")
+    if l > 0 and l != 2:
+        log.error("Need exactly 2 arguments to --smtp: server from_addr")
         exit(1)
 
     return args

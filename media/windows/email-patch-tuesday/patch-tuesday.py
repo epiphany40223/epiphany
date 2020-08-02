@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # Send a simple automated email.
@@ -23,6 +23,7 @@
 #
 
 import smtplib
+import argparse
 
 from email.message import EmailMessage
 
@@ -30,6 +31,17 @@ smtp_server = 'smtp-relay.gmail.com'
 smtp_from   = 'Epiphany reminder <no-reply@epiphanycatholicchurch.org>'
 smtp_to     = 'staff@epiphanycatholicchurch.org,itadmin@epiphanycatholicchurch.org'
 subject     = 'Epiphany patch Tuesday reminder'
+
+parser = argparse.ArgumentParser(description='Patch Tuesday email sender')
+parser.add_argument(f'--smtp-auth-file',
+                    required=True,
+                    help='File containing SMTP AUTH username:password for {smtp_server}')
+args = parser.parse_args()
+
+# This assumes that the file has a single line in the format of username:password.
+with open(args.smtp_auth_file) as f:
+    line = f.read()
+    smtp_username, smtp_password = line.split(':')
 
 body        = '''<h1>REMINDER!</h1>
 
@@ -57,6 +69,13 @@ Myrador</p>'''
 with smtplib.SMTP_SSL(host=smtp_server) as smtp:
     msg = EmailMessage()
     msg.set_content(body)
+
+    # Login; we can't rely on being IP whitelisted.
+    try:
+        smtp.login(smtp_username, smtp_password)
+    except Exception as e:
+        log.error(f'Error: failed to SMTP login: {e}')
+        exit(1)
 
     msg['From']    = smtp_from
     msg['To']      = smtp_to
