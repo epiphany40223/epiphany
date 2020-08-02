@@ -1,3 +1,7 @@
 mailman-*
 sync-mailman-logfile.txt*
 sync-google-group-logfile.txt*
+
+client_id.json
+user-credentials.json
+smtp-auth.txt
