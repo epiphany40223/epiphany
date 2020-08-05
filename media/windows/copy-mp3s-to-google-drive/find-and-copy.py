@@ -170,6 +170,18 @@ def send_mail(subject, message_body, html=False):
         if args.debug:
             smtp.set_debuglevel(2)
 
+        # This assumes that the file has a single line in the format of username:password.
+        with open(args.smtp_auth_file) as f:
+            line = f.read()
+            smtp_username, smtp_password = line.split(':')
+
+        # Login; we can't rely on being IP whitelisted.
+        try:
+            smtp.login(smtp_username, smtp_password)
+        except Exception as e:
+            log.error(f'Error: failed to SMTP login: {e}')
+            exit(1)
+
         msg = EmailMessage()
         msg.set_content(message_body)
         msg['Subject'] = subject
@@ -664,6 +676,9 @@ def add_cli_args():
                                  nargs=3,
                                  required=False,
                                  help='SMTP server hostname, to, and from addresses')
+    tools.argparser.add_argument('--smtp-auth-file',
+                                 required=True
+                                 help='File containing SMTP AUTH username:password')
 
     tools.argparser.add_argument('--data-dir',
                                  required=False,
