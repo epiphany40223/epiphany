@@ -1,4 +1,6 @@
-#!/bin/zsh
+#!/bin/bash
+
+set -euo pipefail
 
 orig=cookies.sqlite3
 copy=copy-cookies.sqlite3

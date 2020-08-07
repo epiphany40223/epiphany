@@ -2,7 +2,7 @@
 
 // Constants
 
-$filename = "/home/jsquyres/stewardship-2020-data/cookies.sqlite3";
+$filename = "/home/estewardship/stewardship-2021-data/cookies.sqlite3";
 $timeout = 30 * 24 * 60 * 60;
 $unrecognized_key_url = "unknown.php";
 $stale_key_url = "stale.php";
