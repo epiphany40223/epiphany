@@ -1,4 +1,6 @@
-# Stewardship 2020
+# Stewardship 2021
+
+Much of this is directly copied from the Stewardship 2020 folder.  Only some of it has been updated for Stewardship 2021 so far.
 
 ## Overall architecture
 
@@ -9,16 +11,26 @@ This is *not* a "canned" solution where you push a single button an
 all the magic happens -- it's a pretty manual process, and is
 hand-tweaked as needed.
 
-For the 2020 Stewardship campaign, the following schedule was used:
+For the 2021 Stewardship campaign, the following schedule was used:
 
-* Friday, September 27: initial emails sent
-* Tuesday, October 8: 1st reminder emails sent
-* Tuesday, October 15: 2nd reminder emails sent
-* Tuesday, October 22: 3rd reminder emails sent
-* Tuesday, October 29: 4th reminder emails sent
-* Friday, November 1: online form submissions closed, final reports
-  run, data distributed to ECC staff
-* Saturday, November 2: "thank you" emails sent
+* Aug 15/16: Will have final list of ministries
+* Aug 15/16 or 22/23: Parishioners get a full timeline of stewardship renewal events
+* Mon Aug 24: Do a trial run with Stewardship committee
+    * Let’s just do Stewardship -- not PPC/FAC/etc.
+* Aug 29/30: Overall drive start date:
+    * Prayerful reflection, etc.
+    * NOTE: Derby is Sep 5/6
+* Fri Sep 18: Send snail mail packets to people who don’t have email
+* Sat Sep 19: Send initial emails (before 5:30pm mass)
+* Sep 19/20: Ministry fair
+* Sep 26/27: Stewardship celebration
+* Tue 29 Sep: 1st reminder email
+* Tue 6 Oct: 2nd reminder email
+* Tue 13 Oct: 3rd reminder email
+* Tue 20 Oct: 4th reminder email
+* Thu 29 Oct: “Last call” reminder email -- "Electronic submission is open through Oct 31."
+* Mon 2 Nov: Turn off submission
+* ...after...: send "thank you" emails
 
 There are a few main scripts in this directory:
 
@@ -54,7 +66,7 @@ There were some "helper" scripts, too:
 There was an important outside-of-this-system element to the process,
 too: a good number of people submitted paper Stewardship cards (in
 addition to or instead of using the electronic process).  Any Family
-that submitted a paper card had their PDS Family status set to "2020
+that submitted a paper card had their PDS Family status set to "2021
 Stewardship".  This was done in a timely manner: e.g., if they
 submitted a paper card at mass on the weekend, they were entered in
 PDS on Monday (i.e., before the reminder emails were sent on Tuesday).
@@ -67,7 +79,7 @@ The PDS data is pretty much the same as it's always been: download the SQLite3 d
 
 ### Redirecting web site
 
-For Stewardship 2020, we setup a Digital Ocean Linux (Ubuntu 18.04) droplet at $5/mo.  The sole purpose of this web site is to convert the cookie links from parishioner emails to the Jotform URLs that will pre-populate all the forms out at Jotform.
+For Stewardship 2021, we setup a Digital Ocean Linux (Ubuntu 20.04) droplet at $5/mo.  The sole purpose of this web site is to convert the cookie links from parishioner emails to the Jotform URLs that will pre-populate all the forms out at Jotform.
 
 The redirecting PHP code is pretty darn simple:
 
@@ -81,7 +93,7 @@ The redirecting PHP code is pretty darn simple:
 
 There's very little decision-making capability in the PHP itself -- effectively, most decisions it makes are included in the SQLite3 database.  The intent is that the PHP is fairly simple / stupid.
 
-The Droplet is setup as Ubuntu 18.04 running Apache.  Its vhost is setup for `redirect.epiphanycatholicchurch.org`.  I used the LetsEncrypt.org `certbot` to setup SSL on the server, which setup a corresponding cron job to keep the certificates refreshed.  All obvious external URLs for the host are set to HTTP redirect to https://epiphanycatholicchurch.org/ (i.e., links that don't come from emails to parishioners).
+The Droplet is setup as Ubuntu 20.04 running Apache.  Its vhost is setup for `api.epiphanycatholicchurch.org`.  I used the LetsEncrypt.org `certbot` to setup SSL on the server, which setup a corresponding cron job to keep the certificates refreshed.  All obvious external URLs for the host are set to HTTP redirect to https://epiphanycatholicchurch.org/ (i.e., links that don't come from emails to parishioners).
 
 ## Initial email
 
@@ -89,12 +101,18 @@ Sample command line to send the initial email:
 
 ```
 ./make-and-send-emails.py \
+    --smtp-auth-file auth-file.txt \
     --email-content initial-email.html \
     --all \
     --cookie-db cookies.sqlite3 --append \
     |& tee out.txt
-scp cookies.sqlite3 redirect.epiphanycatholicchurch.org:stewardship-2020-data
+scp cookies.sqlite3 api.epiphanycatholicchurch.org:stewardship-2021-data
 ```
+
+The SMTP auth file contains a single username:password that
+authenticates to Google's SMTP relay service (it's *any* ECC Google
+account).  This allows us to send from any @ecc.org email address (not
+just the one that authenticated).
 
 The email is a file that was made from an email Jordan composed in Constant Contact and sent to me.  I extracted the raw HTML and saved it in the file.  I then tweaked the HTML a bit:
 
@@ -164,11 +182,11 @@ We show some read-only information at the top of the form:
 
 Then there were several more fields for input:
 
-- Your family's 2020 total ANNUAL pledge:
+- Your family's 2021 total ANNUAL pledge:
 
 If that value is greater than 0, we show additional input fields:
 
-- How would you like to fulfill your 2020 pledge?
+- How would you like to fulfill your 2021 pledge?
   - Radio buttons for: weekly, monthly, quarterly, one annual
 - I/we would like to GIVE by (choose all that apply):
   - Bank draft (online bill pay through my bank)
@@ -205,11 +223,12 @@ which PDS Families still needs to get a reminder email:
 
 ```
 ./make-and-send-emails.py \
+    --smtp-auth-file auth-file.txt \
     --email-content 1st-reminder-email.html \
     --unsubmitted \
     --cookie-db cookies.sqlite3 --append \
     |& tee out.txt
-scp cookies.sqlite3 redirect.epiphanycatholicchurch.org:stewardship-2020-data
+scp cookies.sqlite3 api.epiphanycatholicchurch.org:stewardship-2021-data
 ```
 
 Notes:
@@ -219,7 +238,7 @@ who:
     * have something that wasn't submitted (e.g., any Member in that
       Family doesn't have a Ministry submission, or there is no Family
       pledge submission), *AND*
-    * do not have the "2020 Stewardship" Family status set (i.e., they
+    * do not have the "2021 Stewardship" Family status set (i.e., they
       did not submit a paper stewardship card)
 1. The email file has a slightly different text message, and also uses `{member_links_reminders}` and `{family_pledge_link_reminder}`, which adds "(already submitted)" or "(net yet submitted)" annotations to each of the ministry and pledging links.
 2. The `--ministry-spreadsheet` and `--pledge-spreadsheet` options are necessary for:
@@ -274,7 +293,7 @@ campaign so far, including a PDF graph shows some progression lines.
 This report emits both a CSV and -- just for good measure -- a Google
 Sheet with the pledging data.
 
-For the 2020 campaign, it was only run once: at the end of the
+For the 2021 campaign, it was only run once: at the end of the
 campaign.  The ECC business manager successfully imported the CSV to
 PDS -- woo hoo!
 
@@ -283,11 +302,11 @@ Honestly, this report should probably be its own `.py` file (and have some of th
 ### Family status CSV report
 
 This report emits a CSV that is solely used to set the PDS Family
-status to "2020 Stewardship" of any PDS Family who submitted anything
+status to "2021 Stewardship" of any PDS Family who submitted anything
 via electronic stewardship at all (any Member Ministry update and/or
 Family Pledge form).
 
-For the 2020 campaign, it was only run once: at the end of the
+For the 2021 campaign, it was only run once: at the end of the
 campaign.  The ECC business manager successfully imported the CSV to
 PDS -- woo hoo!
 
@@ -330,7 +349,7 @@ This report emits 3 CSVs and Google Sheets:
       1. The Member is _not_ marked in PDS as "active" in a ministry, but
          the Member marked "Participate" on the form.
 
-This report was manually run twice during the 2020 campaign:
+This report was manually run twice during the 2021 campaign:
 
 1. Approximately halfway through the campaign (so that human reviews
 of the data could begin).
@@ -349,7 +368,7 @@ The `pledge-fullfillment-report.py` script emits a CSV containing:
 1. A column indicating whether a Family changed their envelope status or not (i.e., either starting envelopes or stopping envelopes).
 1. A column of keywords to add (these keywords will need to be changed each yet)
     * There are frequency keywords (weekly, monthly, quarterly, annual).  If the frequency changes, keywords will be denoted that they must be deleted -- but we don't think that PDS import will delete keywords.  These will need to be hand-entered in PDS.
-    * There are also mechanism keywords (credit card 2020, ACH 2020, ... etc.).  Since these are per-year keywords, there will never be any deletions.  Note that we allowed Families to indicate multiple mechanisms on the Jotform, so there may be multiple rows/2020 keywords to add for a single Family.
+    * There are also mechanism keywords (credit card 2021, ACH 2021, ... etc.).  Since these are per-year keywords, there will never be any deletions.  Note that we allowed Families to indicate multiple mechanisms on the Jotform, so there may be multiple rows/2021 keywords to add for a single Family.
 1. If Families typed something in the "Other" field, it will show up as an "OTHER" comment.  A human staff member will need to react to those -- they are clearly not for import.
 
 -------

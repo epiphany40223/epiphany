@@ -92,11 +92,11 @@ from constants import api_base_url
 ecc = '@epiphanycatholicchurch.org'
 
 # Comments report email
-comments_email_to = 'erin{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+comments_email_to = 'mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 comments_email_subject = 'Comments report'
 
 # Statistics report email
-statistics_email_to = 'erin{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+statistics_email_to = 'mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 statistics_email_subject = 'Statistics report'
 
 # Pledge results email
@@ -333,6 +333,18 @@ def comments_report(google, start, end, time_period, jotform_ministry, jotform_p
             msg['To'] = to
             msg.set_content('\n'.join(body))
             msg.replace_header('Content-Type', 'text/html')
+
+            # This assumes that the file has a single line in the format of username:password.
+            with open(args.smtp_auth_file) as f:
+                line = f.read()
+                smtp_username, smtp_password = line.split(':')
+
+            # Login; we can't rely on being IP whitelisted.
+            try:
+                smtp.login(smtp_username, smtp_password)
+            except Exception as e:
+                log.error(f'Error: failed to SMTP login: {e}')
+                exit(1)
 
             smtp.send_message(msg)
     except:
@@ -668,6 +680,18 @@ def statistics_report(end, pds_members, pds_families,
             msg.set_content('\n'.join(body))
             msg.replace_header('Content-Type', 'text/html')
 
+            # This assumes that the file has a single line in the format of username:password.
+            with open(args.smtp_auth_file) as f:
+                line = f.read()
+                smtp_username, smtp_password = line.split(':')
+
+            # Login; we can't rely on being IP whitelisted.
+            try:
+                smtp.login(smtp_username, smtp_password)
+            except Exception as e:
+                log.error(f'Error: failed to SMTP login: {e}')
+                exit(1)
+
             with open(graph_filename, "rb") as f:
                 csv_data = f.read()
             msg.add_attachment(csv_data, maintype='application', subtype='pdf',
@@ -794,6 +818,19 @@ def family_pledge_csv_report(args, google, start, end, time_period, pds_families
         log.info('Sending "{subject}" email to {to}'
                  .format(subject=subject, to=to))
         with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+
+            # This assumes that the file has a single line in the format of username:password.
+            with open(args.smtp_auth_file) as f:
+                line = f.read()
+                smtp_username, smtp_password = line.split(':')
+
+            # Login; we can't rely on being IP whitelisted.
+            try:
+                smtp.login(smtp_username, smtp_password)
+            except Exception as e:
+                log.error(f'Error: failed to SMTP login: {e}')
+                exit(1)
+
             msg = EmailMessage()
             msg['Subject'] = subject
             msg['From'] = smtp_from
@@ -1096,6 +1133,18 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
             msg.set_content('\n'.join(body))
             msg.replace_header('Content-Type', 'text/html')
 
+            # This assumes that the file has a single line in the format of username:password.
+            with open(args.smtp_auth_file) as f:
+                line = f.read()
+                smtp_username, smtp_password = line.split(':')
+
+            # Login; we can't rely on being IP whitelisted.
+            try:
+                smtp.login(smtp_username, smtp_password)
+            except Exception as e:
+                log.error(f'Error: failed to SMTP login: {e}')
+                exit(1)
+
             # If there were results, attach CSV files
             for group in groups:
                 if group['csv_filename']:
@@ -1192,6 +1241,18 @@ The same spreadsheet <a href="{url}">is also available as a Google Sheet</a>.</p
             msg.set_content('\n'.join(body))
             msg.replace_header('Content-Type', 'text/html')
 
+            # This assumes that the file has a single line in the format of username:password.
+            with open(args.smtp_auth_file) as f:
+                line = f.read()
+                smtp_username, smtp_password = line.split(':')
+
+            # Login; we can't rely on being IP whitelisted.
+            try:
+                smtp.login(smtp_username, smtp_password)
+            except Exception as e:
+                log.error(f'Error: failed to SMTP login: {e}')
+                exit(1)
+
             # If there were results, attach CSV files
             with open(csv_filename, 'rb') as f:
                 csv_data = f.read()
@@ -1278,6 +1339,18 @@ def thank_you_emails(args, google, start, end, time_period,
             msg.set_content(body)
             msg.replace_header('Content-Type', 'text/html')
 
+            # This assumes that the file has a single line in the format of username:password.
+            with open(args.smtp_auth_file) as f:
+                line = f.read()
+                smtp_username, smtp_password = line.split(':')
+
+            # Login; we can't rely on being IP whitelisted.
+            try:
+                smtp.login(smtp_username, smtp_password)
+            except Exception as e:
+                log.error(f'Error: failed to SMTP login: {e}')
+                exit(1)
+
             smtp.send_message(msg)
     except:
         print("==== Error with {email}".format(email=to))
@@ -1359,6 +1432,10 @@ def setup_args():
                                  const=True,
                                  help='If specified, run the comparison for all time (vs. running for the previous time period')
 
+    tools.argparser.add_argument('--smtp-auth-file',
+                                 required=True,
+                                 help='File containing SMTP AUTH username:password')
+
     global gapp_id
     tools.argparser.add_argument('--app-id',
                                  default=gapp_id,
@@ -1402,10 +1479,6 @@ def main():
             start = end - timedelta(days=3)
         else:
             start = end - timedelta(days=1)
-
-    # JMS
-    #start = datetime(year=2019, month=9, day=30)
-    #end   = datetime(year=2019, month=10, day=1)
 
     # No one wants to see the microseconds
     start = start - timedelta(microseconds=start.microsecond)
@@ -1462,10 +1535,10 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    #comments_report(google, start, end, time_period,
-    #                jotform_ministry_range, jotform_pledge_range, log)
-    #statistics_report(end, pds_members, pds_families,
-    #                  jotform_ministry_all, jotform_pledge_all, log)
+    comments_report(google, start, end, time_period,
+                    jotform_ministry_range, jotform_pledge_range, log)
+    statistics_report(end, pds_members, pds_families,
+                      jotform_ministry_all, jotform_pledge_all, log)
 
     # These reports were uncommented and run by hand upon demand.
     #family_pledge_csv_report(args, google, start, end, time_period,
@@ -1473,8 +1546,8 @@ def main():
     #family_status_csv_report(args, google, start, end, time_period,
     #                         pds_families, pds_members,
     #                         jotform_pledge_range, jotform_ministry_range, log)
-    member_ministry_csv_report(args, google, start, end, time_period,
-                               pds_members, jotform_ministry_range, log)
+    #member_ministry_csv_report(args, google, start, end, time_period,
+    #                           pds_members, jotform_ministry_range, log)
 
     # This report was not finished.  See the "Ideas for 2021" section
     # in README.md.  It should probably be finished and run every

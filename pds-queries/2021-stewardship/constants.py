@@ -3,25 +3,25 @@ import datetime
 
 # Overall title
 
-title = 'Stewardship 2020'
+title = 'Stewardship 2021'
 
 # Start and end dates for the stewardship year
 
-stewardship_begin_date = datetime.date(year=2020, month=1,  day=1)
-stewardship_end_date   = datetime.date(year=2020, month=12, day=31)
+stewardship_begin_date = datetime.date(year=2021, month=1,  day=1)
+stewardship_end_date   = datetime.date(year=2021, month=12, day=31)
 
 #--------------------------------------------------------------------------
 
 # SMTP / email basics
 
 smtp_server  = 'smtp-relay.gmail.com'
-smtp_from    = '"Epiphany Catholic Church" <stewardship2020@epiphanycatholicchurch.org>'
+smtp_from    = '"Epiphany Catholic Church" <stewardship2021@epiphanycatholicchurch.org>'
 
 #--------------------------------------------------------------------------
 
 # Already submitted PDS Family Status
 
-already_submitted_fam_status = '2020 Stewardship'
+already_submitted_fam_status = '2021 Stewardship'
 
 #--------------------------------------------------------------------------
 
@@ -29,8 +29,8 @@ already_submitted_fam_status = '2020 Stewardship'
 # Ubuntu and Apache and the PHP in the php subfolder (with free LetEncrypt SSL
 # certificates to make everything encrypted).
 
-email_image_url = 'https://redirect.epiphanycatholicchurch.org/stewardship-2020/stewardship-logo.png'
-api_base_url = 'https://redirect.epiphanycatholicchurch.org/stewardship-2020/?key='
+email_image_url = 'https://api.epiphanycatholicchurch.org/stewardship-2021/stewardship-logo.png'
+api_base_url = 'https://api.epiphanycatholicchurch.org/stewardship-2021/?key='
 
 #--------------------------------------------------------------------------
 
@@ -47,13 +47,13 @@ jotform_family_gfile_id = '1XEdlMXJvXstwfp8uENnBXykZaQIcozgOpcRZuzURt8c'
 # output files
 upload_team_drive_folder_id = '1yi_bqpRZS4RywnJ1TPP_BGYdi8tC7Frz'
 
-gsheet_editors = 'stewardship2020-workers@epiphanycatholicchurch.org'
+gsheet_editors = 'stewardship2021-workers@epiphanycatholicchurch.org'
 
 #--------------------------------------------------------------------------
 
 # For members who change their ministry data, start / end dates to use
 
-ministry_start_date = '11/01/2019'
+ministry_start_date = '11/01/2020'
 ministry_end_date   = ministry_start_date
 
 #--------------------------------------------------------------------------
@@ -229,11 +229,11 @@ jotform_family_fields = [
     'EnvId',
     'fid',
     'Names',
-    '2019 pledge',
-    'CY2019 amount',
     '2020 pledge',
-    '2020 frequency',
-    '2020 mechanism',
+    'CY2020 amount',
+    '2021 pledge',
+    '2021 frequency',
+    '2021 mechanism',
     'Comments',
     'IP',
     'JotformSubmissionID',

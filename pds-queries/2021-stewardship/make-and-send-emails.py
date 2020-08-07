@@ -440,6 +440,18 @@ def send_family_email(message_body, to_addresses,
                 msg.set_content(message_body)
                 msg.replace_header('Content-Type', 'text/html')
 
+                # This assumes that the file has a single line in the format of username:password.
+                with open(args.smtp_auth_file) as f:
+                    line = f.read()
+                    smtp_username, smtp_password = line.split(':')
+
+                # Login; we can't rely on being IP whitelisted.
+                try:
+                    smtp.login(smtp_username, smtp_password)
+                except Exception as e:
+                    log.error(f'Error: failed to SMTP login: {e}')
+                    exit(1)
+
                 smtp.send_message(msg)
         except:
             log.error("==== Error with {email}"
@@ -826,6 +838,10 @@ def setup_args():
     tools.argparser.add_argument('--email-content',
                                 required=True,
                                 help='File containing the templated content of the email to be sent')
+
+    tools.argparser.add_argument('--smtp-auth-file',
+                                 required=True,
+                                 help='File containing SMTP AUTH username:password')
 
     # These options are for Google Authentication
     global gapp_id
