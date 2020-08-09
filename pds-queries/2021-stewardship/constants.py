@@ -30,7 +30,7 @@ already_submitted_fam_status = '2021 Stewardship'
 # certificates to make everything encrypted).
 
 email_image_url = 'https://api.epiphanycatholicchurch.org/stewardship-2021/stewardship-logo.png'
-api_base_url = 'https://api.epiphanycatholicchurch.org/stewardship-2021/?key='
+api_base_url    = 'https://api.epiphanycatholicchurch.org/stewardship-2021/?key='
 
 #--------------------------------------------------------------------------
 
@@ -40,8 +40,8 @@ guser_cred_file = 'user-credentials.json'
 
 # Copied from the Google Spreadsheets where Jotform is writing its
 # results for the 2 forms
-jotform_member_gfile_id = '1xaML3DvqtQHXvP4thbAUvs1e1_fIRs3RZSFvFtkeLAU'
-jotform_family_gfile_id = '1XEdlMXJvXstwfp8uENnBXykZaQIcozgOpcRZuzURt8c'
+jotform_member_gfile_id = '185Rsmy9DvClHuxa-UcyonyALhLIhjPxtuxun2pn-RWM'
+jotform_family_gfile_id = '1kOL7l2kiNaO-VC8MmjtdT6ICAEuSlkn-ilWAH31gCiU'
 
 # Team Drive folder where to upload the CSV/spreadsheet comparison
 # output files

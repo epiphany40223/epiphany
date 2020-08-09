@@ -60,7 +60,7 @@ def _escape(s):
     return ret
 
 # These fields are in the highly specific to the Jotform!
-family_form_url = 'https://form.jotform.com/91945543203153'
+family_form_url = 'https://form.jotform.com/201894617922159'
 family_fields = {
     # Parish key / envelope number
     "parishKey"        : lambda fam: _pkey(fam['ParKey']),
@@ -81,7 +81,7 @@ family_fields = {
 }
 
 # These fields are in the highly specific to the Jotform!
-member_form_url = 'https://form.jotform.com/91944902477164'
+member_form_url = 'https://form.jotform.com/201893690854163'
 member_fields = {
     # Parish key / envelope number
     "parishKey"        : lambda mem: _pkey(mem['family']['ParKey']),
@@ -407,9 +407,9 @@ def send_family_email(message_body, to_addresses,
 
     #---------------------------------------------------------------------
     # JMS DEBUG
-    #was = smtp_to
-    #smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
-    #log.info("Sending to (OVERRIDE): {to} (was {was})".format(to=smtp_to, was=was))
+    was = smtp_to
+    smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
+    log.info("Sending to (OVERRIDE): {to} (was {was})".format(to=smtp_to, was=was))
     #---------------------------------------------------------------------
 
     if log:
