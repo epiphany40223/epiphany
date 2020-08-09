@@ -20,7 +20,7 @@ email=email-initial.html
         --unsubmitted \
         --cookie-db cookies.sqlite3 \
         --append \
-        |& tee out.txt
+        2>&1 | tee out.txt
 
 echo "========================================================="
 echo "Started at:  $start"
