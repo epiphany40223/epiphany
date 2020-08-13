@@ -307,6 +307,7 @@ def member_name_and_type(member):
 
     return name
 
+# JMS2021: change to accept a family (instead of family_member_data), and iterate through family['members']...?
 def family_member_unique_names(family_member_data, value_func):
     family_members = dict()
     for member_data in family_member_data:
@@ -318,11 +319,13 @@ def family_member_unique_names(family_member_data, value_func):
             return None
 
         # Otherwise, save this name
+        # JMS2021: probably just save the member here
         family_members[name] = member_data
 
     return family_members
 
 def send_family_email(message_body, to_addresses,
+                      # JMS20201: per below, family_member_data probably isn't needed any more
                       family, family_pledge_url, family_member_data,
                       ministry_submissions, pledge_submissions,
                       log=None):
@@ -337,6 +340,7 @@ def send_family_email(message_body, to_addresses,
     #---------------------------------------------------------------------
     # Make a sorted list of member names in the family
     # Some families have multiple Members with the same name!
+    # JMS2021: instead of using family_member_data, perhaps pass family['members']...?
     family_members = family_member_unique_names(family_member_data,
             lambda member: member['email_name'])
     if family_members is None:
@@ -361,20 +365,26 @@ def send_family_email(message_body, to_addresses,
     member_links = ''
     member_links_reminders = ''
 
+    # JMS2021 This loop will now make the Family URL for the ministry form.  It will start the URL with the fields on the first page (i.e., the hidden data), and then we loop through all the Members in the Family (in the sorted order) and append to the URL with the values for their fields.
     for name in sorted(family_members):
+        # JMS2021: per above, family_members[name] will likely just be the member (no need to further de-reference it)
         member_data = family_members[name]
         m           = member_data['member']
+        # JMS2021: Here is the point where we add to the existing Family ministry URL for this specific member.  Call a function to generate the URL to append to the existing family ministry form URL.  You'll need to pass it the Member and the list of field names for this page of the Jotform.  E.g., if this is the 1st Member, pass a list with the field names from the "Member 1" page on the Jotform.  If this is the 2nd Member, pass a list with the field names from the "Member 2" page on the Jotform.  ...etc.  Then append the resulting URL to the existing family ministry form URL.
         url         = member_data['url']
 
         to_names[m['last']] = True
 
         # This HTML/CSS format taken from Jordan's email source code
+        # JMS2021: probably change this variable name from "member_links" to "family_ministry_link", or something like that.
         member_links += ('<li {style}><span {style}><a href="{url}">{name}</a></span></li>'
                          .format(url=url, name=name, style=regular_style))
 
         # Has this one already been submitted?
+        # JMS2021: Update this log statement to be accurate
         log.debug("Making member link for MID {mid}; ministry submissions"
                     .format(mid=m['MemRecNum']))
+        # JMS2021: Update this -- we'll be saving ministry submissions by FID now, not MID.
         if m['MemRecNum'] in ministry_submissions:
             additional = ('<span {style}>(already submitted)</span>'
                             .format(style=regular_style))
@@ -390,7 +400,7 @@ def send_family_email(message_body, to_addresses,
     # Make the Family pledge link
     # (base it off the last Member we traversed in the loop above -- they're all
     # in the same Family, so this is ok)
-    family_pledge_link = ('<a href="{url}">2020 Financial Stewardship Covenant</a>'
+    family_pledge_link = ('<a href="{url}">2021 Financial Stewardship Covenant</a>'
                         .format(url=family_pledge_url))
     fid = m['FamRecNum']
     if fid in pledge_submissions:
@@ -399,7 +409,7 @@ def send_family_email(message_body, to_addresses,
     else:
         additional = ('<span {style}>(not yet submitted)</span>'
                         .format(style=red_style))
-    family_pledge_link_reminder = ('<a href="{url}">2020 Financial Stewardship Covenant</a><br>{additional}'
+    family_pledge_link_reminder = ('<a href="{url}">2021 Financial Stewardship Covenant</a><br>{additional}'
                                     .format(url=family_pledge_url,
                                     additional=additional))
 
@@ -479,6 +489,7 @@ def _send_family_emails(message_body, families,
         first = True
 
         to_emails = list()
+        # JMS2021: per below, family_member_data likely isn't needed any more
         family_member_data = list()
         for m in f['members']:
             if helpers.member_is_hoh_or_spouse(m):
@@ -491,8 +502,10 @@ def _send_family_emails(message_body, families,
                 fam_pledge_url = make_family_form_url(f, cookies, log)
             log.info("    Member: {mem}".format(mem=m['Name']))
 
+            # JMS20201: We no longer need to make per-Member URLs.  Probably remove this...?
             mem_url = make_member_form_url(m, cookies, log)
 
+            # JMS20201: Since we're no longer making per-Member URLs, this list likely isn't needed any more (because we pass the family to send_family_email(), and the family already has a list of Members on it)
             family_member_data.append({
                 "member" : m,
                 "url"    : mem_url,
@@ -509,6 +522,7 @@ def _send_family_emails(message_body, families,
         if len(to_emails) > 0:
             send_count = send_family_email(message_body,
                                            to_emails, f, fam_pledge_url,
+                                           # JMS2021: per above, family_member_data likely isn't needed any more
                                            family_member_data,
                                            ministry_submissions,
                                            pledge_submissions,

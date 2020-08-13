@@ -74,6 +74,7 @@ jotform_ministry_groups['formationalMinistries'] = 'Formational'
 
 # NOTE: The 1st level keys MUST of jotform_member_ministries match the
 # keys of jotform_ministry_groups.
+# JMS2021: these will almost certainly need to be updated once we get the changes from Don.
 jotform_member_ministries = {
     'parishLeadership' : [
         '100-Parish Pastoral Council',
@@ -205,6 +206,8 @@ jotform_member_ministries = {
 
 # These are the fields in the Jotform ministry results spreadsheet
 # The ordering of these fields is critical, although the names are not
+# JMS2021: these need to be updated for the 2021 ministry form.
+# JMS2021: might want to rename this variable from jotform_member_fields to jotform_ministry_fields (since it's all Members in a Family now).  These fields are basically the ones on page 1 of the (new) all-members-in-the-family Jotform.
 jotform_member_fields = [
     'SubmitDate',
     'EnvId',
@@ -213,10 +216,12 @@ jotform_member_fields = [
     'DateCreated',
 ]
 
+# JMS2021: I think we want to split this up a little differently this year.  I.e., have a list with the field names on the first page of the Family ministry jotform.  Then have a list for each Member page on that Jotform (i.e., one list is all the fields for a single Member page) -- then put all of those Member field lists into a list.  So we'll have a list of lists.
 for group in jotform_ministry_groups:
     for ministry in jotform_member_ministries[group]:
         jotform_member_fields.append(ministry)
 
+# JMS2021: finally, we add the Comments/IP/JotformsubmissionID/EditLink fields.  The comments is our comments field; the other three are built-in from Jotform itself.
 jotform_member_fields.append('Comments')
 jotform_member_fields.append('IP')
 jotform_member_fields.append('JotformSubmissionID')
@@ -224,6 +229,7 @@ jotform_member_fields.append('EditLink')
 
 # These are the fields in the Jotform pledge results spreadsheet
 # The ordering of these fields is critical, although the names are not
+# JMS2021: might want to rename this (and everywhere it is used in make_and_send) to jotform_pledge_fields.
 jotform_family_fields = [
     'SubmitDate',
     'EnvId',
