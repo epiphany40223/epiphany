@@ -39,7 +39,7 @@ smtp_sasl_auth_enable = yes
 # path to password map file
 # Format of the file is:
 #
-# [smtp.gmail.com]:587  konica-minolta@epiphanycatholicchurch.org:PASSWORD
+# [smtp-relay.gmail.com]:587  konica-minolta@epiphanycatholicchurch.org:PASSWORD
 #
 # NOTE: The PASSWORD may need to be an app-specific password if the
 # account uses 2FA.
@@ -70,7 +70,7 @@ alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
 mydestination = $myhostname, media-o5070.localdomain, localhost.localdomain, , localhost
 # Epiphany / ECC: Relay to gmail
-relayhost = [smtp.gmail.com]:587
+relayhost = [smtp-relay.gmail.com]:587
 # Epiphany / ECC: explicitly add in epiphanycatholicchurch.org
 relay_domains = epiphanycatholicchurch.org
 # Epiphany / ECC: explicitly state that there are no local recipient maps
