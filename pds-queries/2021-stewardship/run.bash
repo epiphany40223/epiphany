@@ -16,8 +16,9 @@ echo "========================================================="
 email=email-initial.html
 
 ./make-and-send-emails.py \
+        --smtp-auth smtp-auth.txt \
         --email-content $email \
-        --unsubmitted \
+        --email jeff@squyres.com \
         --cookie-db cookies.sqlite3 \
         --append \
         2>&1 | tee out.txt
