@@ -303,7 +303,7 @@ def member_name_and_type(member):
     name = member['email_name']
     key = 'type'
     if key in member and member[key] != '':
-        name += ' ({value})'.format(value=member[key])
+        name += f' ({member[key]})'
 
     return name
 
@@ -952,10 +952,10 @@ def main():
 
     # Open the cookies DB
     if not args.append or not os.path.exists(args.cookie_db):
-        fn = cookiedb_create
+        func = cookiedb_create
     else:
-        fn = cookiedb_open
-    cookies = fn(args.cookie_db)
+        func = cookiedb_open
+    cookies = func(args.cookie_db)
 
     # Send the desired emails
     if args.all:
@@ -972,8 +972,8 @@ def main():
 
     # Record who/what we sent
     ts = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
-    write_csv(sent,     'emails-sent-{ts}.csv'.format(ts=ts),     log=log)
-    write_csv(not_sent, 'emails-not-sent-{ts}.csv'.format(ts=ts), log=log)
+    write_csv(sent,     f'emails-sent-{ts}.csv',     log=log)
+    write_csv(not_sent, f'emails-not-sent-{ts}.csv', log=log)
 
     # Close the databases
     cookies.connection.close()
