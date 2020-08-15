@@ -838,11 +838,6 @@ def main():
             'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
             'notify'     : 'bookkeeper{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
-        {
-            'ministries' : [ '101-Long Range Plan Team' ],
-            'ggroup'     : 'long-range-planning{ecc}'.format(ecc=ecc),
-            'notify'     : 'business-manager{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
 
         #############################
 
@@ -918,14 +913,8 @@ def main():
             'ggroup'     : 'lectors{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
-#        {
-#            'ministries' : [ '41-Epiphany Youth Band'],
-#            'keywords'   : [ 'EYB email list' ],
-#            'ggroup'     : 'eyb{ecc}'.format(ecc=ecc),
-#            'notify'     : 'linda{ecc},jimd{ecc},faith@feetwashers.org,pds-google-sync{ecc}'.format(ecc=ecc),
-#        },
         {
-            'ministries' : [ '506-Prayer Chain Ministry' ],
+            'ministries' : [ '321-Prayer Chain Ministry' ],
             'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
@@ -986,13 +975,8 @@ def main():
             'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
         {
-            'ministries' : [ '810-Childrens Form. Workng Grp' ],
-            'ggroup'     : 'childrens-formation-working-group{ecc}'.format(ecc=ecc),
-            'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '811-Family Form. Working Group' ],
-            'ggroup'     : 'family-formation-working-group{ecc}'.format(ecc=ecc),
+            'ministries' : [ "811-Family&Children's WorkGrp" ],
+            'ggroup'     : 'family-and-childrens-working-group{ecc}'.format(ecc=ecc),
             'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
         {
@@ -1030,11 +1014,6 @@ def main():
         {
             'ministries' : [ '600-Men of Epiphany' ],
             'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
-            'notify'     : 'polly{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '702-Epiphany Backside Ministry' ],
-            'ggroup'     : 'ebm{ecc}'.format(ecc=ecc),
             'notify'     : 'polly{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
