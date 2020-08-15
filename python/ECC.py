@@ -7,6 +7,9 @@
 # pip3 install --upgrade pytz
 #
 
+import os
+import sys
+import platform
 import logging
 import logging.handlers
 
@@ -25,7 +28,7 @@ def diediedie(msg):
 
 #-------------------------------------------------------------------
 
-def setup_logging(info=True, debug=False, logfile=None,
+def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
                   log_millisecond=True):
     level=logging.ERROR
 
@@ -53,6 +56,22 @@ def setup_logging(info=True, debug=False, logfile=None,
                                                  backupCount=50)
         s.setFormatter(f)
         log.addHandler(s)
+
+    # If on a Linux system with journald running, also emit to syslog
+    # (which will end up at the journald).  Note: the journald may not
+    # be running in a WSL environment.
+    dev_log = '/dev/log'
+    if platform.system() == "Linux" and os.path.exists(dev_log):
+        syslog = logging.handlers.SysLogHandler(address=dev_log)
+
+        # For the syslog, we need to get the basename of the
+        # python script we are running (otherwise, it'll default to
+        # "python" or "python3" or the like).
+        b = os.path.basename(name)
+        f = logging.Formatter(f'{b}: %(message)s')
+        syslog.setFormatter(f)
+
+        log.addHandler(syslog)
 
     log.info('Starting')
 
