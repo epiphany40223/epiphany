@@ -677,7 +677,7 @@ def add_cli_args():
                                  required=False,
                                  help='SMTP server hostname, to, and from addresses')
     tools.argparser.add_argument('--smtp-auth-file',
-                                 required=True
+                                 required=True,
                                  help='File containing SMTP AUTH username:password')
 
     tools.argparser.add_argument('--data-dir',
