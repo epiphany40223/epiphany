@@ -78,14 +78,16 @@ jotform_ministry_groups['formationalMinistries'] = 'Formational'
 jotform_member_ministries = {
     'parishLeadership' : [
         '100-Parish Pastoral Council',
-        '101-Long Range Plan Team',
+        # 2021 deleted 101
         '102-Finance Advisory Council',
         '103-Worship Committee',
         '104-Stewardship & E Committee',
-        '105-Youth Ministry Leadership',
+        # 2021 deleted 105
         '106-Community Life Committee',
         '107-Social Resp Steering Comm',
         '108-Formation Team',
+        # 2021 new 109
+        '109-Prayer Ministry Leadership',
     ],
     'administrationMinistries67' : [
         '200-Audit Committee',
@@ -139,17 +141,23 @@ jotform_member_ministries = {
             '318C-Lector Ministry 11:30A',
         ],
         '319-Liturgical Dance Ministry',
-        '320-Prayer Ministry Support',
+        # 2021 delete 320
+        # 2021 new 321
+        '321-Prayer Chain Ministry',
     ],
     'stewardshipamp' : [
         '400-Communications Committee',
         '401-Epiphany Companions',
         '402-New Members Coffee',
-        '403-Small Prayer Groups',
+        # 2021 delete 403
         '404-Welcome Desk',
         '405-Parish Mission Plan Team',
-        '406-Evangelization Working Grp',
-        '407-Stewardship Working Grp',
+        # 2021 rename 406
+        '406-Evangelization Team',
+        # 2021 rename 407
+        '407-Stewardship Team',
+        # 2021 new 408
+        '408-Livestream Team Ministry',
     ],
     'helpingamp' : [
         '500-BereavementReceptionSupprt',
@@ -158,9 +166,13 @@ jotform_member_ministries = {
         '503-Childcare Ministry: Adult',
         '504-DivorceCare',
         '505-Healing Blanket Ministry',
-        '506-Prayer Chain Ministry',
+        # 2021 delete 506
         '507-Grief Support Team',
         '508-Messages of Hope Ministry',
+        # 2021 new 513
+        '513-Care of Sick: Transport',
+        # 2021 new 515
+        '515-Childcare Ministry: Teen',
     ],
     'socialamp' : [
         '600-Men of Epiphany',
@@ -168,17 +180,25 @@ jotform_member_ministries = {
         '602-Singles Explore Life (SEL)',
         '603-Soup Supper Ministry',
         '604-Wednesdays for Women',
-        '605- Sunday Morning Coffee',
+        '605-Sunday Morning Coffee',
         '606-Kitchen Volunteer Ministry',
-        '607-Easter Egg Plan Team',
-        '608-Memorial Day Plan Team',
-        '609-Trunk or Treat Plan Team',
-        '610-Feast of Epiphany PlanTeam',
+        # 2021 rename 607
+        '607-Easter Egg Plan Team 2021',
+        # 2021 rename 608
+        '608-MemorialDayPlanTeam 2021',
+        # 2021 rename 609
+        '609-Octoberfest Plan Team 2021',
+        # 2021 rename 610
+        "610-FeastOfEpiphanyPlanTeam'22",
+        # 2021 new 611
+        '611-EpiphanyOutreachFellowship',
+        # 2021 new 612
+        '612-JubileePictorialDirectory',
     ],
     'socialResponsibility' : [
         '700-Advocates for Common Good',
         '701-C.L.O.U.T./Justice Network',
-        '702-Epiphany Backside Ministry',
+        # 2021 delete 702
         '703-Eyeglass Ministry',
         '704-Habitat for Humanity',
         '705-Hunger & Poverty Ministry',
@@ -186,21 +206,32 @@ jotform_member_ministries = {
         '707-St. Vincent DePaul',
         '708-Ten Percent Committee',
         '709-Twinning Committee:Chiapas',
+        # 2021 new 710
+        '710-Environmental Concerns',
     ],
     'formationalMinistries' : [
         '800-ChildrenFormationCatechist',
-        '801-Confirmation Prep Team',
+        # 2021 rename 801
+        '801-Confirmation Adult Mentor',
         '802-GathTheChildren Catechist',
-        '803-Youth Ministry Adult Leader',
+        # 2021 rename 803
+        '803-Youth Ministry Adult Mentor',
         '804-Hispanic Ministry Team',
         '805-Monday Adult Bible Study',
         '806-Scripture Sharing Group',
         '807-RCIA Team',
         '808-Young Adult Ministry',
         '809-Sunday Adult Form. Spanish',
-        '810-Childrens Form. Workng Grp',
-        '811-Family Form. Working Group',
+        # 2021 delete 810
+        # 2021 rename 811
+        "811-Family&Children's WorkGrp",
         '812-Adult Form. Working Group',
+        # 2021 new 813
+        '813-Visual Faith Group',
+        # 2021 new 815
+        '815-Baptismal Prep Ministers',
+        # 2021 new 816
+        '816-Marriage Prep Ministers',
     ],
 }
 
