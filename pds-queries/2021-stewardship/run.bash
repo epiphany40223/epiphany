@@ -13,12 +13,24 @@ echo "========================================================="
 echo "Starting at: $start"
 echo "========================================================="
 
-email=email-initial.html
+email_file=email-initial.html
+#email_file=email-1st-reminder.html
+
+#email_addr=jeff@squyres.com
+email_addr=jsquyres@epiphanycatholicchurch.org
+filter="--email $email_addr"
+
+# JMS Send them all!
+#filter="--all"
+
+#email_file=email-test.html
+#env_ids_file=id.txt
+#filter="--env-id-file $env_ids_file"
 
 ./make-and-send-emails.py \
         --smtp-auth smtp-auth.txt \
-        --email-content $email \
-        --email jeff@squyres.com \
+        --email-content $email_file \
+        $filter \
         --cookie-db cookies.sqlite3 \
         --append \
         2>&1 | tee out.txt

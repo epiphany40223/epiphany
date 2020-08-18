@@ -58,7 +58,7 @@ def _normalize_boolean(item, src, dest=None) -> None:
 
     if src not in item:
         item[dest] = False
-    elif item[src] == '' or item[src] == 0:
+    elif item[src] == '' or item[src] == 0 or not item[src]:
         item[dest] = False
         if src != dest:
             del item[src]
@@ -91,6 +91,67 @@ def _normalize_date(item):
 
 #-----------------------------------------------------------------------------
 
+# Compute a salutation for the Head of Household ("HoH" and spouse) for each
+# familiy.  PDS allows there to be multiple HoHs and multiple spouse Members in
+# any given Family, so be sure to account for that.
+#
+# Make the salutation be of the form:
+#
+# first/nickname [and first/nickname [...]] last_name [and first/nickname [and first/nickname [...]] last_name [...]
+#
+# Examples:
+#
+# - Andrew and Betty Smith
+# - Andrew Smith and Betty Johnson
+# - Andrew and Betty Smith and Joseph Johnson
+# - Andrew and Betty Smith and Joseph and Geraldine Johnson
+#
+def _compute_family_hoh_and_spouse_salutations(families, log):
+    def _add(last_names, member):
+        last = member['last']
+        if last not in last_names:
+            last_names[last] = list()
+        last_names[last].append(member)
+
+    #-----------------------------------------------------------
+
+    for fid in sorted(families.keys()):
+        family     = families[fid]
+
+        last_names = dict()
+        hoh        = list()
+        spouses    = list()
+
+        for member in family['members']:
+            last = member['last']
+
+            if 'Head' in member['type']:
+                hoh.append(member)
+                _add(last_names, member)
+            if 'Spouse' in member['type']:
+                spouses.append(member)
+                _add(last_names, member)
+
+        salutation = ''
+        for last_name in sorted(last_names.keys()):
+            first_names = list()
+            for member in last_names[last_name]:
+                if 'nickname' in member and member['nickname'] is not None:
+                    first_names.append(member['nickname'])
+                elif member['first'] is not None:
+                    first_names.append(member['first'])
+                else:
+                    first_names.append("***UNKNOWN***")
+                    log.error("Unknown first name")
+
+            if len(salutation) > 0:
+                salutation += ' and '
+            salutation += f"{' and '.join(first_names)} {last_name}"
+
+        family['hoh_and_spouse_salutation'] = salutation
+
+#-----------------------------------------------------------------------------
+
 def _load_families(pds, columns=None,
                    active_only=True, log=None):
     db_num = _get_db_num()
@@ -108,6 +169,7 @@ def _load_families(pds, columns=None,
     columns.append('PictureFile')
     columns.append('EnvelopeUser')
     columns.append('Visitor')
+    columns.append('SendNoMail')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
@@ -123,8 +185,8 @@ def _load_families(pds, columns=None,
                               where=where)
 
     for f in families.values():
-        _normalize_boolean(f, src='PDSInactive{n}'.format(n=db_num),
-                    dest="Inactive")
+        _normalize_boolean(f, src=f'PDSInactive{db_num}', dest="Inactive")
+        _normalize_boolean(f, src='SendNoMail')
         _normalize_filename(f, src='PictureFile')
 
     return families
@@ -170,8 +232,7 @@ def _load_members(pds, columns=None,
 
     for m in members.values():
         _normalize_boolean(m, src='Deceased')
-        _normalize_boolean(m, src='PDSInactive{n}'.format(n=db_num),
-                    dest="Inactive")
+        _normalize_boolean(m, src=f'PDSInactive{db_num}', dest="Inactive")
         _normalize_filename(m, src='PictureFile')
 
     return members
@@ -208,7 +269,7 @@ def _delete_non_parishioners(families, members):
     # Look for family ParKey >= 10,000
     for fid, f in families.items():
         parkey = int(f['ParKey'])
-        if parkey >= 10000 or f['Visitor']:
+        if parkey >= 9000 or f['Visitor']:
             f = families[fid]
             for m in f['members']:
                 mid = m['MemRecNum']
@@ -959,6 +1020,9 @@ def load_families_and_members(filename=None, pds=None,
     _link_family_funds(funds, fund_periods, fund_activities,
                        families, fam_funds, fam_fund_rates, fam_fund_history,
                        log)
+
+    # Compute family HoH+Spouse salutations
+    _compute_family_hoh_and_spouse_salutations(families, log)
 
     return pds, families, members
 

@@ -27,15 +27,28 @@ def compute_funding_sum(year, family):
 ##############################################################################
 
 def main():
-    log = ECC.setup_logging(debug=True)
+    log = ECC.setup_logging(debug=False)
 
     (pds, families,
      members) = PDSChurch.load_families_and_members(filename='pdschurch.sqlite3',
                                                     log=log)
 
+    #num_fam = len(families)
+    #num_mem = len(members)
+    #log.info(f"There are {num_fam} families and {num_mem} members")
+    #exit(0)
+
+    #bill_carlisle = 117745
+    #pprint(members[bill_carlisle])
+    #exit(0)
+
     # JMS debug
     jeff_squyres = 119356
     pprint(members[jeff_squyres])
+    exit(0)
+
+    peariso_family = 205632
+    pprint(families[peariso_family])
     exit(0)
 
     # JMS debug

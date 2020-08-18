@@ -30,14 +30,13 @@ from email.message import EmailMessage
 
 #--------------------------------------------------------------------------
 
-from constants import jotform_member_ministries
 from constants import already_submitted_fam_status
 
 from constants import gapp_id
 from constants import guser_cred_file
-from constants import jotform_member_gfile_id
-from constants import jotform_family_gfile_id
+from constants import jotform_gsheet_gfile_id
 
+from constants import stewardship_year
 from constants import title
 
 from constants import smtp_server
@@ -48,130 +47,32 @@ smtp_subject = 'Epiphany ' + title
 from constants import email_image_url
 from constants import api_base_url
 
+from constants import jotform
+
+from constants import MINISTRY_SQL_TYPE
+from constants import PLEDGE_SQL_TYPE
+
+from constants import COL_AM_INVOLVED
+from constants import COL_NOT_INVOLVED
+
+from constants import MAX_PDS_FAMILY_MEMBER_NUM
+
 #--------------------------------------------------------------------------
 
 # JMS Kinda yukky that "args" is global
 args = None
 
-#--------------------------------------------------------------------------
-
-def _escape(s):
-    ret = s.replace('\"', '\\"')
-    return ret
-
-# These fields are in the highly specific to the Jotform!
-family_form_url = 'https://form.jotform.com/201894617922159'
-family_fields = {
-    # Parish key / envelope number
-    "parishKey"        : lambda fam: _pkey(fam['ParKey']),
-
-    # Member ID
-    "fid"              : lambda fam: fam['FamRecNum'],
-
-    # Family name
-    "names"            : lambda fam: fam['calculated']['household_name'] if 'calculated' in fam else fam['MailingName'],
-
-    # Family annual pledge for 2019
-    # "%24" is "$"
-    "forYour"          : lambda fam: "%24{val}".format(val=fam['calculated']['pledged']) if 'calculated' in fam else "%240",
-
-    # Family contributed so far in CY2019
-    # "%24" is "$"
-    "forYour83"        : lambda fam: "%24{val}".format(val=fam['calculated']['contributed']) if 'calculated' in fam else "%240",
-}
-
-# These fields are in the highly specific to the Jotform!
-member_form_url = 'https://form.jotform.com/201893690854163'
-member_fields = {
-    # Parish key / envelope number
-    "parishKey"        : lambda mem: _pkey(mem['family']['ParKey']),
-
-    # Member ID
-    "mid"              : lambda mem: mem['MemRecNum'],
-
-    # Name
-    "name"             : lambda mem: _escape(mem['full_name']),
-
-    # This data last updated...
-    "thisData"         : lambda fam: last_updated,
-}
-
 ###########################################################################
 
-def _pkey(env_id):
-    return "' {0}".format(str(env_id).strip())
-
-def _mem_value(key, m):
-    if key in m:
-        return m[key]
-    else:
-        return None
-
-def _mem_marital_status(mem):
-    value = _mem_value('marital_status', mem)
-    if value:
-        return value
-    else:
-        return 'Single'
-
-def _mem_cell_phone(mem):
-    if 'phones' not in mem:
-        return ''
-
-    # Be deterministic in ordering
-    pids = sorted(mem['phones'])
-    for pid in pids:
-        phone = mem['phones'][pid]
-        if phone['type'] == 'Cell':
-            return phone['number']
-
-    return ''
-
-# PDS dates are yyyy-mm-dd; Jotform breaks this into 3 fields
-def _make_date(val, key):
-    if not val:
-        return None
-
-    result = re.match('(\d{4})-(\d{2})-(\d{2})', val)
-    year   = result.group(1)
-    month  = result.group(2)
-    day    = result.group(3)
-
-    dates = {
-        'month' : month,
-        'day'   : day,
-        'year'  : year,
-    }
-    return dates[key]
-
-###########################################################################
-
-def _make_url(base_url, fields, thing, cookies, suffix=None, log=None):
-    url = base_url + "?"
-
-    for html_id in fields:
-        func = fields[html_id]
-        value = func(thing)
-        if value is not None:
-            url += "&{id}={value}".format(id=html_id, value=value)
-
-    if suffix:
-        url += '&' + suffix
-
-    # Is this a family or a member?
-    key = 'MemRecNum'
-    if key in thing:
-        uid = 'm{mid}'.format(mid=thing[key])
-    else:
-        uid = 'f{fid}'.format(fid=thing['FamRecNum'])
-
+# Returns the redirect URL
+def insert_url_cookie(uid, type, url, cookies, log=None):
     # Insert the URL in the cookies database
-    cookie = uuid.uuid4()
+    cookie      = uuid.uuid4()
     url_escaped = url.replace("'", "''")
-    query = ("INSERT INTO cookies "
-             "(cookie,uid,url,creation_timestamp) "
-             "VALUES ('{cookie}','{uid}','{url}',{ts});"
-             .format(cookie=cookie, uid=uid, url=url_escaped,
+    query       = ("INSERT INTO cookies "
+             "(cookie,type,uid,url,creation_timestamp) "
+             "VALUES ('{cookie}','{type}','{uid}','{url}',{ts});"
+             .format(cookie=cookie, type=type, uid=uid, url=url_escaped,
                      ts=int(calendar.timegm(time.gmtime()))))
     cookies.execute(query)
 
@@ -180,19 +81,20 @@ def _make_url(base_url, fields, thing, cookies, suffix=None, log=None):
     cookies.connection.commit()
 
     if log:
-        log.debug("URL is: {}".format(url))
-        log.debug("SQL query: {}".format(query))
+        log.debug(f"SQL query: {query}")
 
-    return '{url}{cookie}'.format(url=api_base_url, cookie=cookie)
+    return f'{api_base_url}{cookie}'
 
-def calculate_family_values(family, year):
+##############################################################################
 
-    #-----------------------------------------------------
-
+def calculate_family_values(family, year, log=None):
     if 'funds' in family and year in family['funds']:
         funds = family['funds'][year]
     else:
         funds = dict()
+
+    if log:
+        log.debug(f"Size of family funds dictionary: {len(funds)}")
 
     # Calculate 3 values:
     # 1. Pledge amount for CY2019
@@ -207,7 +109,10 @@ def calculate_family_values(family, year):
     contributed = 0
     for fund in funds.values():
         for item in fund['history']:
-            contributed += item['item']['FEAmt']
+            # Not quite sure how this happens, but sometimes the value is None.
+            val = item['item']['FEAmt']
+            if val is not None:
+                contributed += val
 
     family['calculated'] = {
         "pledged"        : pledged,
@@ -215,26 +120,38 @@ def calculate_family_values(family, year):
         "household_name" : helpers.household_name(family),
     }
 
-def make_family_form_url(family, cookies, log=None):
+##############################################################################
+
+# The ministry URL is comprised of three sections:
+#
+# 1. The base jotform URL
+# 2. Some Family-specific field data
+# 3. N sets of Member-specific field data
+#
+# This routine constructs #1 and #2.
+def make_ministry_jotform_base_url(family, log=None):
     # Calculate the family values if they have not already done so
     if 'calculated' not in family:
-        calculate_family_values(family, year='19')
+        year = f'{stewardship_year - 2000 - 1:02}'
+        calculate_family_values(family, year=year, log=log)
 
-    return _make_url(family_form_url, family_fields, family, cookies, log=log)
+    char = '?'
+    url  = jotform.url
+    for entry in jotform.pre_fill_data['family']:
+        # Recall: the "fields" entry will be a single field for global data
+        field  = entry['fields']
+        value  = entry['value_func'](family)
+        next   = f'{char}{field}={value}'
+        url   += next
+        char   = '&'
 
-#
-# Make a pre-filled URL for the matrix of ministries.
-#
-# The list of PDS ministries corresponding to the rows in the Jotform
-# matrix are in jotform_member_ministries.  We pre-fill values of this
-# URL via FIELDNAME[row][col]=true for any radio button that we want
-# to be active (only one radio button can be active for any given
-# row).  The columns are:
-#
-# 0: I am already involved
-# 1: Yes, please contact me about becoming involved
-# 2: I do not wish to be involved
-def _make_ministries_url(member):
+        if log:
+            log.debug(f"Ministry base URL added: {next}")
+
+    return url
+
+# This routine constructs #3 (from above)
+def make_ministries_url_portion(member, member_number, log=None):
     def _check(ministry, member):
         for member_ministry in member['active_ministries']:
             if ministry == member_ministry['Description']:
@@ -243,198 +160,81 @@ def _make_ministries_url(member):
 
     #-----------------------------------------------------------------------
 
+    # First, add some per-Member non-minstry data
     url = ''
+    for entry in jotform.pre_fill_data['per_member']:
+        # The "fields" member will contain an array of fields; we
+        # want the (member_number)th one.
+        field = entry['fields'][member_number]
+        value = entry['value_func'](member)
+        next  = f'&{field}={value}'
+        url  += next
 
-    col_am_involved  = 0
-    col_not_involved = 2
+        if log:
+            log.debug(f"Ministry member URL portion: {next}")
 
-    for base_field in jotform_member_ministries:
-        for row, ministry in enumerate(jotform_member_ministries[base_field]):
-            column = col_not_involved
+    #-----------------------------------------------------------------------
+
+    # Now add in all the per-Member ministry data
+    for grid in jotform.ministry_grids:
+        field = grid.member_fields[member_number]
+
+        for row_num, row in enumerate(grid.rows):
+            column       = COL_NOT_INVOLVED
+            pds_ministry = row['pds_ministry']
 
             match = False
-            if type(ministry) is list:
-                for m in ministry:
-                    match = _check(ministry, member)
+            if type(pds_ministry) is list:
+                for m in pds_ministry:
+                    match = _check(m, member)
                     if match:
                         break
             else:
-                match = _check(ministry, member)
+                match = _check(pds_ministry, member)
 
             if match:
-                column = col_am_involved
+                column = COL_AM_INVOLVED
 
-            url += ("&{field}[{row}][{col}]=true"
-                    .format(field=base_field,
-                            row=row,
-                            col=column))
+            url += f"&{field}[{row_num}][{column}]=true"
+            # Example: parishLeadership[1][2]`=true`
 
     return url
 
-def make_member_form_url(member, cookies, log=None):
-    suffix = _make_ministries_url(member)
-    return _make_url(member_form_url, member_fields, member, cookies,
-                     suffix=suffix, log=log)
-
 #--------------------------------------------------------------------------
 
-def member_name_and_age(member):
-    name = member['email_name']
-    if member['YearOfBirth'] > 0:
-        birthday = datetime.datetime.strptime(member['DateOfBirth'], "%Y-%m-%d")
-        now = datetime.datetime.now()
-        delta = now - birthday
-
-        # This is an approximation, because timedelta doesn't express in years (!)
-        age = int(abs(delta.days / 365))
-        name += ' (age {age})'.format(age=age)
-
-    return name
-
-def member_name_and_occupation(member):
-    name = member['email_name']
-    key = 'occupation'
-    if key in member and member[key] != '':
-        name += ' ({value})'.format(value=member[key])
-
-    return name
-
-def member_name_and_type(member):
-    name = member['email_name']
-    key = 'type'
-    if key in member and member[key] != '':
-        name += f' ({member[key]})'
-
-    return name
-
-# JMS2021: change to accept a family (instead of family_member_data), and iterate through family['members']...?
-def family_member_unique_names(family_member_data, value_func):
-    family_members = dict()
-    for member_data in family_member_data:
-        # Get the name for this Family Member
-        name = value_func(member_data['member'])
-
-        # If we found a duplicate, abort
-        if name in family_members:
-            return None
-
-        # Otherwise, save this name
-        # JMS2021: probably just save the member here
-        family_members[name] = member_data
-
-    return family_members
-
-def send_family_email(message_body, to_addresses,
-                      # JMS20201: per below, family_member_data probably isn't needed any more
-                      family, family_pledge_url, family_member_data,
-                      ministry_submissions, pledge_submissions,
-                      log=None):
+def send_family_email(message_body, family, submissions,
+                      cookies, smtp, log=None):
     # We won't get here unless there's at least one email address to
     # which to send.  But do a sanity check anyway.
-    if len(to_addresses) == 0:
+    data = family['stewardship']
+    if len(data['to_addresses']) == 0:
         return 0
 
-    regular_style = 'style="font-size: 16px; color: rgb(0, 112, 192);"'
-    red_style     = 'style="font-size: 16px; color: rgb(255, 0, 0); font-style: italic; font-weight: bold;"'
+    bounce_url    = data['bounce_url']
+    text          = f'{stewardship_year} Epiphany Stewardship Renewal'
+    ministry_link = f'<a href="{bounce_url}">{text}</a>'
 
     #---------------------------------------------------------------------
-    # Make a sorted list of member names in the family
-    # Some families have multiple Members with the same name!
-    # JMS2021: instead of using family_member_data, perhaps pass family['members']...?
-    family_members = family_member_unique_names(family_member_data,
-            lambda member: member['email_name'])
-    if family_members is None:
-        family_members = family_member_unique_names(family_member_data,
-                lambda member: member['full_name'])
-    if family_members is None:
-        family_members = family_member_unique_names(family_member_data,
-                member_name_and_age)
-    if family_members is None:
-        family_members = family_member_unique_names(family_member_data,
-                member_name_and_occupation)
-    if family_members is None:
-        family_members = family_member_unique_names(family_member_data,
-                member_name_and_type)
-    if family_members is None:
-        log.error("Could not generate unique names for Family {f} (fid {fid})"
-                    .format(f=family['Name'], fid=f['FamRecNum']))
-        return 0
 
-    # Make the individual family member <LI> HTML items
-    to_names = dict()
-    member_links = ''
-    member_links_reminders = ''
+    smtp_to = ",".join(data['to_addresses'])
 
-    # JMS2021 This loop will now make the Family URL for the ministry form.  It will start the URL with the fields on the first page (i.e., the hidden data), and then we loop through all the Members in the Family (in the sorted order) and append to the URL with the values for their fields.
-    for name in sorted(family_members):
-        # JMS2021: per above, family_members[name] will likely just be the member (no need to further de-reference it)
-        member_data = family_members[name]
-        m           = member_data['member']
-        # JMS2021: Here is the point where we add to the existing Family ministry URL for this specific member.  Call a function to generate the URL to append to the existing family ministry form URL.  You'll need to pass it the Member and the list of field names for this page of the Jotform.  E.g., if this is the 1st Member, pass a list with the field names from the "Member 1" page on the Jotform.  If this is the 2nd Member, pass a list with the field names from the "Member 2" page on the Jotform.  ...etc.  Then append the resulting URL to the existing family ministry form URL.
-        url         = member_data['url']
-
-        to_names[m['last']] = True
-
-        # This HTML/CSS format taken from Jordan's email source code
-        # JMS2021: probably change this variable name from "member_links" to "family_ministry_link", or something like that.
-        member_links += ('<li {style}><span {style}><a href="{url}">{name}</a></span></li>'
-                         .format(url=url, name=name, style=regular_style))
-
-        # Has this one already been submitted?
-        # JMS2021: Update this log statement to be accurate
-        log.debug("Making member link for MID {mid}; ministry submissions"
-                    .format(mid=m['MemRecNum']))
-        # JMS2021: Update this -- we'll be saving ministry submissions by FID now, not MID.
-        if m['MemRecNum'] in ministry_submissions:
-            additional = ('<span {style}>(already submitted)</span>'
-                            .format(style=regular_style))
-        else:
-            additional = ('<span {style}>(not yet submitted)</span>'
-                            .format(style=red_style))
-
-        member_links_reminders += ('<li {style}><span {style}><a href="{url}">{name}</a></span> {additional}</li>'
-                                .format(url=url, name=name, style=regular_style,
-                                        additional=additional))
-
-    #---------------------------------------------------------------------
-    # Make the Family pledge link
-    # (base it off the last Member we traversed in the loop above -- they're all
-    # in the same Family, so this is ok)
-    family_pledge_link = ('<a href="{url}">2021 Financial Stewardship Covenant</a>'
-                        .format(url=family_pledge_url))
-    fid = m['FamRecNum']
-    if fid in pledge_submissions:
-        additional = ('<span {style}>(already submitted)</span>'
-                        .format(style=regular_style))
-    else:
-        additional = ('<span {style}>(not yet submitted)</span>'
-                        .format(style=red_style))
-    family_pledge_link_reminder = ('<a href="{url}">2021 Financial Stewardship Covenant</a><br>{additional}'
-                                    .format(url=family_pledge_url,
-                                    additional=additional))
-
-    smtp_to = ",".join(to_addresses)
-
-    #---------------------------------------------------------------------
     # JMS DEBUG
     was = smtp_to
     smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
-    log.info("Sending to (OVERRIDE): {to} (was {was})".format(to=smtp_to, was=was))
+    log.info(f"Sending to (OVERRIDE): {smtp_to} (was {was})")
     #---------------------------------------------------------------------
 
     if log:
         log.info("    Sending to Family {names} at {emails}"
-                 .format(names=' / '.join(to_names), emails=smtp_to))
+                 .format(names=' / '.join(data['to_names']), emails=smtp_to))
 
     # Note: we can't use the normal string.format() to substitute in
     # values because the HTML/CSS includes a bunch of instances of {}.
     #message_body = message_initial()
     message_body = message_body.replace("{img}", email_image_url)
-    message_body = message_body.replace("{family_names}", " / ".join(to_names))
-    message_body = message_body.replace("{family_pledge_link}", family_pledge_link)
-    message_body = message_body.replace("{family_pledge_link_reminder}", family_pledge_link_reminder)
-    message_body = message_body.replace("{member_links}", member_links)
-    message_body = message_body.replace("{member_links_reminders}", member_links_reminders)
+    message_body = message_body.replace("{family_names}",
+                        family['hoh_and_spouse_salutation'])
+    message_body = message_body.replace("{bounce_url}", ministry_link)
 
     # JMS kinda yukky that "args" is global
     global args
@@ -442,38 +242,24 @@ def send_family_email(message_body, to_addresses,
         log.info("NOT SENDING EMAIL (--do-not-send)")
     else:
         try:
-            with smtplib.SMTP_SSL(host=smtp_server) as smtp:
-                msg = EmailMessage()
-                msg['Subject'] = smtp_subject
-                msg['From'] = smtp_from
-                msg['To'] = smtp_to
-                msg.set_content(message_body)
-                msg.replace_header('Content-Type', 'text/html')
+            msg = EmailMessage()
+            msg['Subject'] = smtp_subject
+            msg['From'] = smtp_from
+            msg['To'] = smtp_to
+            msg.set_content(message_body)
+            msg.replace_header('Content-Type', 'text/html')
 
-                # This assumes that the file has a single line in the format of username:password.
-                with open(args.smtp_auth_file) as f:
-                    line = f.read()
-                    smtp_username, smtp_password = line.split(':')
-
-                # Login; we can't rely on being IP whitelisted.
-                try:
-                    smtp.login(smtp_username, smtp_password)
-                except Exception as e:
-                    log.error(f'Error: failed to SMTP login: {e}')
-                    exit(1)
-
-                smtp.send_message(msg)
+            smtp.send_message(msg)
         except:
             log.error("==== Error with {email}"
                       .format(email=smtp_to))
             log.error(traceback.format_exc())
 
-    return len(to_addresses)
+    return len(data['to_addresses'])
 
 ###########################################################################
 
-def _send_family_emails(message_body, families,
-                        ministry_submissions, pledge_submissions,
+def _send_family_emails(message_body, families, submissions,
                         cookies, log=None):
     # Send one email to the head-of-household + spouse in each family
     # in the dictionary.  Send them in fid order so that if we get
@@ -483,73 +269,114 @@ def _send_family_emails(message_body, families,
     email_sent = list()
     email_not_sent = list()
 
-    fids = sorted(families)
-    for fid in fids:
-        f = families[fid]
-        first = True
+    # This assumes that the file has a single line in the format of username:password.
+    with open(args.smtp_auth_file) as f:
+        line = f.read()
+        smtp_username, smtp_password = line.split(':')
 
-        to_emails = list()
-        # JMS2021: per below, family_member_data likely isn't needed any more
-        family_member_data = list()
-        for m in f['members']:
-            if helpers.member_is_hoh_or_spouse(m):
-                em = PDSChurch.find_any_email(m)
-                to_emails.extend(em)
+    # Open just one connection to the SMTP server
+    with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+        # Login; we can't rely on being IP whitelisted.
+        try:
+            smtp.login(smtp_username, smtp_password)
+        except Exception as e:
+            log.error(f'Error: failed to SMTP login: {e}')
+            exit(1)
 
-            if first:
-                log.info("=== Family: {name}".format(name=f['Name']))
-                first = False
-                fam_pledge_url = make_family_form_url(f, cookies, log)
-            log.info("    Member: {mem}".format(mem=m['Name']))
+        # Iterate through all the family emails that we need to send
+        sorted_fids = sorted(families)
+        for fid in sorted_fids:
+            family = families[fid]
+            log.info(f"=== Family: {family['Name']}")
 
-            # JMS20201: We no longer need to make per-Member URLs.  Probably remove this...?
-            mem_url = make_member_form_url(m, cookies, log)
+            to_names              = dict()
+            to_addresses          = list()
+            members_by_mid        = dict()
+            family['stewardship'] = {
+                'sent_email' : True
+            }
 
-            # JMS20201: Since we're no longer making per-Member URLs, this list likely isn't needed any more (because we pass the family to send_family_email(), and the family already has a list of Members on it)
-            family_member_data.append({
-                "member" : m,
-                "url"    : mem_url,
-            })
+            # Scan through the Members and generate a list of names and
+            # email addresses that we need.
+            for member in family['members']:
+                members_by_mid[member['MemRecNum']] = member
+                log.info(f"    Member: {member['Name']}")
+                if helpers.member_is_hoh_or_spouse(member):
+                    em = PDSChurch.find_any_email(member)
+                    to_addresses.extend(em)
 
-        family_data = {
-            'family'             : f,
-            'family_pledge_url'  : fam_pledge_url,
-            'family_member_data' : family_member_data,
+                to_names[member['last']] = True
 
-            'to_emails'          : to_emails,
-        }
+            if len(to_addresses) == 0:
+                family['stewardship']['sent_email'] = False
+                family['stewardship']['reason not sent'] = 'No HoH/Spouse emails'
+                if log:
+                    log.info(f"    *** Have no HoH/Spouse emails for Family {family['Name']}")
 
-        if len(to_emails) > 0:
-            send_count = send_family_email(message_body,
-                                           to_emails, f, fam_pledge_url,
-                                           # JMS2021: per above, family_member_data likely isn't needed any more
-                                           family_member_data,
-                                           ministry_submissions,
-                                           pledge_submissions,
-                                           log=log)
-            email_sent.append(family_data)
+            # As of September 2021, Jotform cannot handle more than 6 Members'
+            # worth of data in a single form (except with Chrome on a
+            # laptop/desktop -- all other cases fail on the final submit).  So
+            # if this Family has more than 6 Members, do not send to them.
+            if len(family['members']) > MAX_PDS_FAMILY_MEMBER_NUM:
+                family['stewardship']['sent_email'] = False
+                family['stewardship']['reason not sent'] = 'Too many Members in Family'
+                if log:
+                    log.info(f"    *** Too many Members in Family ({len(family['members'])} > {MAX_PDS_FAMILY_MEMBER_NUM}) -- will not send")
 
-        elif len(to_emails) == 0:
-            if log:
-                log.info("    *** Have no HoH/Spouse emails for Family {family}"
-                         .format(family=f['Name']))
-            email_not_sent.append(family_data)
+            #----------------------------------------------------------------
+
+            # We *always* need 'stewardship' set on the family.  So set it
+            # before potentially bailing out if we're not going to send to
+            # this family.
+
+            # Save the things we have computed to far on the family
+            # (we use this data in making the ministry jotform base URL, below)
+            family['stewardship']['to_addresses'] = to_addresses
+            family['stewardship']['to_names'] = to_names
+
+            # Check if we're going to send
+            if not family['stewardship']['sent_email']:
+                email_not_sent.append(family)
+                continue
+
+            #----------------------------------------------------------------
+
+            # Construct the base ministry jotform URL with the Family-global data
+            jotform_url = make_ministry_jotform_base_url(family, log)
+
+            # Now add to the ministry jotform URL all the Member data
+            # Since we might truncate the number of family members, do them in
+            # a deterministic order.
+            for member_number, mid in enumerate(sorted(members_by_mid)):
+                member = members_by_mid[mid]
+
+                # Add to the overall ministry URL with data for this Member
+                jotform_url += make_ministries_url_portion(member,
+                                                            member_number, log)
+
+            # Now that we have the entire ministry jotform URL,
+            # make a bounce URL for it
+            bounce_url  = insert_url_cookie(fid, MINISTRY_SQL_TYPE,
+                                            jotform_url, cookies)
+            family['stewardship']['bounce_url'] = bounce_url
+
+            send_count = send_family_email(message_body, family,
+                                           submissions,
+                                           cookies, smtp, log=log)
+            email_sent.append(family)
 
     return email_sent, email_not_sent
 
 ###########################################################################
 
-def send_all_family_emails(args, families,
-                            ministry_submissions, pledge_submissions,
+def send_all_family_emails(args, families, submissions,
                             cookies, log=None):
-    return _send_family_emails(args.email_content,
-                               families, ministry_submissions,
-                               pledge_submissions, cookies, log)
+    return _send_family_emails(args.email_content, families, submissions,
+                               cookies, log)
 
 #--------------------------------------------------------------------------
 
-def send_file_family_emails(args, families,
-                            ministry_submissions, pledge_submissions,
+def send_file_family_emails(args, families, submissions,
                             cookies, log=None):
     some_families = dict()
 
@@ -569,13 +396,12 @@ def send_file_family_emails(args, families,
                      .format(eid=env, name=f['Name']))
             some_families[fid] = f
 
-    return _send_family_emails(args.email_content, some_families, ministry_submissions,
-                                pledge_submissions, cookies, log)
+    return _send_family_emails(args.email_content, some_families, submissions,
+                                cookies, log)
 
 #--------------------------------------------------------------------------
 
-def send_unsubmitted_family_emails(args, families,
-                            ministry_submissions, pledge_submissions,
+def send_unsubmitted_family_emails(args, families, submissions,
                             cookies, log=None):
     # Find all families that have not *completely* submitted everything.
     # I.e., any family that has not yet submitted:
@@ -591,17 +417,10 @@ def send_unsubmitted_family_emails(args, families,
     for fid, f in families.items():
         want = False
 
-        if fid not in pledge_submissions:
+        if fid not in submissions:
             log.info("Family {n} (fid {fid}) not in pledges"
                     .format(n=f['Name'], fid=fid))
             want = True
-
-        for m in f['members']:
-            mid = m['MemRecNum']
-            if mid not in ministry_submissions:
-                log.info("Member {mm} (mid: {mid}) of family {n} (fid {fid}) not in ministry"
-                        .format(mm=m['email_name'], mid=mid, n=f['Name'], fid=fid))
-                want = True
 
         # This keyword trumps everything: if it is set on the Family, they do not get a reminder email.
         if 'status' in f and f['status'] == already_submitted_fam_status:
@@ -615,13 +434,12 @@ def send_unsubmitted_family_emails(args, families,
             log.info("Compleded family (fid {fid}): {n} -- skipping"
                     .format(n=f['Name'], fid=fid))
 
-    return _send_family_emails(args.email_content, some_families, ministry_submissions,
-                                pledge_submissions, cookies, log)
+    return _send_family_emails(args.email_content, some_families, submissions,
+                                cookies, log)
 
 #--------------------------------------------------------------------------
 
-def send_some_family_emails(args, families,
-                            ministry_submissions, pledge_submissions,
+def send_some_family_emails(args, families, submissions,
                             cookies, log=None):
     target = args.email
     some_families = dict()
@@ -651,8 +469,8 @@ def send_some_family_emails(args, families,
         if found:
             some_families[fid] = f
 
-    return _send_family_emails(args.email_content, some_families, ministry_submissions,
-                                pledge_submissions, cookies, log)
+    return _send_family_emails(args.email_content, some_families, submissions,
+                                cookies, log)
 
 ###########################################################################
 
@@ -661,6 +479,7 @@ def cookiedb_create(filename, log=None):
     query = ('CREATE TABLE cookies ('
              'cookie text primary key not null,'
              'uid not null,'
+             'type integer not null,'
              'url text not null,'
              'creation_timestamp integer not null'
              ')')
@@ -685,83 +504,80 @@ def cookiedb_open(filename, log=None):
 
 ###########################################################################
 
-def write_csv(family_data, filename, log=None):
+def write_csv(family_list, filename, extra, log=None):
     csv_family_fields = {
         "parishKey"          : 'Envelope ID',
         "fid"                : 'FID',
-        "names"              : 'Household names',
-        "forYour"            : '2019 total pledge',
-        "forYour83"          : 'CY2019 giving so far',
+        "household"          : 'Household names',
+        'email'              : 'Email addresses',
+        "previousPledge"     : '2020 total pledge',
+        "soFarThisYear"      : 'CY2020 giving so far',
+    }
+
+    csv_extra_family_fields = {
+        'Salulation'            : lambda fam: fam['MailingName'],
+        'Street Address 1'      : lambda fam: fam['StreetAddress1'],
+        'Street Address 2'      : lambda fam: fam['StreetAddress2'],
+        'City/State'            : lambda fam: fam['city_state'],
+        'Zip Code'              : lambda fam: fam['StreetZip'],
+        'Send no mail'          : lambda fam: fam['SendNoMail'],
+        'Num Family Members'    : lambda fam: len(fam['members']),
+        'Reason email not sent' : lambda fam: fam['stewardship']['reason not sent'],
     }
 
     csv_member_fields = {
-        "parishKey"          : 'Envelope ID',
         "mid"                : 'MID',
         "name"               : 'Name',
-        "thisData"           : "This data last updated",
     }
 
     fieldnames = list()
-    # This field is not in either of the forms
-    fieldnames.append('Member type')
 
     # Add the fields from both forms
     fieldnames.extend(csv_family_fields.values())
+    if extra:
+        fieldnames.extend(csv_extra_family_fields.keys())
     fieldnames.extend(csv_member_fields.values())
 
     csv_fieldnames = fieldnames.copy()
-    csv_fieldnames.append("Saluation")
-    csv_fieldnames.append("Street1")
-    csv_fieldnames.append("Street2")
-    csv_fieldnames.append("CityState")
-    csv_fieldnames.append("Zip")
 
     if log:
         log.info("Writing result CSV: {filename}"
                  .format(filename=filename))
 
     with open(filename, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=csv_fieldnames,
-                                quoting=csv.QUOTE_ALL)
+        writer = csv.DictWriter(csvfile, fieldnames=csv_fieldnames)
         writer.writeheader()
 
-        for fentry in family_data:
+        for family in family_list:
             row = dict()
 
-            family             = fentry['family']
-            family_member_data = fentry['family_member_data']
+            for ff, column in csv_family_fields.items():
+                log.debug(f"Looking for: {ff}")
+                for item in jotform.pre_fill_data['family']:
+                    if item['fields'] == ff:
+                        func = item['value_func']
+                        value = func(family)
 
-            for ff, cff in csv_family_fields.items():
-                func = family_fields[ff]
-                value = func(family)
+                        # The pledge values will have HTML-ized "%24" instead of "$".
+                        if isinstance(value, str):
+                            value = value.replace("%24", "$")
 
-                # The pledge values will have HTML-ized "%24" instead of "$".
-                if isinstance(value, str):
-                    value = value.replace("%24", "$")
+                        row[column] = value
 
-                row[cff] = value
+            if extra:
+                for column, func in csv_extra_family_fields.items():
+                    row[column] = func(family)
 
-            # Add in mailing label values
-            if 'MailingName' in family:
-                row['Saluation'] = family['MailingName']
-            if 'StreetAddress1' in family:
-                row['Street1'] = family['StreetAddress1']
-            if 'StreetAddress2' in family:
-                row['Street2'] = family['StreetAddress2']
-            if 'city_state' in family:
-                row['CityState'] = family['city_state']
-            if 'StreetZip' in family:
-                row['Zip'] = family['StreetZip']
+            for member in family['members']:
+                for mf, column in csv_member_fields.items():
+                    log.debug(f"Looking for member item: {mf}")
+                    for item in jotform.pre_fill_data['per_member']:
+                        for field in item['fields']:
+                            if field.startswith(mf):
+                                func = item['value_func']
+                                row[column] = func(member)
 
-            for fmd in family_member_data:
-                member = fmd['member']
-
-                row['Member type'] = member['type']
-
-                for mf, cmf in csv_member_fields.items():
-                    func = member_fields[mf]
-                    row[cmf] = func(member)
-
+                log.debug(f"Writing row: {row}")
                 writer.writerow(row)
 
 ###########################################################################
@@ -797,18 +613,11 @@ def setup_google(args, log):
                                    fieldnames=fields)
         return csvreader
 
-    log.info("Loading ministry Google ministry submissions spreadsheet")
-    jotform_ministry_csv = _read_jotform_gsheet(google, jotform_member_gfile_id)
-    log.info("Loading ministry Google pledge submissions spreadsheet")
-    jotform_pledge_csv = _read_jotform_gsheet(google, jotform_family_gfile_id)
-
     #---------------------------------------------------------------------
-    # All we need are quick-lookup dictionaries to know if:
+    # All we need are quick-lookup dictionaries to know if a given FID
+    # has submitted or not.
     #
-    # - A given Member ID (MID) has submitted a ministry form
-    # - A given Family FID (FID) has submitted a pledge form
-    #
-    # So convert the two CSV data structures to these quick-lookup dictionaries.
+    # So convert the CSV data structures to a quick-lookup dictionary.
     def _convert(csv_data, log):
         output_data = dict()
 
@@ -819,15 +628,20 @@ def setup_google(args, log):
                 first = False
                 continue
 
-            id = int(row['id'])
-            output_data[id] = True
+            fid = row['fid']
+            if fid:
+                fid = int(fid)
+            else:
+                fid = 0
+            output_data[fid] = True
 
         return output_data
 
-    ministry_submissions = _convert(jotform_ministry_csv, log=log)
-    pledge_submissions = _convert(jotform_pledge_csv, log=log)
+    log.info("Loading Jotform submissions Google sheet")
+    jotform_csv = _read_jotform_gsheet(google, jotform_gsheet_gfile_id)
+    submissions = _convert(jotform_csv, log=log)
 
-    return ministry_submissions, pledge_submissions
+    return submissions
 
 ###########################################################################
 
@@ -931,24 +745,21 @@ def main():
     global args
     args, need_google = setup_args()
 
-    log = ECC.setup_logging(debug=True)
+    log = ECC.setup_logging(debug=False)
 
     # We need Google if the email content contains a *_reminder template
     # (i.e., we need to login to Google and download some data)
     if need_google:
-        ministry_submissions, pledge_submissions = setup_google(args, log=log)
+        submissions = setup_google(args, log=log)
     else:
-        ministry_submissions = dict()
-        pledge_submissions = dict()
+        submissions = dict()
 
     # Read in all the PDS data
     log.info("Reading PDS data...")
     (pds, families,
      members) = PDSChurch.load_families_and_members(filename='pdschurch.sqlite3',
+                                                    parishioners_only=True,
                                                     log=log)
-
-    # Remove non-parishioner families
-    families = helpers.filter_parishioner_families_only(families)
 
     # Open the cookies DB
     if not args.append or not os.path.exists(args.cookie_db):
@@ -967,13 +778,12 @@ def main():
     else:
         func = send_some_family_emails
 
-    sent, not_sent = func(args, families, ministry_submissions,
-                        pledge_submissions, cookies, log)
+    sent, not_sent = func(args, families, submissions, cookies, log)
 
     # Record who/what we sent
     ts = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
-    write_csv(sent,     f'emails-sent-{ts}.csv',     log=log)
-    write_csv(not_sent, f'emails-not-sent-{ts}.csv', log=log)
+    write_csv(sent,     f'emails-sent-{ts}.csv',     extra=False, log=log)
+    write_csv(not_sent, f'emails-not-sent-{ts}.csv', extra=True,  log=log)
 
     # Close the databases
     cookies.connection.close()
@@ -982,7 +792,5 @@ def main():
 # Need to make these global for the lambda functions
 members = 1
 families = 1
-
-last_updated = datetime.datetime.now().strftime('%A %B %d, %Y at %I:%M%p')
 
 main()
