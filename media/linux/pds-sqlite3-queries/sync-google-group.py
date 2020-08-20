@@ -964,6 +964,14 @@ def main():
         #############################
 
         {
+            'ministries' : [ '451-Livestream Team Ministry' ],
+            'ggroup'     : 'livestream-team{ecc}'.format(ecc=ecc),
+            'notify'     : 'jordan{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
             'ministries' : [ '800-ChildrenFormationCatechist' ],
             'ggroup'     : 'childrens-formation-catechists{ecc}'.format(ecc=ecc),
             'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
