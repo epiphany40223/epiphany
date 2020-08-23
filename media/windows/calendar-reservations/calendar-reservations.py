@@ -33,8 +33,6 @@ verbose = True
 debug   = False
 logfile = None
 
-max_upload_retries = 5
-
 test_calendar1_id = 'c_bj96menjelb4pecracnninf45k@group.calendar.google.com'
 test_calendar2_id = 'c_ncm1ib261lp6c02i46mors4isc@group.calendar.google.com'
 
@@ -80,13 +78,16 @@ def setup_cli_args():
 
 ####################################################################
 
-def foo(service):
+def foo(service, log):
     # Calendar events documentation: https://developers.google.com/calendar/v3/reference/events?hl=en_US
 
     # Get upcoming 10 events (from https://developers.google.com/calendar/quickstart/python?hl=en_US)
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    events_result = service.events().list(calendarId=test_calendar1_id, timeMin=now,
-                                        maxResults=10, singleEvents=True,
+    log.info(now)
+    events_result = service.events().list(calendarId=test_calendar1_id,
+                                        maxResults=10,
+                                        timeMin=now,
+                                        singleEvents=True,
                                         orderBy='startTime').execute()
     events = events_result.get('items', [])
 
@@ -94,8 +95,8 @@ def foo(service):
         print('No upcoming events found.')
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
-        print(f'{start}: {event["summary"]} ({event["status"]})')
-        print(f'{event}')
+        log.info(f'{start}: {event["summary"]} ({event["status"]})')
+        log.debug(pformat(event))
 
 ####################################################################
 
@@ -122,10 +123,8 @@ def main():
     services = GoogleAuth.service_oauth_login(apis,
                                               app_json=args.app_id,
                                               user_json=args.user_credentials)
-    service = services['calendar']
-    log.info(f"Got service: {service}")
-
-    foo(service)
+    calendar_service = services['calendar']
+    foo(calendar_service, log)
 
 if __name__ == '__main__':
     main()
