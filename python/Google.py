@@ -41,6 +41,7 @@ scopes = {
     'admin'   : 'https://www.googleapis.com/auth/admin.directory.group',
     'group'   : 'https://www.googleapis.com/auth/apps.groups.settings',
     'reports' : 'https://www.googleapis.com/auth/admin.reports.audit.readonly',
+    'calendar': 'https://www.googleapis.com/auth/calendar',
 }
 
 ####################################################################
