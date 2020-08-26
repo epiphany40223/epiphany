@@ -240,7 +240,7 @@ def _link_family_emails(families, emails):
             key = npkey
 
         addr = '{name} <{addr}>'.format(name=f['Name'],
-                                        addr=e['EMailAddress'])
+                                        addr=e['EMailAddress'].strip())
         e['full_address'] = addr
         f[key].append(e)
 
@@ -326,7 +326,7 @@ def _link_member_emails(members, emails):
             key = npkey
 
         addr = '{name} <{addr}>'.format(name=m['email_name'],
-                                        addr=e['EMailAddress'])
+                                        addr=e['EMailAddress'].strip())
         e['full_address'] = addr
         m[key].append(e)
 
@@ -785,8 +785,8 @@ def _parse_member_names(members):
 
 def _make_emails_lower_case(emails):
     key = 'EMailAddress'
-    for _, e in emails.items():
-        addr = e[key].lower()
+    for e in emails.values():
+        addr = e[key].lower().strip()
         e[key] = addr
 
 #-----------------------------------------------------------------------------
@@ -966,7 +966,7 @@ def load_families_and_members(filename=None, pds=None,
 def _get_sorted_addrs(entries):
     addrs = list()
     for entry in entries:
-        addrs.append(entry['EMailAddress'])
+        addrs.append(entry['EMailAddress'].strip())
 
     return sorted(addrs)
 
