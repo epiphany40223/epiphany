@@ -1028,7 +1028,7 @@ def main():
         #############################
 
         {
-            'ministries' : [ '708-Ten Percent Committee' ],
+            'ministries' : [ '110-Ten Percent Committee' ],
             'ggroup'     : 'ten-percent-committee{ecc}'.format(ecc=ecc),
             'notify'     : 'polly{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
