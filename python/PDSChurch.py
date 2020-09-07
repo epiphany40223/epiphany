@@ -107,6 +107,7 @@ def _load_families(pds, columns=None,
     columns.append('StatDescRec')
     columns.append('PictureFile')
     columns.append('EnvelopeUser')
+    columns.append('Visitor')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
@@ -207,7 +208,7 @@ def _delete_non_parishioners(families, members):
     # Look for family ParKey >= 10,000
     for fid, f in families.items():
         parkey = int(f['ParKey'])
-        if parkey >= 10000:
+        if parkey >= 10000 or f['Visitor']:
             f = families[fid]
             for m in f['members']:
                 mid = m['MemRecNum']
