@@ -918,6 +918,16 @@ def main():
             'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
+        {
+            'ministries' : [ 'E-Taize Prayer' ],
+            'ggroup'     : 'taize-prayer{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+        },
+        {
+            'ministries' : [ 'E-Soul Life' ],
+            'ggroup'     : 'soul-life{ecc}'.format(ecc=ecc),
+            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+        },
 
         {
             'keywords'   : [ 'Wedding Ministries email list' ],
