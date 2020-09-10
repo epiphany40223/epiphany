@@ -1049,7 +1049,7 @@ def main():
         {
             'ministries' : [ '601-Sages (for 50 yrs. +)' ],
             'ggroup'     : 'sages{ecc}'.format(ecc=ecc),
-            'notify'     : 'joanhagedorn46@gmail.com,angie{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'joanhagedorn46@gmail.com,lisag{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
         #############################
@@ -1057,12 +1057,12 @@ def main():
         {
             'ministries' : [ '104-Stewardship & E Committee' ],
             'ggroup'     : 'stewardship{ecc}'.format(ecc=ecc),
-            'notify'     : 'don{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'angie{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
         {
             'ministries' : [ '707-St. Vincent DePaul' ],
             'ggroup'     : 'SVDPConference{ecc}'.format(ecc=ecc),
-            'notify'     : 'don{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'angie{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
         #############################
