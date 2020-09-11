@@ -920,12 +920,12 @@ def main():
         },
         {
             'ministries' : [ 'E-Taize Prayer' ],
-            'ggroup'     : 'taize-prayer{ecc}'.format(ecc=ecc),
+            'ggroup'     : 'taizeprayer{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
         {
             'ministries' : [ 'E-Soul Life' ],
-            'ggroup'     : 'soul-life{ecc}'.format(ecc=ecc),
+            'ggroup'     : 'soullife{ecc}'.format(ecc=ecc),
             'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
