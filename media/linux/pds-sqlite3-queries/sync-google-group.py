@@ -1072,7 +1072,7 @@ def main():
         {
             'ministries' : [ '707-St. Vincent DePaul' ],
             'ggroup'     : 'SVDPConference{ecc}'.format(ecc=ecc),
-            'notify'     : 'angie{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'polly{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
         #############################
