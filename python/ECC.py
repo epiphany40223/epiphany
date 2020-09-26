@@ -37,7 +37,7 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
     elif info:
         level="INFO"
 
-    log = logging.getLogger('FToTD')
+    log = logging.getLogger('ECC')
     log.setLevel(level)
 
     # Make sure to include the timestamp in each message
