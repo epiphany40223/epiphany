@@ -41,20 +41,22 @@ if ($count == 0) {
 
 # If we get here, there's only one cookie that matches in the DB.
 # Get the UID corresponding to this cookie.
-$query = "SELECT uid FROM COOKIES WHERE cookie=:cookie";
+$query = "SELECT uid,type FROM COOKIES WHERE cookie=:cookie";
 $stmt = $db_handle->prepare($query);
 $stmt->bindParam(':cookie', $cookie);
 $result = $stmt->execute();
 $row = $result->fetchArray();
 
-$uid = $row['uid'];
+$uid  = $row['uid'];
+$type = $row['type'];
 
 #----------------------------------------------------------------------
 
 // Get the latest URL for this UID.
-$query = "SELECT url,creation_timestamp FROM COOKIES WHERE uid=:uid ORDER BY rowid DESC LIMIT 1";
+$query = "SELECT url,creation_timestamp FROM COOKIES WHERE uid=:uid AND type=:type ORDER BY rowid DESC LIMIT 1";
 $stmt = $db_handle->prepare($query);
 $stmt->bindParam(':uid', $uid);
+$stmt->bindParam(':type', $type);
 $result = $stmt->execute();
 $row = $result->fetchArray();
 

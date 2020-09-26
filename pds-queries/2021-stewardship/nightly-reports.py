@@ -1,31 +1,6 @@
 #!/usr/bin/env python3
 
-# These are needed for the PDF graph that is created for the
-# statistics report.
-#
-# NOTE: This comment is left over from using matplotlib for Mercy
-# scripts, which used animation.  The pip3-installed version of
-# matplotlib didn't handle animation properly.  But we're not using
-# animation here in the Epiphany reports, so pip3 installing
-# matplotlib may be sufficient...?  Certainly don't need ffmpeg.
-#
-# MacOS:
-# brew install libpng freetype pkg-config ffmpeg
-# *** PER ABOVE: probably don't need ffmpeg?
-#
-# Centos 7:
-# sudo yum install -y freetype freetype-devel
-#
-# Do not install matplotlib from pip3 -- it won't have the Right Things for
-# animation (which may not matter for this script, but this is left over from
-# the Mercy scripts where animation matplotlib features were used).  Instead,
-# build it manually:
-#
-# git clone git@github.com:matplotlib/matplotlib.git
-# cd matplotlib
-# python3.6 -mpip install .
-#
-# *** PER ABOVE: Probably sufficient to pip3 install matplotlib...?
+# Make sure to pip install everything in requirements.txt.
 
 import sys
 sys.path.insert(0, '../../python')
@@ -46,8 +21,6 @@ import GoogleAuth
 
 import helpers
 
-from pprint import pprint
-from pprint import pformat
 from datetime import datetime
 from datetime import timedelta
 
@@ -61,57 +34,35 @@ import matplotlib.pyplot as plt
 
 #------------------------------------------------------------------------------
 
-from constants import jotform_member_ministries
-from constants import jotform_ministry_groups
-from constants import jotform_member_fields
-from constants import jotform_family_fields
 from constants import already_submitted_fam_status
 
 from constants import gapp_id
 from constants import guser_cred_file
-from constants import jotform_member_gfile_id
-from constants import jotform_family_gfile_id
+
+from constants import jotform_gsheet_gfile_id
+from constants import jotform_gsheet_columns
 from constants import upload_team_drive_folder_id
 from constants import gsheet_editors
 
-from constants import ministry_start_date
-from constants import ministry_end_date
-
+from constants import stewardship_year
 from constants import title
-from constants import stewardship_begin_date
-from constants import stewardship_end_date
 
 from constants import smtp_server
 from constants import smtp_from
 
-from constants import email_image_url
-from constants import api_base_url
+from constants import jotform
 
 ##############################################################################
 
 ecc = '@epiphanycatholicchurch.org'
 
 # Comments report email
-comments_email_to = 'mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+comments_email_to = 'angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 comments_email_subject = 'Comments report'
 
 # Statistics report email
-statistics_email_to = 'mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+statistics_email_to = 'angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 statistics_email_subject = 'Statistics report'
-
-# Pledge results email
-# JMS: Lynne, ?Mary?
-pledge_email_to = 'jsquyres@gmail.com'
-pledge_email_subject = 'Pledge results'
-
-# Ministry results email
-# JMS: Maria, ?Mary?
-ministry_email_to = 'jsquyres@gmail.com'
-ministry_email_subject = 'Ministry results'
-
-# FID participation email
-fid_participation_email_to = 'jsquyres@gmail.com'
-fid_participation_subject = 'Family Overall Participation results'
 
 # JMS for debugging/testing
 #statistics_email_to = 'jsquyres@gmail.com'
@@ -120,8 +71,7 @@ fid_participation_subject = 'Family Overall Participation results'
 
 ##############################################################################
 
-def upload_to_gsheet(google, folder_id, filename, fieldnames, csv_rows,
-                remove_csv, log):
+def upload_to_gsheet(google, folder_id, filename, fieldnames, csv_rows, remove_csv, log):
     if csv_rows is None or len(csv_rows) == 0:
         return None, None
 
@@ -225,73 +175,53 @@ def _compare(changes, label, jot_value, pds_value):
 
 ##############################################################################
 
-def comments_to_csv(google, jotform_data, id_field, name_field, env_field, type, output, log):
+def comments_to_csv(google, jotform_data, id_field, emails_field,
+                    name_field, env_field, output, log):
     field = "Comments"
 
     for row in jotform_data:
         if field not in row:
             continue
 
-        # Skip the title row
-        value = row[field].strip()
-        if value == field:
-            continue
-
         # Skip if the comments are empty
-        if value == '':
+        if row[field] == '':
             continue
 
         output.append({
-            'Date'            : row['SubmitDate'],
-            'PDS internal ID' : row[id_field],
-            'Envelope'        : "'" + row[env_field],
-            'Type'            : type,
-            'Name'            : row[name_field],
-            'Comments'        : row[field],
+            'Date'         : row['SubmitDate'],
+            'FID'          : row[id_field],
+            'Envelope'     : helpers.pkey_url(row[env_field]),
+            'Family names' : row[name_field],
+            'Emails'       : row[emails_field],
+            'Comments'     : row[field],
         })
 
-def comments_report(google, start, end, time_period, jotform_ministry, jotform_pledge, log):
+def comments_report(args, google, start, end, time_period, jotform_data, log):
     log.info("Composing comments report...")
 
-    # Examine both jotforms and see if there are any comments that
+    # Examine the jotform data and see if there are any comments that
     # need to be reported
     data = list()
-    comments_to_csv(google, jotform_data=jotform_ministry,
-                    id_field='mid', name_field='Name',
-                    env_field='EnvId',
-                    type='Member', output=data, log=log)
-
-    # If there were member comments, make a blank line to separate
-    # them from any possible pledge comments.
-    blank_line = 0
-    if len(data) > 0:
-        blank_line = 1
-        fieldnames = data[0].keys()
-        dummy = dict()
-        for field in fieldnames:
-            dummy[field] = ''
-        data.append(dummy)
-
-    comments_to_csv(google, jotform_data=jotform_pledge,
-                    id_field='fid', name_field='Names',
-                    env_field='EnvId',
-                    type='Family', output=data, log=log)
+    comments_to_csv(google, jotform_data=jotform_data,
+                    id_field='fid', name_field='Family names',
+                    env_field='EnvId', emails_field='Emails to reply to',
+                    output=data, log=log)
 
     # If we have any comments, upload them to a Gsheet
     gsheet_id = None
     if len(data) > 0:
         # The field names are in data[0].keys(), but we want a
-        #specific, deterministic ordering of the fields.  So hard-code
-        #them here.
+        # specific, deterministic ordering of the fields.  So hard-code
+        # them here.
         fieldnames = [
             'Date',
-            'PDS internal ID',
-            'Type',
+            'FID',
             'Envelope',
-            'Name',
+            'Family names',
+            'Emails',
             'Comments',
         ]
-        filename = 'Comments {t}.csv'.format(t=time_period)
+        filename = f'Comments {time_period}.csv'
         gsheet_id, _ = upload_to_gsheet(google,
                                         folder_id=upload_team_drive_folder_id,
                                         filename=filename,
@@ -302,12 +232,11 @@ def comments_report(google, start, end, time_period, jotform_ministry, jotform_p
 
     # Send the comments report email
     body = list()
-    body.append("""<html>
+    body.append(f"""<html>
 <body>
 <h2>{title} comments report</h2>
 
-<h3>Time period: {time_period}</h3>"""
-               .format(title=title, time_period=time_period))
+<h3>Time period: {time_period}</h3>""")
 
     if len(data) == 0:
         body.append("<p>No comments submitted during this time period.</p>")
@@ -315,7 +244,7 @@ def comments_report(google, start, end, time_period, jotform_ministry, jotform_p
         url = 'https://docs.google.com/spreadsheets/d/{id}'.format(id=gsheet_id)
         body.append("""<p><a href="{url}">Link to Google sheet containing comments for this timeframe</a>.</p>
 <p>There are {num} comments in this report.</p>"""
-                     .format(url=url, num=len(data) - blank_line))
+                     .format(url=url, num=len(data)))
 
     body.append("""
 </body>
@@ -353,7 +282,7 @@ def comments_report(google, start, end, time_period, jotform_ministry, jotform_p
 
 ##############################################################################
 
-def statistics_compute(pds_families, jotform_ministry, jotform_pledge, log):
+def statistics_compute(pds_families, unique_fid_jotform, log):
     ret = dict()
 
     # Total number of active Families in the parish
@@ -365,10 +294,10 @@ def statistics_compute(pds_families, jotform_ministry, jotform_pledge, log):
     # (i.e., we have an email address for the spouse and/or HoH)
 
     eligible = dict()
-    for fid, f in pds_families.items():
-        for m in f['members']:
-            if helpers.member_is_hoh_or_spouse(m):
-                em = PDSChurch.find_any_email(m)
+    for fid, family in pds_families.items():
+        for member in family['members']:
+            if helpers.member_is_hoh_or_spouse(member):
+                em = PDSChurch.find_any_email(member)
                 if len(em) == 0:
                     continue
                 eligible[fid] = True
@@ -378,69 +307,37 @@ def statistics_compute(pds_families, jotform_ministry, jotform_pledge, log):
 
     #-----------------------------------------------------------
 
-    # Make quick lookup dictionaries for which MIDs and FIDs have
-    # submitted for use below.
-    ministry_submitted = dict()
-    for row in jotform_ministry:
-        if row['mid'] == 'mid':
-            continue # Skip title row
+    # The unique_fid_jotform dictionary we have will have, at most, 1 entry per
+    # FID.  So we can just take the length of it to know how many (unique)
+    # families have submitted electronically.
+    ret['num_electronic'] = len(unique_fid_jotform)
 
-        mid = int(row['mid'])
-        ministry_submitted[mid] = True
+    #-----------------------------------------------------------
 
-    pledge_submitted = dict()
-    for row in jotform_pledge:
-        if row['fid'] == 'fid':
-            continue # Skip title row
-
+    # Build a cross-reference of which families have submitted electronically
+    fids_electronic = dict()
+    for row in unique_fid_jotform:
         fid = int(row['fid'])
-        pledge_submitted[fid] = True
+        fids_electronic[fid] = True
 
-    #-----------------------------------------------------------
+    fids_paper_or_electronic = fids_electronic.copy()
 
-    # Compute number of a) at least partial household submissions
-    # and b) completed household submissions.  While here, also
-    # count families that have either started *or* have the
-    # "already done" PDS Family status (i.e., the union count of
-    # these two).
-    ret['num_started'] = 0
-    ret['num_completed'] = 0
-    ret['num_started_or_asfs'] = 0
-    ret['num_completed_or_asfs'] = 0
+    # - Count how many submitted paper
+    # - Count how many submitted paper and electronic
+    # - Count how many submitted paper or electronic
+    fids_paper = dict()
+    fids_paper_and_electronic = dict()
+    for fid, family in pds_families.items():
+        if 'status' in family and family['status'] == already_submitted_fam_status:
+            fids_paper[fid] = True
+            fids_paper_or_electronic[fid] = True
 
-    for fid, f in pds_families.items():
-        member_ministries_done = True
-        for m in f['members']:
-            mid = m['MemRecNum']
-            if mid not in ministry_submitted:
-                member_ministries_done = False
-                break
+            if fid in fids_electronic:
+                fids_paper_and_electronic[fid] = True
 
-        family_pledge_done = True
-        if fid not in pledge_submitted:
-            family_pledge_done = False
-
-        if member_ministries_done or family_pledge_done:
-            ret['num_started'] += 1
-        if member_ministries_done and family_pledge_done:
-            ret['num_completed'] += 1
-
-        done_status = False
-        if 'status' in f and f['status'] == already_submitted_fam_status:
-            done_status = True
-
-        if member_ministries_done or family_pledge_done or done_status:
-            ret['num_started_or_asfs'] += 1
-        if (member_ministries_done and family_pledge_done) or done_status:
-            ret['num_completed_or_asfs'] += 1
-
-    #-----------------------------------------------------------
-
-    # Number of Families with the "completed" PDS Family status
-    ret['num_asfs'] = 0
-    for f in pds_families.values():
-        if 'status' in f and f['status'] == already_submitted_fam_status:
-            ret['num_asfs'] += 1
+    ret['num_paper']                = len(fids_paper)
+    ret['num_paper_or_electronic']  = len(fids_paper_or_electronic)
+    ret['num_paper_and_electronic'] = len(fids_paper_and_electronic)
 
     #-----------------------------------------------------------
 
@@ -448,8 +345,7 @@ def statistics_compute(pds_families, jotform_ministry, jotform_pledge, log):
 
 #------------------------------------------------------------------------
 
-def statistics_graph(pds_members, pds_families,
-                     jotform_ministry, jotform_pledge, log):
+def statistics_graph(pds_members, pds_families, jotform, log):
     def _find_range(data, earliest, latest):
         for row in data:
             submitted = row['SubmitDate']
@@ -464,39 +360,14 @@ def statistics_graph(pds_members, pds_families,
     #------------------------------------------------------------------------
 
     def _compute(start, end, pds_members, pds_families,
-                 jotform_ministry, jotform_pledge, log):
-        ret = dict()
-
+                 jotform, log):
         # Compute these values just in the date range:
-        # - How many ministry submissions?
-        # - How many pledge submissions?
-        # - How many families started?
-        # - How many families completed?
+        # - How many unique family submissions total?
 
         family_submitted = dict()
-        ministry_submitted = dict()
-        for row in jotform_ministry:
-            if row['mid'] == 'mid':
-                continue # Skip title row
 
-            # Is this row in our date range?
-            dt = helpers.jotform_date_to_datetime(row['SubmitDate'])
-            if dt < start or dt > end:
-                continue
-
-            mid = int(row['mid'])
-
-            # Make sure the member hasn't been deleted
-            if mid not in pds_members:
-                continue
-
-            ministry_submitted[mid] = True
-
-            fid = pds_members[mid]['family']['FamRecNum']
-            family_submitted[fid] = True
-
-        pledge_submitted = dict()
-        for row in jotform_pledge:
+        # Check electronic submissions
+        for row in jotform:
             if row['fid'] == 'fid':
                 continue # Skip title row
 
@@ -506,72 +377,51 @@ def statistics_graph(pds_members, pds_families,
                 continue
 
             fid = int(row['fid'])
+            log.debug(f"Found submission in our date window: {fid} on {dt}")
 
             # Make sure the family hasn't been deleted
             if fid not in pds_families:
                 continue
 
-            pledge_submitted[fid] = True
             family_submitted[fid] = True
 
-        ret['num_ministry_submissions'] = len(ministry_submitted)
-        ret['num_pledge_submissions'] = len(pledge_submitted)
-        ret['num_families_started'] = len(family_submitted)
-
-        #...........................
-
-        ret['num_families_completed'] = 0
-        for fid, f in pds_families.items():
-            member_ministries_done = True
-            for m in f['members']:
-                mid = m['MemRecNum']
-                if mid not in ministry_submitted:
-                    member_ministries_done = False
-                    break
-
-            family_pledge_done = True
-            if fid not in pledge_submitted:
-                family_pledge_done = False
-
-            if member_ministries_done and family_pledge_done:
-                ret['num_families_completed'] += 1
-
-        return ret
+        return len(family_submitted)
 
     #------------------------------------------------------------------------
 
+    one_day  = timedelta(days=1)
     earliest = datetime(year=9999, month=12, day=31)
     latest   = datetime(year=1971, month=1,  day=1)
-    earliest, latest = _find_range(jotform_ministry, earliest, latest)
-    earliest, latest = _find_range(jotform_pledge, earliest, latest)
+    earliest, latest = _find_range(jotform, earliest, latest)
 
-    log.info("Earliest: {dt}".format(dt=earliest))
-    log.info("Latest:   {dt}".format(dt=latest))
+    earliest = datetime(year=earliest.year, month=earliest.month, day=earliest.day)
+    latest   = datetime(year=latest.year, month=latest.month, day=latest.day)
+    latest   += one_day - timedelta(seconds=1)
 
-    one_day = timedelta(days=1)
+    log.info(f"Earliest: {earliest}")
+    log.info(f"Latest:   {latest}")
 
-    day = earliest
-
-    dates = list()
-    data_ministry = list()
-    data_pledge = list()
-    data_family_starts = list()
-    data_family_completions = list()
+    day             = earliest
+    dates           = list()
+    data_per_day    = list()
+    data_cumulative = list()
 
     # Make lists that we can give to matplotlib for plotting
     while day <= latest:
-        data_one_day = _compute(day, day + one_day,
-                                pds_members, pds_families,
-                                jotform_ministry, jotform_pledge, log)
-        data_cumulative = _compute(earliest, day + one_day,
-                                   pds_members, pds_families,
-                                   jotform_ministry, jotform_pledge, log)
+        log.debug(f"Get per-day stats for {day.date()}")
+        per_day    = _compute(day, day + one_day,
+                              pds_members, pds_families,
+                              jotform, log)
+        log.debug(f"Get cumulative stats for {earliest} - {day + one_day}")
+        cumulative = _compute(earliest, day + one_day,
+                              pds_members, pds_families,
+                              jotform, log)
+
+        log.debug(f"Date: {day}: per day {per_day}, cumulative {cumulative}")
 
         dates.append(day.date())
-        data_ministry.append(data_one_day['num_ministry_submissions'])
-        data_pledge.append(data_one_day['num_pledge_submissions'])
-        data_family_starts.append(data_cumulative['num_families_started'])
-        data_family_completions.append(data_cumulative['num_families_completed'])
+        data_per_day.append(per_day)
+        data_cumulative.append(cumulative)
 
         day += one_day
 
@@ -586,12 +436,10 @@ def statistics_graph(pds_members, pds_families,
     plt.title("As of {month} {day}, {year} at {hour}:{min:02}{ampm}"
             .format(month=n.strftime("%B"), day=n.day, year=n.year,
                     hour=hour, min=n.minute, ampm=ampm))
-    plt.suptitle(title + " submissions statistics")
+    plt.suptitle(title + " electronic submissions statistics")
 
-    ax.plot(dates, data_ministry, label='Ministry submissions per day')
-    ax.plot(dates, data_pledge, label='Pledge submissions per day')
-    ax.plot(dates, data_family_starts, label='Cumulative family starts')
-    ax.plot(dates, data_family_completions, label='Cumulative family completions')
+    ax.plot(dates, data_per_day, label='Unique family electronic submissions per day')
+    ax.plot(dates, data_cumulative, label='Cumulative unique family electronic submissions')
 
     ax.get_xaxis().set_major_locator(mdates.DayLocator(interval=1))
     ax.get_xaxis().set_major_formatter(mdates.DateFormatter("%a %b %d"))
@@ -613,58 +461,58 @@ def statistics_graph(pds_members, pds_families,
 
 #-----------------------------------------------------------------------------
 
-def statistics_report(end, pds_members, pds_families,
-                    jotform_ministry, jotform_pledge,
-                    log):
+def statistics_report(args, end, pds_members, pds_families, jotform, log):
     log.info("Composing statistics report...")
 
     #---------------------------------------------------------------
 
-    graph_filename = statistics_graph(pds_members, pds_families,
-                                    jotform_ministry, jotform_pledge, log)
-    data = statistics_compute(pds_families,
-                              jotform_ministry, jotform_pledge, log)
+    graph_filename = statistics_graph(pds_members, pds_families, jotform, log)
+    data = statistics_compute(pds_families, jotform, log)
 
     #---------------------------------------------------------------------
 
+    electronic_percentage           = data['num_electronic'] / data['num_eligible'] * 100
+    paper_percentage                = data['num_paper_and_electronic'] / data['num_active'] * 100
+    paper_and_electronic_percentage = data['num_paper_and_electronic'] / data['num_active'] * 100
+    paper_or_electronic_percentage  = data['num_paper_or_electronic'] / data['num_active'] * 100
+
     # Send the statistics report email
     body = list()
-    body.append("""<html>
+    body.append(f"""<html>
 <body>
 <h2>{title} statistics update</h2>
 
 <h3>Time period: through {end}</h3>
 <ul>
-<li> Total number of active PDS Families in the parish: {num_active:,d}</li>
+<li> Total number of active PDS Families in the parish: {data['num_active']:,d}</li>
 <br>
-<li> Number of active PDS Families eligible for electronic stewardship: {num_eligible:,d}
+<li> Number of active PDS Families eligible for electronic stewardship: {data['num_eligible']:,d}
     <ul>
     <li>This means that we have an email address in PDS for the Head of Household and/or the Spouse of a given Family</li>
     </ul></li>
 <br>
-<li> Number of electronic-stewardship-eligible Families who have electronically submitted anything: {started:,d} (out of {num_eligible:,d}, or {started_percentage:.1f}%)</li>
-<li> Number of electronic-stewardship-eligible Families who have electronically completed their submissions: {completed:,d} (out of {num_eligible:,d}, or {completed_percentage:.1f}%)</li>
+<li> Number of electronic-stewardship-eligible Families who have electronically submitted: {data['num_electronic']:,d} (out of {data['num_eligible']:,d}, or {electronic_percentage:.1f}%)
+    <ul>
+    <li>This is the number of families who submitted electronically.</li>
+    </ul></li>
 <br>
-<li> Number of active PDS Families with "{label}" status: {num_asfs:,d}</li>
+<li> Number of active PDS Families with "{already_submitted_fam_status}" status: {data['num_paper']:,d} (out of {data['num_active']:,d}, or {paper_percentage:.1f}%)
+    <ul>
+    <li>This is the number of families who submitted a paper card.</li>
+    </ul></li>
 <br>
-<li> Number of active PDS Families who have either electronically submitted anything or have "{label}" status: {num_started_or_asfs:,d} (out of {num_active:,d}, or {num_started_or_asfs_percentage:.1f}%)
-<li> Number of active PDS Families who have either electronically completed their submission or have "{label}" status: {num_completed_or_asfs:,d} (out of {num_active:,d}, or {num_completed_or_asfs_percentage:.1f}%)
+<li> Number of active PDS Families who have electronically completed their submission <em>and</em> have "{already_submitted_fam_status}" status: {data['num_paper_and_electronic']:,d} (out of {data['num_active']:,d}, or {paper_and_electronic_percentage:.1f}%)
+    <ul>
+    <li>These are people who submitted twice -- paper and electronically!</li>
+    </ul></li>
+<br>
+<li> Number of active PDS Families who have electronically completed their submission <em>or</em> have "{already_submitted_fam_status}" status: {data['num_paper_or_electronic']:,d} (out of {data['num_active']:,d}, or {paper_or_electronic_percentage:.1f}%)
+    <ul>
+    <li>This is the total number of active Families who have submitted.</li>
+    </ul></li>
 </ul>
 </body>
-</html>"""
-                       .format(title=title, end=end,
-                                num_active=data['num_active'],
-                                num_eligible=data['num_eligible'],
-                                started=data['num_started'],
-                                started_percentage=(data['num_started']/data['num_eligible']*100),
-                                completed=data['num_completed'],
-                                completed_percentage=(data['num_completed']/data['num_eligible']*100),
-                                label=already_submitted_fam_status,
-                                num_asfs=data['num_asfs'],
-                                num_started_or_asfs=data['num_started_or_asfs'],
-                                num_started_or_asfs_percentage=(data['num_started_or_asfs']/data['num_active']*100),
-                                num_completed_or_asfs=data['num_completed_or_asfs'],
-                                num_completed_or_asfs_percentage=(data['num_completed_or_asfs']/data['num_active']*100)))
+</html>""")
 
     to = statistics_email_to
     time_period = "through {end}".format(end=end)
@@ -769,7 +617,7 @@ def convert_pledges_to_pds_import(pds_families, jotform_pledge, log):
         row['TotalPledge'] = total
         row['SubmitDate'] = pledge['SubmitDate']
         row['Names'] = pledge['Names']
-        row['Envelope'] = "'" + pledge['EnvId']
+        row['Envelope'] = helpers.pkey_url(pledge['EnvId'])
 
         out.append(row)
 
@@ -1030,7 +878,7 @@ def convert_ministries_to_pds_import(pds_members, jotform_ministry, log):
                 out_row['Full Name'] = m['full_name']
                 out_row['First Name'] = m['first']
                 out_row['Last Name'] = m['last']
-                out_row['Family Envelope ID'] = "'" + f['ParKey'].strip()
+                out_row['Family Envelope ID'] = helpers.pkey_url(f['ParKey'].strip())
 
                 emails = list()
                 key = 'preferred_emails'
@@ -1164,10 +1012,7 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
 
 ##############################################################################
 
-def family_status_csv_report(args, google, start, end, time_period,
-                             pds_families, pds_members,
-                             jotform_pledge, jotform_ministry,
-                             log):
+def family_status_csv_report(args, google, start, end, time_period, pds_families, pds_members, jotform_pledge, jotform_ministry, log):
     # Simple report: FID, Family name, and constants.already_submitted_fam_status
 
     # Make a list of families who have submitted anything at all
@@ -1268,108 +1113,17 @@ The same spreadsheet <a href="{url}">is also available as a Google Sheet</a>.</p
 
 ##############################################################################
 
-# Send "thank you" emails to everyone who completed in this timeframe
-def thank_you_emails(args, google, start, end, time_period,
-                     pds_families, pds_members,
-                     jotform_pledge, jotform_ministry, log):
-
-
-
-    # JMS THIS REPORT WAS NOT COMPLETED FOR 2020 Stewardship.
-
-
-
-    # Make quick lookup table for looking up Members who submitted a ministry update
-    member_ministry_update = dict()
-    for row in jotform_ministry:
-        mid = int(row['mid'])
-        if mid not in pds_members:
-            continue
-        member_ministry_update[mid] = True
-
-    # Find Families who are complete
-    completed = dict()
-    for row in jotform_pledge:
-        fid = int(row['fid'])
-        if fid not in pds_families:
-            continue
-
-        # If we get here, it's because the Family submitted a pledge.  Now check to see if all Members in the Family have submitted a Ministry update.
-        found_all = True
-        f = pds_families[fid]
-        for m in f['members']:
-            mid = m['MemRecNum']
-            if mid not in member_ministry_update:
-                # At least this Member does not have a ministry member update.  We're therefore done searching this Family.
-                found_all = False
-                break
-
-        if not found_all:
-            continue
-
-        # If we got here, it means the Family submission is complete
-        log.info("Family {name} has completed"
-                .format(name=f['Name']))
-        completed[fid] = True
-
-    #-------------------------------------------------------------------------
-
-    # JMS AT THIS POINT WE KNOW WHO COMPLETED OVERALL
-    # JMS WE STILL NEED TO KNOW WHO COMPLETED IN THE TIMEFRAME (i.e., who "new" just completed so that we can send them an email)
-
-    #-------------------------------------------------------------------------
-
-    with open('email-thank-you-and-survey.html', 'r') as f:
-        contents = f.read()
-
-    # JMS override
-    to = 'jsquyres@gmail.com'
-    # Can't use .format() because of CSS use of {}
-    body = contents.replace("{family_names}", "Squyres")
-
-    subject = 'Thank you for participating in Epiphany\'s 2020 Stewardship Drive!'
-    try:
-        log.info('Sending "{subject}" email to {to}'
-                 .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
-            msg = EmailMessage()
-            msg['Subject'] = subject
-            msg['From'] = smtp_from
-            msg['To'] = to
-            msg.set_content(body)
-            msg.replace_header('Content-Type', 'text/html')
-
-            # This assumes that the file has a single line in the format of username:password.
-            with open(args.smtp_auth_file) as f:
-                line = f.read()
-                smtp_username, smtp_password = line.split(':')
-
-            # Login; we can't rely on being IP whitelisted.
-            try:
-                smtp.login(smtp_username, smtp_password)
-            except Exception as e:
-                log.error(f'Error: failed to SMTP login: {e}')
-                exit(1)
-
-            smtp.send_message(msg)
-    except:
-        print("==== Error with {email}".format(email=to))
-        print(traceback.format_exc())
-
-
-##############################################################################
-
 def _export_gsheet_to_csv(service, start, end, google_sheet_id, fieldnames):
     response = service.files().export(fileId=google_sheet_id,
                                       mimeType=Google.mime_types['csv']).execute()
 
     # Some of the field names will be lists.  In those cases, use the first field name in the list.
     final_fieldnames = list()
-    for f in fieldnames:
-        if type(f) is list:
-            final_fieldnames.append(f[0])
-        else:
-            final_fieldnames.append(f)
+    final_fieldnames.extend(fieldnames['prelude'])
+    for member in fieldnames['members']:
+        final_fieldnames.extend(member)
+    final_fieldnames.extend(fieldnames['family'])
+    final_fieldnames.extend(fieldnames['epilog'])
 
     csvreader = csv.DictReader(response.decode('utf-8').splitlines(),
                                fieldnames=final_fieldnames)
@@ -1391,35 +1145,28 @@ def _export_gsheet_to_csv(service, start, end, google_sheet_id, fieldnames):
 
 #-----------------------------------------------------------------------------
 
-def read_jotforms(google, start, end, member_gfile_id, family_gfile_id):
-    def _deduplicate(rows, field):
-        index = dict()
+def read_jotform_gsheet(google, start, end, gfile_id):
+    csv_data = _export_gsheet_to_csv(google, start, end, gfile_id,
+                                      jotform_gsheet_columns)
 
-        # Save the last row number for any given MID/FID
-        # (we only really care about the *last* entry that someone makes)
-        for i, row in enumerate(rows):
-            index[row[field]] = i
+    # Deduplicate: save the last row number for any given FID
+    # (we only really care about the *last* entry that someone makes)
+    deduplicated = dict()
+    for row in csv_data:
+        fid = row['fid']
 
-        # Now create a new output list that has just that last row for any given
-        # MID/FID
-        out = list()
-        for i, row in enumerate(rows):
-            if index[row[field]] == i:
-                out.append(row)
+        # Skip the title row
+        if fid == 'fid':
+            continue
 
-        return out
+        deduplicated[fid] = row
 
-    #------------------------------------------------------------------------
+    # Turn this dictionary into a list of rows
+    out = list()
+    for fid in sorted(deduplicated):
+        out.append(deduplicated[fid])
 
-    member_csv = _export_gsheet_to_csv(google, start, end, member_gfile_id,
-                                      jotform_member_fields)
-    member_csv = _deduplicate(member_csv, 'mid')
-
-    family_csv = _export_gsheet_to_csv(google, start, end, family_gfile_id,
-                                      jotform_family_fields)
-    family_csv = _deduplicate(family_csv, 'fid')
-
-    return member_csv, family_csv
+    return out
 
 ##############################################################################
 
@@ -1496,10 +1243,8 @@ def main():
     log.info("Reading PDS data...")
     (pds, pds_families,
      pds_members) = PDSChurch.load_families_and_members(filename='pdschurch.sqlite3',
+                                                        parishioners_only=True,
                                                         log=log)
-
-    # Remove non-parishioner families
-    pds_families = helpers.filter_parishioner_families_only(pds_families)
 
     #---------------------------------------------------------------
 
@@ -1518,16 +1263,13 @@ def main():
 
     # Load all the results
     log.info("Downloading Jotform raw data...")
-    jotform_ministry_all, jotform_pledge_all = read_jotforms(google, epoch, end,
-                jotform_member_gfile_id, jotform_family_gfile_id)
+    jotform_all = read_jotform_gsheet(google, epoch, end, jotform_gsheet_gfile_id)
 
     # Load a range of results
     if start == epoch:
-        jotform_ministry_range = jotform_ministry_all.copy()
-        jotform_pledge_range = jotform_pledge_all.copy()
+        jotform_range = jotform_all.copy()
     else:
-        jotform_ministry_range, jotform_pledge_range = read_jotforms(google, start, end,
-                    jotform_member_gfile_id, jotform_family_gfile_id)
+        jotform_range = read_jotform_gsheet(google, start, end, jotform_gsheet_gfile_id)
 
     #---------------------------------------------------------------
 
@@ -1535,10 +1277,10 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    comments_report(google, start, end, time_period,
-                    jotform_ministry_range, jotform_pledge_range, log)
-    statistics_report(end, pds_members, pds_families,
-                      jotform_ministry_all, jotform_pledge_all, log)
+    comments_report(args, google, start, end, time_period,
+                    jotform_range, log)
+    statistics_report(args, end, pds_members, pds_families,
+                      jotform_all, log)
 
     # These reports were uncommented and run by hand upon demand.
     #family_pledge_csv_report(args, google, start, end, time_period,
@@ -1548,13 +1290,6 @@ def main():
     #                         jotform_pledge_range, jotform_ministry_range, log)
     #member_ministry_csv_report(args, google, start, end, time_period,
     #                           pds_members, jotform_ministry_range, log)
-
-    # This report was not finished.  See the "Ideas for 2021" section
-    # in README.md.  It should probably be finished and run every
-    # night.
-    #thank_you_emails(args, google, start, end, time_period,
-    #                 pds_families, pds_members,
-    #                 jotform_pledge_all, jotform_ministry_all, log)
 
     # Close the databases
     pds.connection.close()

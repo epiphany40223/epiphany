@@ -8,8 +8,6 @@ sys.path.insert(0, '../../python')
 
 import re
 
-from pprint import pprint
-from pprint import pformat
 from datetime import datetime
 from datetime import timedelta
 
@@ -57,18 +55,6 @@ def member_is_hoh_or_spouse(m):
         return True
     else:
         return False
-
-#--------------------------------------------------------------------------
-
-def filter_parishioner_families_only(families):
-    filtered_families = dict()
-    for fid, family in families.items():
-        # Fake Families start with ID 7000
-        id = int(family['ParKey'].strip())
-        if id > 0 and id < 7000:
-            filtered_families[fid] = family
-
-    return filtered_families
 
 #--------------------------------------------------------------------------
 
@@ -133,3 +119,12 @@ def household_name(family):
         name += ' ' + hoh_names['last']
 
     return name
+
+
+#--------------------------------------------------------------------------
+
+def url_escape(s):
+    return s.replace('\"', '\\"')
+
+def pkey_url(env_id):
+    return "' {0}".format(str(env_id).strip())
