@@ -29,7 +29,7 @@ def diediedie(msg):
 #-------------------------------------------------------------------
 
 def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
-                  log_millisecond=True):
+                  log_millisecond=True, rotate=False):
     level=logging.ERROR
 
     if debug:
@@ -37,7 +37,7 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
     elif info:
         level="INFO"
 
-    log = logging.getLogger('FToTD')
+    log = logging.getLogger('ECC')
     log.setLevel(level)
 
     # Make sure to include the timestamp in each message
@@ -49,11 +49,24 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
     s.setFormatter(f)
     log.addHandler(s)
 
-    # Optionally save to a rotating logfile
+    # Optionally save to a logfile
     if logfile:
-        s = logging.handlers.RotatingFileHandler(filename=logfile,
-                                                 maxBytes=(pow(2,20) * 10),
-                                                 backupCount=50)
+        if rotate:
+            s = logging.handlers.RotatingFileHandler(filename=logfile,
+                                                     maxBytes=(pow(2,20) * 10),
+                                                     backupCount=50)
+        else:
+            if platform.system() != "Windows":
+                # According to
+                # https://docs.python.org/3/library/logging.handlers.html#watchedfilehandler,
+                # the WatchedFile handler is not appropriate for MS
+                # Windows.  The WatchedFile handler is friendly to
+                # services like the Linux logrotater (i.e.,
+                # WatchedFile will check the file before it writes
+                # anything, and will re-open the file if it needs to).
+                s = logging.handlers.WatchedFileHandler(filename=logfile)
+            else:
+                s = logging.handlers.FileHandler(filename=logfile)
         s.setFormatter(f)
         log.addHandler(s)
 
