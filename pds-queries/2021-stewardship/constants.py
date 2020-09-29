@@ -380,7 +380,7 @@ jotform_gsheet_columns['prelude'] = [
 #--------------------------------------------------------------------------
 
 max_number = MAX_PDS_FAMILY_MEMBER_NUM
-# In 20201, Jotform can only handle 6 Members' worth of data
+# In 2021, Jotform can only handle 6 Members' worth of data
 # But we actually have 7 Members' worth of fields on the Form
 # So we have to account for this 7th Member's data here, even
 # though it will always be blank

@@ -408,9 +408,10 @@ def send_unsubmitted_family_emails(args, families, submissions,
     # - all Family Member ministry forms
     # - a Family pledge form
     #
-    # Then also remove any Family that has "2020 Stewardship" set as their Family status.  This means that someone manually put this keyword on the
-    # Family, probably indicating that they have submitted their stewardship
-    # data on paper.
+    # Then also remove any Family that has "2021 Stewardship" set as
+    # their Family status.  This means that someone manually put this
+    # keyword on the Family, probably indicating that they have
+    # submitted their stewardship data on paper.
 
     log.info("Looking for Families with incomplete submissions...")
     some_families = dict()
@@ -418,12 +419,13 @@ def send_unsubmitted_family_emails(args, families, submissions,
         want = False
 
         if fid not in submissions:
-            log.info("Family {n} (fid {fid}) not in pledges"
+            log.info("Family {n} (fid {fid}) no electronic submission"
                     .format(n=f['Name'], fid=fid))
             want = True
 
         # This keyword trumps everything: if it is set on the Family, they do not get a reminder email.
         if 'status' in f and f['status'] == already_submitted_fam_status:
+            log.info(f"Family {f['Name']} (fid {fid}) has status {already_submitted_fam_status}")
             want = False
 
         if want:
@@ -431,7 +433,7 @@ def send_unsubmitted_family_emails(args, families, submissions,
                     .format(n=f['Name'], fid=fid))
             some_families[fid] = f
         else:
-            log.info("Compleded family (fid {fid}): {n} -- skipping"
+            log.info("Completed family (fid {fid}): {n} -- skipping"
                     .format(n=f['Name'], fid=fid))
 
     return _send_family_emails(args.email_content, some_families, submissions,
@@ -604,7 +606,7 @@ def setup_google(args, log):
         fields = [
             'SubmitDate',
             'EnvId',
-            'id',
+            'fid',
             # There are other fields in these spreadsheets, but we only care about
             # the 1st three
         ]
@@ -745,7 +747,12 @@ def main():
     global args
     args, need_google = setup_args()
 
-    log = ECC.setup_logging(debug=False)
+    logfilename = 'log.txt'
+    try:
+        os.unlink(logfilename)
+    except:
+        pass
+    log = ECC.setup_logging(debug=False, logfile=logfilename)
 
     # We need Google if the email content contains a *_reminder template
     # (i.e., we need to login to Google and download some data)
