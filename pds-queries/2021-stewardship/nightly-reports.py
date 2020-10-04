@@ -101,7 +101,7 @@ def upload_to_gsheet(google, folder_id, filename, fieldnames, csv_rows, remove_c
             'supportsTeamDrives' : True,
             }
         media = MediaFileUpload(csv_filename,
-                                mimetype=Google.mime_types['sheet'],
+                                mimetype=Google.mime_types['csv'],
                                 resumable=True)
         file = google.files().create(body=metadata,
                                      media_body=media,
