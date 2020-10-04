@@ -976,7 +976,7 @@ def main():
         {
             'ministries' : [ '451-Livestream Team Ministry' ],
             'ggroup'     : 'livestream-team{ecc}'.format(ecc=ecc),
-            'notify'     : 'director-communications{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'director-communications{ecc},TomHayesMP@gmail.com,pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
         #############################
