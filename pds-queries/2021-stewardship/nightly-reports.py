@@ -52,6 +52,8 @@ from constants import smtp_from
 
 from constants import jotform
 
+from constants import MAX_PDS_FAMILY_MEMBER_NUM
+
 ##############################################################################
 
 ecc = '@epiphanycatholicchurch.org'
@@ -750,9 +752,15 @@ def _status_to_str(status):
 # - Needs to be examined by a human
 #   - NOT PARTICIPATE -> ALREADY PARTICIPATE
 #   - PARTICIPATE -> INTERESTED
-def convert_ministries_to_pds_import(pds_members, jotform_ministry, log):
+#
+# Output will be a dictionary:
+# - PDS ministry name (in the case of multi-names, like lectors, use the jotform name): dictionary of
+#   - interested: list of members
+#   - no_longer_interested: list of members
+#   - needs_human: list of members
+def analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, log):
     def _get_pds_member_ministry_status(member, ministry_names):
-        for ministry in m['active_ministries']:
+        for ministry in member['active_ministries']:
             if ministry['Description'] in ministry_names:
                 if ministry['active']:
                     return MINISTRY_PARTICIPATE, ministry['status']
@@ -771,146 +779,172 @@ def convert_ministries_to_pds_import(pds_members, jotform_ministry, log):
             return 'Interested'
 
     #-------------------------------------------------------------------------
-    def _map_ministry_to_group(ministry_to_find):
-        for key, group in jotform_member_ministries.items():
-            for ministry in group:
-                if type(ministry) is list:
-                    for m in ministry:
-                        if m == ministry_to_find:
-                            return jotform_ministry_groups[key]
-                else:
-                    if ministry == ministry_to_find:
-                        return jotform_ministry_groups[key]
-        return None
 
-    #-------------------------------------------------------------------------
+    output = dict()
 
-    interested = list()
-    no_longer_interested = list()
-    needs_human = list()
+    # Each row is a family
+    for jrow in jotform_csv:
+        fid = int(jrow['fid'])
 
-    for row in jotform_ministry:
-        # Here's something that can happen: a MID was submitted, but is no
-        # longer an active member in PDS.  In that case, ignore the submission.
-        mid = int(row['mid'])
-        if mid not in pds_members:
-            log.warn("WARNING: Member {mid} / {name} submitted ministry info, but cannot be found"
-                    .format(mid=mid, name=row['Name']))
+        # Make sure the family is still active
+        if fid not in pds_families:
+            log.warn(f"WARNING: Family {fid} submitted, but cannot be found -- skipping")
             continue
 
-        m = pds_members[mid]
-        f = m['family']
+        family = pds_families[fid]
+        log.info(f"Processing Jotform Family submission: {family['Name']} (FID {fid})")
 
-        # JMS Debug
-        #if not m['Name'].startswith('Squyres,Jeff'):
-        #    continue
+        # Check the members in this row
+        for member_num in range(MAX_PDS_FAMILY_MEMBER_NUM):
+            column_names = jotform_gsheet_columns['members'][member_num]
+            # The 0th entry in each Member is the MID
+            mid = jrow[column_names[0]]
 
-        # For each ministry submitted, see if there was a change
-        for group in jotform_member_ministries:
-            for ministry_entry in jotform_member_ministries[group]:
-                # Some of the ministry entries are lists because we want to treat them equivalently.
-                if type(ministry_entry) is list:
-                    jotform_column = ministry_entry[0]
-                    ministries     = ministry_entry
-                else:
-                    jotform_column = ministry_entry
-                    ministries     = [ ministry_entry ]
+            # If there's no MID for this Member, then there's no Member.
+            # We're done with the loop.
+            if mid == '':
+                break
 
-                # Get their status from Jotform
-                jotform_status_str = row[jotform_column]
-                jotform_status = _convert_jotform_ministry_status(jotform_status_str)
+            # Here's something that can happen: a MID was submitted, but is no
+            # longer an active member in PDS.  In that case, ignore the submission.
+            mid = int(mid)
+            if mid not in pds_members:
+                log.warn(f"WARNING: Member {mid} submitted, but cannot be found -- skipping")
+                continue
 
-                # Get their status from PDS
-                pds_status, pds_status_string = _get_pds_member_ministry_status(m, ministries)
+            member = pds_members[mid]
+            log.info(f"  Processing Jotform member {member['email_name']} (MID {mid})")
 
-                # If they're the same, nothing to do
-                if jotform_status == pds_status:
-                    continue
+            # JMS Debug
+            #if not m['Name'].startswith('Squyres,Jeff'):
+            #    continue
 
-                ministry_group = _map_ministry_to_group(jotform_column)
+            # Go through the list of ministry grids from the jotform
+            for grid in jotform.ministry_grids:
+                # Go through the rows in the jotform ministry grid
+                for mrow in grid.rows:
+                    # Each row has its PDS ministry name
+                    ministry_entry = mrow['pds_ministry']
 
-                # We're going to have some form of output here, so
-                # make a row.  Use an OrderedDict so that the fields
-                # stay in order.
-                out_row = collections.OrderedDict()
-                out_row['mid'] = mid
-                out_row['MinistryGroup'] = ministry_group
-                out_row['Ministry'] = jotform_column
-                out_row['Status'] = _status_to_pds(jotform_status)
-                out_row['Name'] = row['Name']
+                    # Some ministry rows are lists because we want to treat them equivalently
+                    if type(ministry_entry) is list:
+                        output_key = mrow['row_heading']
+                        ministries = ministry_entry
+                    else:
+                        output_key = ministry_entry
+                        ministries = [ ministry_entry ]
 
-                # If PDS INACTIVE -> INTERESTED
-                if (pds_status == MINISTRY_INACTIVE and
-                      jotform_status == MINISTRY_INTERESTED):
-                    out_row['StartDate'] = ministry_start_date
-                    interested.append(out_row)
+                    # Get the Member's status in this Ministry from the jotform
+                    jotform_column_name = mrow['jotform_columns'][member_num]
+                    jotform_status_str  = jrow[jotform_column_name]
+                    jotform_status      = _convert_jotform_ministry_status(jotform_status_str)
 
-                elif (pds_status == MINISTRY_PARTICIPATE and
-                      jotform_status == MINISTRY_INACTIVE):
-                    out_row['EndDate'] = ministry_end_date
-                    no_longer_interested.append(out_row)
+                    # Get their status from PDS
+                    pds_status, pds_status_string = _get_pds_member_ministry_status(member, ministries)
+                    key = 'jotform'
+                    if key not in member:
+                        member[key] = dict()
+                    member[key][output_key] = pds_status_string
 
-                elif (pds_status == MINISTRY_INACTIVE and
-                      jotform_status == MINISTRY_PARTICIPATE):
-                    out_row['Reason'] = 'PDS says inactive, but Member indicated active'
-                    needs_human.append(out_row)
+                    # If they're the same, nothing to do
+                    if jotform_status == pds_status:
+                        continue
 
-                elif (pds_status == MINISTRY_PARTICIPATE and
-                      jotform_status == MINISTRY_INTERESTED):
-                    out_row['Reason'] = 'PDS says already active, but member indicated interest'
-                    needs_human.append(out_row)
+                    if output_key not in output:
+                        output[output_key] = dict()
 
-                # Add additional fields as requested by the staff
-                # - Whether Member's Family submitted a paper card or not
-                # - Member nickname + last name
-                # - Member first name
-                # - Member last name
-                # - Family envelope ID
-                # - Member email addresses
-                # - Member phones
-                # - Member status on ministry
-                if 'status' in f and f['status'] == already_submitted_fam_status:
-                    paper = 'Submitted paper card'
-                else:
-                    paper = 'Electronic only'
-                out_row['Submitted paper?'] = paper
+                    # If PDS INACTIVE -> INTERESTED
+                    if (pds_status == MINISTRY_INACTIVE and
+                          jotform_status == MINISTRY_INTERESTED):
+                        key = 'Interested'
+                        if key not in output[output_key]:
+                            output[output_key][key] = list()
+                        output[output_key][key].append(member)
 
-                out_row['Full Name'] = m['full_name']
-                out_row['First Name'] = m['first']
-                out_row['Last Name'] = m['last']
-                out_row['Family Envelope ID'] = helpers.pkey_url(f['ParKey'].strip())
+                    elif (pds_status == MINISTRY_PARTICIPATE and
+                          jotform_status == MINISTRY_INACTIVE):
+                        key = 'No longer interested'
+                        if key not in output[output_key]:
+                            output[output_key][key] = list()
+                        output[output_key][key].append(member)
 
-                emails = list()
-                key = 'preferred_emails'
-                if key in m:
-                    for e in m[key]:
-                        emails.append(e['EMailAddress'])
-                out_row['Email'] = ', '.join(emails)
+                    elif (pds_status == MINISTRY_INACTIVE and
+                          jotform_status == MINISTRY_PARTICIPATE):
+                        key = 'Needs human: PDS=inactive, but Jotform=active'
+                        if key not in output[output_key]:
+                            output[output_key][key] = list()
+                        output[output_key][key].append(member)
 
-                phones = list()
-                text = ''
-                key = 'phones'
-                key2 = 'unlisted'
-                if key in m:
-                    # Is this the old member format?  Seems to be a dict of phone_id / phone_data, and no "Unlisted".  :-(
-                    for p in m[key].values():
-                        text = ('{num} {type}'
-                                .format(num=p['number'], type=p['type']))
-                        if key2 in p:
-                            if p[key2]:
-                                text += ' UNLISTED'
-                        phones.append(text)
-                out_row['Phone'] = text
+                    elif (pds_status == MINISTRY_PARTICIPATE and
+                          jotform_status == MINISTRY_INTERESTED):
+                        key = 'Needs human: PDS=active, but Jotform=not interested'
+                        if key not in output[output_key]:
+                            output[output_key][key] = list()
+                        output[output_key][key].append(member)
 
-                out_row['PDSMinistryStatus'] = pds_status_string
-
-    return interested, no_longer_interested, needs_human
+    return output
 
 #-----------------------------------------------------------------------------
 
-def member_ministry_csv_report(args, google, start, end, time_period, pds_members, jotform_ministry_csv, log):
-    interested, no_longer_interested, needs_human = convert_ministries_to_pds_import(pds_members, jotform_ministry_csv, log)
+def member_ministry_csv_report(args, google, start, end, time_period, pds_members, pds_families, jotform_csv, log):
+    def _find_any_phone(member):
+        key = 'phones'
+        key2 = 'unlisted'
+        if key in member:
+            # Is this the old member format?  Seems to be a dict of phone_id / phone_data, and no "Unlisted".  :-(
+            for p in member[key]:
+                text = f"{p['number']} {p['type']}"
+                if key2 in p:
+                    if p[key2]:
+                        text += ' UNLISTED'
+                return text
 
+        return ""
+
+    #--------------------------------------------------------------------
+
+    output = analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, log)
+
+    for ministry_name in sorted(output.keys()):
+        data = output[ministry_name]
+
+        rows = list()
+        rows.append([ 'Category', 'Full Name', 'First', 'Last name', 'Envelope ID', 'Email', 'Phone', 'Current ministry status', 'MID' ])
+
+        for category in sorted(data.keys()):
+
+            # Title row for this section
+            for member in data[category]:
+                family = member['family']
+
+                columns = list()
+                columns.append(category.capitalize())
+                columns.append(member['email_name'])
+                columns.append(member['first'])
+                columns.append(member['last'])
+                columns.append(helpers.pkey_url(family['ParKey']))
+                emails = PDSChurch.find_any_email(member)
+                if emails:
+                    columns.append(emails[0])
+                else:
+                    columns.append('')
+                columns.append(_find_any_phone(member))
+                columns.append(member['jotform'][ministry_name])
+                columns.append(member['MemRecNum'])
+
+                rows.append(columns)
+
+        # Write out the CSV with the results
+        filename = f'{ministry_name} jotform results.csv'.replace('/', '-')
+        if os.path.exists(filename):
+            os.unlink(filename)
+        with open(filename, 'w') as f:
+            writer = csv.writer(f)
+            for row in rows:
+                writer.writerow(row)
+            log.info(f"Wrote to filename: {filename}")
+
+def old_stuff():
     # If we have ministry update data, upload it to a Google sheet
     def _check(data, key, title):
         group = {
@@ -1277,10 +1311,10 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    comments_report(args, google, start, end, time_period,
-                    jotform_range, log)
-    statistics_report(args, end, pds_members, pds_families,
-                      jotform_all, log)
+    #comments_report(args, google, start, end, time_period,
+    #                jotform_range, log)
+    #statistics_report(args, end, pds_members, pds_families,
+    #                  jotform_all, log)
 
     # These reports were uncommented and run by hand upon demand.
     #family_pledge_csv_report(args, google, start, end, time_period,
@@ -1288,8 +1322,8 @@ def main():
     #family_status_csv_report(args, google, start, end, time_period,
     #                         pds_families, pds_members,
     #                         jotform_pledge_range, jotform_ministry_range, log)
-    #member_ministry_csv_report(args, google, start, end, time_period,
-    #                           pds_members, jotform_ministry_range, log)
+    member_ministry_csv_report(args, google, start, end, time_period,
+                               pds_members, pds_families, jotform_range, log)
 
     # Close the databases
     pds.connection.close()

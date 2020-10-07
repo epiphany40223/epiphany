@@ -219,9 +219,9 @@ def send_family_email(message_body, family, submissions,
     smtp_to = ",".join(data['to_addresses'])
 
     # JMS DEBUG
-    was = smtp_to
-    smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
-    log.info(f"Sending to (OVERRIDE): {smtp_to} (was {was})")
+    #was = smtp_to
+    #smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
+    #log.info(f"Sending to (OVERRIDE): {smtp_to} (was {was})")
     #---------------------------------------------------------------------
 
     if log:

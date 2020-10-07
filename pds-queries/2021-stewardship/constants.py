@@ -85,7 +85,7 @@ class ministry_2d_grid:
         self.field_prefix  = field_prefix
         self.field_max     = field_max
 
-        for i in range(1, field_max+1):
+        for i in range(1, field_max + 1):
             self.member_fields.append(f'{field_prefix}{i}')
 
     def add_row(self, pds_ministry, row_heading=None, new=False):
@@ -97,9 +97,14 @@ class ministry_2d_grid:
             row_heading = f'NEW {row_heading}'
 
         self.rows.append({
-            'pds_ministry' : pds_ministry,
-            'row_heading'  : row_heading,
-            'new'          : new,
+            'pds_ministry'    : pds_ministry,
+            'row_heading'     : row_heading,
+            'new'             : new,
+
+            # This value is filled in much later.
+            # It will be the name of the column in the Jotform gsheet of
+            # results: there will be one unique column name for each Member.
+            'jotform_columns' : list(),
         })
 
 #----------------------------------------------------------------------------
@@ -114,10 +119,10 @@ grid.add_row('100-Parish Pastoral Council')
 grid.add_row('102-Finance Advisory Council')
 grid.add_row('103-Worship Committee')
 grid.add_row('104-Stewardship & E Committee',
-                            '104-Stewardship & Evangelization Committee')
+                '104-Stewardship & Evangelization Committee')
 grid.add_row('106-Community Life Committee')
 grid.add_row('107-Social Resp Steering Comm',
-                            '107-Social Responsibility Steering Committee')
+                '107-Social Responsibility Steering Committee')
 grid.add_row('108-Formation Team')
 grid.add_row('109-Prayer Ministry Leadership')
 grid.add_row('110-Ten Percent Committee')
@@ -148,7 +153,7 @@ grid = ministry_2d_grid('Liturgical Prepatory', 'lp')
 
 grid.add_row('300-Art & Environment')
 grid.add_row('301-Audio/Visual/Light Minstry',
-                    '301-Audio/Visual/Lighting Ministry')
+                '301-Audio/Visual/Lighting Ministry')
 grid.add_row('302-Bread Baking Ministry')
 grid.add_row('303-Linens/Vestments Ministry')
 grid.add_row('304-Liturgical Planning')
@@ -156,7 +161,7 @@ grid.add_row('305-Movers Ministry')
 grid.add_row('306-Music Support for Children')
 grid.add_row('307-Wedding Assistant')
 grid.add_row('308-Worship&Music Support Team',
-                    '308-Worship & Music Support Team')
+                '308-Worship & Music Support Team')
 
 _all_ministry_grids.append(grid)
 
@@ -397,7 +402,10 @@ for member_num in range(1, max_number+1):
     for grid in jotform.ministry_grids:
         for row in grid.rows:
             col_heading = row['row_heading']
-            member_columns.append(col_heading + f" {member_num}")
+            column_name = col_heading + f" {member_num}"
+            member_columns.append(column_name)
+
+            row['jotform_columns'].append(column_name)
 
     jotform_gsheet_columns['members'].append(member_columns)
 
