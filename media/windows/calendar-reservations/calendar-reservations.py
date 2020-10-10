@@ -141,6 +141,7 @@ def respond_to_events(events, service, calendar, log):
         if not args.dry_run:
             service.events().patch(
                 calendarId = calendar['id'],
+                sendUpdates = "all",
                 eventId = id,
                 body = response_body,
             ).execute()
