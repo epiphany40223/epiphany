@@ -1032,7 +1032,7 @@ def main():
         {
             'ministries' : [ '600-Men of Epiphany' ],
             'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
-            'notify'     : 'polly{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'lisag{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
         #############################
