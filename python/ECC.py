@@ -66,7 +66,7 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
                 # anything, and will re-open the file if it needs to).
                 s = logging.handlers.WatchedFileHandler(filename=logfile)
             else:
-                s = logging.handlers.FileHandler(filename=logfile)
+                s = logging.FileHandler(filename=logfile)
         s.setFormatter(f)
         log.addHandler(s)
 
