@@ -10,46 +10,46 @@
 # $ pip3 install `cat requirements.txt`
 #
 
+import datetime
 import sys
-sys.path.insert(0, '../../../python')
 
 import ECC
 import Google
 import GoogleAuth
-
-import datetime
-
 from oauth2client import tools
 
-default_app_json  = 'gcalendar-reservations-client-id.json'
+sys.path.insert(0, '../../../python')
+
+default_app_json = 'gcalendar-reservations-client-id.json'
 default_user_json = 'user-credentials.json'
 
 verbose = True
-debug   = False
+debug = False
 logfile = None
 
 # dictionary of calendars that we're checking for events on
 calendars = [
     {
-        "name" : "Test calendar #1",
+        "name": "Test calendar #1",
         "id": 'c_bj96menjelb4pecracnninf45k@group.calendar.google.com',
     },
     {
-        "name" : "Test calendar #2",
-        "id" : 'c_ncm1ib261lp6c02i46mors4isc@group.calendar.google.com',
+        "name": "Test calendar #2",
+        "id": 'c_ncm1ib261lp6c02i46mors4isc@group.calendar.google.com',
     },
-#    {
-#        "name" : "Epiphany Events",
-#        "id" : "churchofepiphany.com_9gueg54raienol399o0jtdgmpg@group.calendar.google.com",
-#    }
+    #    {
+    #        "name" : "Epiphany Events",
+    #        "id" : "churchofepiphany.com_9gueg54raienol399o0jtdgmpg@group.calendar.google.com",
+    #    }
 ]
 
-#list of the domains the calendar will accept events from, will decline events from all others
+# list of the domains the calendar will accept events from, will decline events from all others
 acceptable_domains = {
     'cabral.org',
     'epiphanycatholicchurch.org',
     'churchofepiphany.com',
 }
+
 
 ####################################################################
 #
@@ -85,7 +85,7 @@ def setup_cli_args():
     tools.argparser.add_argument('--dry-run',
                                  action='store_true',
                                  help='Runs through the program without modifying any data')
-           
+
     global args
     args = tools.argparser.parse_args()
 
@@ -95,14 +95,15 @@ def setup_cli_args():
 
     return args
 
+
 ####################################################################
 
 def check_response_status(events, calendar, log):
-    #iterate through the list of events and find ones where responseStatus = needsAction
+    # iterate through the list of events and find ones where responseStatus = needsAction
 
     needs_action_events = []
     for event in events:
-        if "attendees" in event: #determines whether the event has any attendees
+        if "attendees" in event:  # determines whether the event has any attendees
             for attendee in event["attendees"]:
                 if attendee["email"] == calendar['id']:
                     if attendee["responseStatus"] == "needsAction":
@@ -112,10 +113,11 @@ def check_response_status(events, calendar, log):
 
     return needs_action_events
 
+
 ####################################################################
 
 def respond_to_events(events, service, calendar, log):
-    #accepts events from a domain in the list of acceptable domains, declines all others
+    # accepts events from a domain in the list of acceptable domains, declines all others
 
     for event in events:
         organizer_email = event["organizer"]["email"]
@@ -129,21 +131,21 @@ def respond_to_events(events, service, calendar, log):
 
         log.info(f"Event {event['summary']} {id}: will be {response}")
 
-        response_body =   {
-                "attendees" : [
-                    {
-                        "email" : calendar['id'],
-                        "responseStatus" : response,
-                    },
-                ],
-            }
+        response_body = {
+            "attendees": [
+                {
+                    "email": calendar['id'],
+                    "responseStatus": response,
+                },
+            ],
+        }
 
         if not args.dry_run:
             service.events().patch(
-                calendarId = calendar['id'],
-                sendUpdates = "all",
-                eventId = id,
-                body = response_body,
+                calendarId=calendar['id'],
+                sendUpdates="all",
+                eventId=id,
+                body=response_body,
             ).execute()
             log.info(f"Successfully {response} event {event['summary']} {id}")
         else:
@@ -157,34 +159,35 @@ def process_events(service, calendar, log):
 
     log.info(f"Downloading events from {calendar['name']} (ID: {calendar['id']})")
 
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     page_token = None
     while True:
 
-        #makes the call to the api to return a list of upcoming events
+        # makes the call to the api to return a list of upcoming events
         events_result = service.events().list(calendarId=calendar['id'],
-                                            timeMin=now,
-                                            singleEvents=True,
-                                            pageToken=page_token,
-                                            maxResults=2500,
-                                            orderBy='startTime').execute()
+                                              timeMin=now,
+                                              singleEvents=True,
+                                              pageToken=page_token,
+                                              maxResults=2500,
+                                              orderBy='startTime').execute()
         events = events_result.get('items', [])
 
-        #just returns if there are no upcoming events
+        # just returns if there are no upcoming events
         if not events:
             log.info('No upcoming events found.')
             break
 
-        #returns the events the calendar has not responded to
+        # returns the events the calendar has not responded to
         events_to_respond_to = check_response_status(events, calendar, log)
 
-        #checks who the organizer of each event is and accepts or declines the event
+        # checks who the organizer of each event is and accepts or declines the event
         respond_to_events(events_to_respond_to, service, calendar, log)
 
-        #continues to process events if there are more to process, returns if not
+        # continues to process events if there are more to process, returns if not
         page_token = events_result.get('nextPageToken')
         if not page_token:
             break
+
 
 ####################################################################
 
@@ -204,19 +207,20 @@ def main():
     # to an @epiphanycatholicchurch.org account.
 
     apis = {
-        'calendar': { 'scope'       : Google.scopes['calendar'],
-                      'api_name'    : 'calendar',
-                      'api_version' : 'v3' },
+        'calendar': {'scope': Google.scopes['calendar'],
+                     'api_name': 'calendar',
+                     'api_version': 'v3'},
     }
     services = GoogleAuth.service_oauth_login(apis,
                                               app_json=args.app_id,
                                               user_json=args.user_credentials)
     calendar_service = services['calendar']
 
-    #iterates through the list of calendars to check for upcoming events and respond to them
+    # iterates through the list of calendars to check for upcoming events and respond to them
     for calendar in calendars:
         process_events(calendar_service, calendar, log)
     log.info(f"Finished responding to upcoming events")
+
 
 if __name__ == '__main__':
     main()

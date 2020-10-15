@@ -10,6 +10,7 @@
 #
 
 import sys
+
 sys.path.insert(0, '../../../python')
 
 import ECC
@@ -18,28 +19,24 @@ import GoogleAuth
 
 import os
 import json
-import time
-import tempfile
-import datetime
 import traceback
 
 from oauth2client import tools
 from apiclient.http import MediaFileUpload
 
-from pprint import pprint
-from pprint import pformat
 from dateutil.parser import parse
 
-default_app_json  = 'client_id.json'
+default_app_json = 'client_id.json'
 default_user_json = 'user-credentials.json'
 
 verbose = True
-debug   = False
+debug = False
 logfile = None
 
 max_upload_retries = 5
 
 default_google_team_drive_folder_id = '0ANZ3dhbzh1r-Uk9PVA'
+
 
 ####################################################################
 #
@@ -86,6 +83,7 @@ def setup_cli_args():
 
     return args
 
+
 ####################################################################
 
 def verify_target_google_folder(service, id, log):
@@ -102,15 +100,16 @@ def verify_target_google_folder(service, id, log):
     log.info("Valid folder ID: {id} ({name})"
              .format(id=id, name=folder['name']))
 
+
 ####################################################################
 
 def generate_calendar_audit_report(service, log):
     log.info("Querying calendar audit data...")
 
     # Result will likely be long / paginated.
-    results    = list()
+    results = list()
     page_token = None
-    num_pages  = 0
+    num_pages = 0
     while True:
         http = service.activities().list(pageToken=page_token,
                                          userKey='all',
@@ -131,6 +130,7 @@ def generate_calendar_audit_report(service, log):
 
     return results
 
+
 ####################################################################
 
 #
@@ -148,7 +148,7 @@ def generate_calendar_audit_report(service, log):
 #
 def write_temp_json_file(activities, log):
     first_utc = None
-    last_utc  = None
+    last_utc = None
 
     # Find the first and last timestamps.
     # Google's timestamps are UTC.
@@ -161,20 +161,20 @@ def write_temp_json_file(activities, log):
 
     # Convert to our local timezone
     first_local = first_utc.astimezone(ECC.local_tz)
-    last_local  = last_utc.astimezone(ECC.local_tz)
+    last_local = last_utc.astimezone(ECC.local_tz)
 
     # Make the filename based on the timestamps
     def _mkdate(dt):
         return ('{year:04}{month:02}{day:02}-{hour:02}{minute:02}{second:02}'
-                .format(year   = dt.year,
-                        month  = dt.month,
-                        day    = dt.day,
-                        hour   = dt.hour,
-                        minute = dt.minute,
-                        second = dt.second))
+                .format(year=dt.year,
+                        month=dt.month,
+                        day=dt.day,
+                        hour=dt.hour,
+                        minute=dt.minute,
+                        second=dt.second))
 
     first = _mkdate(first_local)
-    last  = _mkdate(last_local)
+    last = _mkdate(last_local)
 
     filename = ('ECC Google calendar audit data {first} through {last}.json'
                 .format(first=first, last=last))
@@ -189,9 +189,10 @@ def write_temp_json_file(activities, log):
     f.close()
 
     log.info("Wrote to temporary local JSON file: {f}"
-              .format(f=filename))
+             .format(f=filename))
 
     return filename
+
 
 ####################################################################
 
@@ -201,10 +202,10 @@ def upload_to_google(service, filename, folder_id, log):
             log.info('Uploading file to google "{file}"'
                      .format(file=filename))
             metadata = {
-                'name'     : filename,
-                'mimeType' : Google.mime_types['json'],
-                'parents'  : [ folder_id ],
-                'supportsTeamDrives' : True,
+                'name': filename,
+                'mimeType': Google.mime_types['json'],
+                'parents': [folder_id],
+                'supportsTeamDrives': True,
             }
             media = MediaFileUpload(filename,
                                     mimetype=Google.mime_types['json'],
@@ -246,17 +247,17 @@ def main():
     # to an @epiphanycatholicchurch.org account.
 
     apis = {
-        'drive'   : { 'scope'       : Google.scopes['drive'],
-                      'api_name'    : 'drive',
-                      'api_version' : 'v3' },
-        'reports' : { 'scope'       : Google.scopes['reports'],
-                      'api_name'    : 'admin',
-                      'api_version' : 'reports_v1' },
+        'drive': {'scope': Google.scopes['drive'],
+                  'api_name': 'drive',
+                  'api_version': 'v3'},
+        'reports': {'scope': Google.scopes['reports'],
+                    'api_name': 'admin',
+                    'api_version': 'reports_v1'},
     }
     services = GoogleAuth.service_oauth_login(apis,
                                               app_json=args.app_id,
                                               user_json=args.user_credentials)
-    service_drive   = services['drive']
+    service_drive = services['drive']
     service_reports = services['reports']
 
     # Make sure that the target ID we got from the command line is actually a folder
@@ -278,6 +279,7 @@ def main():
 
     # Done; remove the temporary JSON file
     os.unlink(json_filename)
+
 
 if __name__ == '__main__':
     main()
