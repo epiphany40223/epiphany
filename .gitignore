@@ -14,3 +14,5 @@ pds-queries/2020-spring-census/pprint-family-test.py
 pds-queries/2020-spring-census/print-member.py
 familychangelog.csv
 memberchangelog.csv
+.idea/
+venv/
