@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 
-'''
-
+"""
 Helper for apps that use PDS databases (that were imported into
 SQLite3 databases)
-
-'''
+"""
 
 import sqlite3
 import os
 
 ##############################################################################
+
 
 def connect(filename):
     if not os.path.exists(filename):
@@ -23,6 +22,7 @@ def connect(filename):
     return cur
 
 ##############################################################################
+
 
 def _get_column_names(cur, name, log):
     # Temporarily set the "sqlite3.Row" row factory so that we can get
@@ -46,7 +46,8 @@ def _get_column_names(cur, name, log):
 
     return names
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 def read_table(cur, name, index_column, columns=None, where=None, log=None):
     # Get all the column names

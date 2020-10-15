@@ -7,29 +7,30 @@
 # pip3 install --upgrade httplib2 google-api-python-client oauth2client
 #
 
-import os
 import json
+import os
 import time
-import httplib2
 
+import httplib2
 from apiclient.discovery import build
 from oauth2client import tools
-from oauth2client.file import Storage
 from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import OAuth2WebServerFlow
+from oauth2client.file import Storage
 
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 
 # JMS Should these really be globals?
 app_cred_file = 'client_id.json'
 default_user_cred_file = 'user-credentials.json'
 user_agent = 'gxcopy'
 
-#-------------------------------------------------------------------
+
+# -------------------------------------------------------------------
 
 def _load_app_credentials(app_cred_file, log=None):
     # Read in the JSON file to get the client ID and client secret
-    cwd  = os.getcwd()
+    cwd = os.getcwd()
     file = os.path.join(cwd, app_cred_file)
     if not os.path.isfile(file):
         log.error("Error: JSON file {0} does not exist".format(file))
@@ -47,15 +48,15 @@ def _load_app_credentials(app_cred_file, log=None):
 
     return app_cred
 
-def _load_user_credentials(scope, app_cred,
-                           user_cred_file=default_user_cred_file, log=None):
+
+def _load_user_credentials(scope, app_cred, user_cred_file=default_user_cred_file, log=None):
     # Get user consent
-    client_id       = app_cred['installed']['client_id']
-    client_secret   = app_cred['installed']['client_secret']
-    flow            = OAuth2WebServerFlow(client_id, client_secret, scope)
+    client_id = app_cred['installed']['client_id']
+    client_secret = app_cred['installed']['client_secret']
+    flow = OAuth2WebServerFlow(client_id, client_secret, scope)
     flow.user_agent = user_agent
 
-    storage   = Storage(user_cred_file)
+    storage = Storage(user_cred_file)
     user_cred = storage.get()
 
     # If no credentials are able to be loaded, fire up a web
@@ -72,9 +73,10 @@ def _load_user_credentials(scope, app_cred,
 
     return user_cred
 
+
 def _authorize_user(user_cred, name, version, log=None):
-    http    = httplib2.Http()
-    http    = user_cred.authorize(http)
+    http = httplib2.Http()
+    http = user_cred.authorize(http)
     service = build(name, version, http=http)
 
     if log:
@@ -83,7 +85,8 @@ def _authorize_user(user_cred, name, version, log=None):
 
     return service
 
-#-------------------------------------------------------------------
+
+# -------------------------------------------------------------------
 
 # Login multiple scopes and return multiple Google service objects.
 #
@@ -96,10 +99,9 @@ def _authorize_user(user_cred, name, version, log=None):
 # A dictionary is returned with Google service objects, indexed by the
 # same 'name' keys from the "apis" input dictionary.
 #
-def service_oauth_login(apis, app_json, user_json,
-                        gauth_max_attempts=3, log=None):
+def service_oauth_login(apis, app_json, user_json, gauth_max_attempts=3, log=None):
     # Load the application credentials
-    app_cred  = _load_app_credentials(app_json)
+    app_cred = _load_app_credentials(app_json)
 
     # Collate all the scopes that we need
     scopes = list()
@@ -112,14 +114,14 @@ def service_oauth_login(apis, app_json, user_json,
     # script to abort, which will notify a human to fix whatever the
     # problem was.
     services = None
-    happy    = False
+    happy = False
     for count in range(gauth_max_attempts):
         try:
             # Authorize the user with all the scopes
             user_cred = _load_user_credentials(scopes, app_cred, user_json)
 
             # Now make a service object for each of the desired APIs
-            services  = dict()
+            services = dict()
             for name, data in apis.items():
                 services[name] = _authorize_user(user_cred, data['api_name'],
                                                  data['api_version'], log=log)
@@ -143,7 +145,8 @@ def service_oauth_login(apis, app_json, user_json,
 
     return services
 
-#===================================================================
+
+# ===================================================================
 
 def service_api_key(api_name, api_version, api_key_filename, log=None):
     if not os.path.exists(api_key_filename):
