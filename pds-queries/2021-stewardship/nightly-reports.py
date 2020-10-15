@@ -1311,10 +1311,10 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    comments_report(args, google, start, end, time_period,
-                    jotform_range, log)
-    statistics_report(args, end, pds_members, pds_families,
-                      jotform_all, log)
+    #comments_report(args, google, start, end, time_period,
+    #                jotform_range, log)
+    #statistics_report(args, end, pds_members, pds_families,
+    #                  jotform_all, log)
 
     # These reports were uncommented and run by hand upon demand.
     #family_pledge_csv_report(args, google, start, end, time_period,
@@ -1322,8 +1322,8 @@ def main():
     #family_status_csv_report(args, google, start, end, time_period,
     #                         pds_families, pds_members,
     #                         jotform_pledge_range, jotform_ministry_range, log)
-    #member_ministry_csv_report(args, google, start, end, time_period,
-    #                           pds_members, pds_families, jotform_range, log)
+    member_ministry_csv_report(args, google, start, end, time_period,
+                               pds_members, pds_families, jotform_range, log)
 
     # Close the databases
     pds.connection.close()
