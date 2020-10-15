@@ -7,18 +7,19 @@
 # pip3 install --upgrade pytz
 #
 
-import os
-import sys
-import platform
 import logging
 import logging.handlers
+import os
+import platform
+import sys
 
 import pytz
 
 local_tz_name = 'America/Louisville'
 local_tz = pytz.timezone(local_tz_name)
 
-#-------------------------------------------------------------------
+
+# -------------------------------------------------------------------
 
 def diediedie(msg):
     print(msg)
@@ -26,16 +27,17 @@ def diediedie(msg):
 
     exit(1)
 
-#-------------------------------------------------------------------
+
+# -------------------------------------------------------------------
 
 def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
                   log_millisecond=True, rotate=False):
-    level=logging.ERROR
+    level = logging.ERROR
 
     if debug:
-        level="DEBUG"
+        level = "DEBUG"
     elif info:
-        level="INFO"
+        level = "INFO"
 
     log = logging.getLogger('ECC')
     log.setLevel(level)
@@ -53,7 +55,7 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
     if logfile:
         if rotate:
             s = logging.handlers.RotatingFileHandler(filename=logfile,
-                                                     maxBytes=(pow(2,20) * 10),
+                                                     maxBytes=(pow(2, 20) * 10),
                                                      backupCount=50)
         else:
             if platform.system() != "Windows":
