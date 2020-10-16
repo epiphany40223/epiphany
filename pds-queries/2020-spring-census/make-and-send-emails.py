@@ -234,7 +234,8 @@ def send_family_email(message_body, to_addresses,
         log.info("NOT SENDING EMAIL (--do-not-send)")
     else:
         try:
-            with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+            with smtplib.SMTP_SSL(host=smtp_server,
+                                  local_hostname='epiphanycatholicchurch.org') as smtp:
                 msg = EmailMessage()
                 msg['Subject'] = smtp_subject
                 msg['From'] = smtp_from

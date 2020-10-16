@@ -257,7 +257,8 @@ def comments_report(args, google, start, end, time_period, jotform_data, log):
     try:
         log.info('Sending "{subject}" email to {to}'
                  .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+        with smtplib.SMTP_SSL(host=smtp_server,
+                              local_hostname='epiphanycatholicchurch.org') as smtp:
             msg = EmailMessage()
             msg['Subject'] = subject
             msg['From'] = smtp_from
@@ -522,7 +523,8 @@ def statistics_report(args, end, pds_members, pds_families, jotform, log):
     try:
         log.info('Sending "{subject}" email to {to}'
                  .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+        with smtplib.SMTP_SSL(host=smtp_server,
+                              local_hostname='epiphanycatholicchurch.org') as smtp:
             msg = EmailMessage()
             msg['Subject'] = subject
             msg['From'] = smtp_from
@@ -667,7 +669,8 @@ def family_pledge_csv_report(args, google, start, end, time_period, pds_families
     try:
         log.info('Sending "{subject}" email to {to}'
                  .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+        with smtplib.SMTP_SSL(host=smtp_server,
+                              local_hostname='epiphanycatholicchurch.org') as smtp:
 
             # This assumes that the file has a single line in the format of username:password.
             with open(args.smtp_auth_file) as f:
@@ -1007,7 +1010,8 @@ def old_stuff():
     try:
         log.info('Sending "{subject}" email to {to}'
               .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+        with smtplib.SMTP_SSL(host=smtp_server,
+                              local_hostname='epiphanycatholicchurch.org') as smtp:
             msg = EmailMessage()
             msg['Subject'] = subject
             msg['From'] = smtp_from
@@ -1112,7 +1116,8 @@ The same spreadsheet <a href="{url}">is also available as a Google Sheet</a>.</p
     try:
         log.info('Sending "{subject}" email to {to}'
               .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+        with smtplib.SMTP_SSL(host=smtp_server,
+                              local_hostname='epiphanycatholicchurch.org') as smtp:
             msg = EmailMessage()
             msg['Subject'] = subject
             msg['From'] = smtp_from
