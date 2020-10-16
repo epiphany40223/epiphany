@@ -54,7 +54,8 @@ Teddy</p>'''
 
 #------------------------------------------------------------------
 
-with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+with smtplib.SMTP_SSL(host=smtp_server,
+                      local_hostname='epiphanycatholicchurch.org') as smtp:
     msg = EmailMessage()
     msg.set_content(body)
 

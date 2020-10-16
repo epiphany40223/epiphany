@@ -963,7 +963,8 @@ def send_mail(mail_origin,
     mail_time_str = mail_time_str + " -" + f'{(time.timezone / 3600):02.0f}00'
 
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465,
+                                  local_hostname='epiphanycatholicchurch.org')
         # use the following for ECC...
         # server = smtplib.SMTP_SSL('smtp-relay.gmail.com', 465)
     except smtplib.SMTPException as e:

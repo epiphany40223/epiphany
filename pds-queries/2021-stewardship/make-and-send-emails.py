@@ -275,7 +275,8 @@ def _send_family_emails(message_body, families, submissions,
         smtp_username, smtp_password = line.split(':')
 
     # Open just one connection to the SMTP server
-    with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+    with smtplib.SMTP_SSL(host=smtp_server,
+                          local_hostname='api.epiphanycatholicchurch.org') as smtp:
         # Login; we can't rely on being IP whitelisted.
         try:
             smtp.login(smtp_username, smtp_password)
