@@ -166,7 +166,8 @@ def send_mail(subject, message_body, html=False):
 
     log.info('Sending email to {0}, subject "{1}"'
                  .format(smtp_to, subject))
-    with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+    with smtplib.SMTP_SSL(host=smtp_server,
+                          local_hostname='epiphanycatholicchurch.org') as smtp:
         if args.debug:
             smtp.set_debuglevel(2)
 
