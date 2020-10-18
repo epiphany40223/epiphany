@@ -189,12 +189,21 @@ def comments_to_csv(google, jotform_data, id_field, emails_field,
         if row[field] == '':
             continue
 
+        pledge_last    = f'CY{stewardship_year-1} pledge'
+        pledge_cur     = f'CY{stewardship_year} pledge'
+        if row[pledge_cur]:
+            pledge_cur_val = int(row[pledge_cur])
+        else:
+            pledge_cur_val = 0
+
         output.append({
             'Date'         : row['SubmitDate'],
             'FID'          : row[id_field],
             'Envelope'     : helpers.pkey_url(row[env_field]),
             'Family names' : row[name_field],
             'Emails'       : row[emails_field],
+            pledge_last    : row[pledge_last],
+            pledge_cur     : f'${pledge_cur_val:,d}',
             'Comments'     : row[field],
         })
 
@@ -215,15 +224,8 @@ def comments_report(args, google, start, end, time_period, jotform_data, log):
         # The field names are in data[0].keys(), but we want a
         # specific, deterministic ordering of the fields.  So hard-code
         # them here.
-        fieldnames = [
-            'Date',
-            'FID',
-            'Envelope',
-            'Family names',
-            'Emails',
-            'Comments',
-        ]
-        filename = f'Comments {time_period}.csv'
+        fieldnames = data[0].keys()
+        filename   = f'Comments {time_period}.csv'
         gsheet_id, _ = upload_to_gsheet(google,
                                         folder_id=upload_team_drive_folder_id,
                                         filename=filename,
