@@ -48,13 +48,19 @@ def compare_csvs(csv_new, csv_old):
     
 
 def load_latest_csv():
+    
     today = datetime.date.today()
     datestring_new = f'{today.year}{today.month}{today.day}'
     datestring_old = f'{today.year}{today.month}{today.day - 1}'
+    
     filename_new = f'RICOH IM C4500_usercounter_{datestring_new}.csv'
     filename_old = f'RICOH IM C4500_usercounter_{datestring_old}.csv'
+    
+    #NOTE: debug_filenames are only placeholders until we can
+    #      automatically download the latest each day
     debug_filename_new = f'RICOH IM C4500_usercounter_20201013.csv'
     debug_filename_old = f'RICOH IM C4500_usercounter_20201011.csv'
+    
     csv_rows_new = list()
     csv_rows_old = list()
 
