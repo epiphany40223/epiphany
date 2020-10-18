@@ -63,7 +63,7 @@ comments_email_to = 'angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 comments_email_subject = 'Comments report'
 
 # Statistics report email
-statistics_email_to = 'angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+statistics_email_to = 'sdreiss71@gmail.com,angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 statistics_email_subject = 'Statistics report'
 
 # JMS for debugging/testing
