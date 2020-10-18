@@ -32,6 +32,9 @@ import matplotlib
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+
 #------------------------------------------------------------------------------
 
 from constants import already_submitted_fam_status
@@ -63,7 +66,7 @@ comments_email_to = 'angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 comments_email_subject = 'Comments report'
 
 # Statistics report email
-statistics_email_to = 'angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+statistics_email_to = 'sdreiss71@gmail.com,angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
 statistics_email_subject = 'Statistics report'
 
 # JMS for debugging/testing
@@ -73,51 +76,30 @@ statistics_email_subject = 'Statistics report'
 
 ##############################################################################
 
-def upload_to_gsheet(google, folder_id, filename, fieldnames, csv_rows, remove_csv, log):
-    if csv_rows is None or len(csv_rows) == 0:
-        return None, None
-
-    # First, write out a CSV file
-    csv_filename = filename
+def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, local_filename, remove_local, log):
     try:
-        os.remove(csv_filename)
-    except:
-        pass
-
-    csvfile = open(csv_filename, 'w')
-    writer  = csv.DictWriter(csvfile, fieldnames=fieldnames,
-                            quoting=csv.QUOTE_ALL)
-    writer.writeheader()
-    for row in csv_rows:
-        writer.writerow(row)
-    csvfile.close()
-
-    # Now upload that file to Google Drive
-    try:
-        log.info('Uploading file to google "{file}"'
-              .format(file=filename))
+        log.info(f'Uploading file to google "{local_filename}" -> "{google_filename}"')
         metadata = {
-            'name'     : filename,
+            'name'     : google_filename,
             'mimeType' : Google.mime_types['sheet'],
-            'parents'  : [ folder_id ],
+            'parents'  : [ google_folder_id ],
             'supportsTeamDrives' : True,
             }
-        media = MediaFileUpload(csv_filename,
-                                mimetype=Google.mime_types['csv'],
+        media = MediaFileUpload(local_filename,
+                                mimetype=Google.mime_types[mime_type],
                                 resumable=True)
         file = google.files().create(body=metadata,
                                      media_body=media,
                                      supportsTeamDrives=True,
                                      fields='id').execute()
-        log.debug('Successfully uploaded file: "{filename}" (ID: {id})'
-              .format(filename=filename, id=file['id']))
+        log.debug(f'Successfully uploaded file: "{google_filename}" (ID: {file["id"]})')
 
     except:
         log.error('Google upload failed for some reason:')
         log.error(traceback.format_exc())
         exit(1)
 
-    # Set permissions on the GSheet to allow the stewardship 2020
+    # Set permissions on the GSheet to allow the
     # workers group to edit the file (if you are view-only, you
     # can't even adjust the column widths, which will be
     # problematic for the comments report!).
@@ -132,22 +114,91 @@ def upload_to_gsheet(google, folder_id, filename, fieldnames, csv_rows, remove_c
                                           sendNotificationEmail=False,
                                           body=perm,
                                           fields='id').execute()
-        log.debug("Set Google permission for file: {id}"
-                 .format(id=out['id']))
+        log.debug(f"Set Google permission for file: {id}")
     except:
         log.error('Google set permission failed for some reason:')
         log.error(traceback.format_exc())
         exit(1)
 
     # Remove the temp file when we're done
-    if remove_csv:
+    if remove_local:
         try:
-            os.remove(csv_filename)
-            csv_filename = None
+            os.remove(local_filename)
         except:
             pass
 
-    return file['id'], csv_filename
+    return file['id']
+
+#-----------------------------------------------------------------------------
+
+def _make_filenames(filename, extension):
+    extension = f".{extension}"
+    if filename.endswith(extension):
+        local_filename  = filename
+        google_filename = filename[:-len(extension)]
+    else:
+        local_filename  = f"{filename}{extension}"
+        google_fielname = filename
+
+    return local_filename, google_filename
+
+#-----------------------------------------------------------------------------
+
+def upload_csv_to_gsheet(google, google_folder_id, filename, fieldnames, csv_rows, remove_local, log):
+    if csv_rows is None or len(csv_rows) == 0:
+        return None, None
+
+    # First, write out a CSV file
+    csv_filename, google_filename = _make_filenames(filename, 'csv')
+    try:
+        os.remove(csv_filename)
+    except:
+        pass
+
+    csvfile = open(csv_filename, 'w')
+    writer  = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                            quoting=csv.QUOTE_ALL)
+    writer.writeheader()
+    for row in csv_rows:
+        writer.writerow(row)
+    csvfile.close()
+
+    # Now upload that file to Google Drive
+    id = _upload_to_gsheet(google,
+                        google_folder_id=folder_id,
+                        google_filename=google_filename,
+                        mime_type='csv',
+                        local_filename=csv_filename,
+                        remove_local=remove_local,
+                        log=log)
+
+    return id, None if remove_local else csv_filename
+
+#-----------------------------------------------------------------------------
+
+def upload_xlsx_to_gsheet(google, google_folder_id, filename, workbook,
+                        remove_local, log):
+    # First, write out the XLSX file
+    xlsx_filename, google_filename = _make_filenames(filename, 'xlsx')
+    try:
+        os.remove(xlsx_filename)
+    except:
+        pass
+    workbook.save(xlsx_filename)
+
+    # Now upload that file to Google Drive
+    id = _upload_to_gsheet(google,
+                        google_folder_id=google_folder_id,
+                        # For some reason, when we upload an XLSX and want
+                        # it to convert to a Google Sheet, the google filename
+                        # must end in .xlsx.  Sigh.
+                        google_filename=xlsx_filename,
+                        mime_type='sheet',
+                        local_filename=xlsx_filename,
+                        remove_local=remove_local,
+                        log=log)
+
+    return id, None if remove_local else xlsx_filename
 
 ##############################################################################
 
@@ -177,59 +228,137 @@ def _compare(changes, label, jot_value, pds_value):
 
 ##############################################################################
 
-def comments_to_csv(google, jotform_data, id_field, emails_field,
-                    name_field, env_field, output, log):
-    field = "Comments"
+def comments_to_xlsx(google, jotform_data, id_field, emails_field,
+                     name_field, env_field, workbook, log):
+    sheet = workbook.active
 
+    comments_label    = "Comments"
+    pledge_last_label = f'CY{stewardship_year-1} pledge'
+    pledge_cur_label  = f'CY{stewardship_year} pledge'
+
+    # Setup the title row
+    # Title rows + set column widths
+    title_font   = Font(color='FFFF00')
+    title_fill   = PatternFill(fgColor='0000FF', fill_type='solid')
+    title_align  = Alignment(horizontal='center', wrap_text=True)
+
+    wrap_align   = Alignment(horizontal='general', wrap_text=True)
+    right_align  = Alignment(horizontal='right')
+
+    money_format = "$###,###,###"
+
+    xlsx_cols = dict();
+    def _add_col(name, width=10):
+        col             = len(xlsx_cols) + 1
+        xlsx_cols[name] = {'name' : name, 'column' : col, 'width' : width }
+    _add_col('Date', width=20)
+    _add_col('FID')
+    _add_col('Envelope')
+    _add_col('Family names', width=30)
+    _add_col('Emails', width=50)
+    _add_col(pledge_last_label)
+    _add_col(pledge_cur_label)
+    _add_col('Comments', width=100)
+
+    for data in xlsx_cols.values():
+        col            = data['column']
+        cell           = sheet.cell(row=1, column=col, value=data['name'])
+        cell.fill      = title_fill
+        cell.font      = title_font
+        cell.alignment = title_align
+
+        col_char = chr(ord('A') - 1 + col)
+        sheet.column_dimensions[col_char].width = data['width']
+
+    sheet.freeze_panes = sheet['A2']
+
+    # Now fill in all the data rows
+    xlsx_row = 2
     for row in jotform_data:
-        if field not in row:
-            continue
-
         # Skip if the comments are empty
-        if row[field] == '':
+        if comments_label not in row:
+            continue
+        if row[comments_label] == '':
             continue
 
-        output.append({
-            'Date'         : row['SubmitDate'],
-            'FID'          : row[id_field],
-            'Envelope'     : helpers.pkey_url(row[env_field]),
-            'Family names' : row[name_field],
-            'Emails'       : row[emails_field],
-            'Comments'     : row[field],
-        })
+        if row[pledge_last_label]:
+            pl = row[pledge_last_label]
+            if pl.startswith('$'):
+                pl = pl[1:]
+            pl = pl.replace(',', '')
+            pledge_last = int(pl)
+            pledge_last_format = money_format
+        else:
+            pledge_last = 0
+            pledge_last_format = None
+
+        if row[pledge_cur_label]:
+            pledge_cur = int(row[pledge_cur_label])
+            pledge_cur_format = money_format
+        else:
+            pledge_cur = 0
+            pledge_cur_format = None
+
+        def _fill(col_name, value, align=None, format=None):
+            col_data = xlsx_cols[col_name]
+            cell     = sheet.cell(row=xlsx_row, column=col_data['column'], value=value)
+            if align:
+                cell.alignment = align
+            if format:
+                cell.number_format = format
+
+        _fill('Date', row['SubmitDate'])
+        _fill('FID', int(row[id_field]))
+        # Do NOT convert the envelope ID to an int -- the leading zeros
+        # are significant.
+        _fill('Envelope', row[env_field])
+        _fill('Family names', row[name_field])
+        _fill('Emails', row[emails_field])
+        _fill(pledge_last_label, pledge_last, format=pledge_last_format)
+        _fill(pledge_cur_label, pledge_cur, format=pledge_cur_format)
+        _fill('Comments', row[comments_label], align=wrap_align)
+
+        xlsx_row += 1
+
+    # Return the number of comments we found
+    return xlsx_row - 2
+
+def reorder_rows_by_date(jotform_data):
+    data = dict()
+    for row in jotform_data:
+        data[row['SubmitDate']] = row
+
+    out = list()
+    for row in sorted(data):
+        out.append(data[row])
+
+    return out
 
 def comments_report(args, google, start, end, time_period, jotform_data, log):
     log.info("Composing comments report...")
 
+    # jotform_data is a list of rows, in order by FID.  Re-order them to be
+    # ordered by submission date.
+    ordered_data = reorder_rows_by_date(jotform_data)
+
     # Examine the jotform data and see if there are any comments that
     # need to be reported
-    data = list()
-    comments_to_csv(google, jotform_data=jotform_data,
-                    id_field='fid', name_field='Family names',
-                    env_field='EnvId', emails_field='Emails to reply to',
-                    output=data, log=log)
+    workbook = Workbook()
+    num_comments = comments_to_xlsx(google, jotform_data=ordered_data,
+                     id_field='fid', name_field='Family names',
+                     env_field='EnvId', emails_field='Emails to reply to',
+                     workbook=workbook, log=log)
 
     # If we have any comments, upload them to a Gsheet
     gsheet_id = None
-    if len(data) > 0:
-        # The field names are in data[0].keys(), but we want a
-        # specific, deterministic ordering of the fields.  So hard-code
-        # them here.
-        fieldnames = [
-            'Date',
-            'FID',
-            'Envelope',
-            'Family names',
-            'Emails',
-            'Comments',
-        ]
-        filename = f'Comments {time_period}.csv'
-        gsheet_id, _ = upload_to_gsheet(google,
-                                        folder_id=upload_team_drive_folder_id,
+    sheet = workbook.active
+    if num_comments > 0:
+        filename   = f'Comments {time_period}.xlsx'
+        gsheet_id, _ = upload_xlsx_to_gsheet(google,
+                                        google_folder_id=upload_team_drive_folder_id,
                                         filename=filename,
-                                        fieldnames=fieldnames,
-                                        csv_rows=data,
-                                        remove_csv=True,
+                                        workbook=workbook,
+                                        remove_local=True,
                                         log=log)
 
     # Send the comments report email
@@ -240,13 +369,12 @@ def comments_report(args, google, start, end, time_period, jotform_data, log):
 
 <h3>Time period: {time_period}</h3>""")
 
-    if len(data) == 0:
+    if num_comments == 0:
         body.append("<p>No comments submitted during this time period.</p>")
     else:
         url = 'https://docs.google.com/spreadsheets/d/{id}'.format(id=gsheet_id)
-        body.append("""<p><a href="{url}">Link to Google sheet containing comments for this timeframe</a>.</p>
-<p>There are {num} comments in this report.</p>"""
-                     .format(url=url, num=len(data)))
+        body.append(f"""<p><a href="{url}">Link to Google sheet containing comments for this timeframe</a>.</p>
+<p>There are {num_comments} comments in this report.</p>""")
 
     body.append("""
 </body>
