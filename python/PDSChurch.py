@@ -10,10 +10,9 @@ starting with "_").  There's only a handful of public functions.
 
 '''
 
-import re
-import pathlib
-
 import datetime
+import pathlib
+import re
 
 import PDS
 
@@ -324,13 +323,13 @@ def _link_family_statuses(families, fam_status_types):
 
 #-----------------------------------------------------------------------------
 
-def _link_family_phones(families, phones, phone_types):
+def link_family_or_member_phones(family_or_member, phones, phone_types):
     for p in phones.values():
-        fid = p['Rec']
-        if fid not in families:
+        family_or_member_id = p['Rec']
+        if family_or_member_id not in family_or_member:
             continue
 
-        f = families[fid]
+        f = family_or_member[family_or_member_id]
         if 'phones' not in f:
             f['phones'] = list()
 
@@ -345,6 +344,11 @@ def _link_family_phones(families, phones, phone_types):
             'type'     : phone_type,
             'unlisted' : p['Unlisted'],
         })
+
+#-----------------------------------------------------------------------------
+
+def _link_family_phones(families, phones, phone_types):
+    link_family_or_member_phones(families, phones, phone_types)
 
 #-----------------------------------------------------------------------------
 
@@ -395,26 +399,7 @@ def _link_member_emails(members, emails):
 #-----------------------------------------------------------------------------
 
 def _link_member_phones(members, phones, phone_types):
-    for p in phones.values():
-        mid = p['Rec']
-        if mid not in members:
-            continue
-
-        m = members[mid]
-        if 'phones' not in m:
-            m['phones'] = list()
-
-        ptr = p['PhoneTypeRec']
-        phone_type = ''
-        if ptr in phone_types:
-            phone_type = phone_types[ptr]['Description']
-
-        _normalize_boolean(p, 'Unlisted')
-        m['phones'].append({
-            'number'   : p['Number'],
-            'type'     : phone_type,
-            'unlisted' : p['Unlisted'],
-        })
+    link_family_or_member_phones(members, phones, phone_types)
 
 #-----------------------------------------------------------------------------
 
