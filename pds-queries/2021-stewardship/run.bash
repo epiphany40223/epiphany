@@ -14,7 +14,7 @@ echo "Starting at: $start"
 echo "========================================================="
 
 #email_file=email-initial.html
-email_file=email-3rd-reminder.html
+email_file=email-5th-reminder.html
 
 #email_addr=jeff@squyres.com
 #email_addr=jsquyres@epiphanycatholicchurch.org
