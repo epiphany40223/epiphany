@@ -235,6 +235,7 @@ def comments_to_xlsx(google, jotform_data, id_field, emails_field,
     comments_label    = "Comments"
     pledge_last_label = f'CY{stewardship_year-1} pledge'
     pledge_cur_label  = f'CY{stewardship_year} pledge'
+    amount_label      = f'CY{stewardship_year-1} amount'
 
     # Setup the title row
     # Title rows + set column widths
@@ -258,6 +259,7 @@ def comments_to_xlsx(google, jotform_data, id_field, emails_field,
     _add_col('Emails', width=50)
     _add_col(pledge_last_label)
     _add_col(pledge_cur_label)
+    _add_col(amount_label)
     _add_col('Comments', width=100)
 
     for data in xlsx_cols.values():
@@ -272,6 +274,20 @@ def comments_to_xlsx(google, jotform_data, id_field, emails_field,
 
     sheet.freeze_panes = sheet['A2']
 
+    #-------------------------------------------------------------------
+
+    def _extract_money_string(val):
+        if val.startswith('$'):
+            val = val[1:]
+        val = int(val.replace(',', ''))
+
+        if val != 0:
+            return int(val), money_format
+        else:
+            return 0, None
+
+    #-------------------------------------------------------------------
+
     # Now fill in all the data rows
     xlsx_row = 2
     for row in jotform_data:
@@ -282,12 +298,7 @@ def comments_to_xlsx(google, jotform_data, id_field, emails_field,
             continue
 
         if row[pledge_last_label]:
-            pl = row[pledge_last_label]
-            if pl.startswith('$'):
-                pl = pl[1:]
-            pl = pl.replace(',', '')
-            pledge_last = int(pl)
-            pledge_last_format = money_format
+            pledge_last, pledge_last_format = _extract_money_string(row[pledge_last_label])
         else:
             pledge_last = 0
             pledge_last_format = None
@@ -298,6 +309,12 @@ def comments_to_xlsx(google, jotform_data, id_field, emails_field,
         else:
             pledge_cur = 0
             pledge_cur_format = None
+
+        if row[amount_label]:
+            amount, amount_format = _extract_money_string(row[amount_label])
+        else:
+            amount = 0
+            amount_format = None
 
         def _fill(col_name, value, align=None, format=None):
             col_data = xlsx_cols[col_name]
@@ -316,6 +333,7 @@ def comments_to_xlsx(google, jotform_data, id_field, emails_field,
         _fill('Emails', row[emails_field])
         _fill(pledge_last_label, pledge_last, format=pledge_last_format)
         _fill(pledge_cur_label, pledge_cur, format=pledge_cur_format)
+        _fill(amount_label, amount, format=amount_format)
         _fill('Comments', row[comments_label], align=wrap_align)
 
         xlsx_row += 1
