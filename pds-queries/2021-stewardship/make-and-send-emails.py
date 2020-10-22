@@ -103,7 +103,7 @@ def calculate_family_values(family, year, log=None):
     pledged = 0
     for fund in funds.values():
         fund_rate = fund['fund_rate']
-        if fund_rate:
+        if fund_rate and fund_rate['FDTotal']:
             pledged += int(fund_rate['FDTotal'])
 
     contributed = 0
