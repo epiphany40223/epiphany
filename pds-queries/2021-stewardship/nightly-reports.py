@@ -21,6 +21,7 @@ import GoogleAuth
 
 import helpers
 
+from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
@@ -916,7 +917,22 @@ def analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, 
                 else:
                     return MINISTRY_INACTIVE, ministry['status']
 
-        return MINISTRY_INACTIVE, 'Not listed in PDS'
+        # If the member is not currently active in this ministry, see if they
+        # were ever previously a member of this ministry
+        results = dict()
+        for ministry in member['inactive_ministries']:
+            if ministry['Description'] in ministry_names:
+                results[ministry['start']] = ministry['status']
+                results[ministry['end']]   = ministry['status']
+
+        if len(results) > 0:
+            dates = sorted(results.keys())
+            end   = dates[-1]
+            result_str = f'Inactive, last status on {end}: {results[end]}'
+        else:
+            result_str = 'Never been a member of this ministry'
+
+        return MINISTRY_INACTIVE, result_str
 
     #-------------------------------------------------------------------------
     def _status_to_pds(status):
@@ -1052,147 +1068,116 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
 
     #--------------------------------------------------------------------
 
-    output = analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, log)
+    def _find_family_home_phone(member):
+        family = member['family']
+        key = 'phones'
+        key2 = 'unlisted'
+        if key in family:
+            for p in family[key]:
+                if 'Home' in p['type']:
+                    text = f"{p['number']} {p['type']}"
+                    if key2 in p:
+                        if p[key2]:
+                            text += ' UNLISTED'
+                    return text
+
+        return ""
+
+    #--------------------------------------------------------------------
+
+    output      = analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, log)
+    today       = date.today()
+
+    #--------------------------------------------------------------------
+
+    def _setup_new_workbook():
+        workbook    = Workbook()
+        sheet       = workbook.active
+
+        for data in xlsx_cols.values():
+            col            = data['column']
+            cell           = sheet.cell(row=1, column=col, value=data['name'])
+            cell.fill      = title_fill
+            cell.font      = title_font
+            cell.alignment = title_align
+
+            col_char = chr(ord('A') - 1 + col)
+            sheet.column_dimensions[col_char].width = data['width']
+
+        sheet.freeze_panes = sheet['A2']
+
+        return workbook
+
+    #--------------------------------------------------------------------
+
+    def _fill(col_name, value, align=None, format=None):
+        col_data = xlsx_cols[col_name]
+        cell     = sheet.cell(row=xlsx_row, column=col_data['column'], value=value)
+        if align:
+            cell.alignment = align
+        if format:
+            cell.number_format = format
+
+    #--------------------------------------------------------------------
+
+    title_font  = Font(color='FFFF00')
+    title_fill  = PatternFill(fgColor='0000FF', fill_type='solid')
+    title_align = Alignment(horizontal='center', wrap_text=True)
+
+    wrap_align  = Alignment(horizontal='general', wrap_text=True)
+    right_align = Alignment(horizontal='right')
+
+    xlsx_cols = dict();
+    def _add_col(name, width=10):
+        col             = len(xlsx_cols) + 1
+        xlsx_cols[name] = {'name' : name, 'column' : col, 'width' : width }
+    _add_col('Full Name', width=20)
+    _add_col('First')
+    _add_col('Last')
+    _add_col('Age')
+    _add_col('Envelope ID')
+    _add_col('Email', width=30)
+    _add_col('Member phone', width=20)
+    _add_col('Family home phone', width=20)
+    _add_col('Category', width=25)
+    _add_col('Current ministry status', width=50)
+    _add_col('MID')
 
     for ministry_name in sorted(output.keys()):
+        workbook = _setup_new_workbook()
+        sheet    = workbook.active
+
         data = output[ministry_name]
-
-        rows = list()
-        rows.append([ 'Category', 'Full Name', 'First', 'Last name', 'Envelope ID', 'Email', 'Phone', 'Current ministry status', 'MID' ])
-
+        xlsx_row = 2
         for category in sorted(data.keys()):
 
-            # Title row for this section
             for member in data[category]:
                 family = member['family']
 
-                columns = list()
-                columns.append(category.capitalize())
-                columns.append(member['email_name'])
-                columns.append(member['first'])
-                columns.append(member['last'])
-                columns.append(helpers.pkey_url(family['ParKey']))
+                _fill('Full Name', member['email_name'])
+                _fill('First', member['first'])
+                _fill('Last', member['last'])
+                if member['date_of_birth']:
+                    age = today - member['date_of_birth']
+                    _fill('Age', int(age.days / 365))
+                _fill('Envelope ID', family['ParKey'])
                 emails = PDSChurch.find_any_email(member)
                 if emails:
-                    columns.append(emails[0])
-                else:
-                    columns.append('')
-                columns.append(_find_any_phone(member))
-                columns.append(member['jotform'][ministry_name])
-                columns.append(member['MemRecNum'])
+                    _fill('Email', emails[0])
+                _fill('Member phone', _find_any_phone(member))
+                _fill('Family home phone', _find_family_home_phone(member))
+                _fill('Category', category.capitalize(), align=wrap_align)
+                _fill('Current ministry status', member['jotform'][ministry_name], align=wrap_align)
+                _fill('MID', member['MemRecNum'])
 
-                rows.append(columns)
+                xlsx_row += 1
 
-        # Write out the CSV with the results
-        filename = f'{ministry_name} jotform results.csv'.replace('/', '-')
+        # Write out the XLSX with the results
+        filename = f'{ministry_name} jotform results.xlsx'.replace('/', '-')
         if os.path.exists(filename):
             os.unlink(filename)
-        with open(filename, 'w') as f:
-            writer = csv.writer(f)
-            for row in rows:
-                writer.writerow(row)
-            log.info(f"Wrote to filename: {filename}")
-
-def old_stuff():
-    # If we have ministry update data, upload it to a Google sheet
-    def _check(data, key, title):
-        group = {
-            'key' : key,
-            'title': title,
-            'data' : data,
-            'gsheet_id' : None,
-            'csv_filename' : None,
-        }
-
-        if len(data) > 0:
-            filename = ('Individual Member Ministry Update: {title}, {t}.csv'
-                    .format(t=time_period, title=title))
-            gsheet_id, csv_filename = upload_to_gsheet(google,
-                                        folder_id=upload_team_drive_folder_id,
-                                        filename=filename,
-                                        fieldnames=data[0].keys(),
-                                        csv_rows=data,
-                                        remove_csv=False,
-                                        log=log)
-            group['gsheet_id' ] = gsheet_id
-            group['csv_filename'] = csv_filename
-
-        groups.append(group)
-
-    #-------------------------------------------------------------------------
-
-    groups = list()
-    _check(interested, 'interested', 'PDS import for Interested')
-    _check(no_longer_interested, 'no_longer_interested', 'PDS import for No longer interested')
-    _check(needs_human, 'needs_human', 'Needs human checking')
-
-    #------------------------------------------------------------------------
-
-    body = list()
-    body.append("""<html>
-<body>
-<h2>{title} Member Ministry Participation data update</h2>
-<h3>Time period: {start} through {end}</h3>
-<p>Only showing results with changes compared to the data in the PDS database.</p>
-
-<p>
-<ul>"""
-                       .format(title=title, start=start, end=end))
-
-    for group in groups:
-        if group['gsheet_id']:
-            url = 'https://docs.google.com/spreadsheets/d/{id}'.format(id=group['gsheet_id'])
-            body.append('<li><a href="{url}">Spreadsheet with {title} results</a></li>'
-                    .format(url=url, title=group['title']))
-        else:
-            body.append("<li>No results for {title}</li>")
-    body.append("</ul>")
-
-    body.append("""</body>
-</html>""")
-
-    to = ministry_email_to
-    subject = '{title} Member Ministry Participation updates ({t})'.format(title=title, t=time_period)
-    try:
-        log.info('Sending "{subject}" email to {to}'
-              .format(subject=subject, to=to))
-        with smtplib.SMTP_SSL(host=smtp_server,
-                              local_hostname='epiphanycatholicchurch.org') as smtp:
-            msg = EmailMessage()
-            msg['Subject'] = subject
-            msg['From'] = smtp_from
-            msg['To'] = to
-            msg.set_content('\n'.join(body))
-            msg.replace_header('Content-Type', 'text/html')
-
-            # This assumes that the file has a single line in the format of username:password.
-            with open(args.smtp_auth_file) as f:
-                line = f.read()
-                smtp_username, smtp_password = line.split(':')
-
-            # Login; we can't rely on being IP whitelisted.
-            try:
-                smtp.login(smtp_username, smtp_password)
-            except Exception as e:
-                log.error(f'Error: failed to SMTP login: {e}')
-                exit(1)
-
-            # If there were results, attach CSV files
-            for group in groups:
-                if group['csv_filename']:
-                    with open(group['csv_filename'], 'rb') as f:
-                        csv_data = f.read()
-                    msg.add_attachment(csv_data, maintype='text', subtype='csv',
-                                    filename=group['csv_filename'])
-
-            smtp.send_message(msg)
-
-            for group in groups:
-                if group['csv_filename']:
-                    os.unlink(group['csv_filename'])
-    except:
-        print("==== Error with {email}".format(email=to))
-        print(traceback.format_exc())
+        workbook.save(filename)
+        log.info(f"Wrote to filename: {filename}")
 
 ##############################################################################
 
@@ -1462,10 +1447,10 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    comments_report(args, google, start, end, time_period,
-                    jotform_range, log)
-    statistics_report(args, end, pds_members, pds_families,
-                      jotform_all, log)
+    #comments_report(args, google, start, end, time_period,
+    #                jotform_range, log)
+    #statistics_report(args, end, pds_members, pds_families,
+    #                  jotform_all, log)
 
     # These reports were uncommented and run by hand upon demand.
     #family_pledge_csv_report(args, google, start, end, time_period,
@@ -1473,8 +1458,8 @@ def main():
     #family_status_csv_report(args, google, start, end, time_period,
     #                         pds_families, pds_members,
     #                         jotform_pledge_range, jotform_ministry_range, log)
-    #member_ministry_csv_report(args, google, start, end, time_period,
-    #                           pds_members, pds_families, jotform_range, log)
+    member_ministry_csv_report(args, google, start, end, time_period,
+                               pds_members, pds_families, jotform_range, log)
 
     # Close the databases
     pds.connection.close()
