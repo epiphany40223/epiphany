@@ -82,9 +82,12 @@ def _normalize_filename(item, src) -> None:
 
 #-----------------------------------------------------------------------------
 
-def _normalize_date(item):
+def _normalize_date(item, sentinel=True):
     if item is None or item == '0000-00-00':
-        return datetime.date.fromisoformat('1899-12-30')
+        if sentinel:
+            return datetime.date.fromisoformat('1899-12-30')
+        else:
+            return None
     else:
         return datetime.date.fromisoformat(item)
 
@@ -233,6 +236,7 @@ def _load_members(pds, columns=None,
         _normalize_boolean(m, src='Deceased')
         _normalize_boolean(m, src=f'PDSInactive{db_num}', dest="Inactive")
         _normalize_filename(m, src='PictureFile')
+        m['date_of_birth'] = _normalize_date(m['DateOfBirth'], sentinel=False)
 
     return members
 
@@ -433,8 +437,8 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
                         mem_ministries, statuses)
 
 def _link_member_talents(members, talents, mem_talents, statuses):
-    _link_member_mintal(members, 'talents', talents,
-                        'TalDescRec', mem_talents, statuses)
+    _link_member_mintal(members, 'talents', talents, 'TalDescRec',
+                        mem_talents, statuses)
 
 def _link_member_mintal(members, desc, things, thing_index_field,
                         mem_things, statuses):
@@ -468,6 +472,8 @@ def _link_member_mintal(members, desc, things, thing_index_field,
         thing = things[thing_id].copy()
         thing['active'] = status['Active']
         thing['status'] = status['Description']
+        thing['start']  = _normalize_date(mt['StartDate'])
+        thing['end']    = _normalize_date(mt['EndDate'])
 
         m[mem_list_name].append(thing)
 
@@ -885,11 +891,11 @@ def load_families_and_members(filename=None, pds=None,
                                  log=log)
     mem_ministries=PDS.read_table(pds, 'MemMin_DB', 'MemKWRecNum',
                                   columns=['MinDescRec', 'MemRecNum',
-                                           'StatusDescRec'],
+                                           'StatusDescRec', 'StartDate', 'EndDate'],
                                   log=log)
     mem_talents =PDS.read_table(pds, 'MemTal_DB', 'MemKWRecNum',
                                   columns=['TalDescRec', 'MemRecNum',
-                                           'StatusDescRec'],
+                                           'StatusDescRec', 'StartDate', 'EndDate'],
                                   log=log)
     mem_dates   = PDS.read_table(pds, 'MemDates_DB', 'MemDateRecNum',
                                  columns=['MemRecNum', 'Date',
