@@ -40,6 +40,9 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 from constants import already_submitted_fam_status
 
+from constants import stewardship_begin_date
+from constants import stewardship_end_date
+
 from constants import gapp_id
 from constants import guser_cred_file
 
@@ -63,16 +66,23 @@ from constants import MAX_PDS_FAMILY_MEMBER_NUM
 ecc = '@epiphanycatholicchurch.org'
 
 # Comments report email
-comments_email_to = 'angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+comments_email_to = f'angie{ecc},mary{ecc},jeff@squyres.com'
 comments_email_subject = 'Comments report'
 
 # Statistics report email
-statistics_email_to = 'sdreiss71@gmail.com,angie{ecc},mary{ecc},jeff@squyres.com'.format(ecc=ecc)
+statistics_email_to = f'sdreiss71@gmail.com,angie{ecc},mary{ecc},jeff@squyres.com'
 statistics_email_subject = 'Statistics report'
+
+fid_participation_email_to = f'mary{ecc},jeff@squyres.com'
+
+pledge_email_to = fid_participation_email_to
+pledge_email_subject = 'Pledge PDS CSV import file'
 
 # JMS for debugging/testing
 #statistics_email_to = 'jsquyres@gmail.com'
 #comments_email_to = 'jsquyres@gmail.com'
+#fid_participation_email_to = 'jsquyres@gmail.com'
+#pledge_email_to = 'jsquyres@gmail.com'
 
 
 ##############################################################################
@@ -166,7 +176,7 @@ def upload_csv_to_gsheet(google, google_folder_id, filename, fieldnames, csv_row
 
     # Now upload that file to Google Drive
     id = _upload_to_gsheet(google,
-                        google_folder_id=folder_id,
+                        google_folder_id=google_folder_id,
                         google_filename=google_filename,
                         mime_type='csv',
                         local_filename=csv_filename,
@@ -177,8 +187,7 @@ def upload_csv_to_gsheet(google, google_folder_id, filename, fieldnames, csv_row
 
 #-----------------------------------------------------------------------------
 
-def upload_xlsx_to_gsheet(google, google_folder_id, filename, workbook,
-                        remove_local, log):
+def upload_xlsx_to_gsheet(google, google_folder_id, filename, workbook, remove_local, log):
     # First, write out the XLSX file
     xlsx_filename, google_filename = _make_filenames(filename, 'xlsx')
     try:
@@ -229,8 +238,7 @@ def _compare(changes, label, jot_value, pds_value):
 
 ##############################################################################
 
-def comments_to_xlsx(google, jotform_data, id_field, emails_field,
-                     name_field, env_field, workbook, log):
+def comments_to_xlsx(google, jotform_data, id_field, emails_field, name_field, env_field, workbook, log):
     sheet = workbook.active
 
     comments_label    = "Comments"
@@ -712,10 +720,10 @@ def statistics_report(args, end, pds_members, pds_families, jotform, log):
 # - End Date: 12/31/2020
 # - Rate
 # - Total pledge
-def convert_pledges_to_pds_import(pds_families, jotform_pledge, log):
+def convert_pledges_to_pds_import(pds_families, jotform, log):
     def _map_to_freqrate(pledge):
-        freq = pledge['2020 frequency']
-        amount = float(pledge['2020 pledge'])
+        freq = pledge[f'CY{stewardship_year} frequency']
+        amount = float(pledge[f'CY{stewardship_year} pledge'])
 
         if freq == 'Weekly donations':
             return 'Weekly', amount / 52
@@ -732,7 +740,7 @@ def convert_pledges_to_pds_import(pds_families, jotform_pledge, log):
 
     out = list()
 
-    for pledge in jotform_pledge:
+    for pledge in jotform:
         # Skip the title row
         if 'fid' in pledge['fid']:
             continue
@@ -747,28 +755,32 @@ def convert_pledges_to_pds_import(pds_families, jotform_pledge, log):
         # If there is a $0 pledge, Per Lynne's comment, we'll
         # transform this into a $1 annual pledge -- just so that this
         # person is on the books, so to speak.
-        if int(pledge['2020 pledge']) == 0:
-            pledge['2020 pledge'] = 1
-            pledge['2020 frequency'] = 'One annual donation'
+        pledge_field  = f'CY{stewardship_year} pledge'
+        pledge_amount = pledge[pledge_field]
+        if not pledge_amount or pledge_amount == '' or int(pledge_amount) == 0:
+            pledge_amount = 0
+            pledge[pledge_field]    = pledge_amount
+            pledge[f'CY{stewardship_year} frequency'] = 'One annual donation'
 
         frequency, rate = _map_to_freqrate(pledge)
 
         # Round pledge value and rate to 2 decimal points, max
-        rate = float(int(rate * 100)) / 100.0
-        total = float(int(pledge['2020 pledge']) * 100) / 100.0
+        rate  = float(int(rate * 100)) / 100.0
+        total = float(int(pledge_amount) * 100) / 100.0
 
         # Use an OrderedDict to keep the fields in order
         row = collections.OrderedDict()
-        row['fid'] = pledge['fid']
+        row['fid']           = pledge['fid']
         row['RecChargeName'] = 'Due/Contributions'
-        row['Frequency'] = frequency
-        row['BeginDate'] = '{0:%m}/{0:%d}/{0:%Y}'.format(stewardship_begin_date)
-        row['EndDate'] = '{0:%m}/{0:%d}/{0:%Y}'.format(stewardship_end_date)
-        row['PledgeRate'] = rate
-        row['TotalPledge'] = total
-        row['SubmitDate'] = pledge['SubmitDate']
-        row['Names'] = pledge['Names']
-        row['Envelope'] = helpers.pkey_url(pledge['EnvId'])
+        row['Frequency']     = frequency
+        # JMS stewardship_begin/end dates are datetimes
+        row['BeginDate']     = stewardship_begin_date.strftime('%m/%d/%Y')
+        row['EndDate']       = stewardship_end_date.strftime('%m/%d/%Y')
+        row['PledgeRate']    = rate
+        row['TotalPledge']   = total
+        row['SubmitDate']    = pledge['SubmitDate']
+        row['Names']         = pledge['Family names']
+        row['Envelope']      = helpers.pkey_url(pledge['EnvId'])
 
         out.append(row)
 
@@ -776,34 +788,32 @@ def convert_pledges_to_pds_import(pds_families, jotform_pledge, log):
 
 #-----------------------------------------------------------------------------
 
-def family_pledge_csv_report(args, google, start, end, time_period, pds_families, jotform_pledge, log):
-    pledges = convert_pledges_to_pds_import(pds_families, jotform_pledge, log)
+def family_pledge_csv_report(args, google, pds_families, jotform, log):
+    pledges = convert_pledges_to_pds_import(pds_families, jotform, log)
 
     # If we have pledges, upload them to a Google sheet
     gsheet_id = None
     if len(pledges) > 0:
-        filename = 'Family Pledge PDS import {t}.csv'.format(t=time_period)
-        gsheet_id, csv_filename = upload_to_gsheet(google,
-                                        folder_id=upload_team_drive_folder_id,
+        filename = 'Family Pledge PDS import.csv'
+        gsheet_id, csv_filename = upload_csv_to_gsheet(google,
+                                        google_folder_id=upload_team_drive_folder_id,
                                         filename=filename,
                                         fieldnames=pledges[0].keys(),
                                         csv_rows=pledges,
-                                        remove_csv=False,
+                                        remove_local=False,
                                         log=log)
 
     # Send the statistics report email
     body = list()
-    body.append("""<html>
+    body.append(f"""<html>
 <body>
 <h2>{title} pledge update</h2>
 
-<h3>Time period: {time_period}</h3>"""
-                       .format(title=title, time_period=time_period))
+""")
 
     if gsheet_id:
         url = 'https://docs.google.com/spreadsheets/d/{id}'.format(id=gsheet_id)
-        body.append('<p><a href="{url}">Link to Google sheet containing pledge updates for this timeframe</a>.</p>'
-                     .format(url=url))
+        body.append(f'<p><a href="{url}">Link to Google sheet containing pledge updates for this timeframe</a>.</p>')
         body.append("<p>See the attachment for a CSV to import directly into PDS.</p>")
     else:
         body.append("<p>There were no pledge submissions during this timeframe.<p>")
@@ -811,11 +821,9 @@ def family_pledge_csv_report(args, google, start, end, time_period, pds_families
     body.append("""</body>
 </html>""")
 
-    to = pledge_email_to
-    subject = '{subj} ({t})'.format(subj=pledge_email_subject, t=time_period)
     try:
-        log.info('Sending "{subject}" email to {to}'
-                 .format(subject=subject, to=to))
+        to = pledge_email_to
+        log.info(f'Sending "{pledge_email_subject}" email to {to}')
         with smtplib.SMTP_SSL(host=smtp_server,
                               local_hostname='epiphanycatholicchurch.org') as smtp:
 
@@ -832,7 +840,7 @@ def family_pledge_csv_report(args, google, start, end, time_period, pds_families
                 exit(1)
 
             msg = EmailMessage()
-            msg['Subject'] = subject
+            msg['Subject'] = pledge_email_subject
             msg['From'] = smtp_from
             msg['To'] = to
             msg.set_content('\n'.join(body))
@@ -1181,30 +1189,21 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
 
 ##############################################################################
 
-def family_status_csv_report(args, google, start, end, time_period, pds_families, pds_members, jotform_pledge, jotform_ministry, log):
+def family_status_csv_report(args, google, pds_families, jotform, log):
     # Simple report: FID, Family name, and constants.already_submitted_fam_status
 
-    # Make a list of families who have submitted anything at all
-    submitted = dict()
-    for row in jotform_pledge:
-        fid = int(row['fid'])
-        if fid in pds_families:
-            submitted[fid] = True
-    for row in jotform_ministry:
-        mid = int(row['mid'])
-        if mid in pds_members:
-            fid = pds_members[mid]['FamRecNum']
-            if fid in pds_families:
-                submitted[fid] = True
-
     # Did we find anything?
-    if len(submitted) == 0:
-        log.info("No FID Statuses to update")
+    if len(jotform) == 0:
+        log.info("No submissions -- no statuses to update")
         return
 
     # Make a dictionary of the final CSV data
     csv_data = list()
-    for fid in submitted:
+    for row in jotform:
+        fid = int(row['fid'])
+        if fid not in pds_families:
+            continue
+
         last_name = pds_families[fid]['Name'].split(',')[0]
         csv_data.append({
             'fid' : fid,
@@ -1214,39 +1213,36 @@ def family_status_csv_report(args, google, start, end, time_period, pds_families
             'Status'      : already_submitted_fam_status,
         })
 
-    filename = ('Family Status Update: {t}.csv'
-            .format(t=time_period, title=title))
-    gsheet_id, csv_filename = upload_to_gsheet(google,
-                                folder_id=upload_team_drive_folder_id,
+    filename = ('Family Status Update.csv')
+    #ef upload_csv_to_gsheet(google, google_folder_id, filename, fieldnames, csv_rows, remove_local, log):
+
+    gsheet_id, csv_filename = upload_csv_to_gsheet(google,
+                                google_folder_id=upload_team_drive_folder_id,
                                 filename=filename,
                                 fieldnames=csv_data[0].keys(),
                                 csv_rows=csv_data,
-                                remove_csv=False,
+                                remove_local=False,
                                 log=log)
-    url = 'https://docs.google.com/spreadsheets/d/{id}'.format(id=gsheet_id)
+    url = f'https://docs.google.com/spreadsheets/d/{gsheet_id}'
 
     #------------------------------------------------------------------------
 
     body = list()
-    body.append("""<html>
+    body.append(f"""<html>
 <body>
 <h2>Family Status data update</h2>
-<h3>Time period: {start} through {end}</h3>
 
 <p> See attached spreadsheet of FIDs that have submitted anything at all in this time period.
 The same spreadsheet <a href="{url}">is also available as a Google Sheet</a>.</p>
 
-<p> Total of {num} families.</p>
+<p> Total of {len(csv_data)} families.</p>
 </body>
-</html>"""
-                   .format(start=start, end=end, url=url,
-                           num=len(submitted)))
+</html>""")
 
     to = fid_participation_email_to
-    subject = '{title} Family Status updates ({t})'.format(title=title, t=time_period)
+    subject = f'{title} Family Status updates'
     try:
-        log.info('Sending "{subject}" email to {to}'
-              .format(subject=subject, to=to))
+        log.info(f'Sending "{subject}" email to {to}')
         with smtplib.SMTP_SSL(host=smtp_server,
                               local_hostname='epiphanycatholicchurch.org') as smtp:
             msg = EmailMessage()
@@ -1278,7 +1274,7 @@ The same spreadsheet <a href="{url}">is also available as a Google Sheet</a>.</p
 
             os.unlink(csv_filename)
     except:
-        print("==== Error with {email}".format(email=to))
+        print(f"==== Error with {to}")
         print(traceback.format_exc())
 
 ##############################################################################
@@ -1447,21 +1443,15 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    #comments_report(args, google, start, end, time_period,
-    #                jotform_range, log)
-    #statistics_report(args, end, pds_members, pds_families,
-    #                  jotform_all, log)
+    comments_report(args, google, start, end, time_period,
+                    jotform_range, log)
+    statistics_report(args, end, pds_members, pds_families,
+                      jotform_all, log)
 
     # These reports were uncommented and run by hand upon demand.
-    #family_pledge_csv_report(args, google, start, end, time_period,
-    #                         pds_families, jotform_pledge_range, log)
-    #family_status_csv_report(args, google, start, end, time_period,
-    #                         pds_families, pds_members,
-    #                         jotform_pledge_range, jotform_ministry_range, log)
-    member_ministry_csv_report(args, google, start, end, time_period,
-                               pds_members, pds_families, jotform_range, log)
-
-    # Close the databases
-    pds.connection.close()
+    #family_pledge_csv_report(args, google, pds_families, jotform_all, log)
+    #family_status_csv_report(args, google, pds_families, jotform_all, log)
+    #member_ministry_csv_report(args, google, start, end, time_period,
+    #                           pds_members, pds_families, jotform_range, log)
 
 main()
