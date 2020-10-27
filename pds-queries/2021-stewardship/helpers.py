@@ -13,6 +13,42 @@ from datetime import timedelta
 
 #--------------------------------------------------------------------------
 
+# "year" is of the form: f'{stewardship_year - 2000 - 1:02}'
+def calculate_family_values(family, year, log=None):
+    if 'funds' in family and year in family['funds']:
+        funds = family['funds'][year]
+    else:
+        funds = dict()
+
+    if log:
+        log.debug(f"Size of family funds dictionary: {len(funds)}")
+
+    # Calculate 3 values:
+    # 1. Pledge amount for CY{year}
+    # 2. Total amount given in CY{year} so far
+    # 3. Family names
+    pledged = 0
+    for fund in funds.values():
+        fund_rate = fund['fund_rate']
+        if fund_rate and fund_rate['FDTotal']:
+            pledged += int(fund_rate['FDTotal'])
+
+    contributed = 0
+    for fund in funds.values():
+        for item in fund['history']:
+            # Not quite sure how this happens, but sometimes the value is None.
+            val = item['item']['FEAmt']
+            if val is not None:
+                contributed += val
+
+    family['calculated'] = {
+        "pledged"        : pledged,
+        "contributed"    : contributed,
+        "household_name" : household_name(family),
+    }
+
+#--------------------------------------------------------------------------
+
 def jotform_date_to_datetime(d):
     # Google is showing three different date formats, depending on how
     # the volumn is formatted (even though they're actually just
