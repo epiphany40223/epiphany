@@ -103,7 +103,7 @@ def calculate_family_values(family, year, log=None):
     pledged = 0
     for fund in funds.values():
         fund_rate = fund['fund_rate']
-        if fund_rate:
+        if fund_rate and fund_rate['FDTotal']:
             pledged += int(fund_rate['FDTotal'])
 
     contributed = 0
@@ -275,7 +275,8 @@ def _send_family_emails(message_body, families, submissions,
         smtp_username, smtp_password = line.split(':')
 
     # Open just one connection to the SMTP server
-    with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+    with smtplib.SMTP_SSL(host=smtp_server,
+                          local_hostname='api.epiphanycatholicchurch.org') as smtp:
         # Login; we can't rely on being IP whitelisted.
         try:
             smtp.login(smtp_username, smtp_password)

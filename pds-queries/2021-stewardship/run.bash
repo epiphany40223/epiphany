@@ -14,7 +14,7 @@ echo "Starting at: $start"
 echo "========================================================="
 
 #email_file=email-initial.html
-email_file=email-1st-reminder.html
+email_file=email-5th-reminder.html
 
 #email_addr=jeff@squyres.com
 #email_addr=jsquyres@epiphanycatholicchurch.org
@@ -26,8 +26,8 @@ email_file=email-1st-reminder.html
 #env_ids_file=id.txt
 #filter="--env-id-file $env_ids_file"
 
-#filter="--unsubmitted"
-filter="--unsubmitted --do-not-send"
+filter="--unsubmitted"
+#filter="--unsubmitted --do-not-send"
 
 ./make-and-send-emails.py \
         --smtp-auth smtp-auth.txt \

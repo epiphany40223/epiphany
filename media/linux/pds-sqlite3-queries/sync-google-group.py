@@ -112,7 +112,8 @@ def send_mail(to, subject, message_body, html=False, log=None):
     if log:
         log.info('Sending email to {to}, subject "{subject}"'
                  .format(to=to, subject=subject))
-    with smtplib.SMTP_SSL(host=smtp_server) as smtp:
+    with smtplib.SMTP_SSL(host=smtp_server,
+                          local_hostname='epiphanycatholicchurch.org') as smtp:
         if args.debug:
             smtp.set_debuglevel(2)
 
@@ -976,7 +977,7 @@ def main():
         {
             'ministries' : [ '451-Livestream Team Ministry' ],
             'ggroup'     : 'livestream-team{ecc}'.format(ecc=ecc),
-            'notify'     : 'director-communications{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'director-communications{ecc},TomHayesMP@gmail.com,pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
         #############################
@@ -1032,7 +1033,7 @@ def main():
         {
             'ministries' : [ '600-Men of Epiphany' ],
             'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
-            'notify'     : 'polly{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}'.format(ecc=ecc),
+            'notify'     : 'lisag{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}'.format(ecc=ecc),
         },
 
         #############################
