@@ -41,12 +41,119 @@ calendars = [
 #    {
 #        "name" : "Epiphany Events",
 #        "id" : "churchofepiphany.com_9gueg54raienol399o0jtdgmpg@group.calendar.google.com",
-#    }
+#    },
+#    {
+#       "name" : "Musicians calendar",
+#       "id" : "churchofepiphany.com_ga4018ieg7n3q71ihs1ovjo9c0@group.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area E (CC)",
+#       "id" : "churchofepiphany.com_2d3336353235303639373131@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area F (CC)"
+#       "id" : "churchofepiphany.com_2d3336333531363533393538@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area G (CC)"
+#       "id" : "churchofepiphany.com_2d33363137333031353534@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area H (CC)"
+#       "id" : "churchofepiphany.com_2d33353938373132352d343735@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area I (CC)"
+#       "id" : "churchofepiphany.com_2d33353739373832333731@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area J (CC)"
+#       "id" : "churchofepiphany.com_2d333535383831322d32@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area K (CC)"
+#       "id" : "churchofepiphany.com_2d3335333231363832383335@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Area L (CC)"
+#       "id" : "churchofepiphany.com_2d3335313431363234383230@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Chapel (WC)"
+#       "id" : "churchofepiphany.com_2d3431353233343734323336@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Coffee Bar Room (CC)"
+#       "id" : "churchofepiphany.com_2d38343237303931342d373732@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Connector table 1"
+#       "id" : "churchofepiphany.com_2d3538323334323031353338@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Connector table 2"
+#       "id" : "churchofepiphany.com_2d3538313436353238373034@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Connector table 3"
+#       "id" : "churchofepiphany.com_2d3538303631303232333033@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Dining Room (EH)"
+#       "id" : "churchofepiphany.com_34373539303436353836@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Kitchen (CC)"
+#       "id" : "churchofepiphany.com_34383131343230342d333531@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Kitchen (EH)"
+#       "id" : "churchofepiphany.com_2d36363539313732302d343738@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Library (CC)""
+#       "id" : "churchofepiphany.com_2d3131393638363634343630@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Lighthouse"
+#       "id" : "churchofepiphany.com_2d38303937383836353134@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Living Room (EH)"
+#       "id" : "churchofepiphany.com_37313933333139382d323530@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Media cart and projector"
+#       "id" : "churchofepiphany.com_2d37353236313138352d373236@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Narthex Gathering Area (WC)"
+#       "id" : "churchofepiphany.com_3334313632303539343135@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Nursery (CC)"
+#       "id" : "churchofepiphany.com_2d353231343439392d34@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Projector screen (large)"
+#       "id" : "churchofepiphany.com_2d39343734383435352d323039@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Projector screen (small)"
+#       "id" : "churchofepiphany.com_2d37313836393635372d313838@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Quiet Room (WC)"
+#       "id" : "churchofepiphany.com_2d36343734343332342d353333@resource.calendar.google.com"
+#    },
+#    {
+#       "name" : "Worship Space"
+#       "id" : "churchofepiphany.com_33363131333030322d363435@resource.calendar.google.com"
+#    },
 ]
 
 #list of the domains the calendar will accept events from, will decline events from all others
 acceptable_domains = {
-    'cabral.org',
     'epiphanycatholicchurch.org',
     'churchofepiphany.com',
 }
@@ -126,7 +233,6 @@ def check_for_conflicts(event_to_check, events, calendar, log):
                     if attendee["email"] == calendar['id']:
                         event_status = attendee["responseStatus"]
                 if((event["id"] != event_to_check["id"]) and (event_status == "accepted")):
-                    log.info(f"Found conflict with {event_to_check['summary']}: {event['summary']}")
                     eventConflicts = True
 
     return eventConflicts
