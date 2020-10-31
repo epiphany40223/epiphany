@@ -114,15 +114,36 @@ def check_response_status(events, calendar, log):
 
 ####################################################################
 
-def respond_to_events(events, service, calendar, log):
+def check_for_conflicts(event_to_check, events, calendar, log):
+    # iterate through the list of all of the events and finds any that conflict with the event in question
+    eventConflicts = False
+
+    if(calendar["name"] != "Epiphany Events"): # will not check for conflicts on the Epiphany Events calendar
+        for event in events:
+            if((event_to_check["start"]["dateTime"] <= event["end"]["dateTime"]) and (event_to_check["end"]["dateTime"] >= event["start"]["dateTime"])):
+                #gets the responseStatus to make sure we only check conflicts with accepted events
+                for attendee in event["attendees"]:
+                    if attendee["email"] == calendar['id']:
+                        event_status = attendee["responseStatus"]
+                if((event["id"] != event_to_check["id"]) and (event_status == "accepted")):
+                    log.info(f"Found conflict with {event_to_check['summary']}: {event['summary']}")
+                    eventConflicts = True
+
+    return eventConflicts
+
+####################################################################
+
+def respond_to_events(events_to_respond_to, events, service, calendar, log):
     #accepts events from a domain in the list of acceptable domains, declines all others
 
-    for event in events:
+    for event in events_to_respond_to:
         organizer_email = event["organizer"]["email"]
         organizer_domain = organizer_email.split('@')[1]
         id = event["id"]
 
-        if organizer_domain in acceptable_domains:
+        conflicts = check_for_conflicts(event, events, calendar, log)
+
+        if (organizer_domain in acceptable_domains) and not conflicts:
             response = 'accepted'
         else:
             response = 'declined'
@@ -178,7 +199,7 @@ def process_events(service, calendar, log):
         events_to_respond_to = check_response_status(events, calendar, log)
 
         #checks who the organizer of each event is and accepts or declines the event
-        respond_to_events(events_to_respond_to, service, calendar, log)
+        respond_to_events(events_to_respond_to, events, service, calendar, log)
 
         #continues to process events if there are more to process, returns if not
         page_token = events_result.get('nextPageToken')
