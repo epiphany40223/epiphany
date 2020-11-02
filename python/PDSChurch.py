@@ -189,6 +189,7 @@ def _load_families(pds, columns=None,
     for f in families.values():
         _normalize_boolean(f, src=f'PDSInactive{db_num}', dest="Inactive")
         _normalize_boolean(f, src='SendNoMail')
+        _normalize_boolean(f, src='EnvelopeUser')
         _normalize_filename(f, src='PictureFile')
 
     return families
