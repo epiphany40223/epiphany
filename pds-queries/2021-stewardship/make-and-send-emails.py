@@ -87,41 +87,6 @@ def insert_url_cookie(uid, type, url, cookies, log=None):
 
 ##############################################################################
 
-def calculate_family_values(family, year, log=None):
-    if 'funds' in family and year in family['funds']:
-        funds = family['funds'][year]
-    else:
-        funds = dict()
-
-    if log:
-        log.debug(f"Size of family funds dictionary: {len(funds)}")
-
-    # Calculate 3 values:
-    # 1. Pledge amount for CY2019
-    # 2. Total amount given in CY2019 so far
-    # 3. Family names
-    pledged = 0
-    for fund in funds.values():
-        fund_rate = fund['fund_rate']
-        if fund_rate and fund_rate['FDTotal']:
-            pledged += int(fund_rate['FDTotal'])
-
-    contributed = 0
-    for fund in funds.values():
-        for item in fund['history']:
-            # Not quite sure how this happens, but sometimes the value is None.
-            val = item['item']['FEAmt']
-            if val is not None:
-                contributed += val
-
-    family['calculated'] = {
-        "pledged"        : pledged,
-        "contributed"    : contributed,
-        "household_name" : helpers.household_name(family),
-    }
-
-##############################################################################
-
 # The ministry URL is comprised of three sections:
 #
 # 1. The base jotform URL
@@ -133,7 +98,7 @@ def make_ministry_jotform_base_url(family, log=None):
     # Calculate the family values if they have not already done so
     if 'calculated' not in family:
         year = f'{stewardship_year - 2000 - 1:02}'
-        calculate_family_values(family, year=year, log=log)
+        helpers.calculate_family_values(family, year=year, log=log)
 
     char = '?'
     url  = jotform.url
@@ -219,9 +184,9 @@ def send_family_email(message_body, family, submissions,
     smtp_to = ",".join(data['to_addresses'])
 
     # JMS DEBUG
-    was = smtp_to
-    smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
-    log.info(f"Sending to (OVERRIDE): {smtp_to} (was {was})")
+    #was = smtp_to
+    #smtp_to = "Jeff Squyres <jsquyres@gmail.com>"
+    #log.info(f"Sending to (OVERRIDE): {smtp_to} (was {was})")
     #---------------------------------------------------------------------
 
     if log:

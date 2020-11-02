@@ -742,12 +742,14 @@ def convert_pledges_to_pds_import(pds_families, jotform, log):
 
     for pledge in jotform:
         # Skip the title row
-        if 'fid' in pledge['fid']:
+        fid = pledge['fid']
+        if 'fid' in fid:
             continue
 
         # Here's something that can happen: A family may be deleted from PDS
         # even though they submitted.  In this case, skip them.
-        if int(pledge['fid']) not in pds_families:
+        fid = int(fid)
+        if fid not in pds_families:
             log.warn("WARNING: Family FID {fid} / {names} submitted a pledge, but is no longer in PDS"
                 .format(fid=pledge['fid'], names=pledge['Names']))
             continue
@@ -758,8 +760,8 @@ def convert_pledges_to_pds_import(pds_families, jotform, log):
         pledge_field  = f'CY{stewardship_year} pledge'
         pledge_amount = pledge[pledge_field]
         if not pledge_amount or pledge_amount == '' or int(pledge_amount) == 0:
-            pledge_amount = 0
-            pledge[pledge_field]    = pledge_amount
+            pledge_amount = 1
+            pledge[pledge_field] = pledge_amount
             pledge[f'CY{stewardship_year} frequency'] = 'One annual donation'
 
         frequency, rate = _map_to_freqrate(pledge)
@@ -773,7 +775,6 @@ def convert_pledges_to_pds_import(pds_families, jotform, log):
         row['fid']           = pledge['fid']
         row['RecChargeName'] = 'Due/Contributions'
         row['Frequency']     = frequency
-        # JMS stewardship_begin/end dates are datetimes
         row['BeginDate']     = stewardship_begin_date.strftime('%m/%d/%Y')
         row['EndDate']       = stewardship_end_date.strftime('%m/%d/%Y')
         row['PledgeRate']    = rate
@@ -781,6 +782,24 @@ def convert_pledges_to_pds_import(pds_families, jotform, log):
         row['SubmitDate']    = pledge['SubmitDate']
         row['Names']         = pledge['Family names']
         row['Envelope']      = helpers.pkey_url(pledge['EnvId'])
+
+        # Calculate family pledge values for last CY
+        family = pds_families[fid]
+        year = f'{stewardship_year - 2000 - 2:02}'
+        helpers.calculate_family_values(family, year, log)
+
+        row[f'CY{stewardship_year - 2} YTD gifts'] = family['calculated']['contributed']
+
+        # Calculate family pledge values for this CY
+        year = f'{stewardship_year - 2000 - 1:02}'
+        helpers.calculate_family_values(family, year, log)
+
+        row[f'CY{stewardship_year - 1} YTD gifts'] = family['calculated']['contributed']
+        row[f'CY{stewardship_year - 1} pledge']    = family['calculated']['pledged']
+
+        # Add column for how they want to fullfill their pledge
+        row[f'CY{stewardship_year} frequency'] = pledge[f'CY{stewardship_year} frequency']
+        row[f'CY{stewardship_year} mechanism'] = pledge[f'CY{stewardship_year} mechanisms']
 
         out.append(row)
 
@@ -1060,19 +1079,28 @@ def analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, 
 #-----------------------------------------------------------------------------
 
 def member_ministry_csv_report(args, google, start, end, time_period, pds_members, pds_families, jotform_csv, log):
-    def _find_any_phone(member):
-        key = 'phones'
-        key2 = 'unlisted'
+    def _find_all_phones(member):
+        found = list()
+        key   = 'phones'
+        key2  = 'unlisted'
         if key in member:
-            # Is this the old member format?  Seems to be a dict of phone_id / phone_data, and no "Unlisted".  :-(
+            # Is this the old member format?  Seems to be a dict of
+            # phone_id / phone_data, and no "Unlisted".  :-(
             for p in member[key]:
+                # Skip emergency contacts
+                if 'Emergency' in p['type']:
+                    continue
+
                 text = f"{p['number']} {p['type']}"
                 if key2 in p:
                     if p[key2]:
                         text += ' UNLISTED'
-                return text
+                found.append(text)
 
-        return ""
+        # When used with XLSX word wrapping alignment, this will
+        # across put each phone number on a separate line, but all
+        # within a single cell.
+        return '\r\n'.join(found)
 
     #--------------------------------------------------------------------
 
@@ -1145,11 +1173,14 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
     _add_col('Age')
     _add_col('Envelope ID')
     _add_col('Email', width=30)
-    _add_col('Member phone', width=20)
+    _add_col('Member phones', width=20)
     _add_col('Family home phone', width=20)
     _add_col('Category', width=25)
     _add_col('Current ministry status', width=50)
     _add_col('MID')
+    _add_col('MaryAngie column 1', width=10)
+    _add_col('MaryAngie column 2', width=10)
+    _add_col('MaryAngie column 3', width=50)
 
     for ministry_name in sorted(output.keys()):
         workbook = _setup_new_workbook()
@@ -1172,7 +1203,7 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
                 emails = PDSChurch.find_any_email(member)
                 if emails:
                     _fill('Email', emails[0])
-                _fill('Member phone', _find_any_phone(member))
+                _fill('Member phones', _find_all_phones(member), align=wrap_align)
                 _fill('Family home phone', _find_family_home_phone(member))
                 _fill('Category', category.capitalize(), align=wrap_align)
                 _fill('Current ministry status', member['jotform'][ministry_name], align=wrap_align)
