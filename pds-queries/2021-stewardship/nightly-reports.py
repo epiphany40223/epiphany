@@ -781,7 +781,7 @@ def convert_pledges_to_pds_import(pds_families, jotform, log):
         row['TotalPledge']   = total
         row['SubmitDate']    = pledge['SubmitDate']
         row['Names']         = pledge['Family names']
-        row['Envelope']      = helpers.pkey_url(pledge['EnvId'])
+        row['Envelope ID']   = helpers.pkey_url(pledge['EnvId'])
 
         # Calculate family pledge values for last CY
         family = pds_families[fid]
@@ -800,6 +800,16 @@ def convert_pledges_to_pds_import(pds_families, jotform, log):
         # Add column for how they want to fullfill their pledge
         row[f'CY{stewardship_year} frequency'] = pledge[f'CY{stewardship_year} frequency']
         row[f'CY{stewardship_year} mechanism'] = pledge[f'CY{stewardship_year} mechanisms']
+
+        # Add a column for this Family's "Envelope user" value
+        row['PDS Envelope User'] = family['EnvelopeUser']
+
+        # Add a column for whether the Family selected the "offeratory envelopes" option on the Jotform.  A handful of people also typed something that included the word "offeratory", so include those, too.
+        val = False
+        field = f'CY{stewardship_year} mechanisms'
+        if re.search(pledge[field], 'Offeratory'):
+            val = True
+        row['Jotform asked for Envelopes'] = val
 
         out.append(row)
 
