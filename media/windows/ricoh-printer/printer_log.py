@@ -58,8 +58,8 @@ def load_latest_csv():
     
     #NOTE: debug_filenames are only placeholders until we can
     #      automatically download the latest each day
-    debug_filename_new = f'RICOH IM C4500_usercounter_20201013.csv'
-    debug_filename_old = f'RICOH IM C4500_usercounter_20201011.csv'
+    debug_filename_new = 'media/windows/ricoh-printer/RICOH IM C4500_usercounter_20201013.csv'
+    debug_filename_old = 'media/windows/ricoh-printer/RICOH IM C4500_usercounter_20201011.csv'
     
     csv_rows_new = list()
     csv_rows_old = list()
