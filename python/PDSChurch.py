@@ -317,6 +317,12 @@ def _link_family_city_states(families, city_states):
         csid = f['StreetCityRec']
         if csid and csid in city_states:
             f['city_state'] = city_states[csid]['CityState']
+        else:
+            # Several places in our Python assume that there is a
+            # value in the "city_state" entry.  So rather than go
+            # check all of those places, just put an empty string
+            # there if there actually is no value.
+            f['city_state'] = ''
 
 #-----------------------------------------------------------------------------
 
