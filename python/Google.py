@@ -30,6 +30,8 @@ mime_types = {
 
     'csv'        : 'text/csv',
 
+    'xlsx'       : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+
     # JMS this is probably a lie, but it's useful for comparisons
     'team_drive' : 'application/vnd.google-apps.team_drive',
 }
