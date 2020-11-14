@@ -187,7 +187,8 @@ grid.add_row(['316A-Greeters 5:30P',
 grid.add_row('317-Instrumentalists & Cantors')
 grid.add_row(['318A-Lector Ministry  5:30P',
               '318B-Lector  Ministry 9:00A',
-              '318C-Lector Ministry 11:30A'],
+              '318C-Lector Ministry 11:30A',
+              '318-Lectors  MASTER LIST'],
              '318-Lectors')
 grid.add_row('319-Liturgical Dance Ministry')
 grid.add_row('321-Prayer Chain Ministry')

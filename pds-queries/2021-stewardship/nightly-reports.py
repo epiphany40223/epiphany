@@ -1188,9 +1188,6 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
     _add_col('Category', width=25)
     _add_col('Current ministry status', width=50)
     _add_col('MID')
-    _add_col('MaryAngie column 1', width=10)
-    _add_col('MaryAngie column 2', width=10)
-    _add_col('MaryAngie column 3', width=50)
 
     for ministry_name in sorted(output.keys()):
         workbook = _setup_new_workbook()
