@@ -128,7 +128,10 @@ def download_google_sheets(google, args, log):
     # Make a sorted list of files
     sortable_gfiles = dict()
     for gfile in gfiles:
-        sortable_gfiles[gfile['name']] = gfile
+        # Skip the "bad" Linda file
+        if (gfile['id'] != '1ShIqWfZguwgL07K7WSyyGhwpNoW2oJnXzysut4wZZOA' and
+            not gfile['name'].startswith('2020')):
+            sortable_gfiles[gfile['name']] = gfile
 
     # JMS delete me
     jms_count = 0
@@ -195,6 +198,7 @@ def squish(workbooks, log):
             _copy_row(src_row, output_ws, row_number)
             row_number += 1
 
+    return output_wb
 
 ##############################################################################
 
