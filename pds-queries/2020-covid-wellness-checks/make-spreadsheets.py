@@ -61,7 +61,7 @@ def write_spreadsheet(sorted_families, prefix=None, log=None):
 
         _title('Number in household', 10),
 
-        _title('Date called', 12),
+        _title('Dates called', 18),
         _title('Result\n(left message, spoke to someone)', 20),
         _title('Help Requested\n(none, priest, errands, financial, friendly check in, other)', 30),
         _title('Notes', 100, left_align),
@@ -161,7 +161,6 @@ def write_spreadsheets(families, prefix=None, log=None):
 
 def process_families(families, log):
     target_families = dict()
-    target_families_all = dict()
 
     fids = sorted(families)
     for fid in fids:
@@ -183,12 +182,9 @@ def process_families(families, log):
             if helpers.member_is_hoh_or_spouse(m):
                 this_family[m['type']] = m
 
-        target_families[family_last_name] = this_family
-        # Make sure to make the key unique (but still sortable!) by appending the FID
-        target_families_all[f"{family_last_name} {fid}"] = this_family
+        target_families[f"{family_last_name} {fid}"] = this_family
 
-    #pprint(target_families)
-    return target_families, target_families_all
+    return target_families
 
 # Household name
 # Home phone (if exists)
@@ -216,24 +212,10 @@ def main():
 
     print(f"Total number of parishioner families: {len(families)}")
 
-    # Shoot.  We initially stored by last name only, which effectively removed
-    # all families with duplicate last names.
-    target_families, target_families_all = process_families(families, log)
-    # Find all the families that were accidentally excluded from the initial list
-    num_deleted = 0
-    for this_family in target_families.values():
-        fid = this_family['fid']
-        for key, value in target_families_all.items():
-            if fid == value['fid']:
-                del target_families_all[key]
-                num_deleted += 1
-                break
+    target_families = process_families(families, log)
 
-    print(f"Number of families deleted from dup list: {num_deleted}")
-    print(f"Number of target families in initial list: {len(target_families)}")
-    print(f"Number of families excluded from initial list: {len(target_families_all)}")
+    print(f"Number of target families in list: {len(target_families)}")
 
     write_spreadsheets(target_families, log=log)
-    write_spreadsheets(target_families_all, prefix="missed", log=log)
 
 main()
