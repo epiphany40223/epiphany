@@ -24,6 +24,8 @@ import PDS
 pkey  = 'preferred_emails'
 npkey = 'non_preferred_emails'
 
+date_never = datetime.date.fromisoformat('1899-12-30')
+
 ##############################################################################
 
 # Which database number to use?
@@ -85,7 +87,7 @@ def _normalize_filename(item, src) -> None:
 def _normalize_date(item, sentinel=True):
     if item is None or item == '0000-00-00':
         if sentinel:
-            return datetime.date.fromisoformat('1899-12-30')
+            return date_never
         else:
             return None
     else:
