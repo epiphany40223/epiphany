@@ -111,6 +111,24 @@ def write_xlsx(ministry_name, interested, log):
         ws[cell].fill      = fill
         ws[cell].alignment = outcome_align
 
+    def _find_phones(entity, phones):
+        key = 'phones'
+        if key not in entity:
+            return
+
+        for phone in entity[key]:
+            if 'emergency' not in phone['type'].lower():
+                item = {
+                    'number' : phone['number'],
+                    'string' : phone['number'],
+                    'type'   : '',
+                }
+                if phone['type']:
+                    item['string'] += f" ({phone['type']})"
+                    item['type']    = phone['type']
+
+                phones[phone['number']] = item
+
     value_font  = Font(name='Arial', size=10)
     value_align = Alignment(wrap_text=True)
 
@@ -130,19 +148,17 @@ def write_xlsx(ministry_name, interested, log):
             value += email
         _set(f'C{row}', value)
 
-        key = 'phones'
-        if key in member:
+        # Take non-Emergency phone numbers
+        phones = dict()
+        _find_phones(member['family'], phones)
+        _find_phones(member, phones)
+        if len(phones) > 0:
             value = ''
-            for phone in member[key]:
-                if 'Emergency' in phone['type']:
-                    continue
+            for num in sorted(phones):
+                phone = phones[num]
                 if value:
                     value += '\r\n'
-
-                phone_str = phone['number']
-                if phone['type']:
-                    phone_str += f" ({phone['type']})"
-                value += phone_str
+                value += phone['string']
             _set(f'E{row}', value)
 
         # Set colors
