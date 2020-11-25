@@ -20,7 +20,7 @@ from datetime import timedelta
 
 import openpyxl
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 start_of_interest = date(month=1, day=1, year=constants.stewardship_year - 1)
 
@@ -42,27 +42,47 @@ def write_xlsx(ministry_name, interested, log):
 
     #---------------------------------------------------------------------
 
-    title_font = Font(name='Arial', size=12, bold=True)
+    # Set narrow margins so that we can get as much in as possible if people print it out
+    ws.page_margins.left  = 0.4
+    ws.page_margins.right = ws.page_margins.left
+
+    ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+
+    #---------------------------------------------------------------------
+
+    title_font    = Font(name='Arial', size=12, bold=True)
+    thin_side     = Side(style='thin')
+    bottom_border = Border(bottom=thin_side)
 
     def _make_title(cell, value):
-        ws[cell] = value
-        ws[cell].font = title_font
+        ws[cell]        = value
+        ws[cell].font   = title_font
+        ws[cell].border = bottom_border
 
     _make_title('A1', 'Ministry')
+    _make_title('B1', '')
     _make_title('C1', ministry_name)
-    _make_title('A2', 'Ministry Chair/Leader')
+    _make_title('A2', 'Ministry Chair')
+    _make_title('B2', '')
+    _make_title('C2', '')
 
     #---------------------------------------------------------------------
 
     outcome_font  = Font(name='Arial', size=12, bold=True)
     outcome_align = Alignment(horizontal='center', wrap_text=True)
+    box_border    = Border(top=thin_side, bottom=thin_side, left=thin_side, right=thin_side)
 
-    row = 4
+    row = 3
     ws.merge_cells(f'G{row}:I{row}')
     cell               = f'G{row}'
     ws[cell]           = 'OUTCOME'
     ws[cell].font      = outcome_font
     ws[cell].alignment = outcome_align
+    ws[cell].border    = box_border
+
+    # The "Ouycom" box is merged, so we have to set the top cell border on all the cells
+    ws[f'H{row}'].border = Border(top=thin_side, bottom=thin_side)
+    ws[f'I{row}'].border = Border(top=thin_side, bottom=thin_side, right=thin_side)
 
     #---------------------------------------------------------------------
 
@@ -72,6 +92,7 @@ def write_xlsx(ministry_name, interested, log):
         ws[cell].alignment = heading_align
         if fill:
             ws[cell].fill  = fill
+        ws[cell].border    = box_border
 
         ws.column_dimensions[cell[0]].width = width
 
@@ -83,12 +104,12 @@ def write_xlsx(ministry_name, interested, log):
     no_resp_fill  = PatternFill(fgColor='FEC7CE', fill_type='solid')
 
     row += 1
-    _make_heading(f'A{row}', 'Name', 25)
-    _make_heading(f'B{row}', 'Envelope ID', 10)
-    _make_heading(f'C{row}', 'Email addresses', 40)
-    _make_heading(f'D{row}', 'Date of email', 15)
+    _make_heading(f'A{row}', 'Name', 20)
+    _make_heading(f'B{row}', 'Envelope ID', 9)
+    _make_heading(f'C{row}', 'Email addresses', 35)
+    _make_heading(f'D{row}', 'Date of email', 10)
     _make_heading(f'E{row}', 'Phone numbers', 25)
-    _make_heading(f'F{row}', 'Date of phone call', 15)
+    _make_heading(f'F{row}', 'Date of phone call', 10)
     join_col = 'G'
     _make_heading(f'{join_col}{row}', 'Join ministry', 10, join_fill)
     not_int_col = 'H'
@@ -106,6 +127,7 @@ def write_xlsx(ministry_name, interested, log):
         ws[cell]           = value
         ws[cell].font      = value_font
         ws[cell].alignment = value_align
+        ws[cell].border    = box_border
 
     def _set_color(cell, fill):
         ws[cell].fill      = fill
@@ -142,16 +164,19 @@ def write_xlsx(ministry_name, interested, log):
         _set(f'B{row}', member['family']['ParKey'])
 
         value = ''
+        num_emails = 0
         for email in PDSChurch.find_any_email(member):
             if value:
                 value += '\r\n'
             value += email
+            num_emails += 1
         _set(f'C{row}', value)
 
         # Take non-Emergency phone numbers
         phones = dict()
         _find_phones(member['family'], phones)
         _find_phones(member, phones)
+        num_phones = 0
         if len(phones) > 0:
             value = ''
             for num in sorted(phones):
@@ -159,12 +184,24 @@ def write_xlsx(ministry_name, interested, log):
                 if value:
                     value += '\r\n'
                 value += phone['string']
+                num_phones += 1
             _set(f'E{row}', value)
+
+        # Add cell borders for cells that have no values
+        for column in ['D', 'F', 'G', 'H', 'I']:
+            ws[f"{column}{row}"].border = box_border
 
         # Set colors
         _set_color(f'{join_col}{row}', join_fill)
         _set_color(f'{not_int_col}{row}', not_int_fill)
         _set_color(f'{no_resp_col}{row}', no_resp_fill)
+
+        # Set the row height
+        num_lines = num_emails if num_emails > num_phones else num_phones
+        num_lines = 1 if num_emails == 0 else num_lines
+        actual_height = 15 * num_lines
+        if actual_height < 30:
+            ws.row_dimensions[row].height = 30
 
     #---------------------------------------------------------------------
 

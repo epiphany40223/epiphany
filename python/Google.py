@@ -30,6 +30,8 @@ mime_types = {
 
     'csv'        : 'text/csv',
 
+    'pdf'        : 'application/pdf',
+
     'xlsx'       : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 
     # JMS this is probably a lie, but it's useful for comparisons
