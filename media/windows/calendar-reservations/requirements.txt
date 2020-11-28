@@ -5,3 +5,4 @@ google-auth-oauthlib
 python-dateutil
 pytz
 oauth2client
+DateTimeRange
