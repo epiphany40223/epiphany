@@ -2,10 +2,6 @@
 #
 # Utility functions and helpers for all ECC code.
 #
-# Needs:
-#
-# pip3 install --upgrade pytz
-#
 
 import os
 import sys
@@ -28,8 +24,41 @@ def diediedie(msg):
 
 #-------------------------------------------------------------------
 
+class ECCSlackLogHandler(logging.StreamHandler):
+    def __init__(self, token_filename, channel="#bot-errors"):
+        logging.StreamHandler.__init__(self)
+        self.channel = channel
+
+        if not os.path.exists(token_filename):
+            print(f"ERROR: Slack token filename {token_filename} does not exist")
+            exit(1)
+
+        with open(token_filename, "r") as fp:
+            self.token = fp.read().strip()
+
+        # We'll initialize this the first time it is actually used. No need to
+        # login to Slack unless we actually intend to send a message.  Note that
+        # we set the level for this logger to be "CRITIAL", so we won't actually
+        # login to Slack unless log.critical() is invoked.
+        self.client  = None
+
+    def emit(self, record):
+        # If this is the first time we're emitting a message, then initialize
+        # the Slack client object.  This allows apps who don't use the Slack
+        # handler to not have the slack_sdk module installed/available.
+        import slack_sdk
+        if not self.client:
+            self.client = slack_sdk.WebClient(token=self.token)
+
+        msg      = self.format(record)
+        response = self.client.chat_postMessage(channel=self.channel,
+                                                text=msg)
+
+#-------------------------------------------------------------------
+
 def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
-                  log_millisecond=True, rotate=False):
+                  log_millisecond=True, rotate=False,
+                  slack_token_filename=None, slack_channel="#bot-errors"):
     level=logging.ERROR
 
     if debug:
@@ -48,6 +77,11 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
     s = logging.StreamHandler()
     s.setFormatter(f)
     log.addHandler(s)
+
+    if slack_token_filename:
+        s = ECCSlackLogHandler(slack_token_filename, slack_channel)
+        s.setLevel('CRITICAL')
+        log.addHandler(s)
 
     # Optionally save to a logfile
     if logfile:
