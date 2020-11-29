@@ -46,6 +46,17 @@
     as an argument for later retrieval.
 
             Modified by DK Fowler ... 13-Aug-2020           --- v02.00
+
+    Modified to add logic to rotate the log file based on a pre-determined size.  The number
+    of backup archives (currently set to 9), and the maximum log file size (currently set to
+    1GB) can be specified, and the archives are automatically gzip'd.  The GZIP operation is
+    handled as a separate thread so as to not disrupt the primary MQTT message handling.
+
+    Also made minor modification to the get_email_credentials and send_mail routines to read
+    a local hostname from the credentials file (or None if no specified), as well as the
+    "mail to" destination.  This allows a more generic usage of the routines for other
+    applications / domains.
+            Modified by DK Fowler ... 21-Nov-2020           --- v02.10
 """
 
 import paho.mqtt.client as mqtt
@@ -60,14 +71,22 @@ import os
 import atexit
 import sys
 import argparse
-import logging
+
+import glob
+from concurrent import futures
+
+import gzip
+import logging.handlers
 
 import sqlite3
 from sqlite3 import Error
 
 # Define version
-eccmqtt_iot_version = "02.00"
-eccmqtt_iot_date = "13-Aug-2020"
+eccmqtt_iot_version = "02.10"
+eccmqtt_iot_date = "21-Nov-2020"
+
+gzip_in_progress = False
+done_flag = False  # flag to indicate when GZIP in progress completes
 
 # Parse the command line arguments for the filename locations, if present
 parser = argparse.ArgumentParser(description='''Epiphany Catholic Church MQTT IoT Listener Application.
@@ -91,6 +110,10 @@ parser.add_argument("-n", "--last_notice_file_path", default="ECCMQTTIoT_Last_No
                     help="default last notification filename path")
 parser.add_argument("-s", "--last_notice_silence_time", default=1440,
                     help="default last notification silence time, in minutes")
+parser.add_argument("-a", "--max_log_archives", default=9,
+                    help="default maximum number of log archive files to keep")
+parser.add_argument("-z", "--archive_log_size", default=1073741824,
+                    help="default maximum log size, in bytes, prior to archival")
 parser.add_argument("-v", "-ver", "--version", action="store_true",
                     help="display application version information")
 
@@ -101,16 +124,149 @@ if args.version:
     print(F"ECC MQTT IoT Listener application, version {eccmqtt_iot_version}, {eccmqtt_iot_date}...")
     sys.exit(0)
 
+
+class GZipRotator(logging.handlers.RotatingFileHandler):
+
+    def doRollover(self):
+
+        global done_flag
+
+        # Let the default log rollover routine do its thing first...
+        super().doRollover()
+
+        # Construct a file pattern to match all current gzip'd logs
+        base_file_pattern = self.baseFilename + ".[0-9].gz"
+        # Get a list of the current .gzip'd log files to determine the next extension to use
+        arch_files = glob.iglob(base_file_pattern)
+        # Loop through the archived log files to find the last file number in use
+        lastgz_file_num = '0'  # default value for first iteration (no current gzips)
+        for archFile in arch_files:
+            fn = archFile.split('.')
+            # The gzip'd file "number" is in array element 2
+            lastgz_file_num = fn[2]
+        lastgz_file_int = int(lastgz_file_num)
+        # Construct a gzip file name for the destination by incrementing the last file number
+        # used.  If more than (backupCount) files are already zipped, delete the oldest and rename
+        # the remaining to free up the last number for re-use.  This ensures that the newest gzip
+        # will always be the highest number.
+        nextgz_file_int = lastgz_file_int + 1
+        if nextgz_file_int > self.backupCount:
+            nextgz_file_int = self.backupCount
+            # Since we already have the maximum gzip'd logs, delete the oldest, then rename the
+            # remaining to free up the last slot.
+            oldest_gz_log = self.baseFilename + ".1.gz"
+            os.remove(oldest_gz_log)
+            # Rename the remaining gzip'd logs...
+            arch_files = glob.iglob(base_file_pattern)
+            for archFile in arch_files:
+                fn = archFile.split('.')
+                # The gzip'd file "number" is in array element 2
+                newgz_file_num = int(fn[2]) - 1
+                newgz_file = fn[0] + "." + fn[1] + "." + str(newgz_file_num) + ".gz"
+                os.rename(archFile, newgz_file)
+        else:
+            # haven't hit the maximum backup file count yet, so simply construct the
+            # next gzip file name based on the existing base file name components
+            fn = (self.baseFilename + ".1.gz").split('.')
+
+        nextgz_file_name = fn[0] + "." + fn[1] + "." + str(nextgz_file_int) + ".gz"
+        dest = self.baseFilename + ".1"
+
+        # Start a thread to gzip the output file so as not to delay primary task(s)
+        done_flag = False
+        ex = futures.ThreadPoolExecutor(max_workers=2)
+        print('Starting GZIP thread for log file {dest}...')  # debug
+        f = ex.submit(self.gzip_log, dest, nextgz_file_name)
+        f.add_done_callback(self.done)
+
+    @staticmethod
+    def gzip_log(dest, nextgz_file_name):
+
+        global gzip_in_progress
+
+        gzip_in_progress = True
+        try:
+            with open(dest, 'rb') as f_in, gzip.open(nextgz_file_name, 'wb') as f_out:
+                f_out.writelines(f_in)
+        except Exception as e:
+            return F'Error occurred during attempt to GZIP log {dest}:  {e}', dest
+        return F'Log file {dest} successfully GZIP''d...', dest
+
+    @staticmethod
+    def done(fn):
+        global done_flag
+        global gzip_in_progress
+
+        gzip_in_progress = False        # reset the GZIP-in-progress flag
+
+        result = fn.result()
+
+        if fn.cancelled():
+            print(F"GZIP thread cancelled")
+            # The destination file is returned as the second element of the result list
+            print(F"...log file {result[1]} should be manually GZIP'd and the source deleted.")
+            logger.error(F"GZIP thread cancelled")
+            logger.error(F"...log file {result[1]} should be manually GZIP'd and the source deleted.")
+        elif fn.done():
+            error = fn.exception()
+            if error:
+                print(F"Error occurred while attempting to GZIP log file...")
+                print(F"...log file {result[1]}")
+                print(F"...error returned: {error}")
+                print(F"...log file {result[1]} should be manually GZIP'd and the source deleted.")
+                logger.error(F"Error occurred while attempting to GZIP log file...")
+                logger.error(F"...log file {result[1]}")
+                logger.error(F"...error returned: {error}")
+                logger.error(F"...log file {result[1]} should be manually GZIP'd and the source deleted.")
+            else:
+                result = fn.result()
+                print(F"{result[0]}")
+                logger.info(F"{result[0]}")
+                done_flag = True
+                # GZIP successful, so remove the source log archive
+                try:
+                    # The destination file is returned as the second element of the result list
+                    os.remove(result[1])
+                    print(F"Archived log file {result[1]} has been deleted.")
+                    logger.info(F"Archived log file {result[1]} has been deleted.")
+                except OSError as e:
+                    print(F"Error occurred while attempting to delete source log after GZIP...")
+                    print(F"...file {result[1]}, error {e}")
+                    print(F"...This file should be deleted manually.")
+                    logger.error(F"Error occurred while attempting to delete source log after GZIP...")
+                    logger.error(F"...file {result[1]}")
+                    logger.error(F"...This file should be deleted manually.")
+
+
+# Set the number of backup copies of the log to maintain
+max_log_archives = args.max_log_archives    # default is 9 archives if not specified
+# Set the maximum size in bytes at which the log is archived
+max_log_size = args.archive_log_size  # default is 1GB if not specified
+
 # Set up logging...change as appropriate based on implementation location and logging level
 log_file_path = args.log_file_path
 # log_file_path = None  # To direct logging to console instead of file
 
+logformatter = logging.Formatter('%(asctime)s:%(levelname)s: %(name)s: line: %(lineno)d %(message)s')
+logRotateZip = GZipRotator(log_file_path,
+                           maxBytes=max_log_size,
+                           backupCount=max_log_archives,
+                           delay=False)
+logRotateZip.setLevel(logging.DEBUG)
+logRotateZip.setFormatter(logformatter)
+logger = logging.getLogger('MQTTIoT')
+logger.addHandler(logRotateZip)
+logger.setLevel(logging.DEBUG)
+
+"""
+# Old logging setup, prior to v02.10...
 logging.basicConfig(
     filename=log_file_path,
     level=logging.DEBUG,
     format="%(asctime)s:%(levelname)s: %(name)s: line: %(lineno)d %(message)s"
 )
 logger = logging.getLogger('MQTTIoT')
+"""
 
 # Location of database file...change as appropriate based on implementation location
 ECCMQTTIoT_database = args.database_file_path
@@ -316,7 +472,6 @@ def connectivity_check(mqttc):
     now = datetime.now()
     date_now_str = now.strftime("%Y-%m-%d %H:%M:%S")
     print(F"*** {date_now_str} *** timer expired")
-    # logger.debug(F"*** {date_now_str} *** timer expired")
     if not received_msg:
         # An MQTT message was not received during the timer execution, so alert and
         # re-execute the script
@@ -337,17 +492,21 @@ def connectivity_check(mqttc):
         if last_notice_age_min > ECCMQTTIoT_notice_silence:
             # Generate an email alert prior to re-executing
             # Get the originator email credentials from the specified location...
-            mail_origin, mail_pass = get_email_credentials()
+            mail_origin, mail_pass, mail_local_host, mail_to = get_email_credentials()
 
             mail_subject = 'ECC IoT Listener Restart'
             mail_from = 'ECC IoT Listener'
+            # mail_to is now read from the credentials file...21-Nov-2020
+            # For me locally...
+            # mail_to = 'keith.fowler.kf+listener_test@gmail.com'
             # For ECC...
-            mail_to = 'temp-sensors@epiphanycatholicchurch.org'
+            # mail_to = 'temp-sensors@epiphanycatholicchurch.org'
             mail_body = f'\nNo MQTT message has been received within {ECCMQTTIoT_conn_timer} ' \
                         f'minutes.\nECC IoT Listener has been restarted.\n '
 
             gmail_send_status = send_mail(mail_origin,
                                           mail_pass,
+                                          mail_local_host,
                                           mail_subject,
                                           mail_from,
                                           mail_to,
@@ -373,7 +532,7 @@ def connectivity_check(mqttc):
     # Reset the flag indicating a message has been received during the timer execution
     received_msg = False
 
-    # Restart the timer
+    # Restart the timer; note the arguments passed to the callback must be a list...
     timer = Timer(ECCMQTTIoT_conn_timer * 60, connectivity_check, args=[mqttc])
     timer.start()
 
@@ -796,8 +955,10 @@ def get_email_credentials():
         This routine will attempt to read the email originator username and password
         from the specified external file.
                 Written by DK Fowler ... 13-Aug-2020
-        :return username:    GMail originator username read from specified external file
-        :return password:    GMail originator password read from specified external file
+        Modified to also read and return the sender local host name (if specified) and
+        the "mail to" destination address from the credentials file.
+                Modified by DK Fowler ... 21-Nov-2020
+        :return creds[List]  List which contains username, password, local host, mail-to
 
     """
     try:
@@ -939,6 +1100,7 @@ def print_exit_summary(mqttc):
 
 def send_mail(mail_origin,
               mail_pass,
+              mail_local_host,
               mail_subject,
               mail_from,
               mail_to,
@@ -946,8 +1108,11 @@ def send_mail(mail_origin,
     """
         This routine will send an e-mail message using the passed parameters.
                 Written by DK Fowler ... 12-Aug-2020
+        Modified to include local host name for the sender if specified.
+                Modified by DK Fowler ... 21-Nov-2020
     :param mail_origin      e-mail address of the originator
     :param mail_pass        e-mail password for the originator account
+    :param mail_local_host  local host name for sender domain, if specified
     :param mail_subject     e-mail subject string
     :param mail_from        e-mail from string, preceding 'From' e-mail address
     :param mail_to          e-mail 'To' destination address
@@ -963,7 +1128,13 @@ def send_mail(mail_origin,
     mail_time_str = mail_time_str + " -" + f'{(time.timezone / 3600):02.0f}00'
 
     try:
+<<<<<<< Updated upstream
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+=======
+        # server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465,
+                                  local_hostname=mail_local_host)
+>>>>>>> Stashed changes
         # use the following for ECC...
         # server = smtplib.SMTP_SSL('smtp-relay.gmail.com', 465)
     except smtplib.SMTPException as e:

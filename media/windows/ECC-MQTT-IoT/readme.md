@@ -11,24 +11,20 @@ Though MQTT provides various quality-of-service (QoS) levels to ensure message d
 Command-line parameters can be specified to indicate the location of files used by the application:
 
 * log file (**-l**, **-log**, **--log_file_path=**{file path})
-
 * database file path (**-d**, **-db**, **--database_file_path=**{file path})
-
 * MQTT credentials file path (**-c**, **--credentials_file_path=**{file path})
-
 * MQTT broker IP address (**-b**, **--mqtt_broker=**{IP address})
-
 * connectivity timer check (*new with v02.00*) (**-t, --timer_check=**{time in minutes})
-
 * GMail notification credentials file path (*new with v02.00*) (**-m, --gmail_credentials_file_path=**{file path})
-
 * last notification file path (*new with v02.00*) (**-n, --last_notice_file_path=**{file path})
-
 * last notification silence time (*new with v02.00*) (**-s, --last_notice_silence_time=**{time in minutes})
 
-  If not specified, defaults will be provided for each.  Parsing of the command-line is handled with the Python module argparse, and includes brief help for each optional parameter.  In addition to the command-line parameters for file locations, **-h (or --help)** will display help, and **-v (or -ver, --version)** will display the current application version and date or release.
+* maximum number of log archive files to keep (*new with v02.10*) (**-a, --max_log_archives=**{count})
+* maximum log size, in bytes, prior to archival (*new with v02.10*) (**-z, --archive_log_size=**{size in bytes})
 
-The application is written in Python3 and utilizes libraries as noted in the imports following (*including several new libraries required for v02.00*):
+If not specified, defaults will be provided for each.  Parsing of the command-line is handled with the Python module argparse, and includes brief help for each optional parameter.  In addition to the command-line parameters for file locations, **-h (or --help)** will display help, and **-v (or -ver, --version)** will display the current application version and date or release.
+
+The application is written in Python3 and utilizes libraries as noted in the imports following (*including several new libraries required for v02.00* */ v02.10*):
 
 ```
 import paho.mqtt.client as mqtt
@@ -43,7 +39,15 @@ import os
 import atexit
 import sys
 import argparse
-import logging
+
+import glob
+from concurrent import futures
+
+import gzip
+import logging.handlers
+
+import sqlite3
+from sqlite3 import Error
 ```
 
 The Paho MQTT client library is utilized for interfacing with the Mosquitto MQTT server running on an ECC server, and must be installed prior to running the listener application.
@@ -65,8 +69,11 @@ In order to perform the initial setup for running the application:
    * (*new with v02.00*) GMail notification credentials file path.  These are the credentials of the GMail account used to send notifications.
    * (*new with v02.00*) last notification file path.  This file is used to store the date/time of the last successful notification sent, and used to determine whether a future notification should be sent during the specified "mute" or silence period.
    * (*new with v02.00*) last notification silence time, in minutes.  This is the silence period, use to mute multiple notifications during the time period specified.
+   * *(new with v02.10*) maximum number of log archive files to keep.  This value will default to 9 unless otherwise specified.
+   * (*new with v02.10*) maximum log size, in bytes, prior to archival.  Once the log file reaches this size, it will be automatically rotated and GZIP'd.  This value will default to approximately 1GB unless otherwise specified.
 4. Create the MQTT user credentials file.  This is a simple text file containing a record with the authorized client username and password, comma separated.  Note that these credentials must match the credentials file created during the Mosquitto broker installation / configuration.
 5. Create the GMail notification credentials file (*new with v02.00*).  This is a simple text file containing a record with the authorized GMail origination address and password, comma separated.  These are the credentials the application uses in order to send notifications, such as when the listener is restarted when no MQTT messages are received within the specified timeframe.
+   - **Note:**  (*new with v02.10*)  The GMail credentials file now also contains two additional parameters following the origination address and password; additionally, the sender local host name and destination e-mail address are included in the same record, comma separated.
 6. The application is designed to be run continuously in the background.
 
 
@@ -83,7 +90,28 @@ Several enhancements and bug fixes were made for the v02.00 release, as noted:
 
 4. A bug was corrected that would cause the startup of the listener to fail if the database did not exist.  This was due to the check for rotating / archiving the database when it reaches a specified size.  This check will now simply return if the file does not exist, allowing the database to be created on the first connection attempt.
 
-   
+
+
+
+## V02.10 Release Notes (November, 2020)
+
+Several additional enhancements were included in the v02.10 release, among these:
+
+1. Code was added to automatically rotate the log file based on a specified maximum size, in bytes.  Once this limit is hit, the built-in Python rotating log handler is called to first rotate the log, then the old log file is GZIP'd.  This is handled by starting a new separate thread to handle the compression, since this can take some time for very large files.  This helps to avoid interfering with the primary purpose of the script to handle incoming MQTT messages.  The number of already-compressed archive files is also check to ensure only a maximum number of archives are maintained as specified.  If the maximum number has been reached, the oldest file is deleted and the remaining archive files are renamed so that the oldest archived log always has a ".1" extension, and the newest has an extension of the maximum number of archived logs maintained.  Once a successful GZIP has occurred, the latest, uncompressed rotated log file is deleted.
+
+2. Minor modifications were made to the mail credentials file to include the sender local host name (if specified, or None), and the destination e-mail address for alerts.  This allows a more generic usage of the e-mail routines for other applications / domains / users.
+
+   #### Migration steps to v02.10:
+
+   - Stop any existing scheduled tasks for prior versions.
+
+   - Edit the ECCMQTTIoT_GMail_Credentials.txt file to include the new parameters for sender local host name and destination e-mail addresses.
+
+   - Modify any other default parameters as noted above either in the Python script or preferably via command-line switches for the scheduled task.
+
+   - Restart the scheduled task.
+
+     
 
 ## MQTT Authorization
 
