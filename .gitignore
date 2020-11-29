@@ -10,8 +10,11 @@ __pycache__
 client_id.json
 user-credentials.json
 
+slack_token.txt
+
 venv
 py38
+py39
 
 .DS_Store
 
