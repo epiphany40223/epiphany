@@ -18,8 +18,6 @@ import helpers
 from pprint import pprint
 from pprint import pformat
 
-families_per_spreadsheet = 20
-
 ##############################################################################
 
 def write_spreadsheet(sorted_families, prefix=None, log=None):
@@ -29,10 +27,10 @@ def write_spreadsheet(sorted_families, prefix=None, log=None):
     if prefix:
         filename = f"{prefix}-{filename}"
 
+    #---------------------------------------------------------------------
+
     wb = Workbook()
     ws = wb.active
-
-    #---------------------------------------------------------------------
 
     # Set narrow margins so that we can get as much in as possible if people print it out
     ws.page_margins.left   = 0.25
@@ -150,17 +148,29 @@ def write_spreadsheet(sorted_families, prefix=None, log=None):
 
 #-----------------------------------------------------------------------------
 
-def write_spreadsheets(families, prefix=None, log=None):
+def write_spreadsheets(families, num_sheets, prefix=None, log=None):
+    def _get_fps():
+        return base_fps if remainder <= 0 else (base_fps+1)
+
+    # Base number of families per spreadsheet
+    base_fps = int(len(families) / num_sheets)
+    # Unless that divided evenly, some spreadsheets will need to have one more family
+    remainder = len(families) - (base_fps * num_sheets)
+
     # Important to go in sorted order, so we can't use simple foo[0:19]
     # kind of syntax (because the keys/family names are not necessarily
     # in order in the dictionary keys).
     subset = list()
+    fps = _get_fps()
     for id in sorted(families):
         f = families[id]
         subset.append(f)
-        if len(subset) >= families_per_spreadsheet:
+        if len(subset) >= fps:
             write_spreadsheet(subset, prefix=prefix, log=log)
+
             subset = list()
+            remainder -= 1
+            fps = _get_fps()
 
     if len(subset) > 0:
         write_spreadsheet(subset, prefix=prefix, log=log)
@@ -168,7 +178,8 @@ def write_spreadsheets(families, prefix=None, log=None):
 ##############################################################################
 
 def process_families(families, log):
-    target_families = dict()
+    spanish_families = dict()
+    english_families = dict()
 
     for fid in sorted(families):
         f = families[fid]
@@ -185,13 +196,22 @@ def process_families(families, log):
             'fid'                 : fid,
         }
 
+        languages = dict()
         for m in f['members']:
             if helpers.member_is_hoh_or_spouse(m):
                 this_family[m['type']] = m
 
-        target_families[f"{family_last_name} {fid}"] = this_family
+                key = 'language'
+                if key in m:
+                    primary = m[key].split('/')[0].lower()
+                    languages[primary] = True
 
-    return target_families
+        if len(languages) == 1 and 'spanish' in languages:
+            spanish_families[f"{family_last_name} {fid}"] = this_family
+        else:
+            english_families[f"{family_last_name} {fid}"] = this_family
+
+    return spanish_families, english_families
 
 ##############################################################################
 
@@ -207,10 +227,13 @@ def main():
 
     print(f"Total number of parishioner families: {len(families)}")
 
-    target_families = process_families(families, log)
+    spanish_families, english_families = process_families(families, log)
 
-    print(f"Number of target families in list: {len(target_families)}")
+    print(f"Number of spanish families in list: {len(spanish_families)}")
+    print(f"Number of english families in list: {len(english_families)}")
 
-    write_spreadsheets(target_families, log=log)
+    # We have 69 english volunteers and 1 spanish volunteer
+    write_spreadsheets(families=english_families, num_sheets=69, prefix='English', log=log)
+    write_spreadsheets(families=spanish_families, num_sheets=1, prefix='Spanish', log=log)
 
 main()
