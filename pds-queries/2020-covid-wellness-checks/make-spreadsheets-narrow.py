@@ -232,8 +232,8 @@ def main():
     print(f"Number of spanish families in list: {len(spanish_families)}")
     print(f"Number of english families in list: {len(english_families)}")
 
-    # We have 69 english volunteers and 1 spanish volunteer
-    write_spreadsheets(families=english_families, num_sheets=69, prefix='English', log=log)
+    # We have 70 english volunteers and 1 spanish volunteer
+    write_spreadsheets(families=english_families, num_sheets=70, prefix='English', log=log)
     write_spreadsheets(families=spanish_families, num_sheets=1, prefix='Spanish', log=log)
 
 main()
