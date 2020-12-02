@@ -1246,7 +1246,7 @@ def family_status_csv_report(args, google, pds_families, jotform, log):
         csv_data.append({
             'fid' : fid,
             'Family Name' : pds_families[fid]['Name'],
-            'Envelope ID' : pds_families[fid]['ParKey'],
+            'Envelope ID' : helpers.pkey_url(pds_families[fid]['ParKey']),
             'Last Name'   : last_name,
             'Status'      : already_submitted_fam_status,
         })
