@@ -50,13 +50,23 @@
     Modified to add logic to rotate the log file based on a pre-determined size.  The number
     of backup archives (currently set to 9), and the maximum log file size (currently set to
     1GB) can be specified, and the archives are automatically gzip'd.  The GZIP operation is
-    handled as a separate thread so as to not disrupt the primary MQTT message handling.
+    handled as a separate thread so as to not disrupt the primary MQTT message handling.  The
+    GZIP log archives are numbered sequentially starting with ".1.gz" (the newest, just
+    archived log), through the maximum-specified archive number (the oldest).  Once the maximum
+    number of GZIP archives are reached, the oldest archive is deleted.
 
     Also made minor modification to the get_email_credentials and send_mail routines to read
     a local hostname from the credentials file (or None if no specified), as well as the
     "mail to" destination.  This allows a more generic usage of the routines for other
     applications / domains.
             Modified by DK Fowler ... 21-Nov-2020           --- v02.10
+
+    Modified to make GZIP archive rotation more consistent with the standard Linux /
+    Python logRotator function.
+
+    Added streaming file handler to direct stderr to both the console and to the log
+    file.  This allows capturing exception traces in the log as errors occur.
+            Modified by DK Fowler ... 03-Dec-2020           --- v02.20
 """
 
 import paho.mqtt.client as mqtt
@@ -72,7 +82,6 @@ import atexit
 import sys
 import argparse
 
-import glob
 from concurrent import futures
 
 import gzip
@@ -82,8 +91,8 @@ import sqlite3
 from sqlite3 import Error
 
 # Define version
-eccmqtt_iot_version = "02.10"
-eccmqtt_iot_date = "21-Nov-2020"
+eccmqtt_iot_version = "02.20"
+eccmqtt_iot_date = "03-Dec-2020"
 
 gzip_in_progress = False
 done_flag = False  # flag to indicate when GZIP in progress completes
@@ -125,6 +134,31 @@ if args.version:
     sys.exit(0)
 
 
+class StreamToLogger(object):
+    """
+    Fake file-like stream object that redirects writes to a logger instance.
+
+    Code from:
+    https://stackoverflow.com/questions/19425736/how-to-redirect-stdout-and-stderr-to-logger-in-python
+    """
+
+    def __init__(self, logger_obj, level):
+        self.logger_obj = logger_obj
+        self.level = level
+        self.linebuf = ''
+        self.terminal = sys.stderr
+
+    def write(self, buf):
+        self.terminal.write(buf)
+
+        for line in buf.rstrip().splitlines():
+            if line != '\n':
+                self.logger_obj.log(self.level, line.rstrip())
+
+    def flush(self):
+        pass
+
+
 class GZipRotator(logging.handlers.RotatingFileHandler):
 
     def doRollover(self):
@@ -134,48 +168,32 @@ class GZipRotator(logging.handlers.RotatingFileHandler):
         # Let the default log rollover routine do its thing first...
         super().doRollover()
 
-        # Construct a file pattern to match all current gzip'd logs
-        base_file_pattern = self.baseFilename + ".[0-9].gz"
-        # Get a list of the current .gzip'd log files to determine the next extension to use
-        arch_files = glob.iglob(base_file_pattern)
-        # Loop through the archived log files to find the last file number in use
-        lastgz_file_num = '0'  # default value for first iteration (no current gzips)
-        for archFile in arch_files:
-            fn = archFile.split('.')
-            # The gzip'd file "number" is in array element 2
-            lastgz_file_num = fn[2]
-        lastgz_file_int = int(lastgz_file_num)
-        # Construct a gzip file name for the destination by incrementing the last file number
-        # used.  If more than (backupCount) files are already zipped, delete the oldest and rename
-        # the remaining to free up the last number for re-use.  This ensures that the newest gzip
-        # will always be the highest number.
-        nextgz_file_int = lastgz_file_int + 1
-        if nextgz_file_int > self.backupCount:
-            nextgz_file_int = self.backupCount
-            # Since we already have the maximum gzip'd logs, delete the oldest, then rename the
-            # remaining to free up the last slot.
-            oldest_gz_log = self.baseFilename + ".1.gz"
-            os.remove(oldest_gz_log)
-            # Rename the remaining gzip'd logs...
-            arch_files = glob.iglob(base_file_pattern)
-            for archFile in arch_files:
-                fn = archFile.split('.')
-                # The gzip'd file "number" is in array element 2
-                newgz_file_num = int(fn[2]) - 1
-                newgz_file = fn[0] + "." + fn[1] + "." + str(newgz_file_num) + ".gz"
-                os.rename(archFile, newgz_file)
-        else:
-            # haven't hit the maximum backup file count yet, so simply construct the
-            # next gzip file name based on the existing base file name components
-            fn = (self.baseFilename + ".1.gz").split('.')
+        # Now the rollover has occurred, so we should have an unarchived file
+        # with a {baseFilename}.1 name.  Before compressing it, we need to "roll up"
+        # the existing GZIP'd archives to make room for the new GZIP we'll
+        # create.  (The newest GZIP archive has a ".1.gz" extension.)
+        for gzip_idx in range(self.backupCount, 0, -1):
+            gzip_filename = f'{self.baseFilename}.{gzip_idx}.gz'
+            if os.path.exists(gzip_filename):
+                if (gzip_idx + 1) > self.backupCount:
+                    # if the current GZIP is "rolled up", it will exceed the maximum
+                    # number of backup files to be kept, so remove it
+                    os.remove(gzip_filename)
+                else:
+                    # otherwise, bump the GZIP archive number up by renaming the file
+                    rollup_gzip_filename = f'{self.baseFilename}.{gzip_idx + 1}.gz'
+                    os.rename(gzip_filename, rollup_gzip_filename)
 
-        nextgz_file_name = fn[0] + "." + fn[1] + "." + str(nextgz_file_int) + ".gz"
+        # Construct a complete filename for the current log to be archived; since
+        # we've rotated the other GZIPs (if they exist), the ".1" slot should be
+        # available.
+        nextgz_file_name = self.baseFilename + ".1.gz"
         dest = self.baseFilename + ".1"
 
         # Start a thread to gzip the output file so as not to delay primary task(s)
         done_flag = False
         ex = futures.ThreadPoolExecutor(max_workers=2)
-        print('Starting GZIP thread for log file {dest}...')  # debug
+        # print('Starting GZIP thread for log file {dest}...')  # debug
         f = ex.submit(self.gzip_log, dest, nextgz_file_name)
         f.add_done_callback(self.done)
 
@@ -185,11 +203,8 @@ class GZipRotator(logging.handlers.RotatingFileHandler):
         global gzip_in_progress
 
         gzip_in_progress = True
-        try:
-            with open(dest, 'rb') as f_in, gzip.open(nextgz_file_name, 'wb') as f_out:
-                f_out.writelines(f_in)
-        except Exception as e:
-            return F'Error occurred during attempt to GZIP log {dest}:  {e}', dest
+        with open(dest, 'rb') as f_in, gzip.open(nextgz_file_name, 'wb') as f_out:
+            f_out.writelines(f_in)
         return F'Log file {dest} successfully GZIP''d...', dest
 
     @staticmethod
@@ -197,7 +212,7 @@ class GZipRotator(logging.handlers.RotatingFileHandler):
         global done_flag
         global gzip_in_progress
 
-        gzip_in_progress = False        # reset the GZIP-in-progress flag
+        gzip_in_progress = False  # reset the GZIP-in-progress flag
 
         result = fn.result()
 
@@ -210,14 +225,13 @@ class GZipRotator(logging.handlers.RotatingFileHandler):
         elif fn.done():
             error = fn.exception()
             if error:
-                print(F"Error occurred while attempting to GZIP log file...")
-                print(F"...log file {result[1]}")
-                print(F"...error returned: {error}")
-                print(F"...log file {result[1]} should be manually GZIP'd and the source deleted.")
-                logger.error(F"Error occurred while attempting to GZIP log file...")
-                logger.error(F"...log file {result[1]}")
-                logger.error(F"...error returned: {error}")
-                logger.error(F"...log file {result[1]} should be manually GZIP'd and the source deleted.")
+                err_str = F"""Error occurred while attempting to GZIP log file...
+                ...log file {result[1]}
+                ...error returned {error}
+                ...log file {result[1]} should be manually GZIP'ed log file..."""
+                print(err_str)
+                logger.error(err_str)
+
             else:
                 result = fn.result()
                 print(F"{result[0]}")
@@ -230,16 +244,16 @@ class GZipRotator(logging.handlers.RotatingFileHandler):
                     print(F"Archived log file {result[1]} has been deleted.")
                     logger.info(F"Archived log file {result[1]} has been deleted.")
                 except OSError as e:
-                    print(F"Error occurred while attempting to delete source log after GZIP...")
-                    print(F"...file {result[1]}, error {e}")
-                    print(F"...This file should be deleted manually.")
-                    logger.error(F"Error occurred while attempting to delete source log after GZIP...")
-                    logger.error(F"...file {result[1]}")
-                    logger.error(F"...This file should be deleted manually.")
+                    err_str = F"""Error occurred while attempting to delete source log after GZIP...
+                    ...file {result[1]}, error {e}
+                    ...error returned {error}
+                    ...This file should be deleted manually."""
+                    print(err_str)
+                    logger.error(err_str)
 
 
 # Set the number of backup copies of the log to maintain
-max_log_archives = args.max_log_archives    # default is 9 archives if not specified
+max_log_archives = args.max_log_archives  # default is 9 archives if not specified
 # Set the maximum size in bytes at which the log is archived
 max_log_size = args.archive_log_size  # default is 1GB if not specified
 
@@ -258,15 +272,8 @@ logger = logging.getLogger('MQTTIoT')
 logger.addHandler(logRotateZip)
 logger.setLevel(logging.DEBUG)
 
-"""
-# Old logging setup, prior to v02.10...
-logging.basicConfig(
-    filename=log_file_path,
-    level=logging.DEBUG,
-    format="%(asctime)s:%(levelname)s: %(name)s: line: %(lineno)d %(message)s"
-)
-logger = logging.getLogger('MQTTIoT')
-"""
+# Add streaming log handler to direct stderr to both the console and the log file
+sys.stderr = StreamToLogger(logger, logging.ERROR)
 
 # Location of database file...change as appropriate based on implementation location
 ECCMQTTIoT_database = args.database_file_path
@@ -1128,15 +1135,8 @@ def send_mail(mail_origin,
     mail_time_str = mail_time_str + " -" + f'{(time.timezone / 3600):02.0f}00'
 
     try:
-<<<<<<< Updated upstream
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-=======
-        # server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465,
                                   local_hostname=mail_local_host)
->>>>>>> Stashed changes
-        # use the following for ECC...
-        # server = smtplib.SMTP_SSL('smtp-relay.gmail.com', 465)
     except smtplib.SMTPException as e:
         print(F"SMTP error occurred during attempt to connect to GMAIL, error:  {e}")
         logger.error(F"SMTP error occurred during attempt to connect to GMAIL, error:  {e}")
