@@ -23,6 +23,7 @@ cd $prog_dir
 # Generate the list of email addresses from PDS data and sync
 google_logfile=$prog_dir/sync-google-group-logfile.txt
 ./sync-google-group.py \
+    --smtp-auth-file $HOME/smtp-auth.txt \
     --sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
     --logfile=$google_logfile \
     --verbose
@@ -42,6 +43,12 @@ m=`date '+%M'`
 if test $h -eq 2 -a $m -lt 15; then
     roster_logfile=$prog_dir/ministry-roster-logfile.txt
     ./create-ministry-rosters.py \
+	--sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
+	--logfile=$roster_logfile \
+	--app-id ../google-drive-uploader/google-uploader-client-id.json \
+	--user-credentials ../google-drive-uploader/google-uploader-user-credentials.json
+
+    ./create-training-rosters.py \
 	--sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
 	--logfile=$roster_logfile \
 	--app-id ../google-drive-uploader/google-uploader-client-id.json \

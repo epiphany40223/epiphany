@@ -10,10 +10,9 @@ starting with "_").  There's only a handful of public functions.
 
 '''
 
-import re
+import datetime
 import pathlib
-
-from datetime import datetime
+import re
 
 import PDS
 
@@ -24,6 +23,8 @@ import PDS
 # Keys for types of emails
 pkey  = 'preferred_emails'
 npkey = 'non_preferred_emails'
+
+date_never = datetime.date.fromisoformat('1899-12-30')
 
 ##############################################################################
 
@@ -58,7 +59,7 @@ def _normalize_boolean(item, src, dest=None) -> None:
 
     if src not in item:
         item[dest] = False
-    elif item[src] == '' or item[src] == 0:
+    elif item[src] == '' or item[src] == 0 or not item[src]:
         item[dest] = False
         if src != dest:
             del item[src]
@@ -66,9 +67,6 @@ def _normalize_boolean(item, src, dest=None) -> None:
         item[dest] = True
         if src != dest:
             del item[src]
-    else:
-        log.info("Unrecognized {f} value: {v}"
-                 .format(f=field, v=item[src]))
 
 #-----------------------------------------------------------------------------
 
@@ -83,6 +81,78 @@ def _normalize_filename(item, src) -> None:
         return
 
     item[src] = pathlib.PureWindowsPath(item[src])
+
+#-----------------------------------------------------------------------------
+
+def _normalize_date(item, sentinel=True):
+    if item is None or item == '0000-00-00':
+        if sentinel:
+            return date_never
+        else:
+            return None
+    else:
+        return datetime.date.fromisoformat(item)
+
+#-----------------------------------------------------------------------------
+
+# Compute a salutation for the Head of Household ("HoH" and spouse) for each
+# familiy.  PDS allows there to be multiple HoHs and multiple spouse Members in
+# any given Family, so be sure to account for that.
+#
+# Make the salutation be of the form:
+#
+# first/nickname [and first/nickname [...]] last_name [and first/nickname [and first/nickname [...]] last_name [...]
+#
+# Examples:
+#
+# - Andrew and Betty Smith
+# - Andrew Smith and Betty Johnson
+# - Andrew and Betty Smith and Joseph Johnson
+# - Andrew and Betty Smith and Joseph and Geraldine Johnson
+#
+def _compute_family_hoh_and_spouse_salutations(families, log):
+    def _add(last_names, member):
+        last = member['last']
+        if last not in last_names:
+            last_names[last] = list()
+        last_names[last].append(member)
+
+    #-----------------------------------------------------------
+
+    for fid in sorted(families.keys()):
+        family     = families[fid]
+
+        last_names = dict()
+        hoh        = list()
+        spouses    = list()
+
+        for member in family['members']:
+            last = member['last']
+
+            if 'Head' in member['type']:
+                hoh.append(member)
+                _add(last_names, member)
+            if 'Spouse' in member['type']:
+                spouses.append(member)
+                _add(last_names, member)
+
+        salutation = ''
+        for last_name in sorted(last_names.keys()):
+            first_names = list()
+            for member in last_names[last_name]:
+                if 'nickname' in member and member['nickname'] is not None:
+                    first_names.append(member['nickname'])
+                elif member['first'] is not None:
+                    first_names.append(member['first'])
+                else:
+                    first_names.append("***UNKNOWN***")
+                    log.error("Unknown first name")
+
+            if len(salutation) > 0:
+                salutation += ' and '
+            salutation += f"{' and '.join(first_names)} {last_name}"
+
+        family['hoh_and_spouse_salutation'] = salutation
 
 #-----------------------------------------------------------------------------
 
@@ -102,6 +172,8 @@ def _load_families(pds, columns=None,
     columns.append('StatDescRec')
     columns.append('PictureFile')
     columns.append('EnvelopeUser')
+    columns.append('Visitor')
+    columns.append('SendNoMail')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
@@ -117,8 +189,9 @@ def _load_families(pds, columns=None,
                               where=where)
 
     for f in families.values():
-        _normalize_boolean(f, src='PDSInactive{n}'.format(n=db_num),
-                    dest="Inactive")
+        _normalize_boolean(f, src=f'PDSInactive{db_num}', dest="Inactive")
+        _normalize_boolean(f, src='SendNoMail')
+        _normalize_boolean(f, src='EnvelopeUser')
         _normalize_filename(f, src='PictureFile')
 
     return families
@@ -137,10 +210,15 @@ def _load_members(pds, columns=None,
     columns.append('MonthOfBirth')
     columns.append('DayOfBirth')
     columns.append('YearOfBirth')
+    columns.append('Gender')
     columns.append('MaritalStatusRec')
     columns.append('MemberType')
     columns.append('PictureFile')
-    columns.append('User4DescRec')
+    columns.append('Location')
+    columns.append('LanguageRec')
+    columns.append('EthnicDescRec')
+    columns.append('User3DescRec') # Skills
+    columns.append('User4DescRec') # Occupation
     columns.append('Deceased')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
@@ -159,9 +237,9 @@ def _load_members(pds, columns=None,
 
     for m in members.values():
         _normalize_boolean(m, src='Deceased')
-        _normalize_boolean(m, src='PDSInactive{n}'.format(n=db_num),
-                    dest="Inactive")
+        _normalize_boolean(m, src=f'PDSInactive{db_num}', dest="Inactive")
         _normalize_filename(m, src='PictureFile')
+        m['date_of_birth'] = _normalize_date(m['DateOfBirth'], sentinel=False)
 
     return members
 
@@ -197,7 +275,7 @@ def _delete_non_parishioners(families, members):
     # Look for family ParKey >= 10,000
     for fid, f in families.items():
         parkey = int(f['ParKey'])
-        if parkey >= 10000:
+        if parkey >= 9000 or f['Visitor']:
             f = families[fid]
             for m in f['members']:
                 mid = m['MemRecNum']
@@ -230,7 +308,7 @@ def _link_family_emails(families, emails):
             key = npkey
 
         addr = '{name} <{addr}>'.format(name=f['Name'],
-                                        addr=e['EMailAddress'])
+                                        addr=e['EMailAddress'].strip())
         e['full_address'] = addr
         f[key].append(e)
 
@@ -241,6 +319,12 @@ def _link_family_city_states(families, city_states):
         csid = f['StreetCityRec']
         if csid and csid in city_states:
             f['city_state'] = city_states[csid]['CityState']
+        else:
+            # Several places in our Python assume that there is a
+            # value in the "city_state" entry.  So rather than go
+            # check all of those places, just put an empty string
+            # there if there actually is no value.
+            f['city_state'] = ''
 
 #-----------------------------------------------------------------------------
 
@@ -249,6 +333,35 @@ def _link_family_statuses(families, fam_status_types):
         id = f['StatDescRec']
         if id in fam_status_types:
             f['status'] = fam_status_types[id]['Description']
+
+#-----------------------------------------------------------------------------
+
+def link_family_or_member_phones(family_or_member, phones, phone_types):
+    for p in phones.values():
+        family_or_member_id = p['Rec']
+        if family_or_member_id not in family_or_member:
+            continue
+
+        f = family_or_member[family_or_member_id]
+        if 'phones' not in f:
+            f['phones'] = list()
+
+        ptr = p['PhoneTypeRec']
+        phone_type = ''
+        if ptr in phone_types:
+            phone_type = phone_types[ptr]['Description']
+
+        _normalize_boolean(p, 'Unlisted')
+        f['phones'].append({
+            'number'   : p['Number'],
+            'type'     : phone_type,
+            'unlisted' : p['Unlisted'],
+        })
+
+#-----------------------------------------------------------------------------
+
+def _link_family_phones(families, phones, phone_types):
+    link_family_or_member_phones(families, phones, phone_types)
 
 #-----------------------------------------------------------------------------
 
@@ -292,33 +405,14 @@ def _link_member_emails(members, emails):
             key = npkey
 
         addr = '{name} <{addr}>'.format(name=m['email_name'],
-                                        addr=e['EMailAddress'])
+                                        addr=e['EMailAddress'].strip())
         e['full_address'] = addr
         m[key].append(e)
 
 #-----------------------------------------------------------------------------
 
 def _link_member_phones(members, phones, phone_types):
-    for p in phones.values():
-        mid = p['Rec']
-        if mid not in members:
-            continue
-
-        m = members[mid]
-        if 'phones' not in m:
-            m['phones'] = list()
-
-        ptr = p['PhoneTypeRec']
-        phone_type = ''
-        if ptr in phone_types:
-            phone_type = phone_types[ptr]['Description']
-
-        _normalize_boolean(p, 'Unlisted')
-        m['phones'].append({
-            'number'   : p['Number'],
-            'type'     : phone_type,
-            'unlisted' : p['Unlisted'],
-        })
+    link_family_or_member_phones(members, phones, phone_types)
 
 #-----------------------------------------------------------------------------
 
@@ -348,20 +442,29 @@ def _link_member_birth_places(members, birth_places):
 #-----------------------------------------------------------------------------
 
 def _link_member_ministries(members, ministries, mem_ministries, statuses):
-    akey = 'active_ministries'
-    ikey = 'inactive_ministries'
+    _link_member_mintal(members, 'ministries', ministries, 'MinDescRec',
+                        mem_ministries, statuses)
 
-    for m in members.values():
-        m[akey] = list()
-        m[ikey] = list()
+def _link_member_talents(members, talents, mem_talents, statuses):
+    _link_member_mintal(members, 'talents', talents, 'TalDescRec',
+                        mem_talents, statuses)
 
-    for mm in mem_ministries.values():
-        mid = mm['MemRecNum']
+def _link_member_mintal(members, desc, things, thing_index_field,
+                        mem_things, statuses):
+    akey = f'active_{desc}'
+    ikey = f'inactive_{desc}'
+
+    for member in members.values():
+        member[akey] = list()
+        member[ikey] = list()
+
+    for mt in mem_things.values():
+        mid = mt['MemRecNum']
         if mid not in members:
             continue
         m = members[mid]
 
-        status_id = mm['StatusDescRec']
+        status_id = mt['StatusDescRec']
         if not status_id:
             continue
         if status_id not in statuses:
@@ -371,23 +474,17 @@ def _link_member_ministries(members, ministries, mem_ministries, statuses):
         if status['Active'] != 1:
             mem_list_name = ikey
 
-        ministry_id = mm['MinDescRec']
+        thing_id = mt[thing_index_field]
 
         # Deep copy the ministry record so that we can add some more
         # data in it about this specific member
-        ministry = ministries[ministry_id].copy()
-        ministry['active'] = status['Active']
-        ministry['status'] = status['Description']
+        thing = things[thing_id].copy()
+        thing['active'] = status['Active']
+        thing['status'] = status['Description']
+        thing['start']  = _normalize_date(mt['StartDate'])
+        thing['end']    = _normalize_date(mt['EndDate'])
 
-        m[mem_list_name].append(ministry)
-
-#-----------------------------------------------------------------------------
-
-def _link_member_marital_statuses(members, statuses):
-    for m in members.values():
-        ms = m['MaritalStatusRec']
-        if ms and ms in statuses:
-            m['marital_status'] = statuses[ms]['Description']
+        m[mem_list_name].append(thing)
 
 #-----------------------------------------------------------------------------
 
@@ -400,17 +497,62 @@ def _link_member_marriage_dates(members, mem_dates, mdtid):
         if mid and mid not in members:
             continue
         m = members[mid]
-        m['marriage_date'] = md['Date']
+        m['marriage_date'] = _normalize_date(md['Date'])
 
 #-----------------------------------------------------------------------------
 
-def _link_member_occupations(members, occupations):
-    for m in members.values():
+training_req_results = {
+    0   :   "Pending",
+    1   :   "Yes",
+    2   :   "No",
+    3   :   "Positive",
+    4   :   "Negative",
+    5   :   "Received",
+    6   :   "Incomplete",
+    7   :   "Cleared",
+    8   :   "Cleared / Restrictions",
+    9   :   "Not Cleared",
+    10  :   "Illegible",
+    11  :   "Submitted",
+    12  :   "Inactive",
+    13  :   "Expired",
+    14  :   "Archived",
+}
 
-        oid = m['User4DescRec']
-        if oid and oid in occupations:
-            occupation = occupations[oid]
-            m['occupation'] = occupation['Description']
+def _link_member_requirements(members, mem_reqs, req_types):
+    for mr in mem_reqs.values():
+        mid = mr['MemRecNum']
+        if mid not in members:
+            continue
+
+        id = mr['ReqResult']
+        if id in training_req_results:
+            result = training_req_results[id]
+        else:
+            result = f'Unknown result {id}'
+
+        m = members[mid]
+        key = 'requirements'
+        if key not in m:
+            m[key] = list()
+
+        m[key].append({
+            'description' : req_types[mr['ReqDescRec']]['Description'],
+            'start_date'  : _normalize_date(mr['ReqDate']),
+            'end_date'    : _normalize_date(mr['ExpirationDate']),
+            'result'      : result,
+            'note'        : mr['ReqNote'],
+        })
+
+#-----------------------------------------------------------------------------
+
+def _link_member_id(members, member_source_field, member_dest_field,
+                    values, value_source_field='Description'):
+    for member in members.values():
+        id = member[member_source_field]
+        if id and id in values:
+            value = values[id]
+            member[member_dest_field] = value[value_source_field]
 
 #-----------------------------------------------------------------------------
 
@@ -465,8 +607,7 @@ def _link_family_funds(funds, fund_periods, fund_activities,
             continue
 
         # Transform the item date string into a datetime.date
-        d = datetime.strptime(item['FEDate'], '%Y-%m-%d')
-        item['FEDate'] = d
+        item['FEDate'] = _normalize_date(item['FEDate'])
 
         family_fund = all_family_funds[item['FEFundRec']]
         fund_id     = family_fund['FDFund']
@@ -706,8 +847,8 @@ def _parse_member_names(members):
 
 def _make_emails_lower_case(emails):
     key = 'EMailAddress'
-    for _, e in emails.items():
-        addr = e[key].lower()
+    for e in emails.values():
+        addr = e[key].lower().strip()
         e[key] = addr
 
 #-----------------------------------------------------------------------------
@@ -730,6 +871,8 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['Description', 'Active'], log=log)
     ministries  = PDS.read_table(pds, 'MinType_DB', 'MinDescRec',
                                  columns=['Description'], log=log)
+    talents     = PDS.read_table(pds, 'TalType_DB', 'TalDescRec',
+                                 columns=['Description'], log=log)
     birth_places= PDS.read_table(pds, 'Ask_DB', 'AskRecNum',
                                  columns=['AskMemNum', 'BirthPlace'], log=log)
     date_places = PDS.read_table(pds, 'DatePlace_DB', 'DatePlaceRecNum',
@@ -738,9 +881,14 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['Description'], log=log)
     phone_types = PDS.read_table(pds, 'PhoneTyp_DB', 'PhoneTypeRec',
                                  columns=['Description'], log=log)
+    req_types   = PDS.read_table(pds, 'ReqType_DB', 'ReqDescRec',
+                                 columns=['Description', 'Expires'], log=log)
     emails      = PDS.read_table(pds, 'MemEMail_DB', 'EMailRec',
                                  columns=['MemRecNum', 'EMailAddress',
                                           'EMailOverMail', 'FamEmail'],
+                                 log=log)
+    languages   = PDS.read_table(pds, 'LangType_DB', 'LanguageRec',
+                                 columns=['Description'],
                                  log=log)
     mem_phones  = PDS.read_table(pds, 'MemPhone_DB', 'PhoneRec',
                                  columns=['Rec', 'Number', 'PhoneTypeRec', 'Unlisted'],
@@ -752,14 +900,26 @@ def load_families_and_members(filename=None, pds=None,
                                  log=log)
     mem_ministries=PDS.read_table(pds, 'MemMin_DB', 'MemKWRecNum',
                                   columns=['MinDescRec', 'MemRecNum',
-                                           'StatusDescRec'],
+                                           'StatusDescRec', 'StartDate', 'EndDate'],
+                                  log=log)
+    mem_talents =PDS.read_table(pds, 'MemTal_DB', 'MemKWRecNum',
+                                  columns=['TalDescRec', 'MemRecNum',
+                                           'StatusDescRec', 'StartDate', 'EndDate'],
                                   log=log)
     mem_dates   = PDS.read_table(pds, 'MemDates_DB', 'MemDateRecNum',
                                  columns=['MemRecNum', 'Date',
                                           'DescRec'],
                                  log=log)
+    mem_ethnics = PDS.read_table(pds, 'EthType_DB', 'EthnicDescRec',
+                                 columns=['Description'], log=log)
+    mem_3kw     = PDS.read_table(pds, 'User3KW_DB', 'User3DescRec',
+                                 columns=['Description'], log=log)
     mem_4kw     = PDS.read_table(pds, 'User4KW_DB', 'User4DescRec',
                                  columns=['Description'], log=log)
+    mem_reqs    = PDS.read_table(pds, 'MemReq_DB', 'MemReqRecNum',
+                                 columns=['MemRecNum', 'ReqDescRec',
+                                          'ReqDate', 'ReqResult',
+                                          'ReqNote', 'ExpirationDate'])
 
     relationship_types = PDS.read_table(pds, 'RelType_DB', 'RelDescRec',
                                         columns=['Description'], log=log)
@@ -773,6 +933,9 @@ def load_families_and_members(filename=None, pds=None,
                                  log=log)
     fam_status_types = PDS.read_table(pds, 'FamStatType_DB', 'StatDescRec',
                                       columns=['Description'], log=log)
+    fam_phones  = PDS.read_table(pds, 'FamPhone_DB', 'PhoneRec',
+                                 columns=['Rec', 'Number', 'PhoneTypeRec', 'Unlisted'],
+                                 log=log)
 
     # Descriptions of each fund
     funds = PDS.read_table(pds, 'FundSetup_DB', 'SetupRecNum',
@@ -834,6 +997,7 @@ def load_families_and_members(filename=None, pds=None,
     _link_family_emails(families, emails)
     _link_family_city_states(families, city_states)
     _link_family_statuses(families, fam_status_types)
+    _link_family_phones(families, fam_phones, phone_types)
     _link_family_keywords(families, fam_keyword_types, fam_keywords)
 
     _parse_member_names(members)
@@ -843,13 +1007,22 @@ def load_families_and_members(filename=None, pds=None,
     _link_member_keywords(members, mem_keyword_types, mem_keywords)
     _link_member_birth_places(members, birth_places)
     _link_member_ministries(members, ministries, mem_ministries, statuses)
-    _link_member_marital_statuses(members, marital_statuses)
+    _link_member_talents(members, talents, mem_talents, statuses)
     _link_member_marriage_dates(members, mem_dates, mdtid)
-    _link_member_occupations(members, mem_4kw)
+    _link_member_requirements(members, mem_reqs, req_types)
+
+    _link_member_id(members, 'MaritalStatusRec', 'marital_status', marital_statuses)
+    _link_member_id(members, 'LanguageRec', 'language', languages)
+    _link_member_id(members, 'EthnicDescRec', 'ethnic', mem_ethnics)
+    _link_member_id(members, 'User3DescRec', 'skills', mem_3kw)
+    _link_member_id(members, 'User4DescRec', 'occupation', mem_4kw)
 
     _link_family_funds(funds, fund_periods, fund_activities,
                        families, fam_funds, fam_fund_rates, fam_fund_history,
                        log)
+
+    # Compute family HoH+Spouse salutations
+    _compute_family_hoh_and_spouse_salutations(families, log)
 
     return pds, families, members
 
@@ -858,7 +1031,7 @@ def load_families_and_members(filename=None, pds=None,
 def _get_sorted_addrs(entries):
     addrs = list()
     for entry in entries:
-        addrs.append(entry['EMailAddress'])
+        addrs.append(entry['EMailAddress'].strip())
 
     return sorted(addrs)
 
@@ -875,7 +1048,7 @@ def find_preferred_email(member_or_family):
 # Return either the Member/Family preferred email addresses, or, if
 # there are no preferred addresses, return the first (by sorted order)
 # non-preferred email address (if it exists).  If no email addresses
-# exist, return None.
+# exist, return an empty list.
 def find_any_email(member_or_family):
     mof = member_or_family
     addrs = find_preferred_email(mof)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 #
 # See https://openpyxl.readthedocs.io/en/stable/index.html
@@ -39,8 +39,18 @@ guser_cred_file = 'user-credentials.json'
 
 ministries = [
     {
+        "ministry"  : '100-Parish Pastoral Council',
+        "gsheet_id" : '1aIoStpSOsup8XL5eNd8nhpJwM-IqN2gTkwVf_Qvlylc',
+        "birthday"  : False,
+    },
+    {
         "ministry"  : '102-Finance Advisory Council',
         "gsheet_id" : '1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '103-Worship Committee',
+        "gsheet_id" : '1h_ZvhkYlnebIu0Tk7h1ldJo-VKnJsJGe1jEzY34mcd0',
         "birthday"  : False,
     },
 
@@ -70,7 +80,11 @@ ministries = [
         "gsheet_id" : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
         "birthday"  : False,
     },
-
+    {
+        "ministry"  : '451-Livestream Team Ministry',
+        "gsheet_id" : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
+        "birthday"  : False,
+    },
     {
         "ministry"  : '600-Men of Epiphany',
         "gsheet_id" : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
@@ -106,8 +120,7 @@ def write_xlsx(members, ministry, want_birthday, log):
     timestamp = ('{year:04}-{mon:02}-{day:02} {hour:02}:{min:02}'
                 .format(year=now.year, mon=now.month, day=now.day,
                         hour=now.hour, min=now.minute))
-    filename = ('{ministry} members as of {timestamp}.xlsx'
-                .format(ministry=ministry, timestamp=timestamp))
+    filename = (f'{ministry} members as of {timestamp}.xlsx')
 
     # Put the members in a sortable form (they're currently sorted by MID)
     sorted_members = dict()
@@ -127,23 +140,33 @@ def write_xlsx(members, ministry, want_birthday, log):
     if want_birthday:
         last_col = 'D'
 
-    ws.merge_cells('A1:{l}1'.format(l=last_col))
-    cell = 'A1'
-    ws[cell] = 'Last updated: {now}'.format(now=now)
+    row = 1
+    ws.merge_cells(f'A{row}:{last_col}{row}')
+    cell = f'A{row}'
+    ws[cell] = f'Ministry: {ministry}'
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 
-    ws.merge_cells('A2:{l}2'.format(l=last_col))
-    cell = 'A2'
+    row = row + 1
+    ws.merge_cells(f'A{row}:{last_col}{row}')
+    cell = f'A{row}'
+    ws[cell] = f'Last updated: {now}'
+    ws[cell].fill = title_fill
+    ws[cell].font = title_font
+
+    row = row + 1
+    ws.merge_cells(f'A{row}:{last_col}{row}')
+    cell = f'A{row}'
     ws[cell] = ''
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 
-    columns = [('A3', 'Member name', 30),
-               ('B3', 'Address', 30),
-               ('C3', 'Phone / email', 50)]
+    row = row + 1
+    columns = [(f'A{row}', 'Member name', 30),
+               (f'B{row}', 'Address', 30),
+               (f'C{row}', 'Phone / email', 50)]
     if want_birthday:
-        columns.append(('D3', 'Birthday', 30))
+        columns.append((f'D{row}', 'Birthday', 30))
 
     for cell,value,width in columns:
         ws[cell] = value
@@ -153,7 +176,8 @@ def write_xlsx(members, ministry, want_birthday, log):
         ws.column_dimensions[cell[0]].width = width
 
     # Freeze the title row
-    ws.freeze_panes = ws['A4']
+    row = row + 1
+    ws.freeze_panes = ws[f'A{row}']
 
     #---------------------------------------------------------------------
 
@@ -165,7 +189,6 @@ def write_xlsx(members, ministry, want_birthday, log):
         return row + 1
 
     # Data rows
-    row = 4
     for name in sorted(sorted_members):
         m = sorted_members[name]
         # The name will take 1 row
@@ -195,11 +218,22 @@ def write_xlsx(members, ministry, want_birthday, log):
                 val = '{ph} {type}'.format(ph=phone['number'], type=phone['type'])
                 last_row = _append(col=col, row=last_row, value=val)
 
+        # If we have any preferred emails, list them all
         key = 'preferred_emails'
-        if key in m:
+        if key in m and len(m[key]) > 0:
             for email in m[key]:
                 last_row = _append(col=col, row=last_row, value=email['EMailAddress'])
-        email_last_row = last_row
+                email_last_row = last_row
+
+        # If we have no preferred emails, list the first alphabetic
+        # non-preferred email
+        else:
+            key = 'non_preferred_emails'
+            if key in m and len(m[key]) > 0:
+                emails   = sorted([x['EMailAddress'] for x in m[key]])
+                last_row = _append(col=col, row=last_row,
+                                   value=emails[0])
+                email_last_row = last_row
 
         # The birthday will only be 1 row
         if want_birthday:
@@ -219,7 +253,7 @@ def write_xlsx(members, ministry, want_birthday, log):
     #---------------------------------------------------------------------
 
     wb.save(filename)
-    log.info('Wrote {filename}'.format(filename=filename))
+    log.info(f'Wrote {filename}')
 
     return filename
 
