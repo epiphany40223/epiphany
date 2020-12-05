@@ -105,6 +105,38 @@
     root (minus file extension).
             Modified by DK Fowler ... 24-Feb-2020       --- v03.05
 
+
+    Modified to reflect changes Ecobee made to the authorization API(s).  The access tokens
+    are now up to 7K bytes in size, and the PIN is now 9 bytes vs. the original 4.
+
+    Modified to add additional error checking and logging for the runtime interval data, as the
+    Ecobee API now returns nearly-blank records with the interval data on occasion that are
+    missing some parameters (32 parameters vs. the documented 33).  These records are skipped and
+    not written to the database.
+
+    Updated the Pyecobee library to the newest release, which now includes a new field that Ecobee
+    has added to the Settings object for 'fanSpeed'.  In conjunction with this change, the existing
+    'thermSettings' table had to be modified to add this new column.  Used the following command
+    line in SQLite3:  'alter table thermSettings add column fanSpeed'
+
+    Modified to handle object type of Reminders; these were first returned for some of the newest
+    thermostats, and the Pyecobee library did not have definitions for these objects.  Created a pull
+    request for the author to include my changes for this.
+
+    Added additional error handling for situations where the start/end dates/times for the
+    runtime historical interval data retrieval are the same; this could happen if the routine is
+    run more frequently than the revision interval data is reported to Ecobee.  Previously the
+    routine would log this occurrence then abort; now it simply logs the occurrence and continues
+    processing the next thermostat in the retrieval list.
+
+    Added e-mail error abort routine for severe errors, such that an e-mail alert will now be
+    sent in the event a serious error occurs that causes the routine to abort.
+
+    Note that the required Pyecobee library has now been changed back to the original author's
+    (sfanous, or Sherif Fanous), as the mumblepin version is now apparently NOT being supported,
+    while sfanous has committed to maintaining his original; his version of the library has now
+    been updated to include the backlog of changes from Ecobee.
+            Modified by DK Fowler ... 16-Nov-2020       --- v03.10
 """
 
 from datetime import datetime
@@ -129,8 +161,8 @@ from dns.exception import DNSException
 from pythonping import ping
 
 # Define version
-eccpycobee_version = "03.05"
-eccpycobee_date = "24-Feb-2020"
+eccpycobee_version = "03.10"
+eccpycobee_date = "16-Nov-2020"
 
 # Parse the command line arguments for the filename locations, if present
 parser = argparse.ArgumentParser(description='''Epiphany Catholic Church Ecobee Thermostat Polling Application.
@@ -148,6 +180,8 @@ parser.add_argument("-api", "--api", "--api-file-path", dest="api_file_path", de
                     help="default API key filename path")
 parser.add_argument("-i", "-int", "--interval-file", "--int-file-path", dest="int_file_path",
                     default="ECCEcobee_therm_interval.json", help="thermostat revision interval filename path")
+parser.add_argument("-m", "--gmail_credentials_file_path", default="ECCEcobee_GMail_Credentials.txt",
+                    help="default GMail user/pass credentials filename path")
 parser.add_argument("-v", "-ver", "--version", action="store_true",
                     help="display application version information")
 
@@ -190,8 +224,8 @@ socket.setdefaulttimeout(30)
             This results in the issuance of an application key.
         2)  An authorization, providing a scope which defines whether the application "scope" will be
             read, write or both access.  The application key from above is used for the authorization
-            request, and if successful, results in a 4-digit PIN (used here, though there are
-            other methods provided).
+            request, and if successful, results in a 9-digit PIN in the form 'xxxx-xxxx'
+            (used here, though there are other methods provided).
         3)  An app registration, done manually by the administrator on the Ecobee portal.  The admin provides
             the PIN from the authorization request previously.  Subsequent calls to the authorization API
             will not be successful until the validation step is performed.  The PIN has a set duration and
@@ -234,7 +268,8 @@ thermostat_list_object_dict = {'action': 'Action', 'alerts': 'Alert', 'climates'
                                'hierarchy_set': 'HierarchySet', 'hierarchy_user': 'HierarchyUser',
                                'limit': 'LimitSetting', 'outputs': 'Output', 'page': 'Page',
                                'remote_sensors': 'RemoteSensor', 'capability': 'RemoteSensorCapability',
-                               'reminders': 'ThermostatReminder2', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
+#                               'reminders': 'ThermostatReminder2', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
+                               'reminders': 'Reminder', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
                                'sensors': 'Sensor', 'state': 'State', 'status': 'Status', 'user': 'User',
                                'forecasts': 'WeatherForecast'}
 
@@ -415,7 +450,8 @@ SQLite_table_dict = {'runtime': 'thermRuntime', 'alerts': 'thermAlerts', 'weathe
                      'settings': 'thermSettings', 'location': 'thermLocation', 'house_details': 'thermHouseDetails',
                      'version': 'thermVersion', 'notification_settings': 'thermNotificationSettings',
                      'extended_runtime': 'thermExtendedRuntime', 'program': 'thermProgram', 'devices': 'thermDevices',
-                     'remote_sensors': 'thermRemoteSensors', 'thermostat': 'Thermostats'}
+                     'remote_sensors': 'thermRemoteSensors', 'thermostat': 'Thermostats',
+                     'reminders': 'thermReminders'}
 '''
 # Included here as a reference for other possible data selections, not currently included
 SQLite_table_dict = {'settings': 'thermSettings', 'runtime': 'thermRuntime',
@@ -496,7 +532,7 @@ def main():
         logger.error(F"...error was:  {e}")
         print(F"Error occurred while attempting to initialize Ecobee service object...aborting.")
         print(F"...error was:  {e}")
-        sys.exit(1)
+        send_mail_and_exit()
 
     # If we have read contents from the JSON authorization token file, display the contents
     try:
@@ -520,7 +556,7 @@ def main():
         logger.error(F"...Ecobee service return error:  {e}")
         print(F"Missing or invalid API key while attempting to initialize Ecobee service object.")
         print(F"...Ecobee service return error:  {e}")
-        sys.exit(1)  # Not much point in continuing if we don't have a valid application key
+        send_mail_and_exit()  # Not much point in continuing if we don't have a valid application key
 
     logger.info(ecobee_service.pretty_format())
 
@@ -613,7 +649,7 @@ def main():
             else:
                 logger.error(F"...aborting...")
                 print(F"...aborting...")
-                sys.exit(1)
+                send_mail_and_exit()
     else:
         if sum_err_occurred and sum_err_cnt > 3:
             logger.error(F"Exceeded maximum retries while attempting to retrieve Ecobee thermostat summary")
@@ -630,7 +666,7 @@ def main():
                 else:
                     logger.error(F"...connection to Internet appears to be down...")
                     print(F"...connection to Internet appears to be down...")
-            sys.exit(1)
+            send_mail_and_exit()
 
     # Debug logic...
     try:
@@ -648,7 +684,7 @@ def main():
             print(F"...sum_err_occurred = FALSE")
         logger.error(F"...aborting...")
         print(F"...aborting...")
-        sys.exit(1)
+        send_mail_and_exit()
 
     sum_err_cnt = 0
     sum_err_occurred = True  # Falsely assume error here to initiate loop
@@ -670,6 +706,7 @@ def main():
                               include_settings=True, include_technician=False, include_utility=False,
                               include_version=True,
                               include_weather=True)
+
         try:
             thermostat_response = ecobee_service.request_thermostats(selection)
         except EcobeeApiException as e:
@@ -689,13 +726,25 @@ def main():
                 except EcobeeException as e:
                     logger.error(F"...error occurred while requesting token refresh; exiting...")
                     print(F"...error occurred while requesting token refresh; exiting...")
-                    sys.exit(1)
+                    send_mail_and_exit()
+        except EcobeeAuthorizationException as e:
+            logger.error(F"An authorization error occurred while requesting thermostat(s) details...")
+            logger.error(F"...Ecobee exception:  {e}")
+            print(F"An authorization error occurred while requesting thermostat(s) details...")
+            print(F"...Ecobee exception:  {e}")
+            send_mail_and_exit()
+        except EcobeeHttpException as e:
+            logger.error(F"An HTTP error occurred while requesting thermostat(s) details...")
+            logger.error(F"...Ecobee exception:  {e}")
+            print(F"An HTTP error occurred while requesting thermostat(s) details...")
+            print(F"...Ecobee exception:  {e}")
+            send_mail_and_exit()
         except EcobeeException as e:  # Some other Ecobee API error occurred
             logger.error(F"Error occurred while requesting thermostat(s) details...")
             logger.error(F"...Ecobee exception:  {e}")
             print(F"Error occurred while requesting thermostat(s) details...")
             print(F"...Ecobee exception:  {e}")
-            sys.exit(1)
+            send_mail_and_exit()
         except Exception as e:  # Check for connection error
             sum_err_cnt += 1
             sum_err_occurred = True
@@ -703,6 +752,12 @@ def main():
             logger.error(F"...error:  {e}")
             print(F"Request error occurred during attempt to retrieve Ecobee thermostat details...")
             print(F"...error:  {e}")
+            try:
+                if thermostat_response:
+                    print(F"...{thermostat_response.status.code}")
+                    print(F"...{thermostat_response.pretty_format()}")
+            except UnboundLocalError as e2:
+                pass
             conn_err_msg = "'ConnectionError' object has no attribute 'message'"
             read_timeout_err_msg = "'ReadTimeout' object has no attribute 'message'"
             connection_timeout_err_msg = "'ConnectTimeout' object has no attribute 'message'"
@@ -719,7 +774,7 @@ def main():
                 logger.error(F"...invalid return from thermostat detail API request, attempt {sum_err_cnt}")
                 print(F"...invalid return from thermostat detail API request, attempt {sum_err_cnt}")
             else:
-                sys.exit(1)
+                send_mail_and_exit()
     else:
         if sum_err_occurred and sum_err_cnt > 3:
             logger.error(F"Exceeded maximum retries while attempting to retrieve Ecobee thermostat details")
@@ -735,10 +790,9 @@ def main():
                     logger.error(F"...connection to Internet OK...")
                 else:
                     logger.error(F"...connection to Internet down...")
-            sys.exit(1)
-
+            send_mail_and_exit()
     logger.info(F"Thermostat details retrieved for {len(thermostat_response.thermostat_list)} thermostats.")
-    # print(F"Number of thermos found:  {len(thermostat_response)}")
+    # print(F"Number of thermostats found:  {len(thermostat_response)}")
 
     # Test dumping returns
     # print(F"{thermostat_response.thermostat_list[0].settings.attribute_name_map.keys()}")
@@ -891,6 +945,7 @@ def main():
                 timeout_err_occurred = False  # flag to indicate a timeout error occurred
                 while runtime_err_occurred and runtime_err_cnt <= 3:
                     runtime_err_occurred = False  # reset to assume success
+                    no_interval_data_occurred = False
                     try:
                         runtime_report_response = ecobee_service.request_runtime_reports(
                             selection=Selection(
@@ -922,7 +977,7 @@ def main():
                             except EcobeeException as e:
                                 logger.error(F"...error occurred while requesting token refresh; exiting...")
                                 print(F"...error occurred while requesting token refresh; exiting...")
-                                sys.exit(1)
+                                send_mail_and_exit()
                         else:
                             runtime_err_cnt += 1
                             runtime_err_occurred = True
@@ -939,15 +994,15 @@ def main():
                         print(F"...{runtime_report_response.status.code}")
                         logger.error(F"...aborting")
                         print(F"...aborting")
-                        sys.exit(1)
+                        send_mail_and_exit()
                     except EcobeeException as e:
                         logger.error(F"Error occurred during Ecobee runtime report API request:  {e}")
                         print(F"Error occurred during Ecobee runtime report API request:  {e}")
                         assert runtime_report_response.status.code == 0, \
                             'Failure while executing request_runtime_reports:\n{0}'.format(
                                 runtime_report_response.pretty_format())
-                        sys.exit(1)
-                    except Exception as e:  # handle HTTP timeout errors
+                        send_mail_and_exit()
+                    except Exception as e:  # handle HTTP timeout errors, misc other errors
                         runtime_err_occurred = True
                         runtime_err_cnt += 1
                         logger.error(F"Error occurred during Ecobee runtime report API request...{e}")
@@ -957,6 +1012,7 @@ def main():
                         connection_timeout_err_msg = "'ConnectTimeout' object has no attribute 'message'"
                         timeout_err_msg = "timed out"
                         empty_return_err_msg = "Expecting value: line 1 column 1 (char 0)"
+                        no_new_interval_data = "end_date_time must be later than start_date_time"
                         # The following are the most common errors encountered...handle connection/read timeouts
                         # and "empty" returns
                         if (conn_err_msg in e.__str__()) or \
@@ -967,6 +1023,18 @@ def main():
                             timeout_err_occurred = True  # set flag to indicate a timeout error occurred
                             logger.error(F"...timeout error on request, attempt {runtime_err_cnt}")
                             print(F"...timeout error on request, attempt {runtime_err_cnt}")
+                        elif no_new_interval_data in e.__str__():
+                            logger.error(F"...no new runtime interval data available for this thermostat and "
+                                         F"specified timerframe")
+                            print(F"...no new runtime interval data available for this thermostat and specified "
+                                  F"timeframe")
+                            logger.error(F"...   start date:  {start_datetime}")
+                            logger.error(F"...   end date:    {end_datetime}")
+                            print(F"...   start date:  {start_datetime}")
+                            print(F"...   end date:    {end_datetime}")
+                            runtime_err_cnt = 4     # force exit attempts for this thermostat
+                            runtime_err_occurred = False
+                            no_interval_data_occurred = True
                 else:
                     if runtime_err_cnt > 3 and runtime_err_occurred:
                         logger.error(F"Timeout or authentication error occurred during Ecobee runtime report "
@@ -982,13 +1050,16 @@ def main():
                                 logger.error(F"...connection to Internet OK...")
                             else:
                                 logger.error(F"...connection to Internet down...")
-                        sys.exit(1)
+                        send_mail_and_exit()
 
-                # Debug logic...should never reach here without a valid response for the thermostat runtime report;
-                # check if the response exists, if not, log error and abort.
+                # Should never reach here without a valid response for the thermostat runtime report;
+                # or, we aborted due to no new interval data
+                # Check if the response exists, if not, log error and abort.
                 try:
                     runtime_report_response
                 except NameError as e:
+                    if no_interval_data_occurred:
+                        break
                     logger.error(F"*** Thermostat runtime report response is not defined...")
                     logger.error(F"...runtime_err_cnt = {runtime_err_cnt}")
                     print(F"*** Thermostat runtime report response is not defined...")
@@ -1001,7 +1072,7 @@ def main():
                         print(F"...runtime_err_occurred = FALSE")
                     logger.error(F"...aborting...")
                     print(F"...aborting...")
-                    sys.exit(1)
+                    send_mail_and_exit()
 
                 cols = runtime_report_response.columns
                 runtime_rows = runtime_report_response.report_list
@@ -1194,7 +1265,7 @@ def persist_to_json(auth_json_file_name, ecobee_service):
         logger.error(F"...aborting...")
         print(F"Error occurred while attempting to write JSON tokens file...{e}")
         print(F"...aborting...")
-        sys.exit(1)
+        send_mail_and_exit()
 
 
 def refresh_tokens(ecobee_service):
@@ -1232,7 +1303,7 @@ def refresh_tokens(ecobee_service):
                 except Exception as e:
                     logger.error(F"Error occurred deleting authorization credentials file:  {e}")
                     print(F"Error occurred deleting authorization credentials file:  {e}")
-                    sys.exit(1)
+                    send_mail_and_exit()
                 authorize(ecobee_service)
         except EcobeeException as e:
             refresh_err_occurred = True
@@ -1266,7 +1337,7 @@ def refresh_tokens(ecobee_service):
                     logger.error(F"...connection to Internet OK...")
                 else:
                     logger.error(F"...connection to Internet down...")
-            sys.exit(1)
+            send_mail_and_exit()
 
 
 def request_tokens(ecobee_service):
@@ -1289,7 +1360,7 @@ def request_tokens(ecobee_service):
             except EcobeeException as e:
                 logger.error(F"...error occurred while attempting to re-authorize Ecobee API, aborting:  {e}")
                 print(F"...error occurred while attempting to re-authorize Ecobee API, aborting:  {e}")
-                sys.exit(1)
+                send_mail_and_exit()
         if 'Waiting for user to authorize' in e.error_description:
             logger.error(F"...waiting for user to authorize application...please log into Ecobee.com "
                          F"and authorize application with PIN as directed, then re-run this application to "
@@ -1297,11 +1368,11 @@ def request_tokens(ecobee_service):
             print(F"...waiting for user to authorize application...please log into Ecobee.com "
                   F"and authorize application with PIN as directed, then re-run this application to "
                   F"continue.")
-            sys.exit(1)
+            send_mail_and_exit()
     except EcobeeException as e:
         logger.error(F"Error during request for Ecobee access tokens, aborting:  {e}")
         print(F"Error during request for Ecobee access tokens, aborting:  {e}")
-        sys.exit(1)
+        send_mail_and_exit()
     except Exception as e:
         if 'ConnectionError' in e.__str__():
             logger.error(F"Error during request for Ecobee access tokens...error connecting to service...")
@@ -1311,7 +1382,7 @@ def request_tokens(ecobee_service):
         else:
             logger.error(F"Error during request for Ecobee access tokens, aborting:  {e}")
             print(F"Error during request for Ecobee access tokens, aborting:  {e}")
-        sys.exit(1)
+        send_mail_and_exit()
 
 
 def authorize(ecobee_service):
@@ -1320,15 +1391,19 @@ def authorize(ecobee_service):
         logger.debug(F"Authorize response returned from authorize API call:  \n{authorize_response.pretty_format()}")
         persist_to_json(ECCAuthorize, ecobee_service)
         logger.info(
-            F"...Please go to Ecobee.com, login to the web portal and click on the settings tab. Ensure the My ")
+            F"...Please go to Ecobee.com, login to the web portal and click on the settings tab. Ensure the 'My ")
         logger.info(
-            F"...Apps widget is enabled. If it is not click on the My Apps option in the menu on the left. In the ")
+            F"Apps' widget is enabled. If it is not click on the 'My Apps' option in the menu on the left.")
         logger.info(
-            F"...My Apps widget paste '{authorize_response.ecobee_pin}' and in the textbox labeled "
-            F"'Enter your 4 digit ")
+            F"Under the My Apps display, select the 'ECC Ecobee Python Data Archival' app, and click on the")
         logger.info(
-            F"...pin to install your third party app' and then click 'Install App'.  The next screen will display any ")
-        logger.info(F"...permissions the app requires and will ask you to click 'Authorize' to add the application.")
+            F"'Add Application' button on the bottom of the screen.  When prompted to 'Enter your 9 digit")
+        logger.info(
+            F"pin to install your third party app', paste {authorize_response.ecobee_pin} in the textbox, and")
+        logger.info(
+            F"then click 'Install App'.  The next screen will display any permissions the app requires and will")
+        logger.info(
+            F"ask you to click 'Authorize' to add the application.")
         logger.info(F"...After completing this step please re-run this application to continue.")
 
         print(F"Application needs to be re-authorized.  Check log for further details.")
@@ -1342,18 +1417,18 @@ def authorize(ecobee_service):
         # for re-authorizing the app on the Ecobee portal
         json_auth_dict['PIN'] = authorize_response.ecobee_pin
         persist_to_json(ECCAuthorize, ecobee_service)
-        sys.exit(1)
+        send_mail_and_exit()
 
     except EcobeeApiException as e:
         logger.error(F"Error during request for authorization of Ecobee service, aborting:  {e}")
         print(F"Error during request for authorization of Ecobee service, aborting:  {e}")
-        sys.exit(1)
+        send_mail_and_exit()
     except Exception as e:
         logger.error(F"Error occurred during request for authorization of Ecobee service...aborting.")
         logger.error(F"...error was:  {e}")
         print(F"Error occurred during request for authorization of Ecobee service...aborting.")
         print(F"...error was:  {e}")
-        sys.exit(1)
+        send_mail_and_exit()
 
 
 def create_thermostat_summary_JSON(thermostat_summary_response, thermostat_JSON_interval_file):
@@ -1673,7 +1748,7 @@ def create_table_from_string(conn, db_table, create_table_sql_str):
             table_success = create_table(conn, create_table_sql_str)
             if not table_success:
                 logger.debug(F"Error occurred attempting to create table {db_table}...aborting")
-                sys.exit(1)
+                send_mail_and_exit()
             # Create secondary indicies
             try:
                 indicies_success = conn.execute(sql_create_ecobee_sec_index1)
@@ -1695,7 +1770,7 @@ def create_table_from_string(conn, db_table, create_table_sql_str):
         print("Error...the Ecobee database connection did not exist when attempting to create "
               F"table {db_table}")
         print(F"...aborting")
-        sys.exit(1)
+        send_mail_and_exit()
 
     if table_success and indicies_success:
         return True
@@ -1808,7 +1883,7 @@ def create_database_record(conn, db_table, thermo_name, thermo_id, db_fields, db
     else:
         logger.error(F"No database connection detected while attempting to write new record, table {db_table}")
         print(F"No database connection detected while attempting to write new record, table {db_table}")
-        sys.exit(1)
+        send_mail_and_exit()
 
     conn.commit()
     cur.close()
@@ -2022,6 +2097,7 @@ def create_runtime_record(conn, thermostat_name, thermostat_id, runtime_row):
             # define text for duplicate primary key error; (would be more effective to check extended error code,
             # but Python doesn't seem to support this yet??
             unique_err_str = "UNIQUE constraint failed: runtime.thermostat_id, runtime.run_date, runtime.run_time"
+            bindings_err_str = "Incorrect number of bindings supplied"
             # logger.debug(F"Error:  {e.__str__()}")
             # logger.debug(F"Exception class is: {e.__class__}")
             # logger.debug(F"Exception is  {e.args}")
@@ -2035,6 +2111,15 @@ def create_runtime_record(conn, thermostat_name, thermostat_id, runtime_row):
                 rewrite_status = check_and_rewrite_duplicate_record(conn, runtime_row_split)
                 if not rewrite_status:
                     logger.debug(F"Database record NOT updated")
+            elif bindings_err_str in err_string:
+                # yes, welcome to the wonderful world of Ecobee...sometimes we randomly
+                # receive different records for the interval data, plus or minus some
+                # expected fields
+                logger.error(F"...unexpected number of fields returned from Ecobee service request,")
+                logger.error(F"...thermostat: {thermostat_name}, date: {runtime_row_split[3]}, "
+                             F"time: {runtime_row_split[4]}")
+                logger.error(F"...returned row:  '{runtime_row}'")
+                logger.error(F"...SQL insert statement:  '{sql_insert}'")
             else:  # only display error to console if other than dup-key occurs
                 print(F"Error writing to database, {e}")
             return False
@@ -2396,7 +2481,7 @@ def get_snapshot(conn,
     except AttributeError as e:
         logger.error(F"Incorrect attribute specified for Thermostat object:  {thermo_object}...{e}")
         print(F"Incorrect attribute specified for Thermostat object:  {thermo_object}...{e}")
-        sys.exit(1)
+        send_mail_and_exit()
 
     logger.debug(F"Thermostat list values evaluation:  {thermo_subclass_top}")
     # print(F"Attrib name map:  {thermostat_response_object[0].device.attribute_name_map}")
@@ -2497,7 +2582,7 @@ def get_snapshot(conn,
             logger.error(F"Error occurred creating table {db_table}...aborting")
             print(F"Error occurred creating table {db_table}...aborting")
             conn.close()  # close the db connection
-            sys.exit(1)
+            send_mail_and_exit()
 
     return lists_dict  # Dictionary with more data to process in lists
 
@@ -2668,13 +2753,13 @@ def get_api():
                 print(F"Error occurred during attempt to read default Ecobee API key from file...")
                 print(F"...error:  {e}")
                 print(F"...aborting...")
-                sys.exit(1)
+                send_mail_and_exit()
     except Exception as e:
         logger.error(F"Error during attempt to open default Ecobee API key file...{e}")
         logger.error(F"...aborting...")
         print(F"Error during attempt to open default Ecobee API key file...{e}")
         print(F"...aborting...")
-        sys.exit(1)
+        send_mail_and_exit()
 
 
 def archive_db():
@@ -2759,6 +2844,162 @@ def check_for_archival_database_revision_records(thermostatName):
         last_db_revision = select_db_last_runtime_interval(conn, thermostatName)
 
     return last_db_revision
+
+
+def get_email_credentials():
+    """
+        This routine will attempt to read the email originator username and password
+        from the specified external file.
+                Written by DK Fowler ... 13-Aug-2020
+        :return username:    GMail originator username read from specified external file
+        :return password:    GMail originator password read from specified external file
+
+    """
+    try:
+        with open(ECCMQTTIoT_gmail_credentials, 'r', encoding='utf-8') as f:
+            try:
+                # Credential file should contain 1 line, in the format of
+                # username, password
+                creds_line = f.readline()
+
+                # Now parse the line read for the username, password
+                creds = creds_line.split(',')
+                return creds
+            except Exception as e:
+                logger.error(F"Error occurred during attempt to read ECC GMail credentials from file...")
+                logger.error(F"...error:  {e}")
+                logger.error(F"...aborting...")
+                print(F"Error occurred during attempt to read ECC GMail credentials from file...")
+                print(F"...error:  {e}")
+                print(F"...aborting...")
+                sys.exit(1)
+    except Exception as e:
+        logger.error(F"Error during attempt to open ECC GMail credentials file...{e}")
+        logger.error(F"...aborting...")
+        print(F"Error during attempt to open ECC GMail credentials file...{e}")
+        print(F"...aborting...")
+        sys.exit(1)
+
+
+def send_mail(mail_origin,
+              mail_pass,
+              mail_local_host,
+              mail_subject,
+              mail_from,
+              mail_to,
+              mail_body):
+    """
+        This routine will send an e-mail message using the passed parameters.
+                Written by DK Fowler ... 12-Aug-2020
+        Modified to include local host name for the sender if specified.
+                Modified by DK Fowler ... 21-Nov-2020
+    :param mail_origin      e-mail address of the originator
+    :param mail_pass        e-mail password for the originator account
+    :param mail_local_host  local host name for sender domain, if specified
+    :param mail_subject     e-mail subject string
+    :param mail_from        e-mail from string, preceding 'From' e-mail address
+    :param mail_to          e-mail 'To' destination address
+    :param mail_body        e-mail message body
+    :return:                True if successful, else False
+    """
+
+    mail_time = datetime.now()
+    mail_time_str = mail_time.strftime("%a, %d %b %Y %H:%M:%S")
+    # Get timezone offset
+    # Append to date/time string; timezone must be specified as a 4-digit value, with leading
+    # zeroes, such as '-0500' for EDT.
+    mail_time_str = mail_time_str + " -" + f'{(time.timezone / 3600):02.0f}00'
+
+    try:
+        # server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465,
+                                  local_hostname=mail_local_host)
+        # use the following for ECC...
+        # server = smtplib.SMTP_SSL('smtp-relay.gmail.com', 465)
+    except smtplib.SMTPException as e:
+        print(F"SMTP error occurred during attempt to connect to GMAIL, error:  {e}")
+        logger.error(F"SMTP error occurred during attempt to connect to GMAIL, error:  {e}")
+        return False
+    except Exception as e:
+        print(F"Error occurred during attempt to connect to GMAIL, error:  {e}")
+        logger.error(F"Error occurred during attempt to connect to GMAIL, error:  {e}")
+        return False
+
+    # Instantiate the email message object
+    msg = EmailMessage()
+
+    # Set the message contents
+    msg['Date'] = mail_time_str
+    msg['Subject'] = mail_subject
+    msg['From'] = mail_from + ' <' + mail_origin + '>'
+    msg['To'] = 'ECC IoT Tech Group <' + mail_to + '>'
+    msg.set_content(mail_body)
+
+    try:
+        server.login(mail_origin, mail_pass)
+    except smtplib.SMTPException as e:
+        print(F"SMTP error occurred during attempt to login to GMAIL account, error: {e}")
+        logger.error(F"SMTP error occurred during attempt to login to GMAIL account, error: {e}")
+        server.quit()
+        return False
+    except Exception as e:
+        print(F"Error occurred during attempt to login to GMAIL account, error: {e}")
+        logger.error(F"Error occurred during attempt to login to GMAIL account, error: {e}")
+        server.quit()
+        return False
+    try:
+        server.send_message(msg)
+        print(F"Notification message successfully sent!\n\n")
+        logger.info(F"Notification message successfully sent!")
+    except smtplib.SMTPException as e:
+        print(F"SMTP error occurred during attempt to send GMAIL message, error:  {e}")
+        logger.error(F"SMTP error occurred during attempt to send GMAIL message, error:  {e}")
+        return False
+    except Exception as e:
+        print(F"Error occurred during attempt to send GMAIL message, error:  {e}")
+        logger.error(F"Error occurred during attempt to send GMAIL message, error:  {e}")
+        return False
+
+    server.quit()
+    return True
+
+
+def send_mail_and_exit():
+    """
+        This routine will send an error e-mail message then abort with an error
+        code.  It is intended as a generic handler to alert administrators that a
+        fatal error condition has occurred with the routine and needs attention.
+                Written by DK Fowler ... 21-Nov-2020
+    :return:    None
+    """
+
+    # Get the email credentials
+    mail_origin, mail_pass, mail_local_host, mail_to = get_email_credentials()
+
+    mail_subject = 'ECC Ecobee Polling Routine Failure'
+    mail_from = 'ECC Ecobee Poller'
+    # mail_to is now read from the credentials file ... 21-Nov-2020
+    # For me locally...
+    # mail_to = 'keith.fowler.kf+listener_test@gmail.com'
+    # For ECC...
+    # mail_to = 'temp-sensors@epiphanycatholicchurch.org'
+    mail_body = f'\nA fatal error has occurred with the ECC Ecobee Polling routine. ' \
+                f'\nCheck the log file for further details.\n '
+
+    gmail_send_status = send_mail(mail_origin,
+                                  mail_pass,
+                                  mail_local_host,
+                                  mail_subject,
+                                  mail_from,
+                                  mail_to,
+                                  mail_body)
+
+    if not gmail_send_status:
+        # save the datetime of the last notification
+        logger.error(F"An error occurred while attempting to send abort e-mail...")
+
+    sys.exit(1)
+    return
 
 
 if __name__ == '__main__':
