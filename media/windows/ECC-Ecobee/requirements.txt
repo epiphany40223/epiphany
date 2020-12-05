@@ -1,7 +1,8 @@
 pythonping
+dnspython
 certifi
 pytz
 urllib3
-pyecobee
+pyecobee>=1.3.10
 requests>=2,<3
 dnspython
