@@ -14,13 +14,13 @@ If no runtime information is currently available in the database, the applicatio
 
 Following the polling of the runtime information, data is retrieved for the point-in-time or snapshot data.  One record is written for each data-type retrieved for each thermostat; so, the number of records written for each data-type is determined by the frequency by which the application is run.  That is, if it is run hourly, one record will be retrieved per thermostat, per data-type, for each hour.  Or, one per day, per thermostat, per data-type if run daily.
 
-#### Update 05-Dec-2020 (v03.10)
+#### Update 08-Dec-2020 (v03.10 / v03.11)
 
-The v03.10 (and updates since v03.01) version includes the following changes:
+The v03.10 / v03.11 (and updates since v03.01) version includes the following changes:
 
 1.  The Python library used to interface with the Ecobee API has been changed back to the original author's (Sheriff Fanous, @sfanous).  This is due to support issues with the fork that was previously utilized (@mumblepins).  As of this date, the *most* supported version seems to be from @sfanous, and he has committed to keep this up-to-date with Ecobee's API changes over time.  Still, the current release does not currently support on of the Ecobee API object (for thermostat reminders).  See details in the migration steps following.
 
-2. Ecobee continues to make unannounced changes to the returns from their API.  This includes undocumented objects (such as thermostat reminders), badly-formed returns ("empty" or largely blank records sometimes returned for runtime data, with insufficient number of data fields), new return fields (fanSpeed added to thermostat settings object), etc.  The code has been modified to support these issues.
+2. Ecobee continues to make unannounced changes to the returns from their API.  This includes undocumented objects (such as thermostat reminders), badly-formed returns ("empty" or largely blank records sometimes returned for runtime data, with insufficient number of data fields), new return fields (fanSpeed added to thermostat settings object), etc.  Additionally, new selection parameters were added to the 'get thermostat details' API for the 'audio' and 'energy' objects (note that these objects are now **NOT** selected by default).  The code has been modified to support these issues.
 
 3. Ecobee changed the approach to authorization as of 01-Dec-2020 to support JWT-formatted access tokens up to 7KB in length (vs. the earlier 32-byte format), and longer PIN-codes in the format "xxxx-xxxx" (vs. the earlier 4-byte format); see further details here:  [ecobee API authorization changes](https://www.ecobee.com/home/developer/api/documentation/v1/auth/developer-migration-summary.shtml).  The code supports these new formats, but in order to use the new, longer PINs and tokens, the application must be re-authorized in the Ecobee portal (see details on migration to the latest release following).
 
@@ -28,17 +28,51 @@ The v03.10 (and updates since v03.01) version includes the following changes:
 
    - GMail user/password credentials file (**-m**, **--gmail_credentials_file_path=**{file path}) 
 
-5. A database archival routine was added to automatically archive the database once it reaches a specified size (currently set to approximately 1GB in the code).
+5. As a result of the new e-mail notification routines, new imports are required for the *smtplib* and *email.message*; the current list of included libraries required is as follows:  
 
-6. Numerous changes have been made to enhance the error handling in the application, as well as code refactoring for efficiency.
+   ```
+   from datetime import datetime
+   from datetime import timedelta
+   import time
+   import pytz
+   import json
+   import os
+   import fnmatch
+   import sys
+   import argparse
+   import smtplib
+   from email.message import EmailMessage
+   
+   from pyecobee import *
+   
+   import sqlite3
+   from sqlite3 import Error
+   
+   import urllib3
+   import certifi
+   import socket
+   import dns.resolver
+   from dns.exception import DNSException
+   from pythonping import ping
+   ```
 
-   ##### Migration steps to v03.10
+6. A database archival routine was added to automatically archive the database once it reaches a specified size (currently set to approximately 1GB in the code).
+
+7. Numerous changes have been made to enhance the error handling in the application, as well as code refactoring for efficiency.
+
+   ##### Migration steps to v03.10 / v03.11
 
    - Stop any existing scheduled tasks for previous releases (CRON / Task Scheduler).
 
    - Edit the ECCMQTTIoT_GMail_Credentials.txt file to include the new parameters for sender local host name and destination e-mail addresses (comma separated, as noted in the *Quick Start* below).
 
    - Modify any other default parameters as noted above either in the Python script or preferably via command-line switches for the scheduled task.
+
+   - To support the new 'fanSpeed' thermostat parameter, the thermSettings SQLite3 database table must be modified to include this new field in the record.  Open the database in SQLite3 and issue the following command to add the new column:
+
+     ```
+     alter table thermSettings add column fan_speed
+     ```
 
    - To include the most current fixes to the Pyecobee Python library, the customized version provided in the zip archive needs to be installed to replace the current version (from @mumblepins).  To uninstall the prior Pyecobee Python library, use
 
@@ -52,15 +86,16 @@ The v03.10 (and updates since v03.01) version includes the following changes:
      pip install ./Pyecobee-ECC.zip -v
      ```
 
+   - Ensure any new libraries are installed as noted above.
+
    - To re-authorize the application to use the new PIN and access-token format, do the following:
 
+     - Edit the authorization token JSON file ( *ECCEcobee_tkn.json* by default) and replace the access, refresh, and authorization tokens with "bogus values", such as "xxxx"
+     - Run the Python script; this will fail due to an authorization error, but a new authorization PIN code will be issued in the new format("xxxx-xxxx").  Examine the log file to retrieve this PIN.
      - Access the ECC Ecobee portal and log in
      - Select "My Apps" from the menu at top right
      - Select "ECC Ecobee Python Data Archival" application
      - Select "Add Application" and follow prompts
-     - Specify a "bogus PIN", such as "aaaa"; this will force the application to be de-authorized
-     - Run the Python script; this will fail due to an authorization error, but a new authorization PIN code will be issued in the new format ("xxxx-xxxx").  Examine the log file to retrieve this PIN.
-     - In the Ecobee portal, select "ECC Ecobee Python Data Archival" --> "Add Application" a second time
      - At the prompt, specify the new 9-character PIN retrieved from the log file
      - Follow the prompts to authorize the application (this is now a series of confirmation screens)
      - Re-run the Python script; the application should now be authorized and a new set of access / refresh tokens will be issued

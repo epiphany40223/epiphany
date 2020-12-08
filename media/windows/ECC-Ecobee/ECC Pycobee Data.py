@@ -117,7 +117,7 @@
     Updated the Pyecobee library to the newest release, which now includes a new field that Ecobee
     has added to the Settings object for 'fanSpeed'.  In conjunction with this change, the existing
     'thermSettings' table had to be modified to add this new column.  Used the following command
-    line in SQLite3:  'alter table thermSettings add column fanSpeed'
+    line in SQLite3:  'alter table thermSettings add column fan_speed'
 
     Modified to handle object type of Reminders; these were first returned for some of the newest
     thermostats, and the Pyecobee library did not have definitions for these objects.  Created a pull
@@ -137,16 +137,31 @@
     while sfanous has committed to maintaining his original; his version of the library has now
     been updated to include the backlog of changes from Ecobee.
             Modified by DK Fowler ... 16-Nov-2020       --- v03.10
+
+    Modified to add support for new thermostat attributes for 'audio','energy', and
+    'filter_subscription', even though we're not requesting these in the selection
+    request for the thermostat details.
+
+    Clarified output message where the latest database runtime data is equal to or greater
+    than the latest revision interval data returned from the Ecobee service for thermostat
+    details.
+
+    Also corrected bug in processing of GMail credentials file and included some missing
+    imports for the new mail routine for error-aborts.
+            Modified by DK Fowler ... 06-Dec-2020       --- v03.11
 """
 
 from datetime import datetime
 from datetime import timedelta
+import time
 import pytz
 import json
 import os
 import fnmatch
 import sys
 import argparse
+import smtplib
+from email.message import EmailMessage
 
 from pyecobee import *
 
@@ -161,8 +176,8 @@ from dns.exception import DNSException
 from pythonping import ping
 
 # Define version
-eccpycobee_version = "03.10"
-eccpycobee_date = "16-Nov-2020"
+eccpycobee_version = "03.11"
+eccpycobee_date = "06-Dec-2020"
 
 # Parse the command line arguments for the filename locations, if present
 parser = argparse.ArgumentParser(description='''Epiphany Catholic Church Ecobee Thermostat Polling Application.
@@ -214,6 +229,9 @@ ECCEcobeeAPIkey = args.api_file_path
 # Location of the JSON revision interval file
 json_interval_file = args.int_file_path
 
+# Location of the GMail credentials file
+ECCEcobee_gmail_credentials = args.gmail_credentials_file_path
+
 # Set the default timeout for socket operations, as these sometimes timeout with the default (5 seconds).
 socket.setdefaulttimeout(30)
 
@@ -250,14 +268,15 @@ socket.setdefaulttimeout(30)
 json_auth_dict = {}
 
 # The following is a dictionary containing the defined thermostat objects used by the library
-thermostat_object_dict = {'thermostat': 'Thermostat', 'settings': 'Settings', 'runtime': 'Runtime',
-                          'extended_runtime': 'ExtendedRuntime', 'electricity': 'Electricity',
-                          'location': 'Location', 'technician': 'Technician',
-                          'utility': 'Utility', 'management': 'Management', 'weather': 'Weather',
-                          'program': 'Program', 'house_details': 'HouseDetails',
+thermostat_object_dict = {'thermostat': 'Thermostat', 'audio': 'Audio', 'settings': 'Settings',
+                          'runtime': 'Runtime', 'extended_runtime': 'ExtendedRuntime',
+                          'electricity': 'Electricity', 'location': 'Location', 'energy': 'Energy',
+                          'technician': 'Technician', 'utility': 'Utility', 'management': 'Management',
+                          'weather': 'Weather', 'program': 'Program', 'house_details': 'HouseDetails',
                           'oem_cfg': 'ThermostatOemCfg', 'notification_settings': 'NotificationSettings',
                           'privacy': 'ThermostatPrivacy', 'version': 'Version',
-                          'security_settings': 'SecuritySettings'}
+                          'security_settings': 'SecuritySettings',
+                          'filter_subscription': 'ApiFilterSubscription'}
 # List-defined objects
 thermostat_list_object_dict = {'action': 'Action', 'alerts': 'Alert', 'climates': 'Climate',
                                'demand_management': 'DemandManagement', 'demand_response': 'DemandResponse',
@@ -268,7 +287,7 @@ thermostat_list_object_dict = {'action': 'Action', 'alerts': 'Alert', 'climates'
                                'hierarchy_set': 'HierarchySet', 'hierarchy_user': 'HierarchyUser',
                                'limit': 'LimitSetting', 'outputs': 'Output', 'page': 'Page',
                                'remote_sensors': 'RemoteSensor', 'capability': 'RemoteSensorCapability',
-#                               'reminders': 'ThermostatReminder2', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
+                               #                               'reminders': 'ThermostatReminder2', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
                                'reminders': 'Reminder', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
                                'sensors': 'Sensor', 'state': 'State', 'status': 'Status', 'user': 'User',
                                'forecasts': 'WeatherForecast'}
@@ -511,6 +530,7 @@ def main():
     logger.info(F"Authorization token filename:       {args.authorize_file_path}")
     logger.info(F"Default API key filename:           {args.api_file_path}")
     logger.info(F"Thermo revision interval filename:  {args.int_file_path}")
+    logger.info(F"Gmail credentials filename:         {args.gmail_credentials_file_path}")
 
     # Attempt to open the credentials / authorization file and read contents
     try:
@@ -704,7 +724,7 @@ def main():
                               include_reminders=True,
                               include_runtime=True, include_security_settings=False, include_sensors=True,
                               include_settings=True, include_technician=False, include_utility=False,
-                              include_version=True,
+                              include_version=True, include_audio=False, include_energy=False,
                               include_weather=True)
 
         try:
@@ -935,10 +955,10 @@ def main():
             fmt_start_datetime = datetime.strftime(start_datetime_utc, "%y%m%d%H%M%S")
             logger.debug(F"Converted start date/time for comparison:  {fmt_start_datetime}")
 
-            if fmt_start_datetime <= latest_runtime_intervals_dict.get(thermo['thermostatName']):
+            if fmt_start_datetime < latest_runtime_intervals_dict.get(thermo['thermostatName']):
                 logger.debug(
                     F"Start date of {fmt_start_datetime} prior to latest revision interval date "
-                    F"{latest_runtime_intervals_dict.get(thermo['thermostatName'])}")
+                    F"{latest_runtime_intervals_dict.get(thermo['thermostatName'])}; requesting runtime data")
 
                 runtime_err_cnt = 0
                 runtime_err_occurred = True  # falsely set for initial loop iteration
@@ -1032,7 +1052,7 @@ def main():
                             logger.error(F"...   end date:    {end_datetime}")
                             print(F"...   start date:  {start_datetime}")
                             print(F"...   end date:    {end_datetime}")
-                            runtime_err_cnt = 4     # force exit attempts for this thermostat
+                            runtime_err_cnt = 4  # force exit attempts for this thermostat
                             runtime_err_occurred = False
                             no_interval_data_occurred = True
                 else:
@@ -1099,9 +1119,11 @@ def main():
                 # logger.debug(runtime_report_response.pretty_format())
 
             else:
-                logger.debug(
-                    F"Polling start date {fmt_start_datetime} later than last revision interval date "
-                    F"{latest_runtime_intervals_dict.get(thermo['thermostatName'])}")
+                logger.info(
+                    F"Polling start date {fmt_start_datetime} from database later than or equal to last revision "
+                    F"interval date {latest_runtime_intervals_dict.get(thermo['thermostatName'])} returned from Ecobee service")
+                print(F"Polling start date {fmt_start_datetime} from database later than or equal to last revision "
+                      F"interval date {latest_runtime_intervals_dict.get(thermo['thermostatName'])} returned from Ecobee service")
 
                 # Move reporting window to the next 30 days if necessary
             start_datetime = end_datetime
@@ -2856,7 +2878,7 @@ def get_email_credentials():
 
     """
     try:
-        with open(ECCMQTTIoT_gmail_credentials, 'r', encoding='utf-8') as f:
+        with open(ECCEcobee_gmail_credentials, 'r', encoding='utf-8') as f:
             try:
                 # Credential file should contain 1 line, in the format of
                 # username, password
