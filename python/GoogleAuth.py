@@ -47,12 +47,12 @@ def _load_app_credentials(app_cred_file, log=None):
 
     return app_cred
 
-def _load_user_credentials(scope, app_cred,
+def _load_user_credentials(scopes, app_cred,
                            user_cred_file=default_user_cred_file, log=None):
     # Get user consent
     client_id       = app_cred['installed']['client_id']
     client_secret   = app_cred['installed']['client_secret']
-    flow            = OAuth2WebServerFlow(client_id, client_secret, scope)
+    flow            = OAuth2WebServerFlow(client_id, client_secret, scopes)
     flow.user_agent = user_agent
 
     storage   = Storage(user_cred_file)

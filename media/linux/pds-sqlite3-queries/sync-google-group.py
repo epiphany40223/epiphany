@@ -1079,6 +1079,14 @@ def main():
         #############################
 
         {
+            'keywords'   : [ 'Weekly Mass - Sometimes', 'Weekly Mass - Usually' ],
+            'ggroup'     : 'WeekdayMass{ecc}'.format(ecc=ecc),
+            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
+        },
+
+        #############################
+
+        {
             'keywords'   : [ 'Apply@ECC email list' ],
             'ggroup'     : 'apply{ecc}'.format(ecc=ecc),
             'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
