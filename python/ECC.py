@@ -5,11 +5,11 @@
 
 import os
 import sys
-import platform
-import logging
-import logging.handlers
-
 import pytz
+import logging
+import smtplib
+import platform
+import logging.handlers
 
 local_tz_name = 'America/Louisville'
 local_tz = pytz.timezone(local_tz_name)
@@ -123,3 +123,75 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
     log.info('Starting')
 
     return log
+
+#===================================================================
+
+_smtp_auth_username  = None
+_smtp_auth_password  = None
+_smtp_server         = 'smtp-relay.gmail.com'
+_smtp_local_hostname = 'epiphanycatholicchurch.org'
+_smtp_debug          = False
+
+def setup_email(smtp_auth_file, smtp_server=_smtp_server, smtp_local_hostname=_smtp_local_hostname,
+                smtp_debug=_smtp_debug, log=None):
+    # Do an import here to test whether it's available, even though it's not
+    # used in this function
+    from email.message import EmailMessage
+
+    global _smtp_server, _smtp_debug, _smtp_local_hostname
+    _smtp_server         = smtp_server
+    _smtp_local_hostname = smtp_local_hostname
+    _smtp_debug          = smtp_debug
+
+    # This assumes that the file has a single line in the format of username:password.
+    with open(smtp_auth_file) as f:
+        line = f.read()
+        global _smtp_auth_username, _smtp_auth_password
+        _smtp_auth_username, _smtp_auth_password = line.split(':')
+
+    if log:
+        log.debug("Setup SMTP auth server")
+
+#-------------------------------------------------------------------
+
+def send_email(to_addr, subject, body, log, content_type='text/plain', from_addr='no-reply@epiphanycatholicchurch.org'):
+    from email.message import EmailMessage
+
+    global _smtp_server, _smtp_debug, _smtp_local_hostname
+    global _smtp_auth_username, _smtp_auth_password
+
+    log.info(f'Sending email to {to_addr}, subject "{subject}"')
+
+    if not _smtp_auth_username:
+        import traceback
+        lines = ''.join(traceback.format_stack()[:-1])
+        str = f"""Called ECC::send_email() without calling ECC:setup_email() first.
+Call stack:
+
+{lines}
+Cannot continue.  Aborting."""
+        log.critical(str)
+        exit(1)
+
+    with smtplib.SMTP_SSL(host=_smtp_server,
+                          local_hostname=_smtp_local_hostname) as smtp:
+        if _smtp_debug:
+            smtp.set_debuglevel(2)
+
+        # Login; we can't rely on being IP whitelisted.
+        try:
+            smtp.login(_smtp_auth_username, _smtp_auth_password)
+        except Exception as e:
+            import traceback
+            log.critical(f'Error: failed to SMTP login: {e}')
+            exit(1)
+
+        msg = EmailMessage()
+        msg.set_content(body)
+        msg['Subject'] = subject
+        msg['From'] = from_addr
+        msg['To'] = to_addr
+        msg.replace_header('Content-Type', content_type)
+        smtp.send_message(msg)
+
+    log.debug(f'Mail sent to {to_addr}, subject "{subject}"')
