@@ -24,6 +24,7 @@ cd $prog_dir
 google_logfile=$prog_dir/sync-google-group-logfile.txt
 ./sync-google-group.py \
     --smtp-auth-file $HOME/smtp-auth.txt \
+    --slack-token-file $HOME/slack-token.txt \
     --sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
     --logfile=$google_logfile \
     --verbose
