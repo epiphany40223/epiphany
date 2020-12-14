@@ -54,28 +54,39 @@ you need to install some Python classes:
 """
 
 import sys
-sys.path.insert(0, '../../../python')
 
 import logging.handlers
 import httplib2
-import smtplib
 import logging
 import sqlite3
 import json
 import time
 import os
 
-import ECC
-import Google
-import PDSChurch
-import GoogleAuth
+# Find the path to the ECC module (by finding the root of the git
+# tree).  This is robust, but it's a little clunky. :-\
+try:
+    import subprocess
+    out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                         capture_output=True)
+    dirname = out.stdout.decode('utf-8').strip()
+    if not dirname:
+        raise Exception("Could not find git root.  Are you outside the git tree?")
+
+    moddir  = os.path.join(dirname, 'python')
+    sys.path.insert(0, moddir)
+    import ECC
+    import Google
+    import PDSChurch
+    import GoogleAuth
+except Exception as e:
+    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
+    sys.stderr.write(f"{e}\n")
+    exit(1)
+
 import googleapiclient
 
 from oauth2client import tools
-from email.message import EmailMessage
-
-from pprint import pprint
-from pprint import pformat
 
 # Globals
 
@@ -83,8 +94,6 @@ args = None
 log = None
 
 # Default for CLI arguments
-smtp = ["smtp-relay.gmail.com",
-        "no-reply@epiphanycatholicchurch.org"]
 gapp_id='client_id.json'
 guser_cred_file = 'user-credentials.json'
 verbose = True
@@ -97,61 +106,6 @@ fatal_notify_to = 'jsquyres@gmail.com'
 # Google Group permissions
 BROADCAST  = 1
 DISCUSSION = 2
-
-#-------------------------------------------------------------------
-
-def send_mail(to, subject, message_body, html=False, log=None):
-    if not args.smtp:
-        if log:
-            log.debug('Not sending email "{0}" because SMTP not setup'.format(subject))
-        return
-
-    smtp_server   = args.smtp[0]
-    smtp_from     = args.smtp[1]
-
-    if log:
-        log.info('Sending email to {to}, subject "{subject}"'
-                 .format(to=to, subject=subject))
-    with smtplib.SMTP_SSL(host=smtp_server,
-                          local_hostname='epiphanycatholicchurch.org') as smtp:
-        if args.debug:
-            smtp.set_debuglevel(2)
-
-        # This assumes that the file has a single line in the format of username:password.
-        with open(args.smtp_auth_file) as f:
-            line = f.read()
-            smtp_username, smtp_password = line.split(':')
-
-        # Login; we can't rely on being IP whitelisted.
-        try:
-            smtp.login(smtp_username, smtp_password)
-        except Exception as e:
-            log.error(f'Error: failed to SMTP login: {e}')
-            exit(1)
-
-        msg = EmailMessage()
-        msg.set_content(message_body)
-        msg['Subject'] = subject
-        msg['From'] = smtp_from
-        msg['To'] = to
-        if html:
-            msg.replace_header('Content-Type', 'text/html')
-        else:
-            msg.replace_header('Content-Type', 'text/plain')
-
-        smtp.send_message(msg)
-
-#-------------------------------------------------------------------
-
-def email_and_die(msg):
-    sys.stderr.write(msg)
-    sys.stderr.write("Aborting")
-
-    send_mail(fatal_notify_to,
-              'Fatal error from PDS<-->Google Group sync', msg)
-
-    exit(1)
-
 
 ####################################################################
 #
@@ -359,8 +313,8 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
                         rationale='\n'.join(rationale)))
 
         # Send the email
-        send_mail(to=sync['notify'], subject=subject, message_body=body,
-                  html=True, log=log)
+        ECC.send_email(to_addr=sync['notify'], subject=subject, body=body,
+                  content_type='text/html', log=log)
 
 #-------------------------------------------------------------------
 
@@ -453,14 +407,14 @@ def _sync_add(sync, group_permissions,
         for err in j['error']['errors']:
             if err['reason'] == 'duplicate':
                 if log:
-                    log.error("Google says a duplicate of {email} "
+                    log.warning("Google says a duplicate of {email} "
                               "already in the group -- ignoring"
                               .format(email=email))
                 return None
 
             elif err['reason'] == 'backendError':
                 if log:
-                    log.error("Google had an internal error while processing"
+                    log.warning("Google had an internal error while processing"
                               "{email} -- ignoring"
                               .format(email=email))
                 return None
@@ -694,28 +648,12 @@ def pds_find_ministry_members(members, sync, log=None):
 ####################################################################
 
 def setup_cli_args():
-    # Be sure to check the Google SMTP relay documentation for
-    # non-authenticated relaying instructions:
-    # https://support.google.com/a/answer/2956491
-    # We are using the following settings:
-    # - Allowed senders: only addresses in my domains
-    # - Only accept mail from the specified IP addresses: No
-    # - Require SMTP Authentication: yes
-    #   |--> This means that you have to specify an ECC Google Account email
-    #        address as an argument to --smtp, and you must also specify
-    #        a 2FA app-specific password as the password.  Do NOT use
-    #        "allow less-secure apps", because Google is deprecating that
-    #        functionality and it will disappear someday.  Use 2FA
-    #        app-specific passwords.
-    # - Require TLS encryption: yes
-    global smtp
-    tools.argparser.add_argument('--smtp',
-                                 nargs=2,
-                                 default=smtp,
-                                 help='SMTP server hostname, from addresses')
     tools.argparser.add_argument('--smtp-auth-file',
                                  required=True,
                                  help='File containing SMTP AUTH username:password')
+    tools.argparser.add_argument('--slack-token-filename',
+                                 required=True,
+                                 help='File containing the Slack bot authorization token')
 
     global gapp_id
     tools.argparser.add_argument('--app-id',
@@ -760,14 +698,6 @@ def setup_cli_args():
     if args.debug:
         args.verbose = True
 
-    # Sanity check args
-    l = 0
-    if args.smtp:
-        l = len(args.smtp)
-    if l > 0 and l != 2:
-        log.error("Need exactly 2 arguments to --smtp: server from_addr")
-        exit(1)
-
     return args
 
 ####################################################################
@@ -781,7 +711,9 @@ def main():
 
     log = ECC.setup_logging(info=args.verbose,
                             debug=args.debug,
-                            logfile=args.logfile)
+                            logfile=args.logfile, rotate=True,
+                            slack_token_filename=args.slack_token_filename)
+    ECC.setup_email(args.smtp_auth_file, smtp_debug=args.debug, log=log)
 
     (pds, pds_families,
      pds_members) = PDSChurch.load_families_and_members(filename=args.sqlite3_db,
