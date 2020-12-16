@@ -54,6 +54,12 @@ if test $h -eq 2 -a $m -lt 15; then
 	--logfile=$roster_logfile \
 	--app-id ../google-drive-uploader/google-uploader-client-id.json \
 	--user-credentials ../google-drive-uploader/google-uploader-user-credentials.json
+
+    ./ppc-feedback-google-group.py \
+        --smtp-auth-file $HOME/smtp-auth.txt \
+        --logfile=ppc-feedback-logfile.txt \
+        --app-id $HOME/credentials/client_id-ppc-feedback.json \
+        --user-credentials $HOME/credentials/user-credentials-ppc-feedback.json
 fi
 
 exit 0
