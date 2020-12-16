@@ -99,7 +99,7 @@ def _authorize_user(user_cred, name, version, log=None):
 def service_oauth_login(apis, app_json, user_json,
                         gauth_max_attempts=3, log=None):
     # Load the application credentials
-    app_cred  = _load_app_credentials(app_json)
+    app_cred  = _load_app_credentials(app_json, log)
 
     # Collate all the scopes that we need
     scopes = list()
