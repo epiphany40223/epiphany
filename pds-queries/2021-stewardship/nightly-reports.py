@@ -1079,7 +1079,7 @@ def analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, 
 
                     elif (pds_status == MINISTRY_PARTICIPATE and
                           jotform_status == MINISTRY_INTERESTED):
-                        key = 'Needs human: PDS=active, but Jotform=not interested'
+                        key = 'Needs human: PDS=active, but Jotform=interested'
                         if key not in output[output_key]:
                             output[output_key][key] = list()
                         output[output_key][key].append(member)
@@ -1088,7 +1088,7 @@ def analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, 
 
 #-----------------------------------------------------------------------------
 
-def member_ministry_csv_report(args, google, start, end, time_period, pds_members, pds_families, jotform_csv, log):
+def member_xlsx_report_by_ministry(args, google, start, end, time_period, pds_members, pds_families, jotform_csv, log):
     def _find_all_phones(member):
         found = list()
         key   = 'phones'
@@ -1131,16 +1131,11 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
 
     #--------------------------------------------------------------------
 
-    output      = analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, log)
-    today       = date.today()
-
-    #--------------------------------------------------------------------
-
-    def _setup_new_workbook():
+    def _setup_new_workbook(cols):
         workbook    = Workbook()
         sheet       = workbook.active
 
-        for data in xlsx_cols.values():
+        for data in cols.values():
             col            = data['column']
             cell           = sheet.cell(row=1, column=col, value=data['name'])
             cell.fill      = title_fill
@@ -1166,6 +1161,20 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
 
     #--------------------------------------------------------------------
 
+    output = analyze_member_ministry_submissions(pds_members, pds_families, jotform_csv, log)
+    today  = date.today()
+
+    #--------------------------------------------------------------------
+
+    # Find all the categories
+    categories = dict()
+    for ministry_name in sorted(output.keys()):
+        data = output[ministry_name]
+        for category in data.keys():
+            categories[category] = True
+
+    #--------------------------------------------------------------------
+
     title_font  = Font(color='FFFF00')
     title_fill  = PatternFill(fgColor='0000FF', fill_type='solid')
     title_align = Alignment(horizontal='center', wrap_text=True)
@@ -1173,24 +1182,25 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
     wrap_align  = Alignment(horizontal='general', wrap_text=True)
     right_align = Alignment(horizontal='right')
 
-    xlsx_cols = dict();
-    def _add_col(name, width=10):
-        col             = len(xlsx_cols) + 1
-        xlsx_cols[name] = {'name' : name, 'column' : col, 'width' : width }
-    _add_col('Full Name', width=20)
-    _add_col('First')
-    _add_col('Last')
-    _add_col('Age')
-    _add_col('Envelope ID')
-    _add_col('Email', width=30)
-    _add_col('Member phones', width=20)
-    _add_col('Family home phone', width=20)
-    _add_col('Category', width=25)
-    _add_col('Current ministry status', width=50)
-    _add_col('MID')
+    def _add_col(cols, name, width=10):
+        col        = len(cols) + 1
+        cols[name] = {'name' : name, 'column' : col, 'width' : width }
+
+    xlsx_cols = dict()
+    _add_col(xlsx_cols, 'Full Name', width=20)
+    _add_col(xlsx_cols, 'First')
+    _add_col(xlsx_cols, 'Last')
+    _add_col(xlsx_cols, 'Age')
+    _add_col(xlsx_cols, 'Envelope ID')
+    _add_col(xlsx_cols, 'Email', width=30)
+    _add_col(xlsx_cols, 'Member phones', width=20)
+    _add_col(xlsx_cols, 'Family home phone', width=20)
+    _add_col(xlsx_cols, 'Category', width=25)
+    _add_col(xlsx_cols, 'Current ministry status', width=50)
+    _add_col(xlsx_cols, 'MID')
 
     for ministry_name in sorted(output.keys()):
-        workbook = _setup_new_workbook()
+        workbook = _setup_new_workbook(xlsx_cols)
         sheet    = workbook.active
 
         data = output[ministry_name]
@@ -1223,6 +1233,51 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
         if os.path.exists(filename):
             os.unlink(filename)
         workbook.save(filename)
+        log.info(f"Wrote to filename: {filename}")
+
+    #------------------------------------------------------------------------
+
+    def _ni_fill(col_name, value, align=None, format=None):
+        col_data = ni_cols[col_name]
+        cell     = ni_sheet.cell(row=ni_row, column=col_data['column'], value=value)
+        if align:
+            cell.alignment = align
+        if format:
+            cell.number_format = format
+
+    #------------------------------------------------------------------------
+
+    ni_cols = dict()
+    _add_col(ni_cols, 'Ministry Name', width=30)
+    _add_col(ni_cols, 'Full Name', width=20)
+    _add_col(ni_cols, 'Age')
+    _add_col(ni_cols, 'Envelope ID')
+
+    # Now interate through all the categories
+    for category in sorted(categories):
+        ni_workbook = _setup_new_workbook(ni_cols)
+        ni_sheet    = ni_workbook.active
+        ni_row      = 2
+
+        for ministry_name in sorted(output.keys()):
+            data = output[ministry_name]
+            if category in data:
+                for member in data[category]:
+                    family = member['family']
+
+                    _ni_fill('Ministry Name', ministry_name)
+                    _ni_fill('Full Name', member['email_name'])
+                    if member['date_of_birth']:
+                        age = today - member['date_of_birth']
+                        _ni_fill('Age', int(age.days / 365))
+                    _ni_fill('Envelope ID', family['ParKey'])
+
+                    ni_row += 1
+
+        filename = f'ministries-{category}.xlsx'
+        if os.path.exists(filename):
+            os.unlink(filename)
+        ni_workbook.save(filename)
         log.info(f"Wrote to filename: {filename}")
 
 ##############################################################################
@@ -1481,15 +1536,15 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    comments_report(args, google, start, end, time_period,
-                    jotform_range, log)
-    statistics_report(args, end, pds_members, pds_families,
-                      jotform_all, log)
+    #comments_report(args, google, start, end, time_period,
+    #                jotform_range, log)
+    #statistics_report(args, end, pds_members, pds_families,
+    #                  jotform_all, log)
 
     # These reports were uncommented and run by hand upon demand.
     #family_pledge_csv_report(args, google, pds_families, jotform_all, log)
     #family_status_csv_report(args, google, pds_families, jotform_all, log)
-    #member_ministry_csv_report(args, google, start, end, time_period,
-    #                           pds_members, pds_families, jotform_range, log)
+    member_xlsx_report_by_ministry(args, google, start, end, time_period,
+                               pds_members, pds_families, jotform_range, log)
 
 main()
