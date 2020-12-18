@@ -23,8 +23,9 @@ from pprint import pformat
 
 ricoh_db = "media/windows/ricoh-printer/ricoh.db"
 today = datetime.date.today()
-datestring = f'{today.year}{today.month}{today.day}'
+#datestring = f'{today.year}{today.month}{today.day}'
 debug_datestring = '20201013'
+datestring = debug_datestring
 
 def _strip(value):
     #The CSV puts brackets around values, which we don't want
@@ -73,12 +74,16 @@ def extract_csv_data(csv_rows):
     print(f"== Extracted {len(csv_staffers)} staffers")
     return csv_staffers
 
+
 def write_to_db(csv, ricoh_db): # Connects to SQLite db, or creates it if it doesn't exist
+    totaldatestring = f'{datestring}_Total'
+    bwdatestring   = f'{datestring}_B&W'
+    colordatestring = f'{datestring}_Color'
 
     def  _insert_staffer(row, conn):
         c = conn.cursor()
-        c.execute(f"""INSERT INTO '{debug_datestring}log' (user,name,bnwprints,colorprints)
-                      VALUES ('{row['num']}','{row['name']}','{row['b&wtotal']}','{row['colortotal']}')""")
+        c.execute(f"""INSERT INTO 'printlog' (user,name,{totaldatestring},{bwdatestring},{colordatestring})
+                      VALUES ('{row['num']}','{row['name']}','{row['total']}','{row['b&wtotal']}','{row['colortotal']}')""")
 
     conn = None
     
@@ -90,14 +95,17 @@ def write_to_db(csv, ricoh_db): # Connects to SQLite db, or creates it if it doe
 
     try:
         c = conn.cursor()
-        c.execute(f"""CREATE TABLE IF NOT EXISTS '{debug_datestring}log' (
+        c.execute(f"""CREATE TABLE IF NOT EXISTS 'printlog' (
                                 user text PRIMARY KEY,
                                 name text NOT NULL,
-                                bnwprints integer,
-                                colorprints integer
                         ); """)
+        c.execute(f"""ALTER TABLE 'printlog'
+                        ADD {totaldatestring} integer;
+                        ADD {bwdatestring} integer;
+                        ADD {colordatestring} integer;
+                        """)
     except Error as e:
-        print(e)
+        print(f'Alter Table: {e}')
     
     for row in csv:
         _insert_staffer(row, conn)
