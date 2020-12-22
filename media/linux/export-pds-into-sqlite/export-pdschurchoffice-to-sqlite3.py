@@ -142,13 +142,6 @@ def open_sqlite3(args):
                                stdin=subprocess.PIPE)
     log.info("Opened sqlite3");
 
-    # This helps SQLite performance considerably (it's slightly risky, in
-    # general, because it removes some atomic-ness of transactions, but
-    # for this application, it's fine).
-    # JMS Apparently this syntax is wrong...?
-    #cmd = 'PRAGMA {db}.synchronous=0;\n'.format(db=database_name)
-    #sqlite3.stdin.write('PRAGMA {db}.synchronous=0;\n'.format(db=database_name))
-
     return sqlite3
 
 
@@ -374,11 +367,12 @@ def main():
     check_args(args, log)
 
     setup_temps(args)
-    dbs = find_pds_files(args)
+    dbs     = find_pds_files(args)
     sqlite3 = open_sqlite3(args)
     for db in dbs:
         process_db(args, db, sqlite3)
     close_sqlite3(sqlite3)
+
     log.info("Finished converting DB --> Sqlite")
     rename_sqlite3_database(args)
 
