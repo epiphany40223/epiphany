@@ -67,6 +67,12 @@
     Added streaming file handler to direct stderr to both the console and to the log
     file.  This allows capturing exception traces in the log as errors occur.
             Modified by DK Fowler ... 03-Dec-2020           --- v02.20
+
+    Added logic to support additional fields received from the new sensor code,
+    including location, MAC address, and software version.  These fields will be
+    added to a new table in the database, but only if the data changes from the
+    last-recorded information.
+            Modified by DK Fowler ... 18-Dec-2020           --- v02.30
 """
 
 import paho.mqtt.client as mqtt
@@ -91,8 +97,8 @@ import sqlite3
 from sqlite3 import Error
 
 # Define version
-eccmqtt_iot_version = "02.20"
-eccmqtt_iot_date = "03-Dec-2020"
+eccmqtt_iot_version = "02.30"
+eccmqtt_iot_date = "18-Dec-2020"
 
 gzip_in_progress = False
 done_flag = False  # flag to indicate when GZIP in progress completes
@@ -297,14 +303,20 @@ ECCMQTTIoT_last_notice = args.last_notice_file_path
 ECCMQTTIoT_notice_silence = args.last_notice_silence_time
 
 # Define database fields
-field_names = ['recordWrittenUTC',
-               'dewPointF',
-               'temperatureF',
-               'relHumidityPercent',
-               'battVoltage',
-               'battPercent',
-               'apRSSI',
-               'sensorName']
+field_names = [['recordWrittenUTC',  # field names for sensor readings
+                'dewPointF',
+                'temperatureF',
+                'relHumidityPercent',
+                'battVoltage',
+                'battPercent',
+                'apRSSI',
+                'sensorName'],
+
+               ['recordWrittenUTC',  # field names for sensor ID, location, etc.
+                'sensorName',
+                'location',
+                'MACaddress',
+                'softwareVersion']]
 
 
 def main():
@@ -317,10 +329,13 @@ def main():
     # Flag to indicate a received message on the channel during the timer
     global received_msg
     received_msg = False
+    global sensor_recvd_message_cnt
 
     max_db_file_size_bytes = 1073741824  # Maximum database file size in bytes before archival; 1GB at 4K cluster size
     recvd_message_cnt = 0
     database_records_written = 0
+
+    sensor_recvd_message_cnt = {}  # dictionary to hold individual sensor message counts
 
     now = datetime.now()
     date_now_str = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -427,6 +442,7 @@ def on_message(mqttc, obj, msg):
     global recvd_message_cnt
     global database_records_written
     global received_msg
+    global sensor_recvd_message_cnt
 
     # Set a flag to indicate we've received a message during the timer execution
     received_msg = True
@@ -444,9 +460,9 @@ def on_message(mqttc, obj, msg):
 
     # Received message on subscribed channel...add it to the database.
     add_db_record(msg.topic, msg.payload, msg_time)
-    # If successful in adding record to database, increment the counter
-    if add_db_record:
-        database_records_written += 1
+
+    if not add_db_record:
+        logger.error(f"Error occurred on attempt to record last message to database...")
 
     # Check the database records written count; every 100 records, output a message
     if ((database_records_written % 100) == 0) and (database_records_written != 0):
@@ -552,11 +568,20 @@ def add_db_record(topic, mqtt_msg, msg_time):
         the table used for the data.
             Written by DK Fowler ... 09-Jun-2020
 
+        Modified to add handling for new fields for sensor, and support for a new database
+        table used to store these.
+            Written by DK Fowler ... 18-Dec-2020
+
     :param topic:           MQTT topic to which the message containing data is published
     :param mqtt_msg:        MQTT message payload (unparsed)
     :param msg_time:        time the message was received by the listener in UTC
     :return:                True if successful in adding record, else False
     """
+
+    global sensor_recvd_message_cnt
+
+    insert_record_status = False  # assume failure
+    check_sensor_id_freq = 144
 
     # Attempt to get a connection to the db.  If it doesn't exist, we create it.
     conn = create_connection(ECCMQTTIoT_database)
@@ -567,42 +592,109 @@ def add_db_record(topic, mqtt_msg, msg_time):
         print(F"No connection established to database...aborting.")
         sys.exit(1)
 
-    db_table = 'ECCTempHum'
-
-    # Construct the SQL create-table statement...
-    create_table_sql_str, table_fields_dict = construct_create_table_sql(db_table,
-                                                                         field_names)
-    # Have a valid db connection; see if the db exists
-    if check_if_table_exists(conn, db_table, ECCMQTTIoT_database):
-        logger.debug(F"Table {db_table} already exists...continuing processing...")
-    else:
-        print(F"Table {db_table} does not exist...creating...")
-        logger.info(F"Table {db_table} does not exist...creating...")
-        create_tbl_status = create_table_from_string(conn, db_table, create_table_sql_str)
-        if not create_tbl_status:
-            logger.error(F"Error creating table {db_table}...aborting...")
-            print(F"Error creating table {db_table}...aborting...")
-            sys.exit(1)
-
-    # Sample message payload looks like:
-    # field1=47.10&field2=73.45&field3=39.17&field4=3.41&field5=93.53&field6=-67&field7=ECCTH01
+    # Sample message payload for the latest sensor looks like:
+    # field1=47.10&field2=73.45&field3=39.17&field4=3.41&field5=93.53
+    # &field6=-67&field7=ECCTH01&field8=Office&field9=98:F4:AB:DA:6E:E2
+    # &field10=v03.10
+    # (Earlier sensor code versions do not include last 3 fields.)
     # First, split the message by the '&' delimiter between fields
     #   *** Note that the raw message is a byte object, so we must convert it first to a string
     msg_fields = (mqtt_msg.decode("utf-8")).split('&')
 
-    # We should now have a list of all the fields in format of 'field=value'; break this to
+    # We should have a list of all the fields in format of 'field=value'; break this to
     # get the values in a separate list
-
     field_values = []
     for msg in msg_fields:
         msg_value = msg.split('=')
         field_values.append(msg_value[1])  # field value should be in second element in list
 
-    insert_record_status = create_database_record(conn,
-                                                  db_table,
-                                                  table_fields_dict,
-                                                  field_values,
-                                                  msg_time)
+    # Check to see if the message actually contains the sensor ID data;
+    # if not, only process the sensor temp/humidity table data.  This is
+    # necessary because earlier sensor code versions did not transmit this data.
+    if len(msg_fields) <= 7:
+        db_table = ['ECCTempHum']
+    else:
+        db_table = ['ECCTempHum',
+                    'ECCTempHumSensor']
+
+    create_table_sql_str = []
+    table_fields_dict = []
+    for table_idx, data_table in enumerate(db_table):
+        # Construct the SQL create-table statement...
+        sql_str, fields_dict = \
+            construct_create_table_sql(data_table,
+                                       field_names[table_idx])
+        create_table_sql_str.insert(table_idx, sql_str)
+        table_fields_dict.append(fields_dict)
+
+        # Have a valid db connection; see if the table exists
+        if check_if_table_exists(conn, data_table, ECCMQTTIoT_database):
+            logger.debug(F"Table {data_table} already exists...continuing processing...")
+        else:
+            print(F"Table {data_table} does not exist...creating...")
+            logger.info(F"Table {data_table} does not exist...creating...")
+            create_tbl_status = create_table_from_string(conn,
+                                                         data_table,
+                                                         create_table_sql_str[table_idx])
+            if not create_tbl_status:
+                logger.error(F"Error creating table {data_table}...aborting...")
+                print(F"Error creating table {data_table}...aborting...")
+                sys.exit(1)
+
+        if table_idx == 0:
+            insert_data = field_values[:7]
+            # First 7 fields are sensor data
+            insert_record_status = create_database_record(conn,
+                                                          data_table,
+                                                          table_fields_dict[table_idx],
+                                                          insert_data,
+                                                          msg_time)
+        else:
+            # Since the sensor ID data shouldn't change very frequently,
+            # check it only once per day or so.  We do this by checking the
+            # message count; since the sensors report on average about every
+            # 10 minutes, we should see about 6 per hour * 24 hours, or 144
+            # messages per day.  (The data list 'insert_data[0]' should contain
+            # the sensor name.)
+
+            # Last 4 fields of the message are sensor ID, MAC, location, software
+            # version
+            insert_data = field_values[6:]
+
+            # Maintain a list of counters by sensor name; if we haven't created
+            # the counter yet, then do so and initialize to 0; else, increment it
+            try:
+                if sensor_recvd_message_cnt[insert_data[0]] in \
+                        sensor_recvd_message_cnt.keys():
+                    sensor_recvd_message_cnt[insert_data[0]] += 1
+                else:
+                    sensor_recvd_message_cnt[insert_data[0]] = 0
+            except KeyError as e:           # handle empty dictionary
+                sensor_recvd_message_cnt[insert_data[0]] = 0
+
+            if ((sensor_recvd_message_cnt[insert_data[0]] %
+                 check_sensor_id_freq) != 0) and \
+                    (sensor_recvd_message_cnt[insert_data[0]] != 0):
+                break
+
+            # Before attempting to insert a record into the sensor ID/location
+            # table, check to see if any of the information has changed since
+            # the most-recently-written record for this sensor.  If not, skip
+            # the insert.
+
+            sensor_change = check_for_sensor_changes(conn,
+                                                     data_table,
+                                                     insert_data)
+            if sensor_change:
+                insert_record_status = create_database_record(conn,
+                                                              data_table,
+                                                              table_fields_dict[table_idx],
+                                                              insert_data,
+                                                              msg_time)
+                logger.info(f"Record written to table {data_table}...")
+            else:
+                logger.info(f"Sensor ID data hasn't changed, so not saved "
+                            f"(table {data_table})...")
 
     # Close the database connection if it is open
     if conn:
@@ -718,7 +810,8 @@ def create_table_from_string(conn, db_table, create_table_sql_str):
     # Check to make sure we have a database connection
     if conn is not None:
         # SQL strings to create secondary indicies.
-        sql_create_mqttiot_sec_index1 = "CREATE INDEX " + "sensor_idx ON " + \
+        sql_create_mqttiot_sec_index1 = "CREATE INDEX " + \
+                                        db_table + "_sensor_idx ON " + \
                                         db_table + "(sensorName);"
         table_exists = check_if_table_exists(conn, db_table, ECCMQTTIoT_database)
         if not table_exists:
@@ -765,19 +858,30 @@ def construct_create_table_sql(table_name, field_names):
         application.
                 Written by DK Fowler ... 10-Jun-2020
 
+        Modified to handle new table containing sensor ID data.
+                Modified by DK Fowler ... 18-Dec-2020
+
     :param table_name:          Database table to create (if it doesn't exist)
     :param field_names:         List containing fields for creation of table
     :return datatype_dict:      Dictionary containing field name as key with datatype returned
     :return: SQL_create_str:    SQL string to create the table
     """
 
-    # Create datatype list
-    field_sql_types = []
-    field_sql_types.insert(0, 'TEXT')  # date/time message received, in UTC
-    for i in range(1, 6):
-        field_sql_types.append('REAL')  # values for dewpoint, temp, hum, batt voltage / percent
-    field_sql_types.append('INTEGER')  # AP RSSI
-    field_sql_types.append('TEXT')  # sensor
+    if table_name == 'ECCTempHum':
+        # Create datatype list
+        field_sql_types = []
+        field_sql_types.insert(0, 'TEXT')  # date/time message received, in UTC
+        for i in range(1, 6):
+            field_sql_types.append('REAL')  # values for dewpoint, temp, hum, batt voltage / percent
+        field_sql_types.append('INTEGER')  # AP RSSI
+        field_sql_types.append('TEXT')  # sensor
+
+    elif table_name == 'ECCTempHumSensor':
+        # Create datatype list
+        field_sql_types = []
+        field_sql_types.insert(0, 'TEXT')  # date/time message received, in UTC
+        for i in range(1, 5):
+            field_sql_types.append('TEXT')  # values for sensor ID, location, MAC, software version
 
     # Create a SQLite datatype dictionary, with the key being field name from the field_name list passed
     # and the value being the datatype defined in the field_sql_types list
@@ -854,6 +958,8 @@ def create_database_record(conn, db_table, values_dict, field_values, msg_time):
     :return:                True if table created successfully; otherwise, False
     """
 
+    global database_records_written
+
     # First create a SQL string for INSERTing the record into the passed table
     sql_insert = construct_insert_table_sql(db_table, values_dict.keys())
 
@@ -879,6 +985,7 @@ def create_database_record(conn, db_table, values_dict, field_values, msg_time):
             cur.execute(sql_insert, val_list)
             logger.debug(F"Record written for sensor {val_list[len(val_list) - 1]}, "
                          F"date: {recordWrittenUTC}, table: {db_table}")
+            database_records_written += 1
         except sqlite3.Error as e:
             cur.close()
             logger.error(F"Error writing to database table {db_table}, {e}")
@@ -920,6 +1027,84 @@ def create_database_record(conn, db_table, values_dict, field_values, msg_time):
     conn.commit()
     cur.close()
     return True
+
+
+def check_for_sensor_changes(conn, db_table, compare_values):
+    """
+    Query the last sensor data written for this sensor and compare the
+    current values to see if a change has occurred.  If so, return true,
+    else, return false.
+            Written by DK Fowler ... 19-Dec-2020
+
+    :param conn:            the database connection object
+    :param db_table:        the SQLite3 database table to be queried
+    :param compare_values:  list of values to compare against last record in db
+    :return:                True, if change detected; else, False
+    """
+
+    cur = conn.cursor()
+
+    # Order of values for the sensor data passed to the routine should be:
+    #   ID, MAC, location, software version
+    # Build SQL query string
+    #   Note:   The Python SQLite API does not support parameterizing the table name, so we need to build
+    #           the SQL SELECT statement with the passed table name.
+    last_written_sql = "SELECT * FROM " + \
+                       db_table + \
+                       f" WHERE sensorName = '{compare_values[0]}' " \
+                       f"ORDER BY recordWrittenUTC DESC LIMIT 1"
+    logger.debug(F"SQL for last record written to database table {db_table}:  ")
+    logger.debug(F"{last_written_sql}")
+    try:
+        cur.execute(last_written_sql)
+    except sqlite3.Error as e:
+        logger.debug(F"Error occurred while attempting to retrieve last sensor ID data from table {db_table}...")
+        logger.debug(F"...error occurred was: {e}")
+        print(F"Error occurred while attempting to retrieve last sensor ID data from table {db_table}...")
+        print(F"...error occurred was: {e}")
+        # Check for table not found in database; this would occur on first initialization of a new database
+        if 'no such table' in e.__str__():
+            logger.info(F"...new table will be created")
+            print(F"...new table will be created")
+            cur.close()
+            return True
+        else:
+            logger.debug(F"...aborting...")
+            print(F"...SQL retrieval statement:  {last_written_sql}")
+            print(F"...aborting...")
+            cur.close()
+            sys.exit(1)
+
+    rows = cur.fetchall()
+
+    row_cnt = 0
+    for row in rows:
+        row_cnt = row_cnt + 1
+        logger.debug(F"Last sensor data for table {db_table}: {row[0]}")
+        logger.debug(row)
+        compare_fields = row  # save the data for further comparison
+
+    """
+        If no rows are returned for this sensor, then there were previously no entries written in
+        the passed table.  This would typically happen during first MQTT message containing sensor
+        ID data for this sensor.  Return True to indicate that "changes" were found, meaning this
+        is a new record that needs to be recorded.
+    """
+    if row_cnt == 0:
+        logger.debug(F"No records found for table {db_table} while retrieving last sensor ID data")
+        cur.close()
+        return True
+
+    # Found a record with same sensor name; now compare the key values
+    change_detected = False
+    for field_idx, field in enumerate(compare_values):
+        # skip the first column in the db record (dateWrittenUTC)
+        if field != compare_fields[field_idx + 1]:
+            change_detected = True
+            break
+
+    cur.close()
+    return change_detected
 
 
 def get_credentials():
