@@ -108,6 +108,320 @@ BROADCAST  = 1
 DISCUSSION = 2
 
 ####################################################################
+
+def get_synchronizations():
+    ecc = '@epiphanycatholicchurch.org'
+
+    synchronizations = [
+        {
+            'ministries' : [ '102-Finance Advisory Council' ],
+            'ggroup'     : f'administration-committee{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '203-Garden & Grounds' ],
+            'ggroup'     : f'garden-and-grounds{ecc}',
+            'notify'     : f'mary{ecc},emswine2@gmail.com,pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '207-Technology Committee' ],
+            'ggroup'     : f'tech-committee{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
+        },
+
+        {
+            'keywords'   : [ 'Liturgy Transcriptions' ],
+            'ggroup'     : f'liturgy-transcriptions{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '100-Parish Pastoral Council' ],
+            'ggroup'     : f'ppc{ecc}',
+            'notify'     : f'bookkeeper{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'PPC Executive Committee' ],
+            'ggroup'     : f'ppc-exec{ecc}',
+            'notify'     : f'bookkeeper{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '602-Singles Explore Life (SEL)' ],
+            'ggroup'     : f'sel{ecc}',
+            'notify'     : f'lynne{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '302-Bread Baking Ministry' ],
+            'ggroup'     : f'breadmakers{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '103-Worship Committee' ],
+            'ggroup'     : f'worship-committee{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '304-Liturgical Planning' ],
+            'ggroup'     : f'liturgy-planning{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '305-Movers Ministry' ],
+            'ggroup'     : f'movers{ecc}',
+            'notify'     : f'linda{ecc},awsimpson57@gmail.com,pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '309A-Acolyte Ministry 5:30P',
+                             '309B-Acolyte Ministry  9:00A',
+                             '309C-Acolyte Ministry 11:30A' ],
+            'ggroup'     : f'acolytes{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '310-Adult Choir' ],
+            'ggroup'     : f'choir{ecc}',
+            'notify'     : f'linda{ecc},faith@feetwashers.org,pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '311-Bell Choir' ],
+            'keywords'   : [ 'Bell choir email list' ],
+            'ggroup'     : f'bell-ringers{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '313-Communion Ministers' ],
+            'ggroup'     : f'communion-ministers{ecc}',
+            'notify'     : f'linda{ecc},stephen@feetwashers.org,pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '314-Communion Min. Coordinator'],
+            'ggroup'     : f'communion-ministers-coordinators{ecc}',
+            'notify'     : f'linda{ecc},stephen@feetwashers.org,pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '315-Funeral Mass Ministry' ],
+            'ggroup'     : f'funeral-mass-ministry{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '317-Instrumentalists & Cantors' ],
+            'keywords'   : [ 'Musicians email list' ],
+            'ggroup'     : f'musicians{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '318-Lectors  MASTER LIST' ],
+            'ggroup'     : f'lectors{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '321-Prayer Chain Ministry' ],
+            'ggroup'     : f'prayer-chain-ministry{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ 'E-Taize Prayer' ],
+            'ggroup'     : f'taizeprayer{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ 'E-Soul Life' ],
+            'ggroup'     : f'soullife{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+
+        {
+            'keywords'   : [ 'Wedding Ministries email list' ],
+            'ggroup'     : f'wedding-ministries{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'Homebound MP3 Recordings' ],
+            'ggroup'     : f'mp3-uploads-group{ecc}',
+            'notify'     : f'linda{ecc},business-manager{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'Homebound recipients email lst', 'Homebound MP3 Recordings' ],
+            'ggroup'     : f'ministry-homebound-liturgy-recipients{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'Recordings access' ],
+            'ggroup'     : f'recordings-viewer{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            # JMS To be deleted after 30 May 2020
+            'keywords'   : [ 'ECC Sheet Music access' ],
+            'ggroup'     : f'music-ministry-sheet-music-access{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'ECC Musicians Info editor' ],
+            'ggroup'     : f'music-ministry-musicians-information-editor{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'ECC Liturgy Plans editor' ],
+            'ggroup'     : f'worship-liturgy-planning{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'ECC Liturgy Plans reader' ],
+            'ggroup'     : f'worship-liturgy-planning-guest{ecc}',
+            'notify'     : f'linda{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '451-Livestream Team Ministry' ],
+            'ggroup'     : f'livestream-team{ecc}',
+            'notify'     : f'director-communications{ecc},director-worship{ecc},TomHayesMP@gmail.com,pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '800-ChildrenFormationCatechist' ],
+            'ggroup'     : f'childrens-formation-catechists{ecc}',
+            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+        },
+
+        {
+            'ministries' : [ '807-RCIA Team' ],
+            'ggroup'     : f'rcia-team{ecc}',
+            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ "811-Family&Children's WorkGrp" ],
+            'ggroup'     : f'family-and-childrens-working-group{ecc}',
+            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '812-Adult Form. Working Group' ],
+            'ggroup'     : f'adult-formation-working-group{ecc}',
+            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '813-Visual Faith Group' ],
+            'ggroup'     : f'visual-faith{ecc}',
+            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '808-Young Adult Ministry' ],
+            'ggroup'     : f'young-adults{ecc}',
+            'notify'     : f'tasha{ecc},pds-google-sync{ecc}',
+        },
+
+        {
+            'keywords'   : [ 'YouthMin parent: Jr high' ],
+            'ggroup'     : f'youth-ministry-parents-jr-high{ecc}',
+            'notify'     : f'tasha{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'YouthMin parent: Sr high' ],
+            'ggroup'     : f'youth-ministry-parents-sr-high{ecc}',
+            'notify'     : f'tasha{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '600-Men of Epiphany' ],
+            'ggroup'     : f'moe{ecc}',
+            'notify'     : f'lisag{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '110-Ten Percent Committee' ],
+            'ggroup'     : f'ten-percent-committee{ecc}',
+            'notify'     : f'polly{ecc},pds-google-sync{ecc}',
+        },
+
+        {
+            'keywords'   : [ '10 Pct Emergency Assistance' ],
+            'ggroup'     : f'10-percent-emergency-assistance{ecc}',
+            'notify'     : f'polly{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '505-Healing Blanket Ministry' ],
+            'ggroup'     : f'healing-blankets-ministry{ecc}',
+            'notify'     : f'frtony{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '601-Sages (for 50 yrs. +)' ],
+            'ggroup'     : f'sages{ecc}',
+            'notify'     : f'joanhagedorn46@gmail.com,lisag{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'ministries' : [ '104-Stewardship & E Committee' ],
+            'ggroup'     : f'stewardship{ecc}',
+            'notify'     : f'angie{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '707-St. Vincent DePaul' ],
+            'ggroup'     : f'SVDPConference{ecc}',
+            'notify'     : f'polly{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'keywords'   : [ 'Weekly Mass - Sometimes', 'Weekly Mass - Usually' ],
+            'ggroup'     : f'WeekdayMass{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'keywords'   : [ 'Apply@ECC email list' ],
+            'ggroup'     : f'apply{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
+            'keywords'   : [ 'Pastoral staff email list' ],
+            'ggroup'     : f'pastoral-staff{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'Support staff email list' ],
+            'ggroup'     : f'support-staff{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'Maintenance staff email list' ],
+            'ggroup'     : f'maintenance-staff{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+    ]
+
+    return synchronizations
+
+####################################################################
 #
 # Sync functions
 #
@@ -735,313 +1049,7 @@ def main():
     service_admin = services['admin']
     service_group = services['group']
 
-    ecc = '@epiphanycatholicchurch.org'
-    synchronizations = [
-        {
-            'ministries' : [ '102-Finance Advisory Council' ],
-            'ggroup'     : 'administration-committee{ecc}'.format(ecc=ecc),
-            'notify'     : 'business-manager{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '203-Garden & Grounds' ],
-            'ggroup'     : 'garden-and-grounds{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},emswine2@gmail.com,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '207-Technology Committee' ],
-            'ggroup'     : 'tech-committee{ecc}'.format(ecc=ecc),
-            'notify'     : 'business-manager{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        {
-            'keywords'   : [ 'Liturgy Transcriptions' ],
-            'ggroup'     : 'liturgy-transcriptions{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '100-Parish Pastoral Council' ],
-            'ggroup'     : 'ppc{ecc}'.format(ecc=ecc),
-            'notify'     : 'bookkeeper{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'PPC Executive Committee' ],
-            'ggroup'     : 'ppc-exec{ecc}'.format(ecc=ecc),
-            'notify'     : 'bookkeeper{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '602-Singles Explore Life (SEL)' ],
-            'ggroup'     : 'sel{ecc}'.format(ecc=ecc),
-            'notify'     : 'lynne{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '302-Bread Baking Ministry' ],
-            'ggroup'     : 'breadmakers{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '103-Worship Committee' ],
-            'ggroup'     : 'worship-committee{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '304-Liturgical Planning' ],
-            'ggroup'     : 'liturgy-planning{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '305-Movers Ministry' ],
-            'ggroup'     : 'movers{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},awsimpson57@gmail.com,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '309A-Acolyte Ministry 5:30P',
-                             '309B-Acolyte Ministry  9:00A',
-                             '309C-Acolyte Ministry 11:30A' ],
-            'ggroup'     : 'acolytes{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '310-Adult Choir' ],
-            'ggroup'     : 'choir{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},faith@feetwashers.org,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '311-Bell Choir' ],
-            'keywords'   : [ 'Bell choir email list' ],
-            'ggroup'     : 'bell-ringers{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '313-Communion Ministers' ],
-            'ggroup'     : 'communion-ministers{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},stephen@feetwashers.org,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '314-Communion Min. Coordinator'],
-            'ggroup'     : 'communion-ministers-coordinators{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},stephen@feetwashers.org,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '315-Funeral Mass Ministry' ],
-            'ggroup'     : 'funeral-mass-ministry{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '317-Instrumentalists & Cantors' ],
-            'keywords'   : [ 'Musicians email list' ],
-            'ggroup'     : 'musicians{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '318-Lectors  MASTER LIST' ],
-            'ggroup'     : 'lectors{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '321-Prayer Chain Ministry' ],
-            'ggroup'     : 'prayer-chain-ministry{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ 'E-Taize Prayer' ],
-            'ggroup'     : 'taizeprayer{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ 'E-Soul Life' ],
-            'ggroup'     : 'soullife{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        {
-            'keywords'   : [ 'Wedding Ministries email list' ],
-            'ggroup'     : 'wedding-ministries{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'Homebound MP3 Recordings' ],
-            'ggroup'     : 'mp3-uploads-group{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},business-manager{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'Homebound recipients email lst', 'Homebound MP3 Recordings' ],
-            'ggroup'     : 'ministry-homebound-liturgy-recipients{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'Recordings access' ],
-            'ggroup'     : 'recordings-viewer{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            # JMS To be deleted after 30 May 2020
-            'keywords'   : [ 'ECC Sheet Music access' ],
-            'ggroup'     : 'music-ministry-sheet-music-access{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'ECC Musicians Info editor' ],
-            'ggroup'     : 'music-ministry-musicians-information-editor{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'ECC Liturgy Plans editor' ],
-            'ggroup'     : 'worship-liturgy-planning{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'ECC Liturgy Plans reader' ],
-            'ggroup'     : 'worship-liturgy-planning-guest{ecc}'.format(ecc=ecc),
-            'notify'     : 'linda{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '451-Livestream Team Ministry' ],
-            'ggroup'     : 'livestream-team{ecc}'.format(ecc=ecc),
-            'notify'     : 'director-communications{ecc},director-worship{ecc},TomHayesMP@gmail.com,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '800-ChildrenFormationCatechist' ],
-            'ggroup'     : 'childrens-formation-catechists{ecc}'.format(ecc=ecc),
-            'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        {
-            'ministries' : [ '807-RCIA Team' ],
-            'ggroup'     : 'rcia-team{ecc}'.format(ecc=ecc),
-            'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ "811-Family&Children's WorkGrp" ],
-            'ggroup'     : 'family-and-childrens-working-group{ecc}'.format(ecc=ecc),
-            'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '812-Adult Form. Working Group' ],
-            'ggroup'     : 'adult-formation-working-group{ecc}'.format(ecc=ecc),
-            'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '813-Visual Faith Group' ],
-            'ggroup'     : 'visual-faith{ecc}'.format(ecc=ecc),
-            'notify'     : 'lisa{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '808-Young Adult Ministry' ],
-            'ggroup'     : 'young-adults{ecc}'.format(ecc=ecc),
-            'notify'     : 'tasha{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        {
-            'keywords'   : [ 'YouthMin parent: Jr high' ],
-            'ggroup'     : 'youth-ministry-parents-jr-high{ecc}'.format(ecc=ecc),
-            'notify'     : 'tasha{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'YouthMin parent: Sr high' ],
-            'ggroup'     : 'youth-ministry-parents-sr-high{ecc}'.format(ecc=ecc),
-            'notify'     : 'tasha{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '600-Men of Epiphany' ],
-            'ggroup'     : 'moe{ecc}'.format(ecc=ecc),
-            'notify'     : 'lisag{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '110-Ten Percent Committee' ],
-            'ggroup'     : 'ten-percent-committee{ecc}'.format(ecc=ecc),
-            'notify'     : 'polly{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        {
-            'keywords'   : [ '10 Pct Emergency Assistance' ],
-            'ggroup'     : '10-percent-emergency-assistance{ecc}'.format(ecc=ecc),
-            'notify'     : 'polly{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '505-Healing Blanket Ministry' ],
-            'ggroup'     : 'healing-blankets-ministry{ecc}'.format(ecc=ecc),
-            'notify'     : 'frtony{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '601-Sages (for 50 yrs. +)' ],
-            'ggroup'     : 'sages{ecc}'.format(ecc=ecc),
-            'notify'     : 'joanhagedorn46@gmail.com,lisag{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'ministries' : [ '104-Stewardship & E Committee' ],
-            'ggroup'     : 'stewardship{ecc}'.format(ecc=ecc),
-            'notify'     : 'angie{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'ministries' : [ '707-St. Vincent DePaul' ],
-            'ggroup'     : 'SVDPConference{ecc}'.format(ecc=ecc),
-            'notify'     : 'polly{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'keywords'   : [ 'Weekly Mass - Sometimes', 'Weekly Mass - Usually' ],
-            'ggroup'     : 'WeekdayMass{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'keywords'   : [ 'Apply@ECC email list' ],
-            'ggroup'     : 'apply{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-
-        #############################
-
-        {
-            'keywords'   : [ 'Pastoral staff email list' ],
-            'ggroup'     : 'pastoral-staff{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'Support staff email list' ],
-            'ggroup'     : 'support-staff{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-        {
-            'keywords'   : [ 'Maintenance staff email list' ],
-            'ggroup'     : 'maintenance-staff{ecc}'.format(ecc=ecc),
-            'notify'     : 'mary{ecc},pds-google-sync{ecc}'.format(ecc=ecc),
-        },
-    ]
+    synchronizations = get_synchronizations()
     for sync in synchronizations:
         group_permissions = google_group_get_permissions(service_group,
                                                          sync['ggroup'],
@@ -1057,6 +1065,7 @@ def main():
             do_sync(sync, group_permissions, service_admin, actions, log=log)
 
     # All done
+    log.info("Synchronization complete")
     pds.connection.close()
 
 if __name__ == '__main__':
