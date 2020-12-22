@@ -106,12 +106,15 @@ Several additional enhancements were included in the v02.20 release, among these
    #### Migration steps to v02.20:
 
    - Stop any existing scheduled tasks for prior versions.
-
-   - Edit the ECCMQTTIoT_GMail_Credentials.txt file to include the new parameters for sender local host name and destination e-mail addresses (comma separated, as noted in the *Quick Start* above).
-
+- Edit the ECCMQTTIoT_GMail_Credentials.txt file to include the new parameters for sender local host name and destination e-mail addresses (comma separated, as noted in the *Quick Start* above).
    - Modify any other default parameters as noted above either in the Python script or preferably via command-line switches for the scheduled task.
+- Restart the scheduled task.
 
-   - Restart the scheduled task.
+
+
+## V02.30 Release Notes (December 22, 2020)
+
+Version 2.30 includes modifications to support new sensor code that will also publish messages containing sensor identification information, including location, MAC address, and sensor code-version.  These additional parameters will be added to a new database table (ECCTempHumSensor) with a datetime stamp, but only if changes have occurred to this information since the last-published data.  This allows tracking and correlation of recorded temperature / humidity by location over time.
 
 
 
