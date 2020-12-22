@@ -8,6 +8,7 @@ base=/home/coeadmin/git/epiphany/media/linux
 prog_dir=$base/export-pds-into-sqlite
 logfile=$base/logfile.txt
 sqlite_out_dir=$base/pds-data
+slack_token=$HOME/slack-token.txt
 
 cd $prog_dir
 
@@ -17,6 +18,7 @@ cd $prog_dir
     --out-dir=$sqlite_out_dir \
     --pdsdata-dir=$pds_input_dir \
     --logfile=$logfile \
+    --slack-token-filename=$slack_token \
     |& tee export.out
 
 # If this is the first run after midnight, save a copy for archival

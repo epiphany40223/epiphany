@@ -1,14 +1,31 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 import subprocess
 import argparse
-import logging
-import logging.handlers
 import shutil
 import time
 import glob
+import sys
 import os
 import re
+
+# Find the path to the ECC module (by finding the root of the git
+# tree).  This is robust, but it's a little clunky. :-\
+try:
+    import subprocess
+    out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                         capture_output=True)
+    dirname = out.stdout.decode('utf-8').strip()
+    if not dirname:
+        raise Exception("Could not find git root.  Are you outside the git tree?")
+
+    moddir  = os.path.join(dirname, 'python')
+    sys.path.insert(0, moddir)
+    import ECC
+except Exception as e:
+    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
+    sys.stderr.write(f"{e}\n")
+    exit(1)
 
 # Logging.  It's significantly more convenient if this is a global.
 log = None
@@ -43,6 +60,10 @@ def setup_args():
                         default=None,
                         help='Optional output logfile')
 
+    parser.add_argument('--slack-token-filename',
+                        required=True,
+                        help='File containing the Slack bot authorization token')
+
     parser.add_argument('--verbose',
                         default=False,
                         action='store_true',
@@ -60,45 +81,21 @@ def setup_args():
 
 # Cleanse / sanity check CLI args
 
-def check_args(args):
+def check_args(args, log):
     pxview_bin = shutil.which(args.pxview)
     if not pxview_bin:
-        raise Exception('Cannot find pxview executable')
+        str = 'Cannot find pxview executable'
+        log.critical(str)
+        raise Exception(str)
     args.sqlite3 = shutil.which(args.sqlite3)
     if not args.sqlite3:
-        raise Exception('Cannot find sqlite3 executable')
+        str = 'Cannot find sqlite3 executable'
+        log.critical(str)
+        raise Exception(str)
     if not os.path.exists(args.pdsdata_dir):
-        raise Exception('Cannot find PDS data dir {}'.format(args.pdsdata_dir))
-
-###############################################################################
-
-def setup_logging(args):
-    level=logging.ERROR
-
-    if args.debug:
-        level="DEBUG"
-    elif args.verbose:
-        level="INFO"
-
-    global log
-    log = logging.getLogger('pds')
-    log.setLevel(level)
-
-    # Make sure to include the timestamp in each message
-    f = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
-
-    # Default log output to stdout
-    s = logging.StreamHandler()
-    s.setFormatter(f)
-    log.addHandler(s)
-
-    # Optionally save to a rotating logfile
-    if args.logfile:
-        s = logging.handlers.RotatingFileHandler(filename=args.logfile,
-                                                 maxBytes=(pow(2,20) * 10),
-                                                 backupCount=10)
-        s.setFormatter(f)
-        log.addHandler(s)
+        str = f'Cannot find PDS data dir {args.pdsdata_dir}"
+        log.critical(str)
+        raise Exception(str)
 
 ###############################################################################
 
@@ -371,8 +368,12 @@ def rename_sqlite3_database(args):
 
 def main():
     args = setup_args()
-    check_args(args)
-    setup_logging(args)
+    global log
+    log = ECC.setup_logging(info=args.verbose,
+                            debug=args.debug,
+                            logfile=args.logfile, rotate=True,
+                            slack_token_filename=args.slack_token_filename)
+    check_args(args, log)
 
     setup_temps(args)
     dbs = find_pds_files(args)
