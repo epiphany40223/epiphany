@@ -23,8 +23,8 @@ cd $prog_dir
 # Generate the list of email addresses from PDS data and sync
 google_logfile=$HOME/logfiles/linux/sync-google-group/sync-google-group-logfile.txt
 ./sync-google-group.py \
-    --smtp-auth-file $HOME/smtp-auth.txt \
-    --slack-token-file $HOME/slack-token.txt \
+    --smtp-auth-file $HOME/credentials/smtp-auth.txt \
+    --slack-token-file $HOME/credentials/slack-token.txt \
     --sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
     --logfile=$google_logfile \
     --verbose
@@ -58,7 +58,7 @@ if test $h -eq 2 -a $m -lt 15; then
 
     ppc_logfile=$HOME/logfiles/linux/ppc-feedback/ppc-feedback-logfile.txt
     ./ppc-feedback-google-group.py \
-        --smtp-auth-file $HOME/smtp-auth.txt \
+        --smtp-auth-file $HOME/credentials/smtp-auth.txt \
         --logfile=$ppc_logfile \
         --app-id $HOME/credentials/client_id-ppc-feedback.json \
         --user-credentials $HOME/credentials/user-credentials-ppc-feedback.json
