@@ -6,7 +6,7 @@ pds_input_dir=/mnt/c/pdschurch/Data
 
 base=/home/coeadmin/git/epiphany/media/linux
 prog_dir=$base/export-pds-into-sqlite
-logfile=$base/logfile.txt
+logfile=$HOME/logfiles/export-pds-to-sqlite/logfile.txt
 sqlite_out_dir=$base/pds-data
 slack_token=$HOME/slack-token.txt
 
