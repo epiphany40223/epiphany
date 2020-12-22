@@ -42,6 +42,7 @@ if test $yes -eq 1; then
     $script \
         --app-id $client_id \
         --user-credentials $user_credentials \
+        --slack-token-filename=$slack_token \
         --dest $dest_folder \
 	"$archive_dir/$d-pdschurch.sqlite3"
     rm -f "$archive_dir/$d-pdschurch.sqlite3"
@@ -66,6 +67,7 @@ if test $yes -eq 1; then
     $script \
         --app-id $client_id \
         --user-credentials $user_credentials \
+        --slack-token-filename=$slack_token \
         --dest $dest_folder \
         "$archive_dir/$b.tar.bz2"
 
