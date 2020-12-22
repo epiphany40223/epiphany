@@ -16,7 +16,7 @@ set -ux
 # take a long time for no apparent reason
 $TOP/slack/runner.py \
     --slack-token-filename /home/coeadmin/slack-token.txt \
-    --logfile runner-log.txt \
+    --logfile $HOME/logfiles/linux/runner-log.txt \
     --child-timeout 900 \
     --verbose \
     --comment "Linux cron run-all automation" \

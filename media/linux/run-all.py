@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 import subprocess
 import logging
@@ -68,7 +68,7 @@ class LockFile:
 #---------------------------------------------------------------------------
 
 def main():
-    setup_logging("logfile.txt")
+    setup_logging(os.path.join(os.environ['HOME'], 'logfiles', 'lock-logfile.txt'))
 
     c = os.getcwd()
     filename = '{dir}/pds-run-all.lock'.format(dir=c)
@@ -77,13 +77,13 @@ def main():
 
         # Export the PDS database into an SQLite3 database
         os.chdir("export-pds-into-sqlite")
-        subprocess.run(["./run.sh"], env=os.environ)
+        subprocess.run(["./run.sh"], env=os.environ, check=True)
         os.chdir("..")
 
         # Run some queries (and act on the results) from that SQLite3
         # database
         os.chdir("pds-sqlite3-queries")
-        subprocess.run(["./run.sh"], env=os.environ)
+        subprocess.run(["./run.sh"], env=os.environ, check=True)
         os.chdir("..")
 
 if __name__ == '__main__':
