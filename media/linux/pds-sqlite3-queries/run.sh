@@ -61,9 +61,10 @@ if test $h -eq 2 -a $m -lt 15; then
 	--user-credentials $cred_dir/google-uploader-user-credentials.json
 
     ppc_logfile=$HOME/logfiles/linux/ppc-feedback/ppc-feedback-logfile.txt
+    cred_dir=$HOME/credentials/ppc-feedback
     ./ppc-feedback-google-group.py \
         --smtp-auth-file $HOME/credentials/smtp-auth.txt \
         --logfile=$ppc_logfile \
-	--app-id $cred_dir/google-uploader-client-id.json \
-	--user-credentials $cred_dir/google-uploader-user-credentials.json
+	--app-id $cred_dir/client-id-ppc-feedback.json \
+	--user-credentials $cred_dir/user-credentials-ppc-feedback.json
 fi
