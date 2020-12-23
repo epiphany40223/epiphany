@@ -1,13 +1,14 @@
 #!/bin/zsh
 
-set -x
+set -xeuo pipefail
 
 pds_input_dir=/mnt/c/pdschurch/Data
 
 base=/home/coeadmin/git/epiphany/media/linux
 prog_dir=$base/export-pds-into-sqlite
-logfile=$base/logfile.txt
+export_logfile=$HOME/logfiles/linux/export-pds-to-sqlite/logfile.txt
 sqlite_out_dir=$base/pds-data
+slack_token=$HOME/credentials/slack-token.txt
 
 cd $prog_dir
 
@@ -16,14 +17,14 @@ cd $prog_dir
     --verbose \
     --out-dir=$sqlite_out_dir \
     --pdsdata-dir=$pds_input_dir \
-    --logfile=$logfile \
+    --logfile=$export_logfile \
+    --slack-token-filename=$slack_token \
     |& tee export.out
 
 # If this is the first run after midnight, save a copy for archival
 # purposes.
 t=`date '+%H%M'`
-yes=`expr $t \<= 14`
-if test $yes -eq 1; then
+if test $t -le 14; then
     # Upload some files to a Google drive
     archive_dir="`readlink -f $sqlite_out_dir/archives`"
     uploader_dir="`readlink -f ../google-drive-uploader`"
@@ -31,6 +32,7 @@ if test $yes -eq 1; then
     client_id=`readlink -f $uploader_dir/google-uploader-client-id.json`
     user_credentials=`readlink -f $uploader_dir/google-uploader-user-credentials.json`
     dest_folder="0ANbM4b6o0km8Uk9PVA"
+    logfile=$HOME/logfiles/linux/google-drive-uploader/logfile.txt
 
     # Upload the latest sqlite file to Google, but rename it with
     # today's date first.
@@ -40,6 +42,8 @@ if test $yes -eq 1; then
     $script \
         --app-id $client_id \
         --user-credentials $user_credentials \
+        --slack-token-filename=$slack_token \
+        --logfile $logfile \
         --dest $dest_folder \
 	"$archive_dir/$d-pdschurch.sqlite3"
     rm -f "$archive_dir/$d-pdschurch.sqlite3"
@@ -64,6 +68,8 @@ if test $yes -eq 1; then
     $script \
         --app-id $client_id \
         --user-credentials $user_credentials \
+        --slack-token-filename=$slack_token \
+        --logfile $logfile \
         --dest $dest_folder \
         "$archive_dir/$b.tar.bz2"
 
@@ -73,3 +79,5 @@ if test $yes -eq 1; then
     date
     echo "Done with PDS files backup"
 fi
+
+exit 0

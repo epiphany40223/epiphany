@@ -1,21 +1,32 @@
-#!/usr/bin/env python3.6
-
-"""Script to upload specific files to Google Drive.
-
-This script developed and tested with Python 3.6.x.  It has not been
-tested with other versions (e.g., Python 2.7.x).
+#!/usr/bin/env python3
 
 """
-
-import sys
-sys.path.insert(0, '../../../python')
+Script to upload specific files to Google Drive.
+"""
 
 import os
+import sys
 import mimetypes
 
-import ECC
-import Google
-import GoogleAuth
+# Find the path to the ECC module (by finding the root of the git
+# tree).  This is robust, but it's a little clunky. :-\
+try:
+    import subprocess
+    out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                         capture_output=True)
+    dirname = out.stdout.decode('utf-8').strip()
+    if not dirname:
+        raise Exception("Could not find git root.  Are you outside the git tree?")
+
+    moddir  = os.path.join(dirname, 'python')
+    sys.path.insert(0, moddir)
+    import ECC
+    import Google
+    import GoogleAuth
+except Exception as e:
+    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
+    sys.stderr.write(f"{e}\n")
+    exit(1)
 
 from apiclient.http import MediaFileUpload
 from oauth2client import tools
@@ -30,8 +41,8 @@ def gd_find_folder(service, folder_id, log):
                          supportsTeamDrives=True).execute())
     except:
         all = sys.exc_info()
-        log.error("Failed to find Google Drive ID {f}: {a} {b} {c}"
-                  .format(f=folder_id,a=all[0], b=all[1], c=all[2]))
+        log.critical("Failed to find Google Drive ID {f}: {a} {b} {c}"
+                     .format(f=folder_id,a=all[0], b=all[1], c=all[2]))
         exit(1)
 
     log.debug("Validated Google Drive destination ID exists: {id}"
@@ -39,12 +50,12 @@ def gd_find_folder(service, folder_id, log):
 
     mime = response.get('mimeType', [])
     if not mime:
-        log.error("Failed to verify that Google Drive ID is a folder")
+        log.critical("Failed to verify that Google Drive ID is a folder")
         exit(1)
 
     if mime != Google.mime_types['folder']:
-        log.error("Destination Google Drive ID is not a folder")
-        log.error("It's actually: {m}".format(m=mime))
+        log.critical("Destination Google Drive ID is not a folder")
+        log.critical("It's actually: {m}".format(m=mime))
         exit(1)
 
     log.debug("Validated Google Drive destination ID is a folder")
@@ -97,6 +108,10 @@ def add_cli_args():
                                  default='user-credentials.json',
                                  help='Filename containing Google user credentials')
 
+    tools.argparser.add_argument('--slack-token-filename',
+                                 required=True,
+                                 help='File containing the Slack bot authorization token')
+
     tools.argparser.add_argument('files',
                                  metavar='file',
                                  nargs='+',
@@ -123,10 +138,11 @@ def add_cli_args():
     if args.debug:
         args.verbose = True
 
+def check_cli_args(args, log):
     # Sanity check that the specified files all exist
     for f in args.files:
         if not os.path.exists(f):
-            print("File does not exist: {f}".format(f=f))
+            log.critical("File does not exist: {f}".format(f=f))
             exit(1)
 
     return args
@@ -139,9 +155,12 @@ def add_cli_args():
 
 def main():
     args = add_cli_args()
-    log  = ECC.setup_logging(info=args.verbose,
-                             debug=args.verbose,
-                             logfile=None)
+    global log
+    log = ECC.setup_logging(info=args.verbose,
+                            debug=args.debug,
+                            logfile=args.logfile, rotate=True,
+                            slack_token_filename=args.slack_token_filename)
+    check_cli_args(args, log)
 
     apis = {
         'drive' : { 'scope'       : Google.scopes['drive'],

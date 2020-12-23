@@ -15,8 +15,8 @@ set -ux
 # Set timeout for 14.5 minutes because periodically Google APIs
 # take a long time for no apparent reason
 $TOP/slack/runner.py \
-    --slack-token-filename /home/coeadmin/slack-token.txt \
-    --logfile runner-log.txt \
+    --slack-token-filename $HOME/credentials/slack-token.txt \
+    --logfile $HOME/logfiles/linux/runner-log.txt \
     --child-timeout 900 \
     --verbose \
     --comment "Linux cron run-all automation" \

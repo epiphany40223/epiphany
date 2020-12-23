@@ -1,14 +1,31 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 import subprocess
 import argparse
-import logging
-import logging.handlers
 import shutil
 import time
 import glob
+import sys
 import os
 import re
+
+# Find the path to the ECC module (by finding the root of the git
+# tree).  This is robust, but it's a little clunky. :-\
+try:
+    import subprocess
+    out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                         capture_output=True)
+    dirname = out.stdout.decode('utf-8').strip()
+    if not dirname:
+        raise Exception("Could not find git root.  Are you outside the git tree?")
+
+    moddir  = os.path.join(dirname, 'python')
+    sys.path.insert(0, moddir)
+    import ECC
+except Exception as e:
+    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
+    sys.stderr.write(f"{e}\n")
+    exit(1)
 
 # Logging.  It's significantly more convenient if this is a global.
 log = None
@@ -43,6 +60,10 @@ def setup_args():
                         default=None,
                         help='Optional output logfile')
 
+    parser.add_argument('--slack-token-filename',
+                        required=True,
+                        help='File containing the Slack bot authorization token')
+
     parser.add_argument('--verbose',
                         default=False,
                         action='store_true',
@@ -60,45 +81,21 @@ def setup_args():
 
 # Cleanse / sanity check CLI args
 
-def check_args(args):
+def check_args(args, log):
     pxview_bin = shutil.which(args.pxview)
     if not pxview_bin:
-        raise Exception('Cannot find pxview executable')
+        str = 'Cannot find pxview executable'
+        log.critical(str)
+        raise Exception(str)
     args.sqlite3 = shutil.which(args.sqlite3)
     if not args.sqlite3:
-        raise Exception('Cannot find sqlite3 executable')
+        str = 'Cannot find sqlite3 executable'
+        log.critical(str)
+        raise Exception(str)
     if not os.path.exists(args.pdsdata_dir):
-        raise Exception('Cannot find PDS data dir {}'.format(args.pdsdata_dir))
-
-###############################################################################
-
-def setup_logging(args):
-    level=logging.ERROR
-
-    if args.debug:
-        level="DEBUG"
-    elif args.verbose:
-        level="INFO"
-
-    global log
-    log = logging.getLogger('pds')
-    log.setLevel(level)
-
-    # Make sure to include the timestamp in each message
-    f = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
-
-    # Default log output to stdout
-    s = logging.StreamHandler()
-    s.setFormatter(f)
-    log.addHandler(s)
-
-    # Optionally save to a rotating logfile
-    if args.logfile:
-        s = logging.handlers.RotatingFileHandler(filename=args.logfile,
-                                                 maxBytes=(pow(2,20) * 10),
-                                                 backupCount=10)
-        s.setFormatter(f)
-        log.addHandler(s)
+        str = f'Cannot find PDS data dir {args.pdsdata_dir}'
+        log.critical(str)
+        raise Exception(str)
 
 ###############################################################################
 
@@ -120,7 +117,7 @@ def setup_temps(args):
 
 # Find the PDS database files
 def find_pds_files(args):
-    dbs = glob.glob('{dir}/*.DB'.format(dir=args.pdsdata_dir))
+    dbs = glob.glob(f'{args.pdsdata_dir}/*.DB')
 
     return dbs
 
@@ -138,19 +135,12 @@ def open_sqlite3(args):
     global database_temp_name
     sql3_args.append(database_temp_name)
 
-    log.debug("sqlite bin: {}".format(args.sqlite3))
+    log.debug(f"sqlite bin: {args.sqlite3}")
     sqlite3 = subprocess.Popen(args=sql3_args,
                                executable=args.sqlite3,
                                universal_newlines=True,
                                stdin=subprocess.PIPE)
     log.info("Opened sqlite3");
-
-    # This helps SQLite performance considerably (it's slightly risky, in
-    # general, because it removes some atomic-ness of transactions, but
-    # for this application, it's fine).
-    # JMS Apparently this syntax is wrong...?
-    #cmd = 'PRAGMA {db}.synchronous=0;\n'.format(db=database_name)
-    #sqlite3.stdin.write('PRAGMA {db}.synchronous=0;\n'.format(db=database_name))
 
     return sqlite3
 
@@ -221,7 +211,7 @@ def replace_things_not_in_quotes(line, tokens):
     return ''.join(results)
 
 def process_db(args, db, sqlite3):
-    log.info("=== PDS table: {full}".format(full=db))
+    log.info(f"=== PDS table: {db}")
 
     results = re.search('(.+).DB$', os.path.basename(db))
     table_base = results.group(1)
@@ -230,10 +220,10 @@ def process_db(args, db, sqlite3):
     # apparently temporary / scratch files (so says PDS support), and
     # should be skipped.
     if table_base.startswith('@'):
-        log.info("  ==> Skipping bogus {short} table".format(short=table_base))
+        log.info(f"  ==> Skipping bogus {table_base} table")
         return
     if table_base.startswith('SPECIAL'):
-        log.info("  ==> Skipping bogus {short} table".format(short=table_base))
+        log.info(f"  ==> Skipping bogus {table_base} table")
         return
 
     # PDS has "PDS" and "PDS[digit]" tables.  "PDS" is the real one;
@@ -241,7 +231,7 @@ def process_db(args, db, sqlite3):
     if (re.search('^PDS\d+$', table_base, flags=re.IGNORECASE) or
         re.search('^RE\d+$', table_base, flags=re.IGNORECASE) or
         re.search('^SCH\d+$', table_base, flags=re.IGNORECASE)):
-        log.info("   ==> Skipping bogus {short} table".format(short=table_base))
+        log.info(f"   ==> Skipping bogus {table_base} table")
         return
 
     # We have the PDS SMB file share opened as read-only, and pxview
@@ -255,17 +245,16 @@ def process_db(args, db, sqlite3):
     pxview_args.append('--sql')
 
     shutil.copy(db, args.temp_dir)
-    temp_db = os.path.join(args.temp_dir, '{file}.DB'.format(file=table_base))
+    temp_db = os.path.join(args.temp_dir, f'{table_base}.DB')
     pxview_args.append(temp_db)
 
     # Is there an associated blobfile?
-    blobname = '{short}.MB'.format(short=table_base)
-    blobfile = "{dir}/{name}".format(dir=args.pdsdata_dir,
-                                     name=blobname)
+    blobname = f'{table_base}.MB'
+    blobfile = f"{args.pdsdata_dir}/{blobname}"
     if os.path.exists(blobfile):
         shutil.copy(blobfile, args.temp_dir)
         temp_blobfile = os.path.join(args.temp_dir, blobname)
-        pxview_args.append('--blobfile={file}'.format(file=temp_blobfile))
+        pxview_args.append(f'--blobfile={temp_blobfile}')
 
     # Sadly, we can't have pxview write directly to the sqlite
     # database because PDS has some field names that are SQL reserved
@@ -273,7 +262,7 @@ def process_db(args, db, sqlite3):
     # the SQL here in Python, then twonk the SQL a bit, and then we
     # can import it into the sqlite3 database using the sqlite3
     # executable.
-    sql_file = '{dir}/{base}.sql'.format(dir=args.out_dir, base=table_base)
+    sql_file = f'{args.out_dir}/{table_base}.sql'
     if os.path.exists(sql_file):
         os.unlink(sql_file)
     pxview_args.append('-o')
@@ -281,8 +270,7 @@ def process_db(args, db, sqlite3):
 
     # Write out the SQL file
     if args.debug:
-        log.debug('=== PXVIEW command: {pxview} {args}'
-                  .format(pxview=args.pxview, args=pxview_args))
+        log.debug(f'=== PXVIEW command: {args.pxview} {pxview_args}')
     subprocess.run(args=pxview_args)
 
     if args.debug:
@@ -336,7 +324,7 @@ def process_db(args, db, sqlite3):
         line = re.sub(r', (\d\d\d\d-\d\d-\d\d)([,)])', r', "\1"\2', line)
 
         if args.debug:
-            log.debug("SQL: {}".format(line.rstrip()))
+            log.debug(f"SQL: {line.rstrip()}")
 
         # If we're insertting and we haven't started the transaction,
         # start the transaction.
@@ -371,15 +359,20 @@ def rename_sqlite3_database(args):
 
 def main():
     args = setup_args()
-    check_args(args)
-    setup_logging(args)
+    global log
+    log = ECC.setup_logging(info=args.verbose,
+                            debug=args.debug,
+                            logfile=args.logfile, rotate=True,
+                            slack_token_filename=args.slack_token_filename)
+    check_args(args, log)
 
     setup_temps(args)
-    dbs = find_pds_files(args)
+    dbs     = find_pds_files(args)
     sqlite3 = open_sqlite3(args)
     for db in dbs:
         process_db(args, db, sqlite3)
     close_sqlite3(sqlite3)
+
     log.info("Finished converting DB --> Sqlite")
     rename_sqlite3_database(args)
 
