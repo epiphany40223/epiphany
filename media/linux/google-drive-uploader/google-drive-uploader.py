@@ -111,6 +111,9 @@ def add_cli_args():
     tools.argparser.add_argument('--slack-token-filename',
                                  required=True,
                                  help='File containing the Slack bot authorization token')
+    tools.argparser.add_argument('--logfile',
+                                 required=False,
+                                 help='Logfile filename')
 
     tools.argparser.add_argument('files',
                                  metavar='file',
