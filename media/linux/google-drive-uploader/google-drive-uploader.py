@@ -141,6 +141,8 @@ def add_cli_args():
     if args.debug:
         args.verbose = True
 
+    return args
+
 def check_cli_args(args, log):
     # Sanity check that the specified files all exist
     for f in args.files:
