@@ -24,6 +24,7 @@ def _strip(value):
     return value.strip('[').strip(']')
 
 def compare_csvs(csv_new, csv_old):
+
     updated_printlog = list()
 
     for num, row in csv_new.items():
@@ -42,36 +43,39 @@ def compare_csvs(csv_new, csv_old):
                 'Color Prints Total'    : row['colortotal'],
                 'Color Prints Today'    : print_color_delta,
             })
-    
+
     print(f'== Compared {len(csv_new)} staffers')
     return updated_printlog
-    
+
 
 def load_latest_csv():
-    
+
+    # loads a specific filename CSV
+    def _load_ricoh_csv(filename):
+        rows = list()
+        with open(filename, "r", encoding='utf-8') as csvfile:
+            csvreader = csv.DictReader(csvfile)
+            for row in csvreader:
+                stripped = dict()
+                for key, value in row.items():
+                    stripped[key] = value.strip(']').strip('[')
+                rows.append(stripped)
+        return rows
+
     today = datetime.date.today()
     datestring_new = f'{today.year}{today.month}{today.day}'
     datestring_old = f'{today.year}{today.month}{today.day - 1}'
-    
+
     filename_new = f'RICOH IM C4500_usercounter_{datestring_new}.csv'
     filename_old = f'RICOH IM C4500_usercounter_{datestring_old}.csv'
-    
+
     #NOTE: debug_filenames are only placeholders until we can
     #      automatically download the latest each day
-    debug_filename_new = 'media/windows/ricoh-printer/RICOH IM C4500_usercounter_20201013.csv'
-    debug_filename_old = 'media/windows/ricoh-printer/RICOH IM C4500_usercounter_20201011.csv'
-    
-    csv_rows_new = list()
-    csv_rows_old = list()
+    debug_filename_new = 'RICOH IM C4500_usercounter_20201013.csv'
+    debug_filename_old = 'RICOH IM C4500_usercounter_20201011.csv'
 
-    with open(debug_filename_new, encoding='utf-8') as csvfile:
-        csvreader = csv.DictReader(csvfile)
-        for row in csvreader:
-            csv_rows_new.append(row)
-    with open(debug_filename_old, encoding='utf-8') as csvfile:
-        csvreader = csv.DictReader(csvfile)
-        for row in csvreader:
-            csv_rows_old.append(row)
+    csv_rows_new = _load_ricoh_csv(debug_filename_new)
+    csv_rows_old = _load_ricoh_csv(debug_filename_old)
 
     print(f"== Loaded {len(csv_rows_new)} staffers from latest CSV")
     print(f"== Loaded {len(csv_rows_old)} staffers from older CSV")
@@ -89,7 +93,7 @@ def extract_csv_data(csv_rows):
         }
 
     csv_staffers = dict()
-    
+
     for row in csv_rows:
         num = _strip(row['User'])
         this_staffer = _extract_staffer(row)
@@ -102,18 +106,15 @@ def write_printlogs(csv_new, csv_old, printlog):
     fieldnames = ['User', 'Name', 'Total Prints', 'Prints Today', 'B & W Prints Total', 'B & W Prints Today', 'Color Prints Total', 'Color Prints Today']
     filename = 'printlog.csv'
 
-    num_rows = 0
     with open(filename, "w+", encoding="utf-8", newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        num_rows = 1
 
         #Write each staffer by User Number
         for staffer in printlog:
             writer.writerow(staffer)
-            num_rows += 1
 
-    print(f"== Wrote {filename} with {num_rows} data rows")            
+    print(f"== Wrote {filename} with {len(printlog)} data rows")
 
 
 def main():

@@ -6,8 +6,6 @@
 import sys
 sys.path.insert(1, '../../python/')
 
-import os
-import re
 import csv
 import datetime
 import sqlite3
@@ -17,11 +15,10 @@ from sqlite3 import Error
 #import PDSChurch
 
 from pprint import pprint
-from pprint import pformat
 
 ###########################################################
 
-ricoh_db = "media/windows/ricoh-printer/ricoh.db"
+ricoh_db = "ricoh.db"
 today = datetime.date.today()
 #datestring = f'{today.year}{today.month}{today.day}'
 debug_datestring = '20201013'
@@ -29,17 +26,13 @@ datestring = debug_datestring
 
 def _strip(value):
     #The CSV puts brackets around values, which we don't want
-    return value.strip('[').strip(']')    
+    return value.strip('[').strip(']')
 
-def load_latest_csv():
-    
-    filename = f'RICOH IM C4500_usercounter_{datestring}.csv'
-    
-    debug_filename = 'media/windows/ricoh-printer/RICOH IM C4500_usercounter_20201013.csv'
-    
+def load_latest_csv(filename):
+
     csv_rows = list()
 
-    with open(debug_filename, encoding='utf-8') as csvfile: #TODO: change to filename when retrieval is automated
+    with open(filename, encoding='utf-8') as csvfile: #TODO: change to filename when retrieval is automated
         csvreader = csv.DictReader(csvfile)
         for row in csvreader:
             csv_rows.append(row)
@@ -59,14 +52,14 @@ def extract_csv_data(csv_rows):
         }
 
     csv_staffers = list()
-    
+
     for row in csv_rows:
         try:
-            num = int(_strip(row['User']))
+            num = _strip(row['User'])
             name = _strip(row['Name'])
         except ValueError as e:
             print(e)
-            num = 000
+            num = '000'
             name = 'Other'
         this_staffer = _extract_staffer(row, num, name)
         csv_staffers.append(this_staffer)
@@ -76,37 +69,34 @@ def extract_csv_data(csv_rows):
 
 
 def write_to_db(csv, ricoh_db): # Connects to SQLite db, or creates it if it doesn't exist
-    totaldatestring = f'{datestring}_Total'
-    bwdatestring   = f'{datestring}_B&W'
-    colordatestring = f'{datestring}_Color'
 
     def  _insert_staffer(row, conn):
         c = conn.cursor()
-        c.execute(f"""INSERT INTO 'printlog' (user,name,{totaldatestring},{bwdatestring},{colordatestring})
-                      VALUES ('{row['num']}','{row['name']}','{row['total']}','{row['b&wtotal']}','{row['colortotal']}')""")
+        c.execute(f"""INSERT INTO 'printlog' (Date,User,Name,Total,BW,Color)
+                      VALUES ('{datestring}','{row['num']}','{row['name']}','{row['total']}','{row['b&wtotal']}','{row['colortotal']}')""")
 
     conn = None
-    
+
     try:
         conn = sqlite3.connect(ricoh_db)
         print(sqlite3.version)
     except Error as e:
-        print(e)
+        print(f'Connection: {e}')
 
     try:
         c = conn.cursor()
-        c.execute(f"""CREATE TABLE IF NOT EXISTS 'printlog' (
-                                user text PRIMARY KEY,
-                                name text NOT NULL,
+        c.execute(f"""CREATE TABLE IF NOT EXISTS printlog (
+                                Key text PRIMARY KEY,
+                                Date text NOT NULL,
+                                User text NOT NULL,
+                                Name text NOT NULL,
+                                Total text NOT NULL,
+                                BW text NOT NULL,
+                                Color text NOT NULL
                         ); """)
-        c.execute(f"""ALTER TABLE 'printlog'
-                        ADD {totaldatestring} integer;
-                        ADD {bwdatestring} integer;
-                        ADD {colordatestring} integer;
-                        """)
     except Error as e:
         print(f'Alter Table: {e}')
-    
+
     for row in csv:
         _insert_staffer(row, conn)
         pprint(f'Wrote {row} to the database')
@@ -114,13 +104,16 @@ def write_to_db(csv, ricoh_db): # Connects to SQLite db, or creates it if it doe
     conn.commit()
 
     conn.close()
-    
+
 
 def main():
-    
+
     #log = ECC.setup_logging(debug=False)
 
-    csv_rows= load_latest_csv()
+    filename = f'RICOH IM C4500_usercounter_{datestring}.csv'
+    debug_filename = 'RICOH IM C4500_usercounter_20201013.csv'
+
+    csv_rows= load_latest_csv(debug_filename)
 
     csv = extract_csv_data(csv_rows)
 
