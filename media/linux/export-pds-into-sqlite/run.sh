@@ -29,8 +29,9 @@ if test $t -le 14; then
     archive_dir="`readlink -f $sqlite_out_dir/archives`"
     uploader_dir="`readlink -f ../google-drive-uploader`"
     script=`readlink -f $uploader_dir/google-drive-uploader.py`
-    client_id=`readlink -f $uploader_dir/google-uploader-client-id.json`
-    user_credentials=`readlink -f $uploader_dir/google-uploader-user-credentials.json`
+    cred_dir=$HOME/credentials/google-drive-uploader
+    client_id=`readlink -f $cred_dir/google-uploader-client-id.json`
+    user_credentials=`readlink -f $cred_dir/google-uploader-user-credentials.json`
     dest_folder="0ANbM4b6o0km8Uk9PVA"
     logfile=$HOME/logfiles/linux/google-drive-uploader/logfile.txt
 
