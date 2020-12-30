@@ -357,16 +357,16 @@ The `squish-ministry-sheets-into-one.py` script downloads all the Google Sheets 
 
 It writes a local file named `worksheet-rollup.xlsx`.
 
+This spreadsheet can be sliced and diced using normal Excel / Google Sheet functionality however the staff / Mary wants it.  E.g., separate out all the Interested / Not Interested / already active / ... etc.
+
 ## Interested ministry spreadsheet report
 
 The `interested-ministry-spreadsheets.py` script reads PDS data -- i.e., it _must be run after all the new "interested" statuses have been set in PDS! -- and emits an XLSX spreadsheet per ministry for all the people who indicated that they were "interested" in a ministry.
 
 These XLSX sheets were uploaded to Google Drive / converted to Google Sheets, and then given to ministry leaders.  The ministry leaders called these people to follow up on their interest.
 
-## Pledge fullfillment report
+## Pledge data
 
-In 2019, we had a `pledge-fullfillment-report.py` script that emitted a CSV.
-
-It does not look like we used this in 2020.  I think Mary directly took the pledge data from the main Jotform Google Sheet output.  That Google Sheet had the FID and all the family data that she needed -- she could just directly slice the rows/columns out of that sheet that she needed.
+I think Mary directly took the pledge data from the main Jotform Google Sheet output.  That Google Sheet had the FID and all the family data that she needed -- she could just directly slice the rows/columns out of that sheet that she needed.
 
 No Python needed!
