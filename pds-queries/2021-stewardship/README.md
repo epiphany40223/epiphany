@@ -46,9 +46,6 @@ There are a few main scripts in this directory:
   the `make-and-send-email` script takes a while to run (~20 mins) --
   continually copying the cookies as we send allows recipients to
   click on the links in their email "immediately" after receiving it.
-* `send-thank-you-emails.py`: This script was run once after the
-  campaign was over to send a "thank you" email to everyone who
-  participated in stewardship.  See below for thoughts on this.
 * `pledge-fullfillment-report.py`: This script was run once at the end of the campaign.  It emits a spreadsheet that needs to be massaged by the business manager and imported into PDS with pledge frequency and mechanism information.
 
 There were some "helper" scripts, too:
@@ -62,6 +59,7 @@ There were some "helper" scripts, too:
 * `print-ministries.py`: Trivial script to print out all the PDS
   ministries.  It was just used to make the Jotform that lists all the
   ministries.
+* `salutations.py`: trivial script to print all Heads of Households / Spouses into a CSV.  It's more of a test script than a production script.
 
 There was an important outside-of-this-system element to the process,
 too: a good number of people submitted paper Stewardship cards (in
@@ -111,22 +109,14 @@ scp cookies.sqlite3 api.epiphanycatholicchurch.org:stewardship-2021-data
 
 The SMTP auth file contains a single username:password that
 authenticates to Google's SMTP relay service (it's *any* ECC Google
-account).  This allows us to send from any @ecc.org email address (not
+account).  This allows us to send from any `@ecc.org` email address (not
 just the one that authenticated).
 
 The email is a file that was made from an email Jordan composed in Constant Contact and sent to me.  I extracted the raw HTML and saved it in the file.  I then tweaked the HTML a bit:
 
 1. Removed the Constant Contact footer.
-1. Added `Dear {family_names} household:`
-1. Added:
-```
-<div><br></div>
-<ol>
-{member_links}
-</ol>
-<div><br></div>
-```
-1. Used `{family_pledge_link}` for the family pledge link.
+1. Changed the content of the message to be what Angie wanted.
+1. Added various `{foo}` Python variable substitutions.
 
 Note that the graphics I used in the emails are from the Constant
 Contact email that Jordan sent to me.  I.e., I'm using IMG links that
@@ -152,9 +142,27 @@ only is this convenient from a "we loves the Google Sheets"
 perspective, it also gets the data out of Jotform (so that we don't
 have to continually pay $39/mo just to access the submission data).
 
-There were two Jotforms.
+The Jotform was a fairly large form that included multiple pages:
 
-### Ministry Update Form
+1. An intro page
+1. 7 Member Ministry update pages
+1. A family pledge update page
+
+### Reply email
+
+The Jotform was configured to send back a "Thanks, we got your submission!" email upon submitting.  We passed a hidden field with the PDS Family Head of Household + Spouse emails; that hidden field was used as the "to" address for the email.
+
+Sending the email upon submission was a great way for people to know for 100% sure that ECC got their submission.
+
+### Intro page
+
+This was a fairly boilerplate page -- welcome to the stewardship drive, blah blah blah.
+
+Note that due to a bug at Jotform, all the images on the Jotform were hosted at the Digital Ocean Droplet.  See https://www.jotform.com/answers/2534755-Prepopulate-URL-inconsistent-behaviour-on-Safari-and-Chrome-browsers-across-macOS-and-iOS for more details.  Hence, if you look at the 2021 Jotform, you'll now see lots of broken graphics.  This is expected.
+
+### Member Ministry update pages
+
+We had 7 Member Ministry pages because the majority of the parish has 7 Members or less in their PDS Families.  I ran a quick Python query to do this counting: there were only a handful of Families with 8 or more Members.  These Familes were handled manually by Mary (e.g., she ran reports showing their ministries and worked with those Families directly).
 
 We show the Member their name (in read-only fields) and then a series of
 tables -- one table for each group of ministries.
@@ -172,13 +180,15 @@ We pre-filled in these columns:
   "PARTICIPATE column.
 - Otherwise, we set the "NO LONGER INVOLVED" column.
 
+***NOTE:*** due to having *7* Member Ministry forms in a single Jotform led to an explosion of fields that needed to be pre-filled.  It was absolutely necessary to override all the grid field names to be shorter than their defaults.  The grids were all shortened to 3 letters.  If we went much longer than that, the Jotform back-end would not accept all the field values that we pre-populated via the URL.
+
 ### Family Pledge Form
 
-We show some read-only information at the top of the form:
+We show some read-only information at the top of the page:
 
 - Family name
-- Family's 2019 pledge
-- How much the Family has contributed so far during CY2019
+- Family's 2020 pledge
+- How much the Family has contributed so far during CY2020
 
 Then there were several more fields for input:
 
@@ -316,167 +326,47 @@ the entire campaign is done.  Otherwise, it will screw up the
 
 Honestly, this report should probably be its own `.py` file (and have some of the common routines in `nightly-reports.py` moved into `helpers.py`)
 
-### Ministry update CSV report
+### Ministry update report
 
-This report emits 3 CSVs and Google Sheets:
+This report emits an XLSX for each ministry that contains all Members who submitted a change in their ministry status compared to PDS.  Each Member listed in a ministry's spreadsheet will be one of four cases:
 
-1. "Interested" report: a CSV showing all Members who are _not_
+1. "Interested": all Members who are _not_
    already active in a given ministry, but marked the "interested"
    column.
-   * *INTENT:* This report is summarily reviewed by a human to check
-     for obvious errors and then is imported into PDS.  Staff can then
-     run PDS reports to see who is newly-interested in their
-     ministries.
-1. "No longer interested" report: a CSV showing all Members who _are_
+1. "No longer interested": all Members who _are_
    active in a ministry, but marked the "not interested" column.
-   * *INTENT*: This data is given to staff to review.  Staff almost
-      always want to see the details of who is leaving their
-      ministries before we actually take them out in PDS.  Once
-      this spreadsheet has been edited to fix any human errors and/or
-      other issues, it needs to be manually entered into PDS (due to
-      the way PDS imports data, we cannot import this CSV directly --
-      it would create a new Ministry Row on a Member, rather than
-      closing out an existing Ministry Row).
-1. "Inconsistent / human must review" report: a CSV showing data from
-   two cases that human staff members / volunteer must review.
-   * *INTENT*: A human staff member and/or volunteer must review this
-      data before it can be hand-entered into PDS.  Specifically,
-      there are two cases that arise from the Ministry Update
-      submitted data -- where the Member submitted is not consistent
-      with our PDS database:
-      1. The Member is marked in PDS as "active" in a ministry, but the
-         Member marked "Interested" on the form.
-      1. The Member is _not_ marked in PDS as "active" in a ministry, but
-         the Member marked "Participate" on the form.
+1. "Inconsistent / human must review": data from
+   two cases that human staff members / volunteer must review:
+   1. The Member is marked in PDS as "active" in a ministry, but the
+      Member marked "Interested" on the form.
+   1. The Member is _not_ marked in PDS as "active" in a ministry, but
+      the Member marked "Participate" on the form.
 
-This report was manually run twice during the 2021 campaign:
+These XLSX reports are summarily reviewed by humans to check for obvious errors before we run the `interested-ministry-spreadsheets.py` and `squish-ministry-sheets-into-one.py` reports.  Specifically, the XLSX files were uploaded to Google Drive and converted to Google Sheets.
 
-1. Approximately halfway through the campaign (so that human reviews
-of the data could begin).
-1. After the campaign ended.
+The ECC staff then hand-checked these sheets for errors, inconsistencies, and resolved the two "inconsistent" data cases.  They edited the Google Sheets in place:
 
-Although these reports were run twice, nothing was imported into PDS
-until after the campaign was over (e.g., the "INTERESTED" CSV was
-imported all at once after the campaign was over).
+1. They deleted rows that were flat-out wrong / known to be incorrect.
+1. They resolved the 2 ambiguous cases by editing the "Category" column -- e.g., resetting it to "Interested" or "No longer interested"
 
 Honestly, this report should probably be its own `.py` file (and have some of the common routines in `nightly-reports.py` moved into `helpers.py`)
 
+## Squish ministry spreadsheets
+
+The `squish-ministry-sheets-into-one.py` script downloads all the Google Sheets from a Google Drive folder (i.e., the folder where all the XLSX sheets were uploaded in the "Ministry update report") and makes one giant spreadsheet containing the union of all the data from all the Google Sheets.
+
+It writes a local file named `worksheet-rollup.xlsx`.
+
+## Interested ministry spreadsheet report
+
+The `interested-ministry-spreadsheets.py` script reads PDS data -- i.e., it _must be run after all the new "interested" statuses have been set in PDS! -- and emits an XLSX spreadsheet per ministry for all the people who indicated that they were "interested" in a ministry.
+
+These XLSX sheets were uploaded to Google Drive / converted to Google Sheets, and then given to ministry leaders.  The ministry leaders called these people to follow up on their interest.
+
 ## Pledge fullfillment report
 
-The `pledge-fullfillment-report.py` script emits a CSV containing:
+In 2019, we had a `pledge-fullfillment-report.py` script that emitted a CSV.
 
-1. A column indicating whether a Family changed their envelope status or not (i.e., either starting envelopes or stopping envelopes).
-1. A column of keywords to add (these keywords will need to be changed each yet)
-    * There are frequency keywords (weekly, monthly, quarterly, annual).  If the frequency changes, keywords will be denoted that they must be deleted -- but we don't think that PDS import will delete keywords.  These will need to be hand-entered in PDS.
-    * There are also mechanism keywords (credit card 2021, ACH 2021, ... etc.).  Since these are per-year keywords, there will never be any deletions.  Note that we allowed Families to indicate multiple mechanisms on the Jotform, so there may be multiple rows/2021 keywords to add for a single Family.
-1. If Families typed something in the "Other" field, it will show up as an "OTHER" comment.  A human staff member will need to react to those -- they are clearly not for import.
+It does not look like we used this in 2020.  I think Mary directly took the pledge data from the main Jotform Google Sheet output.  That Google Sheet had the FID and all the family data that she needed -- she could just directly slice the rows/columns out of that sheet that she needed.
 
--------
-
-# Reflections after the campaign
-
-I'm writing this section on November 2, after all emails and reports
-have been run and distributed.
-
-## Feedback from parishioners
-
-The majority of feedback was positive.  Some people weren't happy,
-though.  I saw 2-3 comments from parishioners who insisted that the
-system did not accept their submissions.  ...but I saw their
-submissions in the Jotform Google Sheets -- so I'm not exactly sure
-what the parishioner was referring to (I sent followup emails when
-requested, but did not hear back from the parishioners with details on
-exactly why they though that their submissions were not recorded).
-
-The only thing that I can think of is that the parishioners may have
-seen the "PLEASE READ" and warning icons after their submission and
-either did not read the text (which told them to make sure to submit
-for every member of their household + their pledge form) or did not
-understand it.  I.e., they somehow interpreted that iconography to
-mean that their submission was not recorded...?
-
-## Direct PDS data import
-
-This was the first year that we were able to directly import the
-majority of stewardship data into PDS.
-
-The importance of this cannot be overstated.
-
-* The morning after the campaign was over, several CSVs were directly
-  imported into PDS and all that data was safely saved in our
-  database.
-* Over the next week or two, the staff will sanity check all the
-  ministry updates in various Google Sheets.  These Sheets will then
-  be downloaded as CSVs and uploaded into PDS (per above, some of the
-  data will need to be entered by hand, but the majority of it will be
-  automatic).
-
-This is phenomenally valuable.  Not only was this done faster than
-ever before, but by it being automated, the possibility of error
-during human data re-entry was significantly reduced.
-
-## Ideas for 2021 campaign
-
-### Webform limitations
-
-In the campaign, we had to send a different link for each Family
-member's ministry update and then another link for the Family pledge
-form.
-
-It would be really great if somehow that could be a single link / a
-single form (e.g., with a page for each family Member ministry update
-and one for the Family pledge form).
-
-I could not figure out a way to have a "variable" length form on
-Jotform.  It might be possible -- I just didn't have enough time to
-figure it out.  It may also be possible in a different web form
-vendor.
-
-E.g., it could be possible to have 5 (or 10?) Member pages in a single
-form.  We pre-fill in as many of them as is relevant for a given
-household, and have the page advance/"next" button somehow skip the
-empty pages.  ...or something like that...?
-
-If it does become possible, it will certainly change how the output
-data is processed, because there will be N ministry updates per
-submission.
-
-### HTTP POST vs PUT
-
-We use specifically formatted HTTP POST URLs with all the data to
-pre-fill in the forms.
-
-In hindsight, it would be at least a little better to see if we could
-PUT this data so that it's just slightly harder for a malicious user
-to submit arbitrary data.
-
-In a perfect world, it would be much better to have the web form
-vendor use a unique cookie to draw the pre-filled-in data from a
-database somewhere (vs. passing the data along in a URL).  I did not
-find a cheap vendor that allowed us to do this easily, but it's worth
-another investigation at some point.
-
-### "Thank you" emails
-
-One piece of feedback that we got was that some people didn't get a
-good sense of whether their submission was recorded or not.
-
-In 2021, it would probably be good to send out emails every midnight
-to Families who *completed* their submission that day (i.e., submitted
-their pledge form as well as ministry submissions for all Members in
-their Family).  This is actually a little tricky:
-
-* On the surface, you can just comb through the Jotform results and,
-  for each Family, find the first date where that Family submitted
-  their pledge form + all Member ministry updates.  If that date is
-  before midnight, send a "thank you" email.
-* BUT: there's always an element of census updates during these
-  stewardship campaigns.  E.g., we marked a few dozen adult children
-  as "inactive" due to feedback during the campaign.  E.g., Smith
-  family submits pledge + ministry updates for 2 adults on date X.
-  They also submit a comment saying "our adult child no longer lives
-  with us."  That comment is not handled until 3 days later (i.e.,
-  X+3), so the logic in the above bullet will not catch that the Smith
-  family needs to have a "Thank you" email sent.
-* Might need to keep an sqlite3 database listing of all "thank you"
-  emails sent.  :-\
+No Python needed!
