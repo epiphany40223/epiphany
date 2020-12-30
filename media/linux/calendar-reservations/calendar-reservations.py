@@ -7,15 +7,30 @@
 #
 # $ virtualenv --python=python3.8
 # $ . ./venv/bin/activate
-# $ pip3 install `cat requirements.txt`
+# $ pip3 install -r requirements.txt
 #
 
-import sys
-sys.path.insert(0, '../../../python')
+# Find the path to the ECC module (by finding the root of the git
+# tree).  This is robust, but it's a little clunky. :-\
+try:
+    import os
+    import sys
+    import subprocess
+    out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                         capture_output=True)
+    dirname = out.stdout.decode('utf-8').strip()
+    if not dirname:
+        raise Exception("Could not find git root.  Are you outside the git tree?")
 
-import ECC
-import Google
-import GoogleAuth
+    moddir = os.path.join(dirname, 'python')
+    sys.path.insert(0, moddir)
+    import ECC
+    import Google
+    import GoogleAuth
+except Exception as e:
+    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
+    sys.stderr.write(f"{e}\n")
+    exit(1)
 
 import datetime
 from datetimerange import DateTimeRange
@@ -31,7 +46,7 @@ logfile = None
 
 default_timezone = 'America/New_York'
 
-# dictionary of calendars that we're checking for events on
+# Dictionary of calendars on which we're checking for events
 calendars = [
     {
         "name" : "Musicians calendar",
@@ -175,7 +190,22 @@ calendars = [
     }
 ]
 
-# list of the domains the calendar will accept events from, will decline events from all others
+# Test calendars to use when we're debugging
+calendars_debug = [
+    {
+        "name" : "Test calendar #1",
+        "id": 'c_bj96menjelb4pecracnninf45k@group.calendar.google.com',
+        "check_conflicts" : True,
+    },
+    {
+        "name" : "Test calendar #2",
+        "id" : 'c_ncm1ib261lp6c02i46mors4isc@group.calendar.google.com',
+        "check_conflicts" : True,
+    }
+]
+
+# List of the domains the calendar will accept events from, will decline events
+# from all others
 acceptable_domains = {
     'epiphanycatholicchurch.org',
     'churchofepiphany.com',
@@ -196,6 +226,9 @@ def setup_cli_args():
     tools.argparser.add_argument('--user-credentials',
                                  default=default_user_json,
                                  help='Filename containing Google user credentials')
+    tools.argparser.add_argument('--slack-token-filename',
+                                 required=True,
+                                 help='File containing the Slack bot authorization token')
 
     global verbose
     tools.argparser.add_argument('--verbose',
@@ -242,7 +275,8 @@ def check_for_conflicts(events_to_check, events, calendar, service, log):
         log.info(f"Not checking {calendar['name']} for conflicts")
         return
 
-    # iterate through the list of all of the events and finds any that conflict with the event in question
+    # iterate through the list of all of the events and finds any that conflict
+    # with the event in question
     conflicting_events = []
     accepted_events = []
 
@@ -250,16 +284,17 @@ def check_for_conflicts(events_to_check, events, calendar, service, log):
 
     for all_the_events in [events_to_check, events]:
         for event in all_the_events:
-            # subtracts and adds one second to the end and start times so no event can end at the same time another starts
-            # this lets us compare events using dateTimeRange intersections
+            # Subtracts and adds one second to the end and start times so no
+            # event can end at the same time another starts.  This lets us
+            # compare events using dateTimeRange intersections.
             try:
                 start = _getTime(event, 'start', one_second)
-                end = _getTime(event, 'end', -one_second)
+                end   = _getTime(event, 'end', -one_second)
                 event['dtr'] = DateTimeRange(start, end)
             except Exception as e:
-                log.error(f"Some kind of error trying to make datetimeranges: {e}")
-                log.error(f"Calendar of the problem: {calendar['name']}")
-                log.error(f"The event in question is: {event}")
+                log.critical(f"Some kind of error trying to make DateTimeRanges: {e}")
+                log.critical(f"Calendar of the problem: {calendar['name']}")
+                log.critical(f"The event in question is: {event}")
                 exit(1)
 
     log.debug(f"Len of events to check: {len(events_to_check)}")
@@ -333,9 +368,13 @@ def process_events(service, calendar, log):
 
     log.info(f"Downloading events from {calendar['name']} (ID: {calendar['id']})")
 
-    # we check events from the past 31 days and on to clean up any past events from last month
-    # this is just a precaution in case someone needs to review the calendar from the past month
-    # we don't check further back to prevent having to check too many events
+    # We check events from the past 31 days through the next 18 months to clean
+    # up any past events from last month. This is just a precaution in case
+    # someone needs to review the calendar from the past month.  We don't check
+    # _all_ events to prevent having to check too many events (we did some
+    # testing; checking from 31 days ago to 18 months ahead makes for "short"
+    # processing/download times in the Google query API.  Checking for *all*
+    # events is prohibitively long).
     start = datetime.datetime.utcnow() - datetime.timedelta(days=31)
     startString = start.isoformat() + 'Z' # 'Z' indicates UTC time
     end = datetime.datetime.utcnow() + datetime.timedelta(days=547) # 547 days is 18 months
@@ -367,7 +406,7 @@ def process_events(service, calendar, log):
 
     events_to_decline = []
     acceptable_events = []
-    all_other_events = []
+    all_other_events  = []
 
     for event in events:
         found = False
@@ -403,7 +442,8 @@ def main():
 
     log = ECC.setup_logging(info=args.verbose,
                             debug=args.debug,
-                            logfile=args.logfile)
+                            logfile=args.logfile, rotate=True,
+                            slack_token_filename=args.slack_token_filename)
 
     # Note: these logins have been configured on the Google cloud
     # console to only allow logins with @epiphanycatholicchurch.org
@@ -423,17 +463,9 @@ def main():
                                               user_json=args.user_credentials)
     calendar_service = services['calendar']
 
+    global calendars
     if args.debug:
-        calendars.append({
-            "name" : "Test calendar #1",
-            "id": 'c_bj96menjelb4pecracnninf45k@group.calendar.google.com',
-            "check_conflicts" : True,
-        })
-        calendars.append({
-            "name" : "Test calendar #2",
-            "id" : 'c_ncm1ib261lp6c02i46mors4isc@group.calendar.google.com',
-            "check_conflicts" : True,
-        })
+        calendars = calendars_debug
 
     # iterates through the list of calendars to check for upcoming events and respond to them
     for calendar in calendars:
