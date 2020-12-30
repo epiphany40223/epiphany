@@ -17,13 +17,14 @@ cd $prog_dir
 # Run once a day (i.e., the first run after midnight)
 t=`date '+%H%M'`
 if test $t -le 14; then
+    file=ricoh-`date "+%Y-%m-%d-%H%M"`.csv
     # Download the CSV data from the Ricoh
     ./download-user-counter.py \
         --verbose \
         --ip 10.10.0.4 \
         --password-filename $ricoh_password \
         --slack-token-filename $slack_token \
-        --csv output.csv \
+        --csv $file \
         |& tee ricoh.out
 
     # ... add the CSV data to the Ricoh SQLite database ...
