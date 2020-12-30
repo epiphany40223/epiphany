@@ -68,7 +68,8 @@ def main():
 
     # Only run if we can get the logfile
     with LockFile(lockfile, log) as lockfile_obj:
-        for subdir in ['ricoh', 'export-pds-into-sqlite', 'pds-sqlite3-queries']:
+        for subdir in ['ricoh', 'export-pds-into-sqlite', 'pds-sqlite3-queries',
+                       'calendar-reservations']:
             os.chdir(os.path.join(git_top, 'media', 'linux', subdir))
             subprocess.run(["./run.sh"], env=os.environ, check=True)
 
