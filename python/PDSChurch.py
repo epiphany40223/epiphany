@@ -853,6 +853,65 @@ def _make_emails_lower_case(emails):
 
 #-----------------------------------------------------------------------------
 
+# Gmail ignores "." on the left-hand side of the "@" in the email address.
+# For example, Gmail resolves the following email addresses as the same
+# account:
+#
+# - foobar@gmail.com
+# - foo.bar@gmail.com
+# - f.o.o.b.a.r@gmail.com
+#
+# This means we can send any of the three to Google and it will silently
+# get changed to foobar@gmail.com on the back end.
+#
+# However, if we query for Group members, Google will reply with
+# "foobar@gmail.com".  If we have "foo.bar@gmail.com" in PDS, we'll think
+# that those two addresses are different.
+#
+# Similarly, Google ignores anything after "+"; these addresses all resolve
+# back to the same Google account:
+#
+# - foobar@gmail.com
+# - foobar+hello@gmail.com
+# - foobar+world@gmail.com
+#
+# So instead, just go through all the emails we just loaded from PDS, and if
+# it's a Gmail mail domain, remove all "." and all "+BLAH" suffixes from the
+# left-hand side of the "@" in the email address.  We're not doing MX lookups to
+# know which domains are Google mail or not -- we're just using a hard-coded
+# list of known common Google mail domains.  If we need to add more over time,
+# we can.
+def _normalize_gmails(emails):
+
+    # Hard-coded list of Google email domains that we care about
+    # Feel free to expand this over time (it's not worth doing a zillion
+    # DNS MX lookups every time this script runs).
+    gmail_domains = ['gmail.com', 'epiphanycatholicchurch.org', 'stalbert.org']
+
+    key = 'EMailAddress'
+    for item in emails.values():
+        # Skip invalid email addresses
+        if '@' not in item[key]:
+            continue
+
+        parts = item[key].split('@')
+        if parts[1] not in gmail_domains:
+            continue
+
+        # Strip out '+' suffixes
+        if '+' in parts[0]:
+            plus_parts = parts[0].split('+')
+            parts[0]   = plus_parts[0]
+
+        # Strip out periods
+        if '.' in parts[0]:
+            parts[0] = parts[0].replace(".", "")
+
+        # Re-create the email address
+        item[key] = f"{parts[0]}@{parts[1]}"
+
+#-----------------------------------------------------------------------------
+
 # Load PDS Families and Members.  Return them as 2 giant hashes,
 # appropriately cross-linked to each other.
 def load_families_and_members(filename=None, pds=None,
@@ -981,6 +1040,7 @@ def load_families_and_members(filename=None, pds=None,
     mdtid        = _find_member_marriage_date_type(date_types)
 
     _make_emails_lower_case(emails)
+    _normalize_gmails(emails)
 
     families = _load_families(pds=pds,
                               active_only=active_only,
