@@ -428,12 +428,78 @@ def get_synchronizations():
 ####################################################################
 
 def compute_sync(sync, pds_members, group_members, log=None):
+    def _normalized(email):
+        # We could do a DNS MX lookup to see if a given domain is a Google
+        # mail domain.  However, that does not seem worth it (and would
+        # likely generate a bazillion spurious DNS MX lookups, because we
+        # invoke this comparison a *LOT*).  So just use a hard-coded list of
+        # common-enough Google mail domains.
+        google_mail_domains = ['gmail.com', 'epiphanycatholicchurch.org', 'stalbert.org']
+
+        parts = email.split('@')
+        if parts[1] not in google_mail_domains:
+            return email
+
+        if '+' in parts[0]:
+            plus_parts = parts[0].split('+')
+            parts[0] = plus_parts[0]
+
+        if '.' in parts[0]:
+            parts[0] = parts[0].replace('.', '')
+
+        return f"{parts[0]}@{parts[1]}"
+
+    #--------------------------------------------------------------------
+
+    # Google is a bit whacky with email addresses.  It does the following
+    # two things when processing email addresses:
+    #
+    # - If there's a "." on the left hand side of the email address, ignore it
+    # - If there's a "+BLAH" suffix on the left hand side, ignore it
+    #
+    # Meaning that all of the following email addresses resolve to the
+    # same Google account:
+    #
+    # - foobar@gmail.com
+    # - foo.bar@gmail.com
+    # - f.o.o.b.a.r@gmail.com
+    # - foobar+hello@gmail.com
+    # - foo.bar+whazzup@gmail.com
+    #
+    # Meaning we can send any of the above email addresses to Google
+    # and Google will resolve it all down to the same Google account.
+    #
+    # HOWEVER: When we ask for the membership of a Google Group, Google
+    # may return any form of the email address (e.g., it may contain a "."
+    # or a "+BLAH" suffix on the LHS).  It's not clear to me what the
+    # rules are here -- perhaps the Google user sets a preference
+    # somewhere for how they want Google to display their email address...?
+    #
+    # Meaning: we can't just normailze the above email addresses (in PDS) to
+    # foobar@gmail.com and assume that Gmail will always return
+    # foobar@gmail.com to us as a member of a Google Group.  Instead, if
+    # we see a Google mail domain, we might need to normalize the email
+    # addresses and *then* compares to see if any given PDS email address
+    # is a member of a Google Group.
+    def _compare_email(a, b):
+        if a == b:
+            return True
+
+        # If one or the other email address is invalid, they're not equal
+        if '@' not in a or '@' not in b:
+            return False
+
+        # Check to see if the normalized forms are equal
+        return _normalized(a) == _normalized(b)
+
+    #--------------------------------------------------------------------
+
     actions = list()
 
     for pm in pds_members:
         found_in_google_group = False
         for gm in group_members:
-            if pm['email'] == gm['email']:
+            if _compare_email(pm['email'], gm['email']):
                 found_in_google_group = True
                 gm['sync_found'] = True
 
