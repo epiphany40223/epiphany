@@ -53,6 +53,16 @@ ministries = [
         "gsheet_id" : '1h_ZvhkYlnebIu0Tk7h1ldJo-VKnJsJGe1jEzY34mcd0',
         "birthday"  : False,
     },
+    {
+        "ministry"  : '107-Social Resp Steering Comm',
+        "gsheet_id" : '1Am3v0Pv4D9zubkGYgFbUd8e92PZnBPrbcwKrMrs8AnI',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '110-Ten Percent Committee',
+        "gsheet_id" : '18BIrnBWf_4LS9XeC9tordSD1SBgJz67a0I9Ouj6ZcEc',
+        "birthday"  : False,
+    },
 
     {
         "ministry"  : '207-Technology Committee',
@@ -80,14 +90,32 @@ ministries = [
         "gsheet_id" : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
         "birthday"  : False,
     },
+
     {
         "ministry"  : '451-Livestream Team Ministry',
         "gsheet_id" : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
         "birthday"  : False,
     },
+
     {
         "ministry"  : '600-Men of Epiphany',
         "gsheet_id" : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
+        "birthday"  : False,
+    },
+
+    {
+        "ministry"  : '700-Advocates for Common Good',
+        "gsheet_id" : '1Iz8hz7NAhh9-dVMiC7mL8yYFi_qmM_ayB5IXhJU0uPw',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '710-Environmental Concerns',
+        "gsheet_id" : '1jsoRxugVwXi_T2IDq9J-mEVdzS8xaOk9kuXGAef-YaQ',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '711-Hispanic Ministry Team',
+        "gsheet_id" : '1zUJLVRkzS79uVQYgMkA9YaUfSFrY4Wax0ys5jSfpkEg',
         "birthday"  : False,
     },
 ]
