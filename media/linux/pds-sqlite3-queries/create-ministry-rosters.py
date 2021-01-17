@@ -54,6 +54,11 @@ ministries = [
         "birthday"  : False,
     },
     {
+        "ministry"  : '106-Community Life Committee',
+        "gsheet_id" : '1k_hH1tEWBGuERCmFvhZxKOfAsBkqy0uZ16LAd0_jMDg',
+        "birthday"  : False,
+    },
+    {
         "ministry"  : '107-Social Resp Steering Comm',
         "gsheet_id" : '1Am3v0Pv4D9zubkGYgFbUd8e92PZnBPrbcwKrMrs8AnI',
         "birthday"  : False,
