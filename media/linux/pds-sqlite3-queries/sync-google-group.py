@@ -119,6 +119,11 @@ def get_synchronizations():
             'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
+            'ministries' : [ '106-Community Life Committee' ],
+            'ggroup'     : f'community-life{ecc}',
+            'notify'     : f'lisag{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '203-Garden & Grounds' ],
             'ggroup'     : f'garden-and-grounds{ecc}',
             'notify'     : f'mary{ecc},emswine2@gmail.com,pds-google-sync{ecc}',
