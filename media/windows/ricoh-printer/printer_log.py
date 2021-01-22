@@ -110,9 +110,7 @@ def compare_timestamps(log, new_data, old_data):
             'name'   : row['name'],
         }
         for col in row.keys():
-            if row[col] == 0 and row_old[col] == 0:
-                continue
-            elif type(row[col]) == str and type(row_old[col]) == str:
+            if type(row[col]) == str and type(row_old[col]) == str:
                 continue
             delta[col] = row[col] - row_old[col]
         updated_printlog.append(delta)
