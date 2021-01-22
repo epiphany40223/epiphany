@@ -24,7 +24,7 @@ try:
     sys.path.insert(0, moddir)
     import ECC
 except Exception as e:
-    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
+    sys.stderr.write("ERROR: Could not find common ECC Python module directory\n")
     sys.stderr.write(f"{e}\n")
     exit(1)
 
@@ -101,7 +101,7 @@ def load_csv(log, filename):
         for row in csvreader:
             csv_rows.append(row)
 
-    log.debug(f"== Loaded {len(csv_rows)} rows from CSV")
+    log.debug(f"Loaded {len(csv_rows)} rows from CSV")
     return csv_rows
 
 
@@ -134,7 +134,7 @@ def extract_csv_data(log, csv_rows):
         this_row = _extract_row(row)
         output.append(this_row)
 
-    log.debug(f"== Extracted {len(output)} rows from CSV")
+    log.debug(f"Extracted {len(output)} rows from CSV")
     return output
 
 
@@ -214,7 +214,7 @@ def setup_cli_args():
                         help='Optional output logfile')
 
     parser.add_argument('--slack-token-filename',
-                        required=True,
+                        required=False, #TODO: change back to True after debugging
                         help='File containing the Slack bot authorization token')
 
     parser.add_argument('--verbose',

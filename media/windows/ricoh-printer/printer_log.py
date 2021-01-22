@@ -34,14 +34,13 @@ except Exception as e:
 
 def setup_cli_args():
     parser = argparse.ArgumentParser(description='Import Ricoh data into an SQLite3 database.')
-    # TODO: use this to let the user choose the path to the output csv?
-    #parser.add_argument('--csv',
-    #                    required=True,
-    #                    help='Path to CSV file containing Ricoh values to import to the database')
+    parser.add_argument('--csv',
+                        default='.\printlog.csv',
+                        help='Path to CSV file to write the data to')
     parser.add_argument('--db',
                         required=True,
                         help='Path to sqlite database to import values from')
-    parser.add_argument('--timestamp1', # TODO: is this a valid way to get the timestamps and is there a better way to name them
+    parser.add_argument('--timestamp1',
                         required=True,
                         help='First timestamp GMT "yyyy-mm-dd hh:mm:ss" to compare')
     parser.add_argument('--timestamp2',
@@ -53,7 +52,7 @@ def setup_cli_args():
                         help='Optional output logfile')
 
     parser.add_argument('--slack-token-filename',
-                        required=True,
+                        required=False, #TODO: switch back to True after debugging
                         help='File containing the Slack bot authorization token')
 
     parser.add_argument('--verbose',
@@ -73,36 +72,24 @@ def setup_cli_args():
 def fetch_timestamp_data(log, conn, timestamp):
     c = conn.cursor()
 
-    timestamp_rows = list()
+    c.execute('SELECT * FROM printlog WHERE timestamp=?', [timestamp])
+    rows = c.fetchall()
 
-    c.execute('SELECT * FROM printlog WHERE timestamp=?', timestamp)
-    timestamp_rows.append(c.fetchall()) # fetchall should return a list of rows matching the select statement
+    log.debug(f"Found {len(rows)} rows with timestamp {timestamp}")
 
-    log.debug(f"Found {len(timestamp_rows)} rows with timestamp {timestamp}")
-
-    return timestamp_row
+    return rows
 
 
 # returns a dictionary of staffers with their data
 def extract_data_to_compare(log, rows, timestamp):
 
-    def _extract_staffer(row):
-        # TODO : determine whether the list returned by fetch_timestamp_data can be accessed like this
-        return {
-            'num'           : row['User'],
-            'name'          : row['Name'],
-            'total'         : int(row['Total Prints'],
-            'b&wtotal'      : int(row['B & W(Total Prints)']),
-            'colortotal'    : int(row['Color(Total Prints)']),
-        }
-
     staffers = dict()
 
     # iterates through the list of rows, retrieves data about each staffer
     for row in rows:
-        num = row['User']
-        this_staffer = _extract_staffer(row)
-        staffers[num] = this_staffer
+        num = row['department']
+        staffers[num] = row
+        log.debug(row.keys())
 
     log.debug(f"Extracted {len(staffers)} staffers with timestamp {timestamp}")
     return staffers
@@ -114,45 +101,47 @@ def compare_timestamps(log, new_data, old_data):
     updated_printlog = list()
 
     for num, row in new_data.items():
-        if num in old_data:
-            row_old = old_data[num]
-            print_delta = row['total'] - row_old['total']
-            print_black_delta = row['b&wtotal'] - row_old['b&wtotal']
-            print_color_delta = row['colortotal'] - row_old['colortotal']
-            updated_printlog.append({
-                'User'                  : row['num'],
-                'Name'                  : row['name'],
-                'Total Prints'          : row['total'],
-                'Prints Today'          : print_delta,
-                'B & W Prints Total'    : row['b&wtotal'],
-                'B & W Prints Today'    : print_black_delta,
-                'Color Prints Total'    : row['colortotal'],
-                'Color Prints Today'    : print_color_delta,
-            })
+        if num not in old_data:
+            continue
+
+        row_old = old_data[num]
+        delta = {
+            'department'   : row['department'],
+            'name'   : row['name'],
+        }
+        for col in row.keys():
+            if row[col] == 0 and row_old[col] == 0:
+                continue
+            elif type(row[col]) == str and type(row_old[col]) == str:
+                continue
+            delta[col] = row[col] - row_old[col]
+        updated_printlog.append(delta)
 
     log.info(f'Compared {len(new_data)} staffers')
     return updated_printlog
 
 
 # writes the new deltas to a csv titles printlog.csv
-def write_printlogs(log, printlog):
-    fieldnames = ['User', 'Name', 'Total Prints', 'Prints Today', 'B & W Prints Total', 'B & W Prints Today', 'Color Prints Total', 'Color Prints Today']
-    filename = 'printlog.csv' #TODO: is this what we should name it?
+def write_to_csv(log, printlog, rows, filename):
+    fieldnames = rows[0].keys()
 
     with open(filename, "w+", encoding="utf-8", newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
 
-        #Write each staffer by User Number
+        # Write each staffer by User Number
         for staffer in printlog:
             writer.writerow(staffer)
 
     log.info(f"Wrote {filename} with {len(printlog)} data rows")
 
+
 def open_db(log, filename):
     # If the database exists, just open and return it
     if os.path.exists(filename):
-        return sqlite3.connect(filename)
+        conn = sqlite3.connect(filename)
+        conn.row_factory = sqlite3.Row
+        return conn
 
     # Otherwise, create the database and its schema.
     # Specifically mention the non-integer fields that are not in the
@@ -163,6 +152,7 @@ def open_db(log, filename):
     # - department: the Ricoh department ID
     # - name: the Ricoh username
     conn = sqlite3.connect(filename)
+    conn.row_factory = sqlite3.Row
     c    = conn.cursor()
     sql  = 'CREATE TABLE IF NOT EXISTS printlog ('
     for sql_fieldname in fields:
@@ -181,6 +171,7 @@ def open_db(log, filename):
 
     return conn
 
+
 def main():
     args = setup_cli_args()
     log  = ECC.setup_logging(info=args.verbose,
@@ -190,7 +181,7 @@ def main():
 
     conn = open_db(log, args.db)
 
-    prev_data_rows = fetch_timestamp_data(log, conn, args.timestamp1) #TODO: name these variables better
+    prev_data_rows = fetch_timestamp_data(log, conn, args.timestamp1)
     new_data_rows = fetch_timestamp_data(log, conn, args.timestamp2)
 
     prev_staffers = extract_data_to_compare(log, prev_data_rows, args.timestamp1)
@@ -198,7 +189,7 @@ def main():
 
     printlog = compare_timestamps(log, new_staffers, prev_staffers)
 
-    write_printlogs(log, printlog)
+    write_to_csv(log, printlog, prev_data_rows, args.csv)
 
     conn.close()
 
