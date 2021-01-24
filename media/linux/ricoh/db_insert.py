@@ -228,6 +228,11 @@ def setup_cli_args():
 
     args = parser.parse_args()
 
+    # Sanity check
+    if not os.path.exists(args.csv):
+        print(f"ERROR: File does not exist: {args.csv}")
+        exit(1)
+
     return args
 
 
