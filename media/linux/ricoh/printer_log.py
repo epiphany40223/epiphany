@@ -5,6 +5,7 @@
 
 import re
 import os
+import pytz
 import sqlite3
 import argparse
 import datetime
@@ -45,10 +46,10 @@ def setup_cli_args():
                         help='SQLite3 database from which to read values')
     parser.add_argument('--first',
                         required=True,
-                        help='First timestamp "yyyy-mm-dd[ hh:mm:ss]" to compare')
+                        help='First local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
     parser.add_argument('--last',
                         required=True,
-                        help='Last timestamp "yyyy-mm-dd[ hh:mm:ss]" to compare')
+                        help='Last local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
 
     parser.add_argument('--logfile',
                         default=None,
@@ -74,20 +75,30 @@ def setup_cli_args():
         print(f"ERROR: SQLite3 database does not exist {args.db}")
         exit(1)
 
-    def _check_timestamp(timestamp):
+    # Convert the string timestamp to a Python datetime in GMT
+    def _convert_timestamp(timestamp):
         # The timestamp must be of one of the following forms:
         # yyyy-mm-dd
         # yyyy-mm-dd hh:mm:ss
-        if (re.match('\d\d\d\d-\d\d-\d\d$', timestamp) or
-            re.match('\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$', timestamp)):
-            return
+        if re.match('\d\d\d\d-\d\d-\d\d$', timestamp):
+            ts = datetime.datetime.strptime(timestamp,
+                                            "%Y-%m-%d")
 
-        print(f"ERROR: Timestamp is not in expected format: {timestamp}")
-        exit(1)
+        elif re.match('\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$', timestamp):
+            ts = datetime.datetime.strptime(timestamp,
+                                            "%Y-%m-%d %H:%M:%S")
+
+        else:
+            print(f"ERROR: Timestamp is not in expected format: {timestamp}")
+            exit(1)
+
+        # Convert to GMT
+        return ts.astimezone(gmt)
 
     # Normalize the two timestamps
-    _check_timestamp(args.first)
-    _check_timestamp(args.last)
+    gmt        = pytz.timezone("GMT")
+    args.first = _convert_timestamp(args.first)
+    args.last  = _convert_timestamp(args.last)
 
     return args
 
@@ -97,20 +108,20 @@ def setup_cli_args():
 # timestamp. Remember that the timestamp parameter is in local time, but
 # timestamps in the database are in GMT.
 def find_timestamp(log, conn, timestamp):
-    c = conn.cursor()
+    c    = conn.cursor()
     c.execute(f'SELECT timestamp FROM printlog WHERE datetime(timestamp)>=datetime(?) GROUP BY timestamp ORDER BY datetime(timestamp) LIMIT 1', [timestamp])
     rows = c.fetchall()
 
     if len(rows) < 1:
         return None
-    return rows[0]['timestamp']
+    return datetime.datetime.fromisoformat(rows[0]['timestamp'])
 
 ###########################################################
 
 def fetch_depts_at_timestamp(log, conn, timestamp):
-    c = conn.cursor()
+    c     = conn.cursor()
     c.execute('SELECT department FROM printlog WHERE timestamp=?', [timestamp])
-    rows = c.fetchall()
+    rows  = c.fetchall()
     depts = { row['department'] : timestamp for row in rows }
 
     log.debug(f"Found {len(depts)} departments at timestamp {timestamp}: {depts}")
@@ -151,22 +162,22 @@ def fetch_missing_timestamps(log, conn, timestamp_first, timestamp_last, depts):
         label = None
         if 'first' not in dept:
             # Find first timestamp with this department
-            desc = ''
+            desc      = ''
             timestamp = timestamp_first
-            label = 'first'
+            label     = 'first'
 
         elif 'last' not in dept:
             # Find last timestamp with this department
-            desc = 'DESC'
+            desc      = 'DESC'
             timestamp = timestamp_last
-            label = 'last'
+            label     = 'last'
 
         if label is not None:
-            sql    = f'SELECT timestamp FROM printlog WHERE department=? AND datetime(timestamp)>=datetime(?) GROUP BY timestamp ORDER BY datetime(timestamp) {desc} LIMIT 1'
-            values = [ dept['id'], timestamp ]
+            sql         = f'SELECT timestamp FROM printlog WHERE department=? AND datetime(timestamp)>=datetime(?) GROUP BY timestamp ORDER BY datetime(timestamp) {desc} LIMIT 1'
+            values      = [ dept['id'], timestamp ]
             c.execute(sql, values)
-            rows = c.fetchall()
-            dept[label] = rows[0]['timestamp']
+            rows        = c.fetchall()
+            dept[label] = datetime.datetime.fromisoformat(rows[0]['timestamp'])
 
     log.debug(f"Depts with all timestamps filled in: {depts}")
 
@@ -227,7 +238,9 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
     # Reserve some blank rows for the titles
     titles = [
         'Ricoh printer counts by department',
-        f'{timestamp_first} through {timestamp_last}',
+        # "None" renders the timestamp in the local timezone, and
+        # ctime() puts it in a pleasing human-readable format.
+        f'{timestamp_first.astimezone(None).ctime()} through {timestamp_last.astimezone(None).ctime()}',
     ]
     for i in range(len(titles) + 1):
         ws.append([])
@@ -243,8 +256,15 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
 
     # Now add a row for each set of delta data
     for dept_id in sorted(depts.keys()):
-        item = depts[dept_id]
-        data = [ dept_id, item['first_data']['name'], item['first'], item['last'] ]
+        item  = depts[dept_id]
+        # "None" renders these Python datetimes in the local timezone
+        first = item['first'].astimezone(None)
+        last  = item['last'].astimezone(None)
+
+        # Make sure to render the times the way that we want (e.g., ctime()),
+        # otherwise OpenPyXL will render them as GMT.
+        data  = [ dept_id, item['first_data']['name'],
+                  first.ctime(), last.ctime() ]
         for field in fields:
             if field in item['deltas'] and type(item['deltas'][field]) != str:
                 data.append(item['deltas'][field])

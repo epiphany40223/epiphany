@@ -5,6 +5,7 @@
 
 import os
 import csv
+import pytz
 import sqlite3
 import argparse
 import datetime
@@ -171,8 +172,11 @@ def open_db(log, filename):
     return conn
 
 
-def write_to_db(log, timestamp, csv, conn):
+def write_to_db(log, local_timestamp, csv, conn):
     c = conn.cursor()
+
+    gmt = pytz.timezone("GMT")
+    gmt_timestamp = local_timestamp.astimezone(gmt)
 
     # Use the first extracted CSV row to make the template SQL
     # (because all the CSV rows will contain the same fields)
@@ -187,14 +191,14 @@ def write_to_db(log, timestamp, csv, conn):
     # Insert each CSV row's value into the database
     for row in csv:
         values = [ row[x] for x in sorted_fields ]
-        values.append(timestamp)
+        values.append(gmt_timestamp)
         values_tuple = tuple(values)
         log.debug(f"SQL insert values tuple: {values_tuple}")
         c.execute(sql, values_tuple)
 
     # Commit those inserts to the database
     conn.commit()
-    log.info(f"Inserted {len(csv)} rows into the database")
+    log.info(f"Inserted {len(csv)} rows into the database at local timestamp {local_timestamp} (GMT: {gmt_timestamp})")
 
 
 def setup_cli_args():
@@ -206,15 +210,15 @@ def setup_cli_args():
                         required=True,
                         help='Path to write output sqlite3 database')
     parser.add_argument('--timestamp',
-                        default=datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-                        help='Use this GMT "yyyy-mm-dd hh:mm:ss" timestamp when inserting into the database')
+                        default=datetime.datetime.now(),
+                        help='Use this "yyyy-mm-dd hh:mm:ss" local timestamp when inserting into the database')
 
     parser.add_argument('--logfile',
                         default=None,
                         help='Optional output logfile')
 
     parser.add_argument('--slack-token-filename',
-                        required=False, #TODO: change back to True after debugging
+                        default=None,
                         help='File containing the Slack bot authorization token')
 
     parser.add_argument('--verbose',
@@ -232,6 +236,11 @@ def setup_cli_args():
     if not os.path.exists(args.csv):
         print(f"ERROR: File does not exist: {args.csv}")
         exit(1)
+
+    # Convert the CLI argument timestamp to a Python datetime
+    if type(args.timestamp) == str:
+        args.timestamp = datetime.datetime.strptime(args.timestamp,
+                                                    "%Y-%m-%d %H:%M:%S")
 
     return args
 
