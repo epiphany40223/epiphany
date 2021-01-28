@@ -107,6 +107,11 @@ ministries = [
         "gsheet_id" : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
         "birthday"  : False,
     },
+    {
+        "ministry"  : '601-Sages (for 50 yrs. +)',
+        "gsheet_id" : '1-uvQO5RRf0K6NJlR_4Mijygn4XGk0zhvowdflKLoEUc',
+        "birthday"  : False,
+    },
 
     {
         "ministry"  : '700-Advocates for Common Good',
