@@ -124,6 +124,16 @@ def get_synchronizations():
             'notify'     : f'lisag{ecc},pds-google-sync{ecc}',
         },
         {
+            "ministries" : [ '107-Social Resp Steering Comm' ],
+            'ggroup'     : f'social-responsibility-steering-commitee{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
+            "ministries" : [ '110-Ten Percent Committee' ],
+            'ggroup'     : f'ten-percent-committee{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '203-Garden & Grounds' ],
             'ggroup'     : f'garden-and-grounds{ecc}',
             'notify'     : f'mary{ecc},emswine2@gmail.com,pds-google-sync{ecc}',
@@ -352,15 +362,9 @@ def get_synchronizations():
         #############################
 
         {
-            'ministries' : [ '110-Ten Percent Committee' ],
-            'ggroup'     : f'ten-percent-committee{ecc}',
-            'notify'     : f'polly{ecc},pds-google-sync{ecc}',
-        },
-
-        {
             'keywords'   : [ '10 Pct Emergency Assistance' ],
             'ggroup'     : f'10-percent-emergency-assistance{ecc}',
-            'notify'     : f'polly{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
 
         #############################
@@ -421,6 +425,22 @@ def get_synchronizations():
             'keywords'   : [ 'Maintenance staff email list' ],
             'ggroup'     : f'maintenance-staff{ecc}',
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+
+        {
+            "ministries" : [ '700-Advocates for Common Good' ],
+            'ggroup'     : f'advocates-for-the-common-good{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
+            "ministries" : [ '710-Environmental Concerns' ],
+            'ggroup'     : f'environmental-concerns{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
+            "ministries" : [ '711-Hispanic Ministry Team' ],
+            'ggroup'     : f'hispanic-ministry-team{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
     ]
 
