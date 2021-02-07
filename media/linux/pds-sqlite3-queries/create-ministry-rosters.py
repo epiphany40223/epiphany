@@ -132,23 +132,6 @@ ministries = [
 
 ####################################################################
 
-def find_members_in_ministry(pds_members, ministry_to_find, log):
-    out = list()
-
-    for m in pds_members.values():
-        key = 'active_ministries'
-        if key not in m:
-            continue
-
-        for ministry in m[key]:
-            if ministry['Description'] == ministry_to_find:
-                out.append(m)
-                break
-
-    return out
-
-#-------------------------------------------------------------------
-
 def write_xlsx(members, ministry, want_birthday, log):
     # Make the microseconds be 0, just for simplicity
     now = datetime.now()
@@ -332,10 +315,14 @@ def upload_overwrite(filename, google, file_id, log):
 def create_roster(pds_members, ministry, google, gsheet_id,
                   want_birthday, log):
     # Find the members
-    members = find_members_in_ministry(pds_members, ministry, log)
+    members = PDSChurch.filter_members_on_ministries(pds_members, [ministry])
     if members is None or len(members) == 0:
         log.info("No members in ministry: {min}".format(min=ministry))
         return
+
+    # PDSChurch.filter_members() returns a dict.  Turn this into a simple
+    # list of Members.
+    members = [ x for x in members.values() ]
 
     # Make an xlsx
     filename = write_xlsx(members=members, ministry=ministry,
