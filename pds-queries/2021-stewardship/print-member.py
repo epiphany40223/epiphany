@@ -42,6 +42,13 @@ def main():
     #pprint(members[bill_carlisle])
     #exit(0)
 
+    b = PDSChurch.filter_members_on_keywords(members, ['ECC Sheet Music access'])
+    a = PDSChurch.filter_members_on_ministries(members, ['207-Technology Committee'])
+    c = PDSChurch.union_of_member_dicts(a, b)
+    for member in c.values():
+        print(f"member: {member['Name']}")
+    exit(0)
+
     # JMS debug
     jeff_squyres = 119356
     pprint(members[jeff_squyres])

@@ -1059,3 +1059,81 @@ def find_any_email(member_or_family):
         return [ addr ]
     else:
         return [ ]
+
+##############################################################################
+
+def _filter_entity_on_keywords(entities, target_keywords):
+    out = dict()
+
+    # Make sure we always have a list
+    if type(target_keywords) == 'str':
+        target_keywords = [ target_keywords ]
+
+    for id, entity in entities.items():
+        key = 'keywords'
+        if key not in entity:
+            continue
+
+        for target_keyword in target_keywords:
+            if target_keyword in entity[key]:
+                out[id] = entity
+                break
+
+    return out
+
+def filter_members_on_keywords(members, target_keywords):
+    return _filter_entity_on_keywords(members, target_keywords)
+
+def filter_families_on_keywords(families, target_keywords):
+    return _filter_entity_on_keywords(families, target_keywords)
+
+#-----------------------------------------------------------------------------
+
+def filter_members_on_ministries(members, target_ministries):
+    out = dict()
+
+    # Make sure we always have a list
+    if type(target_ministries) == 'str':
+        target_ministries = [ target_ministries ]
+
+    for mid, member in members.items():
+        key = 'active_ministries'
+        if key not in member:
+            continue
+
+        for ministry in member[key]:
+            if ministry['Description'] in target_ministries:
+                out[mid] = member
+                break
+
+    return out
+
+#-----------------------------------------------------------------------------
+
+def filter_members_on_hohspouse(members):
+    out = dict()
+    target_values = ['Head of Household', 'Spouse']
+
+    for mid, member in members.items():
+        key = 'type'
+        if key not in member:
+            continue
+
+        if member[key] in target_values:
+            out[mid] = member
+
+    return out
+
+#-----------------------------------------------------------------------------
+
+# Important assumption: if the same key X exists in both member dictionaries,
+# it contains the same value.
+def union_of_member_dicts(members1, members2):
+    # Deep copy the first one
+    out = { x : y for x, y in members1.items() }
+
+    # Itemize copy the 2nd on
+    for x, y in members2.items():
+        out[x] = y
+
+    return out
