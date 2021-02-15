@@ -272,10 +272,8 @@ def _link_families_members(families, members):
 def _delete_non_parishioners(families, members):
     to_delete = list()
 
-    # Look for family ParKey >= 10,000
     for fid, f in families.items():
-        parkey = int(f['ParKey'])
-        if parkey >= 9000 or f['Visitor']:
+        if not is_parishioner(f):
             f = families[fid]
             for m in f['members']:
                 mid = m['MemRecNum']
@@ -1137,3 +1135,12 @@ def union_of_member_dicts(members1, members2):
         out[x] = y
 
     return out
+
+#-----------------------------------------------------------------------------
+
+def is_parishioner(family):
+    parkey = int(family['ParKey'])
+
+    # Look for family ParKey >= 9,000 or if they have the "Visitor"
+    # flag set
+    return False if parkey >= 9000 or family['Visitor'] else True
