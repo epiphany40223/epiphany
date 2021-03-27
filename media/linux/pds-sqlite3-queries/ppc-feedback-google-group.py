@@ -284,10 +284,6 @@ def setup_cli_args():
                                  default=guser_cred_file,
                                  help='Filename containing Google user credentials')
 
-    tools.argparser.add_argument('--dry-run',
-                                 action='store_true',
-                                 help='Do not actually update the Google Group; just show what would have been done')
-
     global verbose
     tools.argparser.add_argument('--verbose',
                                  action='store_true',
@@ -306,11 +302,7 @@ def setup_cli_args():
     global args
     args = tools.argparser.parse_args()
 
-    # --dry-run implies --verbose
-    if args.dry_run:
-        args.verbose = True
-
-    # --debug also implies --verbose
+    # --debug implies --verbose
     if args.debug:
         args.verbose = True
 
