@@ -231,11 +231,16 @@ def download_google_sheet(google, gfile, log):
     csvreader = csv.reader(fakefile)
     for row in csvreader:
         date_str  = row[0]
-        email_str = row[1]
+        email_str = row[1].strip()
 
         # Check to make sure that the date string is actually a date.
         # Skip it if it does not.
         if not date_str:
+            continue
+
+        # If there's a date but not corresponding email address, skip
+        # this entry.
+        if email_str == "":
             continue
 
         try:
