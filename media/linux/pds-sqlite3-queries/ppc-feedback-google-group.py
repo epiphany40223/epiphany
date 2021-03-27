@@ -231,11 +231,16 @@ def download_google_sheet(google, gfile, log):
     csvreader = csv.reader(fakefile)
     for row in csvreader:
         date_str  = row[0]
-        email_str = row[1]
+        email_str = row[1].strip()
 
         # Check to make sure that the date string is actually a date.
         # Skip it if it does not.
         if not date_str:
+            continue
+
+        # If there's a date but not corresponding email address, skip
+        # this entry.
+        if email_str == "":
             continue
 
         try:
@@ -279,10 +284,6 @@ def setup_cli_args():
                                  default=guser_cred_file,
                                  help='Filename containing Google user credentials')
 
-    tools.argparser.add_argument('--dry-run',
-                                 action='store_true',
-                                 help='Do not actually update the Google Group; just show what would have been done')
-
     global verbose
     tools.argparser.add_argument('--verbose',
                                  action='store_true',
@@ -301,11 +302,7 @@ def setup_cli_args():
     global args
     args = tools.argparser.parse_args()
 
-    # --dry-run implies --verbose
-    if args.dry_run:
-        args.verbose = True
-
-    # --debug also implies --verbose
+    # --debug implies --verbose
     if args.debug:
         args.verbose = True
 
