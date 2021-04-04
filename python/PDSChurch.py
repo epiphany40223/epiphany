@@ -557,15 +557,16 @@ def _link_member_id(members, member_source_field, member_dest_field,
 # Transform the list of all family fund history (i.e., individual
 # contributions) to be:
 #
-# families['funding'][fid][year][fund_id], a dictionary containing:
+# families[fid]['funds'][2 digit year][fund_id], a dictionary containing:
 #
 # * 'fund': PDS DB entry from FundSetup_DB
+# * 'fund_rate': ...JMS
 # * 'history': array of entries, one per contribution of the family that year
 # on that fund, each entry containing a dictionary of:
 #     * 'activity': name of fund from FuncAct (don't both copying over
 #        other data -- the fund name is really the only important thing)
-#     * 'fund_id': same as fund_id index in "funding"
-#     * 'year': same as year index in "fundung"
+#     * 'fund_id': same as fund_id index in "funds"
+#     * 'year': same 2-digit year as year index in "funds"
 #     * 'item': detailed dictionary of information about the contribution.
 #       'FEAmt', 'FEComment', 'FEDate' are probably the only relevant fields
 #       from this dictionary.
