@@ -11,6 +11,8 @@ import csv
 import copy
 import datetime
 
+pledge_minimum = 0
+
 ##############################################################################
 
 def find_family_funding(year, family):
@@ -127,7 +129,7 @@ def analyze(start, end, families, members, log):
             funding     = find_family_funding(year, family)
             census      = submitted_census(family, year)
             stewardship = submitted_stewardship(family, funding, year)
-            active      = (funding['total'] > 0 or funding['pledged'] > 0 or
+            active      = (funding['total'] > 0 or funding['pledged'] > pledge_minimum or
                             census or stewardship or has_year_keyword(family, year))
 
             results[year][fid] = {
@@ -206,7 +208,7 @@ def show_family_stats(results):
 
             f_census = family_data['census']
             f_stew   = family_data['stewardship']
-            f_pledge = funding['pledged'] > 0
+            f_pledge = funding['pledged'] > pledge_minimum
             f_gave   = funding['total'] > 0
 
             active       += int(family_data['active'])
@@ -284,10 +286,10 @@ def show_money_stats(families, results):
             pledge  = funding['pledged']
             gave    = funding['total']
 
-            pledge_total += pledge
+            pledge_total += pledge if pledge > pledge_minimum else 0
             give_total   += gave
 
-            if pledge > 0:
+            if pledge > pledge_minimum:
                 pledges.append(pledge)
 
                 tenp = pledge * 0.1
@@ -340,6 +342,7 @@ def show_money_stats(families, results):
 
         # Initially zeros for all buckets
         total_per_bucket = [ 0 for val in max_bins ]
+        count_per_bucket = [ 0 for val in max_bins ]
 
         for fid, family_data in year_data.items():
             total = family_data['funding']['total']
@@ -347,21 +350,32 @@ def show_money_stats(families, results):
             # The lowest bucket may be 2, but the total may be 0
             if total <= max_bins[0]:
                 total_per_bucket[0] += total
+                count_per_bucket[0] += 1
                 continue
 
             found = False
-            #print(f"== JMS total: {total}")
             for i in range(len(max_bins) - 1):
-                #print(f"   lower {max_bins[i]} - upper {max_bins[i+1]}")
                 if total > max_bins[i] and total <= max_bins[i+1]:
                     total_per_bucket[i] += total
+                    count_per_bucket[i] += 1
                     found = True
                     break
 
             assert(found == True)
 
+        # Can't do the single-line way because some count_per_bucket[i] values will be 0.
+        average_per_bucket = list()
+        for i in range(len(total_per_bucket)):
+            value = 0
+            if count_per_bucket[i] > 0:
+                # Round to an int, because we're talking dollars here --
+                # it's good enough to round.
+                value = int(total_per_bucket[i] / count_per_bucket[i])
+            average_per_bucket.append(value)
+
         all_totals_per_bucket[year] = total_per_bucket
-        print(f"Year: {year}: totals per bucket: {total_per_bucket}")
+        print(f"Year: {year}: totals per bucket:   {total_per_bucket}")
+        print(f"Year: {year}: averages per bucket: {average_per_bucket}")
 
     # Now that we have the set of bins with the largest max, histogram graph each year
     for year in sorted(all_pledges):
@@ -377,7 +391,7 @@ def show_money_stats(families, results):
                 ax.text(rect.get_x() + rect.get_width() / 2, height+0.01, f"{int(height)}",
                         ha='center', va='bottom')
 
-            print(f"Histogram heights: {data}")
+            print(f"{label} Histogram heights: {data}")
             plt.title(f"{label} for {year}")
 
             filename = f"{label}-for-{year}.png"
@@ -406,7 +420,7 @@ def main():
         data = find_family_funding(year, families[squyres])
         print(f"Squyres {year}: {data}")
 
-    results = analyze(start=2015, end=2020,
+    results = analyze(start=2015, end=2021,
         families=families, members=members, log=log)
 
     show_family_stats(results)
