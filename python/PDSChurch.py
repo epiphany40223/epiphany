@@ -123,21 +123,16 @@ def _compute_family_hoh_and_spouse_salutations(families, log):
         family     = families[fid]
 
         last_names = dict()
-        hoh        = list()
-        spouses    = list()
+        hoh, spouse, _ = filter_members_on_hohspouse(family['members'])
+        if hoh:
+            _add(last_names, hoh)
+        if spouse:
+            _add(last_names, spouse)
 
-        for member in family['members']:
-            last = member['last']
-
-            if 'Head' in member['type']:
-                hoh.append(member)
-                _add(last_names, member)
-            if 'Spouse' in member['type']:
-                spouses.append(member)
-                _add(last_names, member)
-
+        # Compute the first and last name salutation
         salutation = ''
-        for last_name in sorted(last_names.keys()):
+        sorted_names = sorted(last_names.keys())
+        for last_name in sorted_names:
             first_names = list()
             for member in last_names[last_name]:
                 if 'nickname' in member and member['nickname'] is not None:
@@ -146,13 +141,29 @@ def _compute_family_hoh_and_spouse_salutations(families, log):
                     first_names.append(member['first'])
                 else:
                     first_names.append("***UNKNOWN***")
-                    log.error("Unknown first name")
+                    log.warn(f"Unknown first name: {member['Name']}")
 
             if len(salutation) > 0:
                 salutation += ' and '
             salutation += f"{' and '.join(first_names)} {last_name}"
 
         family['hoh_and_spouse_salutation'] = salutation
+
+        # Compute the last-names-only salutation.  Examples:
+        # Smith
+        # Smith and Jones
+        # Smith, Jones, and Mitchell
+        key = 'last_name_salutation'
+
+        # It is possible that a Family has no names in it (!).  Just skip the family in this case.
+        if len(last_names) == 0:
+            continue
+        elif len(last_names) == 1:
+            family[key] = sorted_names[0]
+        elif len(last_names) == 2:
+            family[key] = ' and '.join(sorted_names)
+        else:
+            family[key] = ', '.join(sorted_names[:-1]) + f', and {sorted_names[-1]}'
 
 #-----------------------------------------------------------------------------
 
@@ -318,12 +329,20 @@ def _link_family_city_states(families, city_states):
         csid = f['StreetCityRec']
         if csid and csid in city_states:
             f['city_state'] = city_states[csid]['CityState']
+
+            # Heuristic: the state is the last token (should be a 2-letter
+            # abbreviation), and the city is every token before that.
+            parts      = f['city_state'].split(' ')
+            f['city']  = ' '.join(parts[:-1])
+            f['state'] = parts[-1]
         else:
             # Several places in our Python assume that there is a
             # value in the "city_state" entry.  So rather than go
             # check all of those places, just put an empty string
             # there if there actually is no value.
             f['city_state'] = ''
+            f['city'] = ''
+            f['state'] = ''
 
 #-----------------------------------------------------------------------------
 
@@ -1152,19 +1171,39 @@ def filter_members_on_ministries(members, target_ministries):
 
 #-----------------------------------------------------------------------------
 
-def filter_members_on_hohspouse(members):
+# Returns a Member for the hoh (or None), spouse (or None), and a dictionary of
+# the rest, indexed by MID.
+def filter_members_on_hohspouse(list_of_members):
     out = dict()
-    target_values = ['Head of Household', 'Spouse']
 
-    for mid, member in members.items():
+    hoh    = None
+    spouse = None
+    rest   = dict()
+
+    for member in list_of_members:
+        mid = member['MemRecNum']
         key = 'type'
         if key not in member:
-            continue
+            rest[mid] = member
+        elif member[key] == 'Head of Household':
+            hoh = member
+        elif member[key] == 'Spouse':
+            spouse = member
+        else:
+            rest[mid] = member
 
-        if member[key] in target_values:
-            out[mid] = member
+    return hoh, spouse, rest
 
-    return out
+def is_member_hoh_or_spouse(member):
+    key = 'type'
+    if key not in member:
+        return False
+
+    type = member[key]
+    if type in ['Head of Household', 'Spouse']:
+        return True
+
+    return False
 
 #-----------------------------------------------------------------------------
 
