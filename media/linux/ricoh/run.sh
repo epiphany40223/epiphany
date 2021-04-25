@@ -7,6 +7,7 @@ prog_dir=$base/ricoh
 logfile=$HOME/logfiles/linux/ricoh/logfile.txt
 slack_token=$HOME/credentials/slack-token.txt
 ricoh_password=$HOME/credentials/ricoh-password.txt
+sqlite3_file=$prog_dir/ricoh.sqlite3
 
 cd $prog_dir
 
@@ -18,6 +19,7 @@ cd $prog_dir
 t=`date '+%H%M'`
 if test $t -le 14; then
     file=ricoh-`date "+%Y-%m-%d-%H%M"`.csv
+    gmt_timestamp=`date -u "+%Y-%m-%d %H%M%S"`
     # Download the CSV data from the Ricoh
     ./download-user-counter.py \
         --verbose \
@@ -27,7 +29,14 @@ if test $t -le 14; then
         --csv $file \
         |& tee ricoh.out
 
-    # ... add the CSV data to the Ricoh SQLite database ...
+    # Insert the result into the sqlite3 database
+    ./db_insert.py \
+        --slack-token-filename $slack_token \
+        --logfile $logfile \
+        --db $sqlite3_file \
+        --verbose \
+        --csv $file \
+        --timestamp "$gmt_timestamp"
 fi
 
 exit 0
