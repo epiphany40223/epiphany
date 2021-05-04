@@ -392,6 +392,11 @@ def get_synchronizations():
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
         },
         {
+            'keywords'   : [ 'Office@ECC email list' ],
+            'ggroup'     : f'office-group{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+        {
             'keywords'   : [ 'Pastoral staff email list' ],
             'ggroup'     : f'pastoral-staff{ecc}',
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
