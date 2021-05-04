@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 
+import os
 import sys
-sys.path.insert(0, '../../python')
-sys.path.insert(0, '../python')
-
-import ECC
-import PDSChurch
-
 import csv
 import copy
 import datetime
+
+# Load the ECC python modules.  There will be a sym link off this directory.
+moddir = os.path.join(os.path.dirname(sys.argv[0]), 'ecc-python-modules')
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ecc-python-modules directory.")
+    print("ERROR: Please make a ecc-python-modules sym link and run again.")
+    exit(1)
+
+sys.path.insert(0, moddir)
+
+import ECC
+import PDSChurch
 
 pledge_minimum = 0
 
