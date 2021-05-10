@@ -15,7 +15,7 @@ import httplib2
 
 from pprint import pprint
 from pprint import pformat
-from apiclient.errors import HttpError
+from googleapiclient.errors import HttpError
 
 # Globals
 
