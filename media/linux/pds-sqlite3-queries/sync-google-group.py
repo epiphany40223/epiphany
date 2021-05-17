@@ -351,6 +351,11 @@ def get_synchronizations():
             'notify'     : f'pds-google-sync{ecc}',
         },
         {
+            'keywords'   : [ 'Renovations@ECC email list' ],
+            'ggroup'     : f'renovations{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
+        {
             'keywords'   : [ 'ECC Liturgy Plans editor' ],
             'ggroup'     : f'worship-liturgy-planning{ecc}',
             'notify'     : f'linda{ecc},pds-google-sync{ecc}',
