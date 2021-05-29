@@ -21,6 +21,10 @@ import ECC
 
 ###############################################################################
 
+out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                    capture_output=True)
+git_top = out.stdout.decode('utf-8').strip()
+
 # Globals
 logfile  = os.path.join(os.environ['HOME'], 'logfiles', 'lock-logfile.txt')
 lockfile = os.path.join(git_top, 'media', 'linux', 'pds-run-all.lock')
