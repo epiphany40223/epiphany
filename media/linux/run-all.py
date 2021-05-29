@@ -4,25 +4,20 @@ import subprocess
 import logging
 import logging.handlers
 import time
+import sys
 import os
 
-# Find the path to the ECC module (by finding the root of the git
-# tree).  This is robust, but it's a little clunky. :-\
-try:
-    import sys, subprocess
-    out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
-                         capture_output=True)
-    git_top = out.stdout.decode('utf-8').strip()
-    if not git_top:
-        raise Exception("Could not find git root.  Are you outside the git tree?")
-
-    moddir = os.path.join(git_top, 'python')
-    sys.path.insert(0, moddir)
-    import ECC
-except Exception as e:
-    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
-    sys.stderr.write(f"{e}\n")
+# We assume that there is a "ecc-python-modules" sym link in this
+# directory that points to the directory with ECC.py and friends.
+moddir = os.path.join(os.getcwd(), 'ecc-python-modules')
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ecc-python-modules directory.")
+    print("ERROR: Please make a ecc-python-modules sym link and run again.")
     exit(1)
+
+sys.path.insert(0, moddir)
+
+import ECC
 
 ###############################################################################
 
