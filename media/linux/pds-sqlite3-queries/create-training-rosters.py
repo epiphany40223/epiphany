@@ -3,12 +3,20 @@
 # Basic script to create a list of all PDS trainings of a given type.
 
 import sys
-sys.path.insert(0, '../../../python')
-
 import os
 
 import logging.handlers
 import logging
+
+# We assume that there is a "ecc-python-modules" sym link in this
+# directory that points to the directory with ECC.py and friends.
+moddir = os.path.join(os.getcwd(), 'ecc-python-modules')
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ecc-python-modules directory.")
+    print("ERROR: Please make a ecc-python-modules sym link and run again.")
+    exit(1)
+
+sys.path.insert(0, moddir)
 
 import ECC
 import Google
