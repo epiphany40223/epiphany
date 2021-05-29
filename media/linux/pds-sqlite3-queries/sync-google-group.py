@@ -314,11 +314,6 @@ def get_synchronizations():
             'ggroup'     : f'adult-formation-working-group{ecc}',
             'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
         },
-        {
-            'ministries' : [ '813-Visual Faith Group' ],
-            'ggroup'     : f'visual-faith{ecc}',
-            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
-        },
 
         #############################
 
