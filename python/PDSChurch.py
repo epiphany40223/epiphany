@@ -447,10 +447,17 @@ def _link_member_talents(members, talents, mem_talents, statuses):
     _link_member_mintal(members, 'talents', talents, 'TalDescRec',
                         mem_talents, statuses)
 
-def _link_member_mintal(members, desc, things, thing_index_field,
-                        mem_things, statuses):
+def _member_mintal_keys(desc):
     akey = f'active_{desc}'
     ikey = f'inactive_{desc}'
+
+    return akey, ikey
+
+def _link_member_mintal(members, desc, things, thing_index_field,
+                        mem_things, statuses):
+    akey, ikey = _member_mintal_keys(desc)
+
+    now = datetime.datetime.now().date()
 
     for member in members.values():
         member[akey] = list()
@@ -468,19 +475,26 @@ def _link_member_mintal(members, desc, things, thing_index_field,
         if status_id not in statuses:
             continue
         status = statuses[status_id]
-        mem_list_name = akey
-        if status['Active'] != 1:
-            mem_list_name = ikey
-
-        thing_id = mt[thing_index_field]
 
         # Deep copy the ministry record so that we can add some more
         # data in it about this specific member
-        thing = things[thing_id].copy()
+        thing_id        = mt[thing_index_field]
+        thing           = things[thing_id].copy()
         thing['active'] = status['Active']
         thing['status'] = status['Description']
         thing['start']  = _normalize_date(mt['StartDate'])
         thing['end']    = _normalize_date(mt['EndDate'])
+
+        # Put this new thing/entry on the "active" list if:
+        # - The status is "Active", AND
+        # - We are within the start/end date window
+        mem_list_name = akey
+        if (status['Active'] != 1 or
+            # Start date is in the future
+            (thing['start'] != date_never and now < thing['start']) or
+            # We have passed the end date
+            (thing['end'] != date_never and now > thing['end'])):
+            mem_list_name = ikey
 
         m[mem_list_name].append(thing)
 
