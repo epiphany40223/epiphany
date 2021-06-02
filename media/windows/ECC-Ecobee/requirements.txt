@@ -1,8 +1,6 @@
-pythonping
-dnspython
-certifi
-pytz
-urllib3
-pyecobee>=1.3.10
-requests>=2,<3
-dnspython
+pyecobee==1.3.11
+pytz==2020.4
+pythonping==1.0.8
+urllib3==1.24.3
+certifi==2019.6.16
+dnspython==2.1.0

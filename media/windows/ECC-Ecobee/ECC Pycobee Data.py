@@ -149,6 +149,20 @@
     Also corrected bug in processing of GMail credentials file and included some missing
     imports for the new mail routine for error-aborts.
             Modified by DK Fowler ... 06-Dec-2020       --- v03.11
+
+    Modified to include new fields returned from the Ecobee API for the thermostat runtime
+    object:  actual_voc, actual_co2, actual_aq_accuracy, and actual_aq_score.  In order to
+    support these new fields, updated the Pyecobee library to the latest edition, v1.3.11;
+    modified the standard library to support my previous customizations for the reminders
+    object which has not been incorporated into the standard library by sfanous.  Also, updated
+    the database thermRuntime table to include these new fields, using the following commands
+    in SQLite3:
+            'alter table thermRuntime add column actual_voc INTEGER;'
+            'alter table thermRuntime add column actual_co2 INTEGER;'
+            'alter table thermRuntime add column actual_aq_accuracy INTEGER;'
+            'alter table thermRuntime add column actual_aq_score INTEGER;'
+
+            Modified by DK Fowler ... 01-Jun-2021       --- v03.20
 """
 
 from datetime import datetime
@@ -176,8 +190,8 @@ from dns.exception import DNSException
 from pythonping import ping
 
 # Define version
-eccpycobee_version = "03.11"
-eccpycobee_date = "06-Dec-2020"
+eccpycobee_version = "03.20"
+eccpycobee_date = "01-Jun-2021"
 
 # Parse the command line arguments for the filename locations, if present
 parser = argparse.ArgumentParser(description='''Epiphany Catholic Church Ecobee Thermostat Polling Application.
@@ -287,7 +301,7 @@ thermostat_list_object_dict = {'action': 'Action', 'alerts': 'Alert', 'climates'
                                'hierarchy_set': 'HierarchySet', 'hierarchy_user': 'HierarchyUser',
                                'limit': 'LimitSetting', 'outputs': 'Output', 'page': 'Page',
                                'remote_sensors': 'RemoteSensor', 'capability': 'RemoteSensorCapability',
-                               #                               'reminders': 'ThermostatReminder2', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
+                               # 'reminders': 'ThermostatReminder2', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
                                'reminders': 'Reminder', 'runtime_sensor_metadata': 'RuntimeSensorMetadata',
                                'sensors': 'Sensor', 'state': 'State', 'status': 'Status', 'user': 'User',
                                'forecasts': 'WeatherForecast'}
