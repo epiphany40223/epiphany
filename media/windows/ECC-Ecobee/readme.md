@@ -14,6 +14,44 @@ If no runtime information is currently available in the database, the applicatio
 
 Following the polling of the runtime information, data is retrieved for the point-in-time or snapshot data.  One record is written for each data-type retrieved for each thermostat; so, the number of records written for each data-type is determined by the frequency by which the application is run.  That is, if it is run hourly, one record will be retrieved per thermostat, per data-type, for each hour.  Or, one per day, per thermostat, per data-type if run daily.
 
+
+
+#### Update 01-Jun-2021 (v03.20)
+
+The v03.20 version includes the following changes:
+
+1.  The Ecobee API was modified around 27-May-2021 to return additional fields for the thermostat runtime details.  These new fields are *actual_voc*, *actual_co2*, *actual_aq_accuracy*, and *actual_aq_score*.  In order to support these new fields, Sheriff Fanous updated the Pyecobee library and object definitions (to version v1.3.11).  The latest v03.20 release requires this new library version.
+
+   ##### Migration steps to v03.20
+
+   - Stop any existing scheduled tasks for previous releases (CRON / Task Scheduler).
+
+   - To support the new fields mentioned above, the thermRuntime SQLite3 database table must be modified to include these new fields in the record.  Open the database in SQLite3 and issue the following commands to add the new columns:
+
+     ```
+     alter table thermRuntime add column actual_voc INTEGER;
+     alter table thermRuntime add column actual_co2 INTEGER;
+     alter table thermRuntime add column actual_aq_accuracy INTEGER;
+     alter table thermRuntime add column actual_aq_score INTEGER;
+     ```
+
+   - To include the most current fixes to the Pyecobee Python library, the customized version provided in the zip archive needs to be installed to replace the current version.  To uninstall the prior Pyecobee Python library, use
+
+     ```
+     pip uninstall Pyecobee
+     ```
+
+   - Install the customized Pyecobee library from the .zip archive provided, using
+
+     ```
+     pip install ./Pyecobee-ECC.zip -v
+     ```
+
+     Restart the scheduled task.
+
+
+
+
 #### Update 08-Dec-2020 (v03.10 / v03.11)
 
 The v03.10 / v03.11 (and updates since v03.01) version includes the following changes:
@@ -120,7 +158,7 @@ The v03.01 version includes the following changes:
    If not specified, defaults will be provided for each.  Parsing of the command-line is handled with the Python module argparse, and includes brief help for each optional parameter.  In addition to the command-line parameters for file locations, **-h (or --help)** will display help, and **-v (or -ver, --version)** will display the current application version and date or release.
    
 3.  Default file names no longer contain embedded spaces for better cross-platform support.  Some of the file names used in prior versions of the
-application were renamed for consistency (e.g, .json extensions for JSON-formatted files).  **Before updating to the current release, ensure that either command-line parameters are used for invocation to ensure the existing files are correctly identified, or rename the existing files to match the default names:**
+   application were renamed for consistency (e.g, .json extensions for JSON-formatted files).  **Before updating to the current release, ensure that either command-line parameters are used for invocation to ensure the existing files are correctly identified, or rename the existing files to match the default names:**
    * ECCEcobee.log (log file)
    * ECCEcobee.db (SQLite3 DB)
    * ECCEcobee_tkn.json (JSON authorization token file)
@@ -130,7 +168,10 @@ application were renamed for consistency (e.g, .json extensions for JSON-formatt
 
 **Note:  Due to the change in the storage format for the authorization tokens, upon upgrading to this release the existing authorization token files should be deleted, then the application run with the proper *new* file path specifications.  This initial iteration will prompt for the application to be re-authorized and log the authorization PIN to the log file.  At that time, an administrator will need to log onto the Ecobee portal and re-add the application along with the authorization PIN.**
 
+
+
 #### Update 02-Jan-2020 (v02.09)
+
 The v02.09 version of the application polls and records most, if not all, of the useful information from the thermostats.  While v01.00 recorded historical runtime information and basic thermostat settings, this version adds support for virtually all of the instantaneous (or snapshot) data provided by the Ecobee service.  This includes polling, deserialization, and recording over 40 SQLite3 databases.  See information below regarding data structure for further details.
 
 This release also adds some additional error handling for common errors, such as timeouts on the Ecobee API calls.  (This would occasionally occur in the initial release due to the large amount of data requested during initial runs for the historical runtime information.  This is now detected and the application will automatically retry up to four times before failing with an appropriate message.)  Finally, some minor refactoring and code clean-up was done with this release.
@@ -141,7 +182,10 @@ This latest release also utilizes several other libraries not included in the in
    * socket - used to set socket connection timeout values to a value higher than the default
    * pythonping - used for pinging various sites to further validate Internet access in the event of repeated timeout errors
 
+
+
 ## Quick Start
+
 In order to perform the initial setup for running the application:
 1. Install the Pyecobee library from the included archive file:
    
