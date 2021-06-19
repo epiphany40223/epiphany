@@ -1,3 +1,12 @@
+# NOTE: This file is now obsolete.  We clear the "run all lockfile"
+# from the Windows scheduler because it can be triggered upon (Window)
+# system startup.
+#
+# Keeping this file just as an example if we ever move to a 100% Linux
+# system.
+#
+#------------------------------------------------------------------------
+#
 # This is a systemd startup service file that will ensure that the PDS
 # synchronizer lock file is removed upon reboot (e.g., if the machine
 # freezes or is rebooted in the middle of a PDS synchronizer run).
@@ -33,7 +42,7 @@ Conflicts=shutdown.target
 After=local-fs.target
 
 [Service]
-ExecStart=/usr/bin/rm -f /home/coeadmin/pds-run-all.lock
+ExecStart=/usr/bin/rm -f /home/coeadmin/git/epiphany/media/linux/pds-run-all.lock
 Type=oneshot
 
 [Install]
