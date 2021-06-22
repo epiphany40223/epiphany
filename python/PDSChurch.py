@@ -174,6 +174,7 @@ def _load_families(pds, columns=None,
     columns.append('EnvelopeUser')
     columns.append('Visitor')
     columns.append('SendNoMail')
+    columns.append('DateRegistered')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
