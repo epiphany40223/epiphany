@@ -136,6 +136,26 @@ ministries = [
         "gsheet_id" : '1zUJLVRkzS79uVQYgMkA9YaUfSFrY4Wax0ys5jSfpkEg',
         "birthday"  : False,
     },
+    {
+        "ministry"  : '803-Youth Ministry AdultMentor',
+        "gsheet_id" : '1jzg9jRNUrjb9CeMRC23d4pkr2CQOUQNaOgL-EMDXOW4',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '84-Youth Grp(Jr High)Adult Vol',
+        "gsheet_id" : '1b76OIhb9XDYg7llAHArg6lP9fCi9PrzJpcZcU8jjMBk',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '88-Youth Grp(Sr Hi) Adult Vol',
+        "gsheet_id" : '14K4MaYEzPgHvnkf-Z1yFJPB-9YJSP1Ytg9rcou6ohyo',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '91-Youth Council',
+        "gsheet_id" : '1zTGviZ6R3fus11maPl3GQZghCcvs1zC9oVSIV6uHXO4',
+        "birthday"  : False,
+    },
 ]
 
 ####################################################################
