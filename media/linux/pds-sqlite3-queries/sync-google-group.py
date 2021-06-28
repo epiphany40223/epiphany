@@ -225,6 +225,11 @@ def get_synchronizations():
         #############################
 
         {
+            'ministries' : [ '404-Welcome Desk' ],
+            'ggroup'     : f'welcome-desk{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '451-Livestream Team Ministry' ],
             'ggroup'     : f'livestream-team{ecc}',
             'notify'     : f'director-communications{ecc},director-worship{ecc},TomHayesMP@gmail.com,pds-google-sync{ecc}',
