@@ -329,11 +329,6 @@ def get_synchronizations():
         #############################
 
         {
-            'keywords'   : [ '10 Pct Emergency Assistance' ],
-            'ggroup'     : f'10-percent-emergency-assistance{ecc}',
-            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
-        },
-        {
             'keywords'   : [ 'Apply@ECC email list' ],
             'ggroup'     : f'apply{ecc}',
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
