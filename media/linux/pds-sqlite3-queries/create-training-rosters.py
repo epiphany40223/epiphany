@@ -41,7 +41,7 @@ gapp_id         = 'client_id.json'
 guser_cred_file = 'user-credentials.json'
 
 now = datetime.now()
-timestamp = (f'{now.year:04}-{now.month:02}-{now.day:02} {now.hour:02}:{now.minute:02}')
+timestamp = f'{now.year:04}-{now.month:02}-{now.day:02} {now.hour:02}:{now.minute:02}'
 
 trainings   = [
     {
@@ -89,23 +89,31 @@ def pds_find_training(pds_members, training_to_find, log):
             continue
 
         for req in member[key]:
-            if(req['description'] != training_to_find['pds_type']):
+            if req['description'] != training_to_find['pds_type']:
                 continue
             reqcount += 1
-            sd = req['start_date']
+
             mid = member['MemRecNum']
+            start_date = req['start_date']
+            if start_date == PDSChurch.date_never:
+                start_date = ''
             if mid not in out:
                 out[mid] = dict()
-            if sd not in out[mid]:
-                out[mid][sd] = list()
+            if start_date not in out[mid]:
+                out[mid][start_date] = list()
+
+            end_date = req['end_date']
+            if end_date == PDSChurch.date_never:
+                end_date = ''
+
             member = check_ministries(member)
-            out[mid][sd].append({
+            out[mid][start_date].append({
                 'mid'           :   mid,
-                'name'          :   member['first']+' '+member['last'],
+                'name'          :   f"{member['first']} {member['last']}",
                 'email'         :   PDSChurch.find_any_email(member)[0],
                 'phone'         :   PDSChurch.find_member_phone(member, 'Cell'),
-                'start_date'    :   sd,
-                'end_date'      :   req['end_date'],
+                'start_date'    :   start_date,
+                'end_date'      :   end_date,
                 'stage'         :   req['result'],
                 'involved'      :   member['involved'],
                 'weekend'       :   member['weekend'],
@@ -121,7 +129,7 @@ def pds_find_training(pds_members, training_to_find, log):
         return out
 
 def write_xlsx(title, trainingdata, log):
-    filename = (f'{title}')
+    filename = title
 
     wb = Workbook()
 
