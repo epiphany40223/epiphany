@@ -684,22 +684,14 @@ def _find_member_marriage_date_type(date_types):
 
 # A full Family name will be formatted:
 #
-#    Last,First(spouse last,spouse first,spouse title,spouse suffix),Title,Suffix
+#    Last,First(spouse last,spouse first,spouse prefix,spouse suffix),Prefix,Suffix
 #
 # (spouse) information may not be there
 # (spouse last) will not be there if the info is the same
 #
-# If Middle, Nickname, or Maiden are not provided, those terms
-# (including "{}", "()", and "[]") are not included.  E.g., if only
-# the nickname is provided:
-#
-#    Squyres,Jeffrey(Jeff)
-#
 # If Prefix and Suffix are not provided, those terms are not there,
 # either (including the commas).  If only Suffix is supplied, then the
-# comma will be there for the Prefix, but it will be empty.  Example:
-#
-#    Squyres,Jeffrey{Michael}(Jeff),,Esq.
+# comma will be there for the Prefix, but it will be empty.
 #
 # There are no cases in Epiphany's database where someone does not
 # have both a first and a last name.  So I didn't even bother trying
@@ -709,47 +701,76 @@ def _parse_family_name(name, log=None):
     parts = name.split(',')
     last = parts[0]
 
+    spouse = None
+    result = re.search("\((.+?)\)", name)
+    if result:
+        # Remove the spouse from the name, just so that we can split the
+        # remainder of the name on "," and know that all of those parts belong
+        # to the HoH
+        spouse = result[0]
+        name   = re.sub(f'\({spouse}\)', '', name)
+        parts  = name.split(',')
+
+    first = parts[1]
+
     prefix = None
-    if len(parts) > 2:
+    if len(parts) > 2 and parts[2] != '':
         prefix = parts[2]
-        if prefix == '':
-            prefix = None
 
     suffix = None
     if len(parts) > 3:
         suffix = parts[3]
 
-    # The "more" field may have the middle, nickname, and maiden name.
-    # Parse those out.
-    first = None
-    middle = None
-    nickname = None
-    maiden = None
-    if len(parts) > 1:
-        more = parts[1]
-        result = re.match('([^\(\{\[]+)', more)
-        if result:
-            first = result[1]
+    # If the spouse part exists, parse it
+    spouse_prefix = None
+    spouse_first  = None
+    spouse_last   = None
+    spouse_suffix = None
+    if spouse:
+        # Defaults; may get overridden below
+        spouse_last = parts[0]
+
+        # This is super goofy (to rhyme with "terrible"):
+        #
+        # - If there's only 1 part, it's the first name
+        # - If there's 2 parts, its the last name and first name
+        # - If there's 3 parts, it's the last name, first name, and title
+        # - If there's 4 parts, it's the last name, first name, title, and suffix
+        #
+        # (this was determined by exmaining the data by hand)
+
+        parts = spouse.split(',')
+        if len(parts) == 1:
+            spouse_first  = parts[0]
+
+        elif len(parts) == 2:
+            spouse_last   = parts[0]
+            spouse_first  = parts[1]
+
+        elif len(parts) == 3:
+            spouse_last   = parts[0]
+            spouse_first  = parts[1]
+            spouse_title  = parts[2]
+
+        elif len(parts) == 4:
+            spouse_last   = parts[0]
+            spouse_first  = parts[1]
+            spouse_title  = parts[2]
+            spouse_suffix = parts[3]
+
         else:
-            first = 'Unknown'
+            log.error(f"Unrecognized parts in spouse name: {spouse}")
 
-        result = re.search('\{(.+)\}', more)
-        if result:
-            middle = result[1]
-
-        result = re.search('\((.+)\)', more)
-        if result:
-            nickname = result[1]
-
-        result = re.search('\[(.+)\]', more)
-        if result:
-            maiden = result[1]
-
-    if log:
-        log.debug("Last: {l}, First: {f}, Middle: {m}, Nickname: {n}, Maiden: {maiden}, Prefix: {pre}, Suffix: {suff}"
-                  .format(l=last,f=first,m=middle,n=nickname,maiden=maiden,pre=prefix,suff=suffix))
-
-    return last, first, middle, nickname, maiden, prefix, suffix
+    return {
+        'prefix'        : prefix,
+        'first'         : first,
+        'last'          : last,
+        'suffix'        : suffix,
+        'spouse_prefix' : spouse_prefix,
+        'spouse_first'  : spouse_first,
+        'spouse_last'   : spouse_last,
+        'spouse_suffix' : spouse_suffix,
+    }
 
 #-----------------------------------------------------------------------------
 
@@ -818,43 +839,50 @@ def _parse_member_name(name, log=None):
         log.debug("Last: {l}, First: {f}, Middle: {m}, Nickname: {n}, Maiden: {maiden}, Prefix: {pre}, Suffix: {suff}"
                   .format(l=last,f=first,m=middle,n=nickname,maiden=maiden,pre=prefix,suff=suffix))
 
-    return last, first, middle, nickname, maiden, prefix, suffix
+    return {
+        'first' : first,
+        'middle' : middle,
+        'last' : last,
+        'nickname' : nickname,
+        'maiden' : maiden,
+        'prefix' : prefix,
+        'suffix' : suffix,
+    }
 
 def _parse_member_names(members):
     for _, m in members.items():
-        name = m['Name']
-        (last, first, middle, nickname, maiden,
-         prefix, suffix) = _parse_member_name(name)
+        name   = m['Name']
+        parsed = _parse_member_name(name)
 
-        m['first']    = first
-        m['middle']   = middle
-        m['last']     = last
-        m['nickname'] = nickname
-        m['maiden']   = maiden
-        m['prefix']   = prefix
-        m['suffix']   = suffix
+        m['first']    = parsed['first']
+        m['middle']   = parsed['middle']
+        m['last']     = parsed['last']
+        m['nickname'] = parsed['nickname']
+        m['maiden']   = parsed['maiden']
+        m['prefix']   = parsed['prefix']
+        m['suffix']   = parsed['suffix']
 
         field = 'full_name'
         m[field]     = ''
-        if prefix:
-            m[field] += prefix + ' '
-        if first:
-            m[field] += first + ' '
-        if nickname:
-            m[field] += '("' + nickname + '") '
-        if middle:
-            m[field] += middle + ' '
-        if last:
-            m[field] += last
-        if maiden:
-            m[field] += ' (maiden: ' + maiden + ')'
-        if suffix:
-            m[field] += ', ' + suffix
+        if parsed['prefix']:
+            m[field] += parsed['prefix'] + ' '
+        if parsed['first']:
+            m[field] += parsed['first'] + ' '
+        if parsed['nickname']:
+            m[field] += '("' + parsed['nickname'] + '") '
+        if parsed['middle']:
+            m[field] += parsed['middle'] + ' '
+        if parsed['last']:
+            m[field] += parsed['last']
+        if parsed['maiden']:
+            m[field] += ' (maiden: ' + parsed['maiden'] + ')'
+        if parsed['suffix']:
+            m[field] += ', ' + parsed['suffix']
 
-        if nickname:
-            m['email_name'] = '{nick} {last}'.format(nick=nickname, last=last)
+        if parsed['nickname']:
+            m['email_name'] = f'{parsed["nickname"]} {parsed["last"]}'
         else:
-            m['email_name'] = '{first} {last}'.format(first=first, last=last)
+            m['email_name'] = f'{parsed["first"]} {parsed["last"]}'
 
 #-----------------------------------------------------------------------------
 
@@ -1178,5 +1206,5 @@ def find_member_phone(member, type):
                 continue
 
             return entry['number']
-        
+
         return ''
