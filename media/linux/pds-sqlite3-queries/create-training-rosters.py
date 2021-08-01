@@ -60,17 +60,17 @@ def check_ministries(member):
     key = 'active_ministries'
     if key in member:
         for ministry in member[key]:
-            if ministry['Description'] == 'Weekend Communion':
+            if ministry['Description'] == '313A-Communion: Weekend':
                 member['weekend'] = 'Yes'
             else:
                 member['weekend'] = 'No'
 
-            if ministry['Description'] == 'Weekday Communion':
+            if ministry['Description'] == '313B-Communion: Weekday':
                 member['weekday'] = 'Yes'
             else:
                 member['weekday'] = 'No'
 
-            if ministry['Description'] == 'Homebound Communion':
+            if ministry['Description'] == '313C-Communion: Homebound':
                 member['homebound'] = 'Yes'
             else:
                 member['homebound'] = 'No'
