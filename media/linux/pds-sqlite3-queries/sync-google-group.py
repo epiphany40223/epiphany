@@ -141,6 +141,11 @@ def get_synchronizations():
             'ggroup'     : f'ten-percent-committee{ecc}',
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
+        {
+            "ministries" : [ '111-Hispanic Ministry Team' ],
+            'ggroup'     : f'hispanic-ministry-team{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
 
         #############################
 
@@ -279,11 +284,6 @@ def get_synchronizations():
             'ggroup'     : f'environmental-concerns{ecc}',
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
-        {
-            "ministries" : [ '711-Hispanic Ministry Team' ],
-            'ggroup'     : f'hispanic-ministry-team{ecc}',
-            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
-        },
 
         #############################
 
@@ -296,11 +296,6 @@ def get_synchronizations():
             'ministries' : [ '807-RCIA Team' ],
             'ggroup'     : f'rcia-team{ecc}',
             'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
-        },
-        {
-            'ministries' : [ '808-Young Adult Ministry' ],
-            'ggroup'     : f'young-adults{ecc}',
-            'notify'     : f'tasha{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ "811-Family&Children's WorkGrp" ],
