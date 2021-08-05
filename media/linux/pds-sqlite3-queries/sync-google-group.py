@@ -370,11 +370,6 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'keywords'   : [ 'Linda Retirement Planning' ],
-            'ggroup'     : f'linda-retirement-planning{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
-        },
-        {
             'keywords'   : [ 'Liturgy Transcriptions' ],
             'ggroup'     : f'liturgy-transcriptions{ecc}',
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
