@@ -1,10 +1,12 @@
 # Notes
 
-The scripts in this directory are not polished.  They were written for
+The scrip in this directory is not polished.  It is an adaptation of scripts
+that were written for
 one-time uses to convert several specific shared Google Folders to
-Google Team Drives.  Each of the scripts has some hard-coded
-assupmtions that are certainly not true for everyone's particular
-setups of shared folders / team drives.  Additionally, since they were
+Google Team Drives.  The script definitely still contains some
+hard-coded
+assumptions that are certainly not true for everyone's particular
+setups of shared folders / shared drives.  Additionally, since they were
 intended for one-time use, they really aren't polished, or, in some
 cases, complete (e.g., sometimes it was easier/faster to leave the
 script incomplete and then just manually use the Google Drive web UI
