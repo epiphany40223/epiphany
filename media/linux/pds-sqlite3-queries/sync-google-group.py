@@ -61,6 +61,7 @@ import json
 import time
 import sys
 import os
+import re
 
 # We assume that there is a "ecc-python-modules" sym link in this
 # directory that points to the directory with ECC.py and friends.
@@ -973,7 +974,10 @@ def find_ministry_chairs(member):
         return False, False
 
     for ministry in member['active_ministries']:
-        if 'Chair' in ministry['status']:
+        # We only want ministries that start with "ddd-" or
+        # "ddd[ABC]-" where "d" is a digit.  All other ministries are
+        # defunct.
+        if 'Chair' in ministry['status'] and re.match('\d\d\d[ABC]{0,1}\-', desc):
             return True, False
 
     return False, False
