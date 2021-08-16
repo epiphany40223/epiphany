@@ -977,7 +977,7 @@ def find_ministry_chairs(member):
         # We only want ministries that start with "ddd-" or
         # "ddd[ABC]-" where "d" is a digit.  All other ministries are
         # defunct.
-        if 'Chair' in ministry['status'] and re.match('\d\d\d[ABC]{0,1}\-', desc):
+        if 'Chair' in ministry['status'] and re.match('\d\d\d[ABC]{0,1}\-', ministry['Description']):
             return True, False
 
     return False, False
