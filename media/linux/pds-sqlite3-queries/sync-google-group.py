@@ -424,6 +424,15 @@ def get_synchronizations():
             'ggroup'     : f'youth-ministry-parents-sr-high{ecc}',
             'notify'     : f'deacontrey{ecc},pds-google-sync{ecc}',
         },
+
+        #############################
+
+        {
+            'functions'  : [ { 'func' : find_ministry_chairs,
+                               'purpose' : "Find ministry chairs" }, ],
+            'ggroup'     : f'ministry-chairs{ecc}',
+            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+        },
     ]
 
     return synchronizations
@@ -653,6 +662,11 @@ def do_sync(sync, group_permissions, service, actions, log=None):
                 rationale.append('<li> Members with the "{k}" keyword</li>'
                                 .format(k=k))
                 subject_add.append(k)
+
+        if 'functions' in sync:
+            for f in sync['functions']:
+                rationale.append(f'<li> Members that satisfied the "{f["purpose"]}" function</li>')
+                subject_add.append(f['purpose'])
 
         # Assemble the final subject line
         subject = subject + ', '.join(subject_add)
@@ -951,11 +965,25 @@ def _member_has_any_keyword(member, keywords):
 
     return found_any, poster_of_any
 
+# Returns two values:
+# Boolean: if the Member is a chair of any ministry
+# Boolean: same value as the first return value
+def find_ministry_chairs(member):
+    if 'active_ministries' not in member:
+        return False, False
+
+    for ministry in member['active_ministries']:
+        if 'Chair' in ministry['status']:
+            return True, False
+
+    return False, False
+
 def pds_find_ministry_members(members, sync, log=None):
     ministry_members = list()
     ministries       = list()
     keywords         = list()
     found_emails     = dict()
+    functions        = list()
 
     # Make the sync ministries be an array
     if 'ministries' in sync:
@@ -971,24 +999,38 @@ def pds_find_ministry_members(members, sync, log=None):
         else:
             keywords = [ sync['keywords'] ]
 
+    if 'functions' in sync:
+        functions = sync['functions']
+
     # Walk all members looking for those in any of the ministries or
     # those that have any of the keywords.
-    for mid, member in members.items():
-        min_any, chair_of_any  = _member_in_any_ministry(member, ministries)
-        key_any, poster_of_any = _member_has_any_keyword(member, keywords)
+    for mid, pds_member in members.items():
+        # Check if the member is in any of the ministries
+        member, leader = _member_in_any_ministry(pds_member, ministries)
 
-        if not min_any and not key_any:
-            continue
-
-        leader = False
-        if chair_of_any or poster_of_any:
+        # Check if the member has any of the keywords
+        member_temp, leader_temp = _member_has_any_keyword(pds_member, keywords)
+        if member_temp:
+            member = True
+        if leader_temp:
             leader = True
 
-        emails = PDSChurch.find_any_email(member)
+        # Check if the member satisfies any of the other functions
+        for func in functions:
+            member_temp, leader_temp = func['func'](pds_member)
+            if member_temp:
+                member = True
+            if leader_temp:
+                leader = True
+
+        if not member:
+            continue
+
+        emails = PDSChurch.find_any_email(pds_member)
         for email in emails:
             e = email.lower()
             new_entry = {
-                'pds_members' : [ member ],
+                'pds_members' : [ pds_member ],
                 'email'       : e,
                 'leader'      : leader,
             }
@@ -1006,14 +1048,13 @@ def pds_find_ministry_members(members, sync, log=None):
                 index = found_emails[e]
                 leader = leader or ministry_members[index]['leader']
                 ministry_members[index]['leader'] = leader
-                ministry_members[index]['pds_members'].append(member)
+                ministry_members[index]['pds_members'].append(pds_member)
             else:
                 ministry_members.append(new_entry)
                 found_emails[e] = len(ministry_members) - 1
 
     if log:
-        log.debug("PDS members for ministries {m} and keywords {k}:"
-                  .format(m=ministries, k=keywords))
+        log.debug(f"PDS members for ministries {ministries} and keywords {keywords} and functions {functions}:")
         for m in ministry_members:
             name_str = ''
             for pm in m['pds_members']:
