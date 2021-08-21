@@ -52,7 +52,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from oauth2client import tools
-from apiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload
 from email.message import EmailMessage
 
 import matplotlib
@@ -120,8 +120,7 @@ fid_participation_subject = 'Family Overall Participation results'
 
 ##############################################################################
 
-def upload_to_gsheet(google, folder_id, filename, fieldnames, csv_rows,
-                remove_csv, log):
+def upload_to_gsheet(google, folder_id, filename, fieldnames, csv_rows, remove_csv, log):
     if csv_rows is None or len(csv_rows) == 0:
         return None, None
 
@@ -436,8 +435,7 @@ def statistics_compute(pds_families, jotform_ministry, jotform_pledge, log):
 
 #------------------------------------------------------------------------
 
-def statistics_graph(pds_members, pds_families,
-                     jotform_ministry, jotform_pledge, log):
+def statistics_graph(pds_members, pds_families, jotform_ministry, jotform_pledge, log):
     def _find_range(data, earliest, latest):
         for row in data:
             submitted = row['SubmitDate']
@@ -545,6 +543,7 @@ def statistics_graph(pds_members, pds_families,
     data_pledge = list()
     data_family_starts = list()
     data_family_completions = list()
+    data_family_completions_per_day = list()
 
     # Make lists that we can give to matplotlib for plotting
     while day <= latest:
@@ -560,8 +559,18 @@ def statistics_graph(pds_members, pds_families,
         data_pledge.append(data_one_day['num_pledge_submissions'])
         data_family_starts.append(data_cumulative['num_families_started'])
         data_family_completions.append(data_cumulative['num_families_completed'])
+        data_family_completions_per_day.append(data_one_day['num_families_completed'])
 
         day += one_day
+
+
+    # JMS
+    print("==== CSV data")
+    for i, date in enumerate(dates):
+        print(f"{i},{date},{data_family_completions_per_day[i]},{data_family_completions[i]}")
+    print("==== CSV data")
+    exit(1)
+
 
     # Make the plot
     fig, ax = plt.subplots()
@@ -601,9 +610,7 @@ def statistics_graph(pds_members, pds_families,
 
 #-----------------------------------------------------------------------------
 
-def statistics_report(end, pds_members, pds_families,
-                    jotform_ministry, jotform_pledge,
-                    log):
+def statistics_report(end, pds_members, pds_families, jotform_ministry, jotform_pledge, log):
     log.info("Composing statistics report...")
 
     #---------------------------------------------------------------
@@ -1115,10 +1122,7 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
 
 ##############################################################################
 
-def family_status_csv_report(args, google, start, end, time_period,
-                             pds_families, pds_members,
-                             jotform_pledge, jotform_ministry,
-                             log):
+def family_status_csv_report(args, google, start, end, time_period, pds_families, pds_members, jotform_pledge, jotform_ministry, log):
     # Simple report: FID, Family name, and constants.already_submitted_fam_status
 
     # Make a list of families who have submitted anything at all
@@ -1208,9 +1212,7 @@ The same spreadsheet <a href="{url}">is also available as a Google Sheet</a>.</p
 ##############################################################################
 
 # Send "thank you" emails to everyone who completed in this timeframe
-def thank_you_emails(args, google, start, end, time_period,
-                     pds_families, pds_members,
-                     jotform_pledge, jotform_ministry, log):
+def thank_you_emails(args, google, start, end, time_period, pds_families, pds_members, jotform_pledge, jotform_ministry, log):
 
 
 
@@ -1464,8 +1466,8 @@ def main():
     # mornings.
     #comments_report(google, start, end, time_period,
     #                jotform_ministry_range, jotform_pledge_range, log)
-    #statistics_report(end, pds_members, pds_families,
-    #                  jotform_ministry_all, jotform_pledge_all, log)
+    statistics_report(end, pds_members, pds_families,
+                      jotform_ministry_all, jotform_pledge_all, log)
 
     # These reports were uncommented and run by hand upon demand.
     #family_pledge_csv_report(args, google, start, end, time_period,
@@ -1473,8 +1475,8 @@ def main():
     #family_status_csv_report(args, google, start, end, time_period,
     #                         pds_families, pds_members,
     #                         jotform_pledge_range, jotform_ministry_range, log)
-    member_ministry_csv_report(args, google, start, end, time_period,
-                               pds_members, jotform_ministry_range, log)
+    #member_ministry_csv_report(args, google, start, end, time_period,
+    #                           pds_members, jotform_ministry_range, log)
 
     # This report was not finished.  See the "Ideas for 2021" section
     # in README.md.  It should probably be finished and run every
