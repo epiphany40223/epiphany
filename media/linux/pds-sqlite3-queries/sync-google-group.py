@@ -406,7 +406,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'keywords'   : [ 'Weekly Mass - Sometimes', 'Weekly Mass - Usually' ],
+            'keywords'   : [ 'Weekday Mass Email' ],
             'ggroup'     : f'WeekdayMass{ecc}',
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
         },
