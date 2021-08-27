@@ -235,11 +235,6 @@ def get_synchronizations():
             'ggroup'     : f'welcome-desk{ecc}',
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
-        {
-            'ministries' : [ '451-Livestream Team Ministry' ],
-            'ggroup'     : f'livestream-team{ecc}',
-            'notify'     : f'director-communications{ecc},director-worship{ecc},TomHayesMP@gmail.com,pds-google-sync{ecc}',
-        },
 
         #############################
 
@@ -411,7 +406,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'keywords'   : [ 'Weekly Mass - Sometimes', 'Weekly Mass - Usually' ],
+            'keywords'   : [ 'Weekday Mass Email' ],
             'ggroup'     : f'WeekdayMass{ecc}',
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
         },

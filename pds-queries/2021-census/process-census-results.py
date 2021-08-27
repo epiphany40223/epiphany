@@ -635,7 +635,10 @@ def member_cell_updates(member_submissions, members, log):
 
         # Iterate through all the Member phones:
         # - For all phones that are not the target phone, remove them.
-        # - If we didn't find the target phone, add it.
+        #   JMS CLARIFICATION: because of the way we worded the
+        #   question on the 2021 census form, we're only going to
+        #   remove Member Cell phones.
+        # - If we didn't find the target phone, add it as a Cell.
         found = False
         jotform_digits = reduce_phone_to_digits(jotform_phone)
         jotform_ac     = jotform_digits[0:3]
@@ -644,6 +647,9 @@ def member_cell_updates(member_submissions, members, log):
         key = 'phones'
         if key in member:
             for entry in member[key]:
+                if entry['type'] != 'Cell':
+                    continue
+
                 digits = reduce_phone_to_digits(entry['number'])
                 if digits == jotform_digits:
                     # If this is the phone number they gave us on the jotform,
@@ -667,10 +673,10 @@ def member_cell_updates(member_submissions, members, log):
 
     # Write the removals
     def _make_removal_item(mid, member, value, item):
-        item['Phone to remove'] = value
+        item['Cell phones to remove'] = ', '.join(value)
 
     filename = 'census2021-member-cell-removals.csv'
-    fields = ['MID', 'Name', 'Phone to remove']
+    fields = ['MID', 'Name', 'Cell phones to remove']
     _simple_csv_member_write(filename, removals, members,
         fields, 'Member cell removals', _make_removal_item, log)
 
