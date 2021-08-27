@@ -42,11 +42,14 @@ def main():
                                                     log=log)
 
     counts = dict()
+    who = dict()
     for fid, family in families.items():
         count = len(family['members'])
         if count not in counts:
             counts[count] = 0
+            who[count] = list()
         counts[count] += 1
+        who[count].append(family)
 
         if count == 7:
             print(f"7-member family: {family['Name']}, fid {family['FamRecNum']}")
@@ -59,5 +62,8 @@ def main():
     for i in range(max + 1):
         if i in counts:
             print(f"Count {i}: {counts[i]}")
+            if i >= 7:
+                for family in who[i]:
+                    print(f"  Name: {family['Name']}")
 
 main()
