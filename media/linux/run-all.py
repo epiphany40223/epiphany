@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import datetime
 import logging
 import logging.handlers
 import time
@@ -40,6 +41,8 @@ class LockFile:
         self.opened = False
         self.log = log
 
+        self.max_lockfile_age = datetime.timedelta(minutes=60)
+
     def __enter__(self):
         try:
             fp = open(self.lockfile, mode='x')
@@ -49,10 +52,34 @@ class LockFile:
             self.opened = True
         except:
             # We weren't able to create the file, so that means
-            # someone else has it locked.  This is not an error -- we
-            # just exit.
+            # someone else has it locked.  If the lockfile is "old"
+            # (e.g., over an hour old), then something is wrong --
+            # alert a human.
+            self._check_lockfile_age()
+
+            # If we get here, the lock file isn't old.  So this is not
+            # an error -- we just exit.
             self.log.warning("Unable to obtain lockfile -- exiting")
             exit(0)
+
+    def _check_lockfile_age(self):
+        try:
+            lockfile_stat = os.stat(self.lockfile)
+        except:
+            self.log.error(f"Unable to stat() the lockfile {self.lockfile}")
+            exit(1)
+
+        now = datetime.datetime.now()
+        lockfile_create = datetime.datetime.fromtimestamp(lockfile_stat.st_ctime)
+        age = now - lockfile_create
+        if age >= self.max_lockfile_age:
+            self.log.error(f"Lockfile is too old ({self.lockfile})")
+            self.log.error(f"Created: {lockfile_create}")
+            self.log.error(f"Age: {age}")
+            exit(1)
+
+        # If we get here, the lockfile isn't too old.  So just return.
+        return
 
     def __exit__(self, exception_type, exception_value, exeception_traceback):
         if self.opened:
