@@ -1055,6 +1055,15 @@ def load_families_and_members(filename=None, pds=None,
     if parishioners_only:
         _delete_non_parishioners(families, members)
 
+    # Save the raw data that we might want to access later (outside
+    # the context of just Members and Families).
+    global _sql_data
+    _sql_data = {
+        'ministries' : ministries,
+        'member keywords' : mem_keyword_types,
+        'family keywords' : fam_keyword_types,
+    }
+
     _link_family_emails(families, emails)
     _link_family_city_states(families, city_states)
     _link_family_statuses(families, fam_status_types)
