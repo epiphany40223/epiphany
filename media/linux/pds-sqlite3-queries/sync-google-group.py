@@ -188,7 +188,7 @@ def get_synchronizations():
         {
             'ministries' : [ '310-Adult Choir' ],
             'ggroup'     : f'choir{ecc}',
-            'notify'     : f'director-worship{ecc},faith@feetwashers.org,pds-google-sync{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '311-Bell Choir' ],
@@ -199,12 +199,12 @@ def get_synchronizations():
         {
             'ministries' : [ '313-Communion Ministers' ],
             'ggroup'     : f'communion-ministers{ecc}',
-            'notify'     : f'director-worship{ecc},stephen@feetwashers.org,pds-google-sync{ecc}',
+            'notify'     : f'director-worship{ecc},tonya@cabral.org,pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '314-Communion Min. Coordinator'],
             'ggroup'     : f'communion-ministers-coordinators{ecc}',
-            'notify'     : f'director-worship{ecc},stephen@feetwashers.org,pds-google-sync{ecc}',
+            'notify'     : f'director-worship{ecc},tonya@cabral.org,pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '315-Funeral Mass Ministry' ],
