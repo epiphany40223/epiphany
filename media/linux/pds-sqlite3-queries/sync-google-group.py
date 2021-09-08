@@ -411,6 +411,11 @@ def get_synchronizations():
             'notify'     : f'mary{ecc},pds-google-sync{ecc}',
         },
         {
+            'keywords'   : [ 'Worship Administration' ],
+            'ggroup'     : f'worship-administration{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
             'keywords'   : [ 'YouthMin parent: Jr high' ],
             'ggroup'     : f'youth-ministry-parents-jr-high{ecc}',
             'notify'     : f'deacontrey{ecc},pds-google-sync{ecc}',
