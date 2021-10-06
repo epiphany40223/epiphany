@@ -40,6 +40,8 @@ def process_families(families, log):
     num_families_with_no_email  = 0
     num_families_with_no_adults = 0
 
+    families_with_no_email = list()
+
     fids = sorted(families)
     for fid in fids:
         f = families[fid]
@@ -54,11 +56,15 @@ def process_families(families, log):
                     have_email = True
                     break
 
-        # If we have an email address for this Family, move on
+        # If we have an email address for the spouse or HoH of a
+        # Family, move on
         if have_email:
             continue
+        else:
+            families_with_no_email.append(f)
 
-        # We have no email for the Family.  Get phone numbers.
+        # We have no email for the HoH or spouse in this Family.  Get
+        # phone numbers.
         log.info("    *** Have no HoH/Spouse emails for Family {family}"
                  .format(family=f['Name']))
         num_families_with_no_email += 1
@@ -78,42 +84,38 @@ def process_families(families, log):
 
     #######################################################################
 
-    print(f"Number of Families with no Spouse/HoH email: {num_families_with_no_email}")
-    print(f"Number of Families with no Spouse/HoH:       {num_families_with_no_adults}")
-    print(f"Resulting number of Members:                 {len(target_members)}")
+    log.info(f"Number of Families with no Spouse/HoH email: {num_families_with_no_email}")
+    log.info(f"Number of Families with no Spouse/HoH:       {num_families_with_no_adults}")
+    log.info(f"Resulting number of Members:                 {len(target_members)}")
+
+    return families_with_no_email
 
     #######################################################################
 
     # Private utility routine, used below
-    def _get_phones(envid, phones, entity):
+    def _get_phones(out, family):
         key = 'phones'
-        if key not in entity or len(entity[key]) == 0:
-            return phones
+        if key not in family or len(family[key]) == 0:
+            return out
 
-        for ph in entity[key]:
+        for ph in sorted(family[key]):
             if ph['type'] in exclude_phone_types:
                 continue
 
-            row = {
-                'EnvID' : envid,
-                'First' : 'Family',
-                'Last'  : family_last,
-                'Phone' : ph['number'],
-                'Type'  : ph['type'],
-            }
-            if fid not in phones:
-                phones[fid] = dict()
-            phones[fid][ph['number']] = row
+            type = ph['type']
+            if type == 'Cell' or type == 'Home':
+                out[type] = ph['number']
+            else:
+                out['Other'] = ph['number']
 
-        return phones
+        return out
 
     #######################################################################
 
-    filename = 'parishioner-families-with-no-emails.csv'
     if os.path.exists(filename):
         os.unlink(filename)
 
-    fields              = ['EnvID', 'First', 'Last', 'Phone', 'Type']
+    fields              = ['EnvID', 'Name', 'Home phone', 'Cell phone', 'Other phone']
     exclude_phone_types = ['Emergency', 'Work', 'Dig Page']
     phones              = dict()
 
@@ -127,24 +129,15 @@ def process_families(families, log):
         # Get phones from the Family
         family = families[fid]
         envid  = f"' {family['ParKey']}"
-        phones = _get_phones(envid, phones, family)
+        phones = dict()
+        phones = _get_phones(phones, family)
 
         # Get phones from the Members
-        phones = _get_phones(envid, phones, m)
+        phones = _get_phones(phones, m)
 
     print(f"Resulting number of Families with usable phones: {len(phones)}")
 
     #######################################################################
-
-    # Write out the resulting CSV
-    with open(filename, 'w') as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
-        writer.writeheader()
-        for fid, family_phones in phones.items():
-            for data in family_phones.values():
-                writer.writerow(data)
-
-    print(f"Wrote filename {filename}")
 
 ##############################################################################
 
@@ -155,6 +148,30 @@ def main():
      members) = PDSChurch.load_families_and_members(filename="pdschurch.sqlite3",
                                                     parishioners_only=True,
                                                     log=log)
-    process_families(families, log)
+    families_with_no_email = process_families(families, log)
+
+    # Write out the resulting CSV
+    filename = 'parishioner-families-with-no-emails.csv'
+    with open(filename, 'w') as f:
+        fields = ['FID', 'EnvID', 'Name']
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        for family in families_with_no_email:
+            row = {
+                'FID' : family['FamRecNum'],
+                'EnvID' : f"' {family['ParKey']}",
+                'Name' : family['Name'],
+            }
+            writer.writerow(row)
+
+    print(f"Wrote filename {filename}")
+
+    # Write a single-line text file with all the Env ID's separated by ", ".
+    ids = [ family['ParKey'].strip() for family in families_with_no_email ]
+    filename = 'parishioner-family-env-IDs-with-no-emails-pds.txt'
+    with open(filename, 'w') as f:
+        f.write(", ".join(ids) + '\n')
+
+    print(f"Wrote filename {filename}")
 
 main()
