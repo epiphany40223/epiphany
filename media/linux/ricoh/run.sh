@@ -19,7 +19,7 @@ cd $prog_dir
 t=`date '+%H%M'`
 if test $t -le 14; then
     file=ricoh-`date "+%Y-%m-%d-%H%M"`.csv
-    gmt_timestamp=`date -u "+%Y-%m-%d %H%M%S"`
+    gmt_timestamp=`date -u "+%Y-%m-%d %H:%M:%S"`
     # Download the CSV data from the Ricoh
     ./download-user-counter.py \
         --verbose \
