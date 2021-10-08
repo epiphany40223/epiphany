@@ -125,7 +125,7 @@ def get_synchronizations():
         {
             'ministries' : [ '104-Stewardship & E Committee' ],
             'ggroup'     : f'stewardship{ecc}',
-            'notify'     : f'angie{ecc},pds-google-sync{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '106-Community Life Committee' ],
@@ -153,7 +153,7 @@ def get_synchronizations():
         {
             'ministries' : [ '203-Garden & Grounds' ],
             'ggroup'     : f'garden-and-grounds{ecc}',
-            'notify'     : f'mary{ecc},emswine2@gmail.com,pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},emswine2@gmail.com,pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '207-Technology Committee' ],
@@ -322,7 +322,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Apply@ECC email list' ],
             'ggroup'     : f'apply{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Registration@ECC email list' ],
@@ -332,7 +332,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Renovations@ECC email list' ],
             'ggroup'     : f'renovations{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'ECC Liturgy Plans editor' ],
@@ -368,22 +368,22 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Liturgy Transcriptions' ],
             'ggroup'     : f'liturgy-transcriptions{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Maintenance staff email list' ],
             'ggroup'     : f'maintenance-staff{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Office@ECC email list' ],
             'ggroup'     : f'office-group{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Pastoral staff email list' ],
             'ggroup'     : f'pastoral-staff{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'PPC Executive Committee' ],
@@ -398,7 +398,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Support staff email list' ],
             'ggroup'     : f'support-staff{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Wedding Ministries email list' ],
@@ -408,7 +408,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Weekday Mass Email' ],
             'ggroup'     : f'WeekdayMass{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Worship Administration' ],
@@ -432,7 +432,7 @@ def get_synchronizations():
             'functions'  : [ { 'func' : find_ministry_chairs,
                                'purpose' : "Find ministry chairs" }, ],
             'ggroup'     : f'ministry-chairs{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
     ]
 
