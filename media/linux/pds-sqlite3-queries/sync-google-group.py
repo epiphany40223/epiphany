@@ -128,6 +128,12 @@ def get_synchronizations():
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
         {
+            'functions'  : [ { 'func' : find_stewardship_chair,
+                               'purpose' : "Stewardship ministry chair chair" }, ],
+            'ggroup'     : f'stewardship-chair{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '106-Community Life Committee' ],
             'ggroup'     : f'community-life{ecc}',
             'notify'     : f'lisag{ecc},pds-google-sync{ecc}',
@@ -981,6 +987,24 @@ def find_ministry_chairs(member):
             return True, False
 
     return False, False
+
+# Returns two values:
+# Boolean (member): if the Member is the chair of the Stewardship committee
+# Boolean (leader): same as the first value
+def find_stewardship_chair(member):
+    if 'active_ministries' not in member:
+        return False, False
+
+    for ministry in member['active_ministries']:
+        # We only want ministries that start with "ddd-" or
+        # "ddd[ABC]-" where "d" is a digit.  All other ministries are
+        # defunct.
+        if ('Chair' in ministry['status'] and
+            ministry['Description'].startswith('104-Stewardship')):
+            return True, True
+
+    return False, False
+
 
 def pds_find_ministry_members(members, sync, log=None):
     ministry_members = list()
