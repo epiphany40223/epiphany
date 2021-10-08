@@ -967,8 +967,8 @@ def _member_has_any_keyword(member, keywords):
     return found_any, poster_of_any
 
 # Returns two values:
-# Boolean: if the Member is a chair of any ministry
-# Boolean: same value as the first return value
+# Boolean (member): if the Member is a chair of any ministry
+# Boolean (leader): False
 def find_ministry_chairs(member):
     if 'active_ministries' not in member:
         return False, False
