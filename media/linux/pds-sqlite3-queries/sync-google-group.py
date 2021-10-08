@@ -125,7 +125,13 @@ def get_synchronizations():
         {
             'ministries' : [ '104-Stewardship & E Committee' ],
             'ggroup'     : f'stewardship{ecc}',
-            'notify'     : f'angie{ecc},pds-google-sync{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_stewardship_chair,
+                               'purpose' : "Stewardship ministry chair chair" }, ],
+            'ggroup'     : f'stewardship-chair{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '106-Community Life Committee' ],
@@ -153,7 +159,7 @@ def get_synchronizations():
         {
             'ministries' : [ '203-Garden & Grounds' ],
             'ggroup'     : f'garden-and-grounds{ecc}',
-            'notify'     : f'mary{ecc},emswine2@gmail.com,pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},emswine2@gmail.com,pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '207-Technology Committee' ],
@@ -322,7 +328,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Apply@ECC email list' ],
             'ggroup'     : f'apply{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Registration@ECC email list' ],
@@ -332,7 +338,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Renovations@ECC email list' ],
             'ggroup'     : f'renovations{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'ECC Liturgy Plans editor' ],
@@ -368,22 +374,22 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Liturgy Transcriptions' ],
             'ggroup'     : f'liturgy-transcriptions{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Maintenance staff email list' ],
             'ggroup'     : f'maintenance-staff{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Office@ECC email list' ],
             'ggroup'     : f'office-group{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Pastoral staff email list' ],
             'ggroup'     : f'pastoral-staff{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'PPC Executive Committee' ],
@@ -398,7 +404,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Support staff email list' ],
             'ggroup'     : f'support-staff{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Wedding Ministries email list' ],
@@ -408,7 +414,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Weekday Mass Email' ],
             'ggroup'     : f'WeekdayMass{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Worship Administration' ],
@@ -432,7 +438,7 @@ def get_synchronizations():
             'functions'  : [ { 'func' : find_ministry_chairs,
                                'purpose' : "Find ministry chairs" }, ],
             'ggroup'     : f'ministry-chairs{ecc}',
-            'notify'     : f'mary{ecc},pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
     ]
 
@@ -967,8 +973,8 @@ def _member_has_any_keyword(member, keywords):
     return found_any, poster_of_any
 
 # Returns two values:
-# Boolean: if the Member is a chair of any ministry
-# Boolean: same value as the first return value
+# Boolean (member): if the Member is a chair of any ministry
+# Boolean (leader): False
 def find_ministry_chairs(member):
     if 'active_ministries' not in member:
         return False, False
@@ -981,6 +987,24 @@ def find_ministry_chairs(member):
             return True, False
 
     return False, False
+
+# Returns two values:
+# Boolean (member): if the Member is the chair of the Stewardship committee
+# Boolean (leader): same as the first value
+def find_stewardship_chair(member):
+    if 'active_ministries' not in member:
+        return False, False
+
+    for ministry in member['active_ministries']:
+        # We only want ministries that start with "ddd-" or
+        # "ddd[ABC]-" where "d" is a digit.  All other ministries are
+        # defunct.
+        if ('Chair' in ministry['status'] and
+            ministry['Description'].startswith('104-Stewardship')):
+            return True, True
+
+    return False, False
+
 
 def pds_find_ministry_members(members, sync, log=None):
     ministry_members = list()
