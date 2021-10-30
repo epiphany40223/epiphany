@@ -982,7 +982,7 @@ def google_group_find_members(service, sync, log=None):
                     .members()
                     .list(pageToken=page_token,
                           groupKey=sync['ggroup'],
-                          fields='members(email,role,id)').execute())
+                          fields='nextPageToken,members(email,role,id)').execute())
         for group in response.get('members', []):
             group_members.append({
                 'email' : group['email'].lower(),

@@ -192,7 +192,7 @@ def google_group_find_members(google, google_group, log):
                     .members()
                     .list(pageToken=page_token,
                           groupKey=google_group,
-                          fields='members(email,id)').execute())
+                          fields='nextPageToken,members(email,id)').execute())
         for entry in response.get('members', []):
             group_members.append(entry)
 
