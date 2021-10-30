@@ -21,10 +21,10 @@ import json
 import time
 import tempfile
 import datetime
-import traceback
 
 from oauth2client import tools
 from apiclient.http import MediaFileUpload
+from google.api_core import retry
 
 from pprint import pprint
 from pprint import pformat
@@ -196,34 +196,32 @@ def write_temp_json_file(activities, log):
 ####################################################################
 
 def upload_to_google(service, filename, folder_id, log):
-    for num in range(max_upload_retries):
-        try:
-            log.info('Uploading file to google "{file}"'
-                     .format(file=filename))
-            metadata = {
-                'name'     : filename,
-                'mimeType' : Google.mime_types['json'],
-                'parents'  : [ folder_id ],
-                'supportsTeamDrives' : True,
-            }
-            media = MediaFileUpload(filename,
-                                    mimetype=Google.mime_types['json'],
-                                    resumable=True)
-            http = service.files().create(body=metadata,
-                                          media_body=media,
-                                          supportsTeamDrives=True,
-                                          fields='id')
-            response = Google.call_api(http, log)
+    try:
+        log.info('Uploading file to google "{file}"'
+                 .format(file=filename))
+        metadata = {
+            'name'     : filename,
+            'mimeType' : Google.mime_types['json'],
+            'parents'  : [ folder_id ],
+            'supportsTeamDrives' : True,
+        }
+        media = MediaFileUpload(filename,
+                                mimetype=Google.mime_types['json'],
+                                resumable=True)
+        http = service.files().create(body=metadata,
+                                      media_body=media,
+                                      supportsTeamDrives=True,
+                                      fields='id')
+        response = Google.call_api(http, log)
 
-            log.info('Successfully uploaded file: "{filename}" (ID: {id})'
-                     .format(filename=filename, id=response['id']))
-            return
+        log.info('Successfully uploaded file: "{filename}" (ID: {id})'
+                 .format(filename=filename, id=response['id']))
+        return
 
-        except:
-            log.error('Google upload failed for some reason:')
-            log.error(traceback.format_exc())
-            sleep(5)
-            continue
+    except Exception as e:
+        log.error('Google upload failed for some reason:')
+        log.error(e)
+        raise e
 
     log.error("Google upload failed!")
 
