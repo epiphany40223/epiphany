@@ -94,9 +94,6 @@ verbose = True
 debug = False
 logfile = "log.txt"
 
-# JMS Change me to itadmin
-fatal_notify_to = 'jsquyres@gmail.com'
-
 # Google Group permissions
 BROADCAST  = 1
 DISCUSSION = 2
