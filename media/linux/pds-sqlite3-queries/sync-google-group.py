@@ -101,8 +101,6 @@ DISCUSSION = 2
 
 musician_ministry_prefix = '317-'
 
-google_retry_deadline = 120
-
 ####################################################################
 
 def get_synchronizations():
@@ -801,7 +799,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
 
 #-------------------------------------------------------------------
 
-@retry.Retry(deadline=google_retry_deadline)
+@retry.Retry(predicate=Google.retry_errors)
 def _sync_member_to_owner(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
@@ -835,7 +833,7 @@ def _sync_member_to_owner(sync, group_permissions, service, action, name, log=No
 
     return msg
 
-@retry.Retry(deadline=google_retry_deadline)
+@retry.Retry(predicate=Google.retry_errors)
 def _sync_owner_to_member(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
@@ -857,7 +855,7 @@ def _sync_owner_to_member(sync, group_permissions, service, action, name, log=No
 
     return msg
 
-@retry.Retry(deadline=google_retry_deadline)
+@retry.Retry(predicate=Google.retry_errors)
 def _sync_add(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     role  = action['role']
@@ -884,35 +882,35 @@ def _sync_add(sync, group_permissions, service, action, name, log=None):
     except googleapiclient.errors.HttpError as e:
         # NOTE: If we failed because this is a duplicate, then don't
         # worry about it.
-        msg = "FAILED to add this member -- Google error:"
+        log.warning(f"FAILED to add this member -- Google error: {e}")
 
         j = json.loads(e.content)
         for err in j['error']['errors']:
             if err['reason'] == 'duplicate':
+                # This is not worth trying again.
                 if log:
-                    log.warning("Google says a duplicate of {email} "
-                              "already in the group -- ignoring"
-                              .format(email=email))
+                    log.warning(f"Google says a duplicate of {email} "
+                              "already in the group -- ignoring")
                 return None
 
-            elif err['reason'] == 'backendError':
-                if log:
-                    log.warning("Google had an internal error while processing"
-                              "{email} -- ignoring"
-                              .format(email=email))
-                return None
+            # Re-raise the error and let retry.Retry() determine if we should
+            # try again.
+            raise e
 
-            msg += " {msg} ({reason})".format(msg=err['message'],
-                                              reason=err['reason'])
-    except:
+    except Exception as e:
+        # When errors occur, we do want to log them.  But we'll re-raise them to
+        # let an upper-level error handler handle them (e.g., retry.Retry() may
+        # actually re-invoke this function if it was a retry-able Google API
+        # error).
         all = sys.exc_info()
         msg = ("FAILED to add this member -- unknown Google error! "
-               "({a} / {b} / {c})"
-               .format(a=all[0], b=all[1], c=all[2]))
+               f"({all[0]} / {all[1]} / {all[2]})")
+        log.error(msg)
+        raise e
 
     return msg
 
-@retry.Retry(deadline=google_retry_deadline)
+@retry.Retry(predicate=Google.retry_errors)
 def _sync_delete(sync, service, action, name, log=None):
     email = action['email']
 
@@ -950,7 +948,7 @@ def _sync_delete(sync, service, action, name, log=None):
 #
 ####################################################################
 
-@retry.Retry(deadline=google_retry_deadline)
+@retry.Retry(predicate=Google.retry_errors)
 def google_group_get_permissions(service, group_email, log=None):
     response = (service
                 .groups()
@@ -971,9 +969,11 @@ def google_group_get_permissions(service, group_email, log=None):
 
 #-------------------------------------------------------------------
 
-@retry.Retry(deadline=google_retry_deadline)
+@retry.Retry(predicate=Google.retry_errors)
 def google_group_find_members(service, sync, log=None):
     group_members = list()
+
+    log.debug(f"Looking up Google Group members of {sync}")
 
     # Iterate over all (pages of) group members
     page_token = None

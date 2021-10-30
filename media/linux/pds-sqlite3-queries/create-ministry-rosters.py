@@ -27,6 +27,7 @@ import Google
 import PDSChurch
 import GoogleAuth
 import googleapiclient
+from google.api_core import retry
 
 from datetime import datetime
 from datetime import timedelta
@@ -293,6 +294,7 @@ def write_xlsx(members, ministry, want_birthday, log):
 
 #-------------------------------------------------------------------
 
+@retry.Retry(predicate=Google.retry_errors)
 def upload_overwrite(filename, google, file_id, log):
     # Strip the trailing ".xlsx" off the Google Sheet name
     gsheet_name = filename
@@ -318,10 +320,14 @@ def upload_overwrite(filename, google, file_id, log):
         log.debug('Successfully updated file: "{filename}" (ID: {id})'
               .format(filename=filename, id=file['id']))
 
-    except:
+    except Exception as e:
+        # When errors occur, we do want to log them.  But we'll re-raise them to
+        # let an upper-level error handler handle them (e.g., retry.Retry() may
+        # actually re-invoke this function if it was a retry-able Google API
+        # error).
         log.error('Google file update failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+        log.error(e)
+        raise e
 
 #-------------------------------------------------------------------
 
@@ -351,9 +357,9 @@ def create_roster(pds_members, ministry, google, gsheet_id,
     try:
         os.unlink(filename)
         log.debug("Unlinked temp XLSX file")
-    except:
+    except Exception as e:
         log.info("Failed to unlink temp XLSX file!")
-        log.error(traceback.format_exc())
+        log.error(e)
 
 ####################################################################
 

@@ -22,6 +22,7 @@ import ECC
 import Google
 import PDSChurch
 import GoogleAuth
+from google.api_core import retry
 
 from datetime import date
 from datetime import datetime
@@ -169,6 +170,7 @@ def create_roster(trainingdata, training, google, log, dry_run):
 
 #---------------------------------------------------------------------------
 
+@retry.Retry(predicate=Google.retry_errors)
 def upload_overwrite(filename, google, file_id, log):
     # Strip the trailing ".xlsx" off the Google Sheet name
     gsheet_name = filename
@@ -192,10 +194,14 @@ def upload_overwrite(filename, google, file_id, log):
                                      fields='id').execute()
         log.debug(f"Successfully updated file: {filename} (ID: {file['id']})")
 
-    except:
+    except Exception as e:
+        # When errors occur, we do want to log them.  But we'll re-raise them to
+        # let an upper-level error handler handle them (e.g., retry.Retry() may
+        # actually re-invoke this function if it was a retry-able Google API
+        # error).
         log.error('Google file update failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+        log.error(e)
+        raise e
 
 #------------------------------------------------------------------
 

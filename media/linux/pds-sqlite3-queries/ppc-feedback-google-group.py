@@ -26,6 +26,7 @@ import argparse
 import httplib2
 import datetime
 import googleapiclient
+from google.api_core import retry
 
 from oauth2client import tools
 from io import StringIO
@@ -68,6 +69,7 @@ logfile         = None
 
 #-------------------------------------------------------------------
 
+@retry.Retry(predicate=Google.retry_errors)
 def add_google_group_member(google, google_group, email, log):
     log.info(f"Adding {email} to Google Group {google_group}")
 
@@ -86,13 +88,16 @@ def add_google_group_member(google, google_group, email, log):
         for err in j['error']['errors']:
             if err['reason'] == 'duplicate':
                 log.warning(f"Google says a duplicate of {email} already in the group -- ignoring")
+                return
 
-            elif err['reason'] == 'backendError':
-                log.warning(f"Google had an internal error while processing {email} -- ignoring")
+        log.error(f"Failed to add {email} to {google_group}: unknown Google error! {e}")
+        raise e
 
     except Exception as e:
-        log.critical(f"Failed to add {email} to {google_group}: unknown Google error! {e}")
+        log.error(f"Failed to add {email} to {google_group}: unknown Google error! {e}")
+        raise e
 
+@retry.Retry(predicate=Google.retry_errors)
 def delete_google_group_member(google, google_group, email, id, log):
     # We delete by ID (instead of by email address) because of a weird
     # corner case:
@@ -176,6 +181,7 @@ Thank you for your time and dedication to Epiphany!"""
 #
 ####################################################################
 
+@retry.Retry(predicate=Google.retry_errors)
 def google_group_find_members(google, google_group, log):
     group_members = list()
 
@@ -217,8 +223,14 @@ def find_desired(sheet_data, log):
 # Python datetime.date's
 def download_google_sheet(google, gfile, log):
     log.info(f"Downloading Sheet {gfile}...")
-    csv_content = google.files().export(fileId=gfile,
+
+    # Make this a subroutine so that we can wrap it in retry.Retry()
+    @retry.Retry(predicate=Google.retry_errors)
+    def _download_csv_sheet():
+        return google.files().export(fileId=gfile,
                                          mimeType=Google.mime_types['csv']).execute()
+
+    csv_content = _download_csv_sheet()
 
     out       = list()
     fakefile  = StringIO(csv_content.decode('utf-8'))
