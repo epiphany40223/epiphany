@@ -45,7 +45,7 @@ class MetaSheet:
         title_align = Alignment(horizontal='center')
 
         last_col = 'K'
-    
+
         row = 1
         ws.merge_cells(f'A{row}:{last_col}{row}')
         cell = f'A{row}'
@@ -75,11 +75,10 @@ class MetaSheet:
                     (f'E{row}', 'Phone Number'           ,   50),
                     (f'F{row}', 'Weekend?'               ,   50),
                     (f'G{row}', 'Weekday?'               ,   50),
-                    (f'H{row}', 'Homebound?'             ,   50),
-                    (f'I{row}', 'Notes'                  ,   50),]
+                    (f'H{row}', 'Notes'                  ,   50),]
         if want_everything:
-            columns.append((f'J{row}', 'Stage of Certification', 50))
-            columns.append((f'K{row}', 'Involved?'             , 50))
+            columns.append((f'I{row}', 'Stage of Certification', 50))
+            columns.append((f'J{row}', 'Involved?'             , 50))
 
         for cell,value,width in columns:
             ws[cell] = value
@@ -101,7 +100,6 @@ class MetaSheet:
         ws[f'E{row}'] = entry['phone']
         ws[f'F{row}'] = entry['weekend']
         ws[f'G{row}'] = entry['weekday']
-        ws[f'H{row}'] = entry['homebound']
 
 class EverythingSheet(MetaSheet):
 
@@ -109,7 +107,7 @@ class EverythingSheet(MetaSheet):
         ws = wb['Sheet']
         ws.title = 'Everything'
         MetaSheet.__init__(self, ws, training_data)
-        
+
     def create_roster(self, title):
         (row, ws) = self.create_sheet(title, want_everything = True)
         for mid in sorted(self.values, reverse=True):
@@ -127,7 +125,7 @@ class SchedulableSheet(MetaSheet):
     def __init__(self, wb, training_data):
         ws = wb.create_sheet('Schedulable')
         MetaSheet.__init__(self, ws, training_data)
-        
+
     def create_roster(self, title):
         (row, ws) = self.create_sheet(title, want_everything = False)
         for mid in sorted(self.values, reverse=True):
@@ -146,7 +144,7 @@ class NonSchedulableSheet(MetaSheet):
     def __init__(self, wb, training_data):
         ws = wb.create_sheet('NonSchedulable')
         MetaSheet.__init__(self, ws, training_data)
-        
+
     def create_roster(self, title):
         (row, ws) = self.create_sheet(title, want_everything = False)
         for mid in sorted(self.values, reverse=True):

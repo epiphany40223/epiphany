@@ -22,6 +22,7 @@ import ECC
 import Google
 import PDSChurch
 import GoogleAuth
+from google.api_core import retry
 
 from datetime import date
 from datetime import datetime
@@ -47,7 +48,7 @@ trainings   = [
     {
         "title"     : 'Communion Ministers',
         "gsheet_id" : '1T4g6povnXPYOY8G4Oou7jq_Ere4jm4-z0Y37IKT-s20',
-        'pds_type'  : 'Communion Minister training',
+        'pds_type'  : 'Communion Minister Certificatn',
     },
 ]
 
@@ -60,20 +61,25 @@ def check_ministries(member):
     key = 'active_ministries'
     if key in member:
         for ministry in member[key]:
-            if ministry['Description'] == '313A-Communion: Weekend':
-                member['weekend'] = 'Yes'
-            else:
+            if ministry['Description'] == '313A-Communion: Weekday':
                 member['weekend'] = 'No'
-
-            if ministry['Description'] == '313B-Communion: Weekday':
-                member['weekday'] = 'Yes'
             else:
+                member['weekend'] = 'Yes'
+
+            if ministry['Description'] == '313B-Communion Ministers: 5:30':
                 member['weekday'] = 'No'
-
-            if ministry['Description'] == '313C-Communion: Homebound':
-                member['homebound'] = 'Yes'
             else:
-                member['homebound'] = 'No'
+                member['weekday'] = 'Yes'
+
+            if ministry['Description'] == '313C-Communion Ministers: 9:00':
+                member['weekday'] = 'No'
+            else:
+                member['weekday'] = 'Yes'
+
+            if ministry['Description'] == '313D-Communion Ministers:11:30':
+                member['weekday'] = 'No'
+            else:
+                member['weekday'] = 'Yes'
 
     return member
 
@@ -83,6 +89,7 @@ def pds_find_training(pds_members, training_to_find, log):
     out = dict()
     reqcount = 0
 
+    log.info(f"Looking for certifications of type: {training_to_find['pds_type']}")
     for member in pds_members.values():
         key = 'requirements'
         if key not in member:
@@ -96,7 +103,10 @@ def pds_find_training(pds_members, training_to_find, log):
             mid = member['MemRecNum']
             start_date = req['start_date']
             if start_date == PDSChurch.date_never:
-                start_date = ''
+                # This is an invalid entry -- skip it
+                log.warning(f"Skipping certification entry with no start date on Member: {member['Name']}")
+                continue
+
             if mid not in out:
                 out[mid] = dict()
             if start_date not in out[mid]:
@@ -118,7 +128,6 @@ def pds_find_training(pds_members, training_to_find, log):
                 'involved'      :   member['involved'],
                 'weekend'       :   member['weekend'],
                 'weekday'       :   member['weekday'],
-                'homebound'     :   member['homebound'],
             })
 
     if reqcount == 0:
@@ -169,6 +178,7 @@ def create_roster(trainingdata, training, google, log, dry_run):
 
 #---------------------------------------------------------------------------
 
+@retry.Retry(predicate=Google.retry_errors)
 def upload_overwrite(filename, google, file_id, log):
     # Strip the trailing ".xlsx" off the Google Sheet name
     gsheet_name = filename
@@ -192,10 +202,14 @@ def upload_overwrite(filename, google, file_id, log):
                                      fields='id').execute()
         log.debug(f"Successfully updated file: {filename} (ID: {file['id']})")
 
-    except:
+    except Exception as e:
+        # When errors occur, we do want to log them.  But we'll re-raise them to
+        # let an upper-level error handler handle them (e.g., retry.Retry() may
+        # actually re-invoke this function if it was a retry-able Google API
+        # error).
         log.error('Google file update failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+        log.error(e)
+        raise e
 
 #------------------------------------------------------------------
 

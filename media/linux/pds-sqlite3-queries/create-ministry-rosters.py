@@ -27,6 +27,7 @@ import Google
 import PDSChurch
 import GoogleAuth
 import googleapiclient
+from google.api_core import retry
 
 from datetime import datetime
 from datetime import timedelta
@@ -84,6 +85,30 @@ ministries = [
     },
 
     {
+        "ministry"  : [ '309-Acolytes INTERESTED ONLY',
+                        '309A-Acolyte Ministry 5:30P',
+                        '309B-Acolyte Ministry  9:00A',
+                        '309C-Acolyte Ministry 11:30A' ],
+        "name"      : '309-Acolytes (all masses)',
+        "gsheet_id" : '1zXfAxnuQCATWQ7nU7QYn2Mvy1Ql1Huy7Ve1DW60nPKA',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '309A-Acolyte Ministry 5:30P',
+        "gsheet_id" : '17knwBLjpOgV7tSURrVXsyhWhIe0WO0h7AQZ3HIYse6g',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '309B-Acolyte Ministry  9:00A',
+        "gsheet_id" : '1mQOGaT8jKjwfLhuL7afA4zMjoHfSU0zTfqkw9t1CVoI',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '309C-Acolyte Ministry 11:30A',
+        "gsheet_id" : '1GPk3IzlCTMvGYNFR_Q_haK02NqCuaTNd7Z1CdTZGD8w',
+        "birthday"  : False,
+    },
+    {
         "ministry"  : '310-Adult Choir',
         "gsheet_id" : '1ku8Aq9dXm_mrOq421MWVk7hAqV2Am5FFSgUACOYs2WU',
         "birthday"  : False,
@@ -94,13 +119,95 @@ ministries = [
         "birthday"  : True,
     },
     {
+        "ministry"  : [ '313-Communion Ministers',
+                        '313A-Communion Ministers: Weekday',
+                        '313B-Communion Ministers: 5:30',
+                        '313C-Communion Ministers: 9:00'
+                        '313D-Communion Ministers:11:30' ],
+        "name"      : "313-Communion Ministers (all masses)",
+        "gsheet_id" : '10Aq9XtZHL3v0m0Erm71f8BSUYr7CiEDMwzDWTSgKPJ4',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '313A-Communion Ministers: Weekday',
+        "gsheet_id" : '1ep1HrUf1jWB43e-wnHiayq6gcDImo8Y26OQ2e5b8gdw',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '313B-Communion Ministers: 5:30',
+        "gsheet_id" : '1S-mZyZwIunBJ1hZYJ942Bd1p--SMeUjEMBw3XU9y404',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '313C-Communion Ministers: 9:00',
+        "gsheet_id" : '1JHcG1krbBqlegL9NU45aAKl0zw0rSrMwmPwhKfXfIXI',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '313D-Communion Ministers:11:30',
+        "gsheet_id" : '1aqgGKqbIUyo0xHFufBPQveFMWJUQ0hVkShx_M4NTflg',
+        "birthday"  : False,
+    },
+
+    {
+        "ministry"  : [ '316-Greeters INTERESTED ONLY',
+                        '316A-Greeters 5:30P',
+                        '316B-Greeters 9:00A',
+                        '316C-Greeters 11:30A' ],
+        "name"      : "316-Greeters (all masses)",
+        "gsheet_id" : '1vd7sltcU8MVwIBad__PyXXMN_cUEFvdXpL5RkYiBWJ0',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '316A-Greeters 5:30P',
+        "gsheet_id" : '1sWu0OAL03N7zeg3aB6_1sZQYQbn4uhw7MtCRa0VHy1s',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '316B-Greeters 9:00A',
+        "gsheet_id" : '11O1G4E9cVoDYKsG4ymVn68E77PgFWJnyK_FaU28F0vk',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '316C-Greeters 11:30A',
+        "gsheet_id" : '1JbBRo3DXs1bK3D_TkjRCJUVL_SF660V9YcsudDzm8cs',
+        "birthday"  : False,
+    },
+
+    {
         "ministry"  : '317-Instrumentalists & Cantors',
         "gsheet_id" : '1YP3sC4dcOWH9Li1rJV8D5FI9mef50xvxqOf6K1K54_U',
         "birthday"  : True,
     },
+
     {
-        "ministry"  : '318-Lectors  MASTER LIST',
+        "ministry"  : [ '318-Lectors  MASTER LIST',
+                        '318A-Lector Ministry  5:30P',
+                        '318B-Lector  Ministry 9:00A',
+                        '318C-Lector Ministry 11:30A',
+                        '318D-Lector Ministry  Spanish' ],
+        "name"      : "318-Lectors Ministry (all masses)",
         "gsheet_id" : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '318A-Lector Ministry  5:30P',
+        "gsheet_id" : '1_it-a1Zl2zyWBXSwu_IfGbwbZgd0OUCJdhGtBJzNBXY',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '318B-Lector  Ministry 9:00A',
+        "gsheet_id" : '16OmohVR9zSPF68PyNgY8VV1oTzSeFyXGY7cK4dSuNnE',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '318C-Lector Ministry 11:30A',
+        "gsheet_id" : '1nKE13crOa20BaDjbmgWWRq3oklY_lkNvuHS-3X1-Rro',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '318D-Lector Ministry  Spanish',
+        "gsheet_id" : '1FZDzEquDfhTHUY2_YGR15a05gYkgIzuNR4NaDY1zyB4',
         "birthday"  : False,
     },
 
@@ -145,7 +252,7 @@ ministries = [
 
 ####################################################################
 
-def write_xlsx(members, ministry, want_birthday, log):
+def write_xlsx(members, ministry, name, want_birthday, log):
     # Make the microseconds be 0, just for simplicity
     now = datetime.now()
     us = timedelta(microseconds=now.microsecond)
@@ -154,7 +261,9 @@ def write_xlsx(members, ministry, want_birthday, log):
     timestamp = ('{year:04}-{mon:02}-{day:02} {hour:02}:{min:02}'
                 .format(year=now.year, mon=now.month, day=now.day,
                         hour=now.hour, min=now.minute))
-    filename = (f'{ministry} members as of {timestamp}.xlsx')
+    if name is None:
+        name = ministry
+    filename = (f'{name} members as of {timestamp}.xlsx')
 
     # Put the members in a sortable form (they're currently sorted by MID)
     sorted_members = dict()
@@ -177,7 +286,7 @@ def write_xlsx(members, ministry, want_birthday, log):
     row = 1
     ws.merge_cells(f'A{row}:{last_col}{row}')
     cell = f'A{row}'
-    ws[cell] = f'Ministry: {ministry}'
+    ws[cell] = f'Ministry: {name}'
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 
@@ -293,6 +402,7 @@ def write_xlsx(members, ministry, want_birthday, log):
 
 #-------------------------------------------------------------------
 
+@retry.Retry(predicate=Google.retry_errors)
 def upload_overwrite(filename, google, file_id, log):
     # Strip the trailing ".xlsx" off the Google Sheet name
     gsheet_name = filename
@@ -318,17 +428,34 @@ def upload_overwrite(filename, google, file_id, log):
         log.debug('Successfully updated file: "{filename}" (ID: {id})'
               .format(filename=filename, id=file['id']))
 
-    except:
+    except Exception as e:
+        # When errors occur, we do want to log them.  But we'll re-raise them to
+        # let an upper-level error handler handle them (e.g., retry.Retry() may
+        # actually re-invoke this function if it was a retry-able Google API
+        # error).
         log.error('Google file update failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+        log.error(e)
+        raise e
 
 #-------------------------------------------------------------------
 
-def create_roster(pds_members, ministry, google, gsheet_id,
-                  want_birthday, log):
+def create_roster(pds_members, ministry_entry, google, log):
+    ministry      = ministry_entry['ministry']
+    gsheet_id     = ministry_entry['gsheet_id']
+    birthday      = ministry_entry['birthday']
+
+    if type(ministry) is list:
+        ministries = ministry
+    else:
+        ministries = [ ministry ]
+
+    name = None
+    key = 'name'
+    if key in ministry_entry:
+        name = ministry_entry[key]
+
     # Find the members
-    members = PDSChurch.filter_members_on_ministries(pds_members, [ministry])
+    members = PDSChurch.filter_members_on_ministries(pds_members, ministries)
     if members is None or len(members) == 0:
         log.info("No members in ministry: {min}".format(min=ministry))
         return
@@ -338,8 +465,8 @@ def create_roster(pds_members, ministry, google, gsheet_id,
     members = [ x for x in members.values() ]
 
     # Make an xlsx
-    filename = write_xlsx(members=members, ministry=ministry,
-                          want_birthday=want_birthday, log=log)
+    filename = write_xlsx(members=members, ministry=ministry, name=name,
+                          want_birthday=birthday, log=log)
     log.debug("Wrote temp XLSX file: {f}".format(f=filename))
 
     # Upload the xlsx to Google
@@ -351,9 +478,9 @@ def create_roster(pds_members, ministry, google, gsheet_id,
     try:
         os.unlink(filename)
         log.debug("Unlinked temp XLSX file")
-    except:
+    except Exception as e:
         log.info("Failed to unlink temp XLSX file!")
-        log.error(traceback.format_exc())
+        log.error(e)
 
 ####################################################################
 
@@ -414,10 +541,8 @@ def main():
 
     for ministry in ministries:
         create_roster(pds_members=pds_members,
-                      ministry=ministry['ministry'],
+                      ministry_entry=ministry,
                       google=google,
-                      gsheet_id=ministry['gsheet_id'],
-                      want_birthday=ministry['birthday'],
                       log=log)
 
     # All done

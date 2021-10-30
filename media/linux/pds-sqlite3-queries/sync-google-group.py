@@ -79,6 +79,7 @@ import PDSChurch
 import GoogleAuth
 
 import googleapiclient
+from google.api_core import retry
 
 from oauth2client import tools
 
@@ -94,12 +95,11 @@ verbose = True
 debug = False
 logfile = "log.txt"
 
-# JMS Change me to itadmin
-fatal_notify_to = 'jsquyres@gmail.com'
-
 # Google Group permissions
 BROADCAST  = 1
 DISCUSSION = 2
+
+musician_ministry_prefix = '317-'
 
 ####################################################################
 
@@ -125,12 +125,6 @@ def get_synchronizations():
         {
             'ministries' : [ '104-Stewardship & E Committee' ],
             'ggroup'     : f'stewardship{ecc}',
-            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
-        },
-        {
-            'functions'  : [ { 'func' : find_stewardship_chair,
-                               'purpose' : "Stewardship ministry chair chair" }, ],
-            'ggroup'     : f'stewardship-chair{ecc}',
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
         {
@@ -203,7 +197,11 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '313-Communion Ministers' ],
+            'ministries' : [ '313-Communion Ministers',
+                             '313A-Communion: Weekday',
+                             '313B-Communion Ministers: 5:30',
+                             '313C-Communion Ministers: 9:00',
+                             '313D-Communion Ministers:11:30' ],
             'ggroup'     : f'communion-ministers{ecc}',
             'notify'     : f'director-worship{ecc},tonya@cabral.org,pds-google-sync{ecc}',
         },
@@ -218,13 +216,24 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
+            'ministries' : [ '316A-Greeters 5:30P',
+                             '316B-Greeters 9:00A',
+                             '316C-Greeters 11:30A' ],
+            'ggroup'     : f'greeters{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '317-Instrumentalists & Cantors' ],
             'keywords'   : [ 'Musicians email list' ],
             'ggroup'     : f'musicians{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '318-Lectors  MASTER LIST' ],
+            'ministries' : [ '318-Lectors  MASTER LIST',
+                             '318A-Lector Ministry  5:30P',
+                             '318B-Lector  Ministry 9:00A',
+                             '318C-Lector Ministry 11:30A',
+                             '318D-Lector Ministry  Spanish' ],
             'ggroup'     : f'lectors{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
@@ -440,6 +449,70 @@ def get_synchronizations():
             'ggroup'     : f'ministry-chairs{ecc}',
             'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
+
+        #----------------------------
+
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "104-Stewardship"},
+                               'purpose' : "Stewardship ministry chair" }, ],
+            'ggroup'     : f'stewardship-chair{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+
+        #----------------------------
+
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "309"},
+                               'purpose' : "Worship/acolytes ministry chair" }, ],
+            'ggroup'     : f'worship-acolytes-chair{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "313"},
+                               'purpose' : "Worship/communion ministers ministry chair" }, ],
+            'ggroup'     : f'worship-communion-ministers-chair{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "316"},
+                               'purpose' : "Worship/greeters ministry chair" }, ],
+            'ggroup'     : f'worship-greeters-chair{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "318"},
+                               'purpose' : "Worship/lectors ministry chair" }, ],
+            'ggroup'     : f'worship-lectors-chair{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+
+        {
+            'functions'  : [ { 'func' : find_instrument,
+                               'kwargs' : { "instrument" : "Voice" },
+                               'purpose' : "Find musicians: singers" }, ],
+            'ggroup'     : f'musicians-singers{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_instrument,
+                               'kwargs' : { "instrument" : "Guitar" },
+                               'purpose' : "Find musicians: guitarists" }, ],
+            'ggroup'     : f'musicians-guitarists{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_instrument,
+                               'kwargs' : { "instrument" : "Piano" },
+                               'purpose' : "Find musicians: pianists" }, ],
+            'ggroup'     : f'musicians-pianists{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+
     ]
 
     return synchronizations
@@ -726,8 +799,8 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
 
 #-------------------------------------------------------------------
 
-def _sync_member_to_owner(sync, group_permissions,
-                          service, action, name, log=None):
+@retry.Retry(predicate=Google.retry_errors)
+def _sync_member_to_owner(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Member to Owner"
@@ -760,8 +833,8 @@ def _sync_member_to_owner(sync, group_permissions,
 
     return msg
 
-def _sync_owner_to_member(sync, group_permissions,
-                          service, action, name, log=None):
+@retry.Retry(predicate=Google.retry_errors)
+def _sync_owner_to_member(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Owner to Member"
@@ -782,8 +855,8 @@ def _sync_owner_to_member(sync, group_permissions,
 
     return msg
 
-def _sync_add(sync, group_permissions,
-              service, action, name, log=None):
+@retry.Retry(predicate=Google.retry_errors)
+def _sync_add(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     role  = action['role']
     if log:
@@ -809,34 +882,35 @@ def _sync_add(sync, group_permissions,
     except googleapiclient.errors.HttpError as e:
         # NOTE: If we failed because this is a duplicate, then don't
         # worry about it.
-        msg = "FAILED to add this member -- Google error:"
+        log.warning(f"FAILED to add this member -- Google error: {e}")
 
         j = json.loads(e.content)
         for err in j['error']['errors']:
             if err['reason'] == 'duplicate':
+                # This is not worth trying again.
                 if log:
-                    log.warning("Google says a duplicate of {email} "
-                              "already in the group -- ignoring"
-                              .format(email=email))
+                    log.warning(f"Google says a duplicate of {email} "
+                              "already in the group -- ignoring")
                 return None
 
-            elif err['reason'] == 'backendError':
-                if log:
-                    log.warning("Google had an internal error while processing"
-                              "{email} -- ignoring"
-                              .format(email=email))
-                return None
+            # Re-raise the error and let retry.Retry() determine if we should
+            # try again.
+            raise e
 
-            msg += " {msg} ({reason})".format(msg=err['message'],
-                                              reason=err['reason'])
-    except:
+    except Exception as e:
+        # When errors occur, we do want to log them.  But we'll re-raise them to
+        # let an upper-level error handler handle them (e.g., retry.Retry() may
+        # actually re-invoke this function if it was a retry-able Google API
+        # error).
         all = sys.exc_info()
         msg = ("FAILED to add this member -- unknown Google error! "
-               "({a} / {b} / {c})"
-               .format(a=all[0], b=all[1], c=all[2]))
+               f"({all[0]} / {all[1]} / {all[2]})")
+        log.error(msg)
+        raise e
 
     return msg
 
+@retry.Retry(predicate=Google.retry_errors)
 def _sync_delete(sync, service, action, name, log=None):
     email = action['email']
 
@@ -874,6 +948,7 @@ def _sync_delete(sync, service, action, name, log=None):
 #
 ####################################################################
 
+@retry.Retry(predicate=Google.retry_errors)
 def google_group_get_permissions(service, group_email, log=None):
     response = (service
                 .groups()
@@ -894,8 +969,11 @@ def google_group_get_permissions(service, group_email, log=None):
 
 #-------------------------------------------------------------------
 
+@retry.Retry(predicate=Google.retry_errors)
 def google_group_find_members(service, sync, log=None):
     group_members = list()
+
+    log.debug(f"Looking up Google Group members of {sync}")
 
     # Iterate over all (pages of) group members
     page_token = None
@@ -904,7 +982,7 @@ def google_group_find_members(service, sync, log=None):
                     .members()
                     .list(pageToken=page_token,
                           groupKey=sync['ggroup'],
-                          fields='members(email,role,id)').execute())
+                          fields='nextPageToken,members(email,role,id)').execute())
         for group in response.get('members', []):
             group_members.append({
                 'email' : group['email'].lower(),
@@ -975,7 +1053,7 @@ def _member_has_any_keyword(member, keywords):
 # Returns two values:
 # Boolean (member): if the Member is a chair of any ministry
 # Boolean (leader): False
-def find_ministry_chairs(member):
+def find_ministry_chairs(member, **kwargs):
     if 'active_ministries' not in member:
         return False, False
 
@@ -989,22 +1067,70 @@ def find_ministry_chairs(member):
     return False, False
 
 # Returns two values:
-# Boolean (member): if the Member is the chair of the Stewardship committee
+# Boolean (member): if the Member is the chair of the target committee
 # Boolean (leader): same as the first value
-def find_stewardship_chair(member):
+def find_ministry_chair(member, **kwargs):
     if 'active_ministries' not in member:
         return False, False
+
+    key = 'ministry_prefix'
+    if key not in kwargs:
+        return False, False
+    ministry_prefix = kwargs[key]
 
     for ministry in member['active_ministries']:
         # We only want ministries that start with "ddd-" or
         # "ddd[ABC]-" where "d" is a digit.  All other ministries are
         # defunct.
         if ('Chair' in ministry['status'] and
-            ministry['Description'].startswith('104-Stewardship')):
+            ministry['Description'].startswith(ministry_prefix)):
             return True, True
 
     return False, False
 
+# Returns two values:
+# Boolean (member): if the Member is active in the 317 musicians ministry AND
+#                   has the desired instrument on their Member record,
+# Boolean (leader): is a Chair in the 317 musicians ministry
+def find_instrument(pds_member, **kwargs):
+    def _ministry_membership():
+        key = 'active_ministries'
+        if key not in pds_member:
+            return False, False
+
+        member = False
+        leader = False
+        for ministry in pds_member['active_ministries']:
+            # Is this member active in the 317 ministry?
+            if ministry['Description'].startswith(musician_ministry_prefix):
+                member = True
+                # If they're in the 317, are they a chair of it?
+                if 'Chair' in ministry['status']:
+                    leader = True
+
+        return member, leader
+
+    #--------------------------------------------------------------------
+
+    def _has_instrument():
+        key = 'instrument'
+        if key not in kwargs:
+            return False
+
+        target_instrument = kwargs[key]
+        if key not in pds_member:
+            return False
+        if target_instrument not in pds_member[key]:
+            return False
+
+        return True
+
+    #--------------------------------------------------------------------
+
+    member, leader = _ministry_membership()
+    instrument     = _has_instrument()
+
+    return (member & instrument), leader
 
 def pds_find_ministry_members(members, sync, log=None):
     ministry_members = list()
@@ -1044,12 +1170,19 @@ def pds_find_ministry_members(members, sync, log=None):
             leader = True
 
         # Check if the member satisfies any of the other functions
+        key = 'kwargs'
         for func in functions:
-            member_temp, leader_temp = func['func'](pds_member)
+            kwargs = {}
+            if key in func:
+                kwargs = func[key]
+            member_temp, leader_temp = func['func'](pds_member, **kwargs)
             if member_temp:
                 member = True
             if leader_temp:
                 leader = True
+
+        if leader:
+            member = True
 
         if not member:
             continue

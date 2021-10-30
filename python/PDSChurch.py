@@ -231,6 +231,7 @@ def _load_members(pds, columns=None,
     columns.append('EthnicDescRec')
     columns.append('User3DescRec') # Skills
     columns.append('User4DescRec') # Occupation
+    columns.append('User7DescRec') # Instrument
     columns.append('Deceased')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
@@ -977,6 +978,8 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['Description'], log=log)
     mem_4kw     = PDS.read_table(pds, 'User4KW_DB', 'User4DescRec',
                                  columns=['Description'], log=log)
+    mem_7kw     = PDS.read_table(pds, 'User7KW_DB', 'User7DescRec',
+                                 columns=['Description'], log=log)
     mem_reqs    = PDS.read_table(pds, 'MemReq_DB', 'MemReqRecNum',
                                  columns=['MemRecNum', 'ReqDescRec',
                                           'ReqDate', 'ReqResult',
@@ -1086,6 +1089,7 @@ def load_families_and_members(filename=None, pds=None,
     _link_member_id(members, 'EthnicDescRec', 'ethnic', mem_ethnics)
     _link_member_id(members, 'User3DescRec', 'skills', mem_3kw)
     _link_member_id(members, 'User4DescRec', 'occupation', mem_4kw)
+    _link_member_id(members, 'User7DescRec', 'instrument', mem_7kw)
 
     _link_family_funds(funds, fund_periods, fund_activities,
                        families, fam_funds, fam_fund_rates, fam_fund_history,
