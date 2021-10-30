@@ -48,7 +48,7 @@ trainings   = [
     {
         "title"     : 'Communion Ministers',
         "gsheet_id" : '1T4g6povnXPYOY8G4Oou7jq_Ere4jm4-z0Y37IKT-s20',
-        'pds_type'  : 'Communion Minister training',
+        'pds_type'  : 'Communion Minister Certificatn',
     },
 ]
 
