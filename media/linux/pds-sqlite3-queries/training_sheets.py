@@ -45,7 +45,7 @@ class MetaSheet:
         title_align = Alignment(horizontal='center')
 
         last_col = 'K'
-    
+
         row = 1
         ws.merge_cells(f'A{row}:{last_col}{row}')
         cell = f'A{row}'
@@ -107,7 +107,7 @@ class EverythingSheet(MetaSheet):
         ws = wb['Sheet']
         ws.title = 'Everything'
         MetaSheet.__init__(self, ws, training_data)
-        
+
     def create_roster(self, title):
         (row, ws) = self.create_sheet(title, want_everything = True)
         for mid in sorted(self.values, reverse=True):
@@ -125,7 +125,7 @@ class SchedulableSheet(MetaSheet):
     def __init__(self, wb, training_data):
         ws = wb.create_sheet('Schedulable')
         MetaSheet.__init__(self, ws, training_data)
-        
+
     def create_roster(self, title):
         (row, ws) = self.create_sheet(title, want_everything = False)
         for mid in sorted(self.values, reverse=True):
@@ -144,7 +144,7 @@ class NonSchedulableSheet(MetaSheet):
     def __init__(self, wb, training_data):
         ws = wb.create_sheet('NonSchedulable')
         MetaSheet.__init__(self, ws, training_data)
-        
+
     def create_roster(self, title):
         (row, ws) = self.create_sheet(title, want_everything = False)
         for mid in sorted(self.values, reverse=True):
