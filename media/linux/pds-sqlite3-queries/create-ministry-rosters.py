@@ -129,7 +129,7 @@ ministries = [
         "birthday"  : False,
     },
     {
-        "ministry"  : '313A-Communion Ministers: Weekday',
+        "ministry"  : '313A-Communion: Weekday',
         "gsheet_id" : '1ep1HrUf1jWB43e-wnHiayq6gcDImo8Y26OQ2e5b8gdw',
         "birthday"  : False,
     },
