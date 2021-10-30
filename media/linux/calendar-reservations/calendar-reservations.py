@@ -26,6 +26,7 @@ sys.path.insert(0, moddir)
 import ECC
 import Google
 import GoogleAuth
+from google.api_core import retry
 
 import datetime
 from datetimerange import DateTimeRange
@@ -345,16 +346,21 @@ def respond_to_events(events_to_respond_to, response, service, calendar, log):
 
         log.debug(f"Response body: {response_body}")
 
-        if not args.dry_run:
-            service.events().patch(
-                calendarId = calendar['id'],
-                sendUpdates = "all",
-                eventId = event['id'],
-                body = response_body,
-            ).execute()
-            log.info(f"Successfully {response} event {event['summary']} {event['id']}")
-        else:
-            log.info(f"dry-run: would have {response} event {event['summary']} {event['id']}")
+        # Make this a subroutine so that we can wrap it in retry.Retry()
+        @retry.Retry(predicate=Google.retry_errors)
+        def _respond():
+            if not args.dry_run:
+                service.events().patch(
+                    calendarId = calendar['id'],
+                    sendUpdates = "all",
+                    eventId = event['id'],
+                    body = response_body,
+                ).execute()
+                log.info(f"Successfully {response} event {event['summary']} {event['id']}")
+            else:
+                log.info(f"dry-run: would have {response} event {event['summary']} {event['id']}")
+
+        _respond()
 
 ####################################################################
 
@@ -374,31 +380,38 @@ def process_events(service, calendar, log):
     startString = start.isoformat() + 'Z' # 'Z' indicates UTC time
     end = datetime.datetime.utcnow() + datetime.timedelta(days=547) # 547 days is 18 months
     endString = end.isoformat() + 'Z'
-    page_token = None
-    events = list()
-    while True:
 
-        # makes the call to the api to return a list of upcoming events
-        events_result = service.events().list(calendarId=calendar['id'],
-                                            timeMin=startString,
-                                            timeMax=endString,
-                                            singleEvents=True,
-                                            pageToken=page_token,
-                                            maxResults=2500,
-                                            orderBy='startTime').execute()
-        new_events = events_result.get('items', [])
+    # Make this a subroutine so that we can wrap it in retry.Retry()
+    @retry.Retry(predicate=Google.retry_errors)
+    def _download_events():
+        events = list()
+        page_token = None
+        while True:
 
-        # just returns if there are no upcoming events
-        if not new_events:
-            break
+            # makes the call to the api to return a list of upcoming events
+            events_result = service.events().list(calendarId=calendar['id'],
+                                                timeMin=startString,
+                                                timeMax=endString,
+                                                singleEvents=True,
+                                                pageToken=page_token,
+                                                maxResults=2500,
+                                                orderBy='startTime').execute()
+            new_events = events_result.get('items', [])
 
-        events.extend(new_events)
+            # just returns if there are no upcoming events
+            if not new_events:
+                break
 
-        # continues to process events if there are more to process, returns if not
-        page_token = events_result.get('nextPageToken')
-        if not page_token:
-            break
+            events.extend(new_events)
 
+            # continues to process events if there are more to process, returns if not
+            page_token = events_result.get('nextPageToken')
+            if not page_token:
+                break
+
+        return events
+
+    events            = _download_events()
     events_to_decline = []
     acceptable_events = []
     all_other_events  = []
