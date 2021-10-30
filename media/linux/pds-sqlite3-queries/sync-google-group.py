@@ -79,6 +79,7 @@ import PDSChurch
 import GoogleAuth
 
 import googleapiclient
+from google.api_core import retry
 
 from oauth2client import tools
 
@@ -99,6 +100,8 @@ BROADCAST  = 1
 DISCUSSION = 2
 
 musician_ministry_prefix = '317-'
+
+google_retry_deadline = 120
 
 ####################################################################
 
@@ -798,6 +801,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
 
 #-------------------------------------------------------------------
 
+@retry.Retry(deadline=google_retry_deadline)
 def _sync_member_to_owner(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
@@ -831,6 +835,7 @@ def _sync_member_to_owner(sync, group_permissions, service, action, name, log=No
 
     return msg
 
+@retry.Retry(deadline=google_retry_deadline)
 def _sync_owner_to_member(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
@@ -852,6 +857,7 @@ def _sync_owner_to_member(sync, group_permissions, service, action, name, log=No
 
     return msg
 
+@retry.Retry(deadline=google_retry_deadline)
 def _sync_add(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     role  = action['role']
@@ -906,6 +912,7 @@ def _sync_add(sync, group_permissions, service, action, name, log=None):
 
     return msg
 
+@retry.Retry(deadline=google_retry_deadline)
 def _sync_delete(sync, service, action, name, log=None):
     email = action['email']
 
@@ -943,6 +950,7 @@ def _sync_delete(sync, service, action, name, log=None):
 #
 ####################################################################
 
+@retry.Retry(deadline=google_retry_deadline)
 def google_group_get_permissions(service, group_email, log=None):
     response = (service
                 .groups()
@@ -963,6 +971,7 @@ def google_group_get_permissions(service, group_email, log=None):
 
 #-------------------------------------------------------------------
 
+@retry.Retry(deadline=google_retry_deadline)
 def google_group_find_members(service, sync, log=None):
     group_members = list()
 
