@@ -9,13 +9,16 @@
 #
 
 import time
-import traceback
 
 import httplib2
+import requests
 
 from pprint import pprint
 from pprint import pformat
 from googleapiclient.errors import HttpError
+from google.api_core import exceptions
+from google.api_core import retry
+from google.auth import exceptions as auth_exceptions
 
 # Globals
 
@@ -50,8 +53,38 @@ scopes = {
 
 ####################################################################
 
+# Took idea for this from
+# https://github.com/googleapis/python-api-core/blob/main/google/api_core/retry.py
+retry_errors = retry.if_exception_type(
+    exceptions.InternalServerError,
+    exceptions.TooManyRequests,
+    exceptions.ServiceUnavailable,
+    requests.exceptions.ConnectionError,
+    requests.exceptions.ChunkedEncodingError,
+    auth_exceptions.TransportError,
+
+    # According to https://developers.google.com/analytics/devguides/reporting/mcf/v3/limits-quotas,
+    # 403 and 429 can be returned for exceeding API call quotas
+    exceptions.Forbidden, # 403
+    exceptions.TooManyRequests, # 429
+
+    # However, from empirical evidence (didn't chase down the source code, but I
+    # saw this happen a lot), when we get quota violations, the Google library
+    # doesn't seem to raise either of the above exceptions.  Instead it raises
+    # HttpError... which is unfortunately fairly generic.  It looks like this:
+    #
+    #  File "/Users/jsquyres/git/personal/epiphany/media/linux/pds-sqlite3-queries/py39/lib/python3.9/site-packages/googleapiclient/http.py", line 1123, in _process_response
+    #    raise HttpError(resp, content, uri=self.uri)
+    # googleapiclient.errors.HttpError: <HttpError 403 when requesting https://www.googleapis.com/upload/drive/v3/files/1aIoStpSOsup8XL5eNd8nhpJwM-IqN2gTkwVf_Qvlylc?supportsAllDrives=true&fields=id&alt=json&uploadType=resumable returned "User rate limit exceeded.". Details: "[{'domain': 'usageLimits', 'reason': 'userRateLimitExceeded', 'message': 'User rate limit exceeded.'}]">
+    #
+    # So let's add HttpError in here as well.  If we retry a few time for legit
+    # HTTP errors because we're being overly broad... oh well.
+    HttpError,
+)
+
 # Make a Google API call.  If it fails, try again.
 #
+@retry.Retry(predicate=retry_errors)
 def call_api(httpref, log, max_retries=3, can_fail=False):
     log.debug("Executing Google API call (will try up to {count} times): {h}"
               .format(count=max_retries, h=httpref))
@@ -77,9 +110,9 @@ def call_api(httpref, log, max_retries=3, can_fail=False):
                 log.debug(err)
                 raise
 
-        except:
+        except Exception as e:
             log.error("*** Some unknown error occurred")
-            log.error(sys.exc_info()[0])
+            log.error(e)
             raise
 
     # If we get here, it's failed multiple times -- time to bail...
