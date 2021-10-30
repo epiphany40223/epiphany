@@ -798,8 +798,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
 
 #-------------------------------------------------------------------
 
-def _sync_member_to_owner(sync, group_permissions,
-                          service, action, name, log=None):
+def _sync_member_to_owner(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Member to Owner"
@@ -832,8 +831,7 @@ def _sync_member_to_owner(sync, group_permissions,
 
     return msg
 
-def _sync_owner_to_member(sync, group_permissions,
-                          service, action, name, log=None):
+def _sync_owner_to_member(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Owner to Member"
@@ -854,8 +852,7 @@ def _sync_owner_to_member(sync, group_permissions,
 
     return msg
 
-def _sync_add(sync, group_permissions,
-              service, action, name, log=None):
+def _sync_add(sync, group_permissions, service, action, name, log=None):
     email = action['email']
     role  = action['role']
     if log:
