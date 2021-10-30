@@ -75,11 +75,10 @@ class MetaSheet:
                     (f'E{row}', 'Phone Number'           ,   50),
                     (f'F{row}', 'Weekend?'               ,   50),
                     (f'G{row}', 'Weekday?'               ,   50),
-                    (f'H{row}', 'Homebound?'             ,   50),
-                    (f'I{row}', 'Notes'                  ,   50),]
+                    (f'H{row}', 'Notes'                  ,   50),]
         if want_everything:
-            columns.append((f'J{row}', 'Stage of Certification', 50))
-            columns.append((f'K{row}', 'Involved?'             , 50))
+            columns.append((f'I{row}', 'Stage of Certification', 50))
+            columns.append((f'J{row}', 'Involved?'             , 50))
 
         for cell,value,width in columns:
             ws[cell] = value
@@ -101,7 +100,6 @@ class MetaSheet:
         ws[f'E{row}'] = entry['phone']
         ws[f'F{row}'] = entry['weekend']
         ws[f'G{row}'] = entry['weekday']
-        ws[f'H{row}'] = entry['homebound']
 
 class EverythingSheet(MetaSheet):
 

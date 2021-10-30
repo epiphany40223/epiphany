@@ -61,20 +61,25 @@ def check_ministries(member):
     key = 'active_ministries'
     if key in member:
         for ministry in member[key]:
-            if ministry['Description'] == '313A-Communion: Weekend':
-                member['weekend'] = 'Yes'
-            else:
+            if ministry['Description'] == '313A-Communion: Weekday':
                 member['weekend'] = 'No'
-
-            if ministry['Description'] == '313B-Communion: Weekday':
-                member['weekday'] = 'Yes'
             else:
+                member['weekend'] = 'Yes'
+
+            if ministry['Description'] == '313B-Communion Ministers: 5:30':
                 member['weekday'] = 'No'
-
-            if ministry['Description'] == '313C-Communion: Homebound':
-                member['homebound'] = 'Yes'
             else:
-                member['homebound'] = 'No'
+                member['weekday'] = 'Yes'
+
+            if ministry['Description'] == '313C-Communion Ministers: 9:00':
+                member['weekday'] = 'No'
+            else:
+                member['weekday'] = 'Yes'
+
+            if ministry['Description'] == '313D-Communion Ministers:11:30':
+                member['weekday'] = 'No'
+            else:
+                member['weekday'] = 'Yes'
 
     return member
 
@@ -84,6 +89,7 @@ def pds_find_training(pds_members, training_to_find, log):
     out = dict()
     reqcount = 0
 
+    log.info(f"Looking for certifications of type: {training_to_find['pds_type']}")
     for member in pds_members.values():
         key = 'requirements'
         if key not in member:
@@ -97,7 +103,10 @@ def pds_find_training(pds_members, training_to_find, log):
             mid = member['MemRecNum']
             start_date = req['start_date']
             if start_date == PDSChurch.date_never:
-                start_date = ''
+                # This is an invalid entry -- skip it
+                log.warning(f"Skipping certification entry with no start date on Member: {member['Name']}")
+                continue
+
             if mid not in out:
                 out[mid] = dict()
             if start_date not in out[mid]:
@@ -119,7 +128,6 @@ def pds_find_training(pds_members, training_to_find, log):
                 'involved'      :   member['involved'],
                 'weekend'       :   member['weekend'],
                 'weekday'       :   member['weekday'],
-                'homebound'     :   member['homebound'],
             })
 
     if reqcount == 0:
