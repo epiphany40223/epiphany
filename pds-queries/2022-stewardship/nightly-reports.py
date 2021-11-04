@@ -1020,10 +1020,10 @@ def convert_pledges_to_pds_import(pds_families, jotform, log):
         # Add a column for this Family's "Envelope user" value
         row['PDS Envelope User'] = family['EnvelopeUser']
 
-        # Add a column for whether the Family selected the "offeratory envelopes" option on the Jotform.  A handful of people also typed something that included the word "offeratory", so include those, too.
+        # Add a column for whether the Family selected the "offeratory
+        # envelopes" option on the Jotform.
         val = False
-        field = f'CY{stewardship_year} mechanisms'
-        if re.search(pledge[field], 'Offeratory'):
+        if 'Offertory' in pledge[f'CY{stewardship_year} mechanisms']:
             val = True
         row['Jotform asked for Envelopes'] = val
 
