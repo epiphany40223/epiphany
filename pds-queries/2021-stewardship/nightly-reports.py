@@ -1481,8 +1481,8 @@ def main():
 
     # These two reports were run via cron at 12:07am on Mon-Fri
     # mornings.
-    comments_report(args, google, start, end, time_period,
-                    jotform_range, log)
+    #comments_report(args, google, start, end, time_period,
+    #                jotform_range, log)
     statistics_report(args, end, pds_members, pds_families,
                       jotform_all, log)
 

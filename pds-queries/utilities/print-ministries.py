@@ -31,28 +31,33 @@ def main():
      members) = PDSChurch.load_families_and_members(filename='pdschurch.sqlite3',
                                                     log=log)
 
+    # This gets *all* the ministries -- even ministries which aren't
+    # attached to any Member.
+    sql_data = PDSChurch.get_raw_sql_data();
+    sql_ministries = sql_data['ministries']
+
+    # Make a dictionary with all the ministry names, and set each
+    # entry to False (i.e., no Members found [yet] that are active in
+    # this ministry).
     ministries = dict()
+    for minid, ministry in sql_ministries.items():
+        ministries[ministry['Description']] = False
+
     for member in members.values():
         key = 'active_ministries'
         if key not in member:
             continue
 
         for ministry in member[key]:
-            desc   = ministry['Description']
-            active = ministry['active']
-
-            if desc in ministries:
+            if not ministry['active']:
                 continue
 
-            ministries[desc] = {
-                'desc'   : desc,
-                'active' : active,
-            }
+            desc = ministry['Description']
+            ministries[desc] = True
 
     for name in sorted(ministries):
-        ministry = ministries[name]
-        active   = ministry['active']
+        active = ministries[name]
 
-        print(f"{name} {'(inactive)' if not active else ''}")
+        print(f"{name} {'(no active Members)' if not active else ''}")
 
 main()
