@@ -25,7 +25,7 @@ smtp_from    = f'"Epiphany Catholic Church" <stewardship{stewardship_year}@epiph
 # Already submitted PDS Family Status
 
 already_submitted_fam_status = f'{stewardship_year} Stewardship'
-already_submitted_fam_keyword = f'Active: {stewardship_year} Stewardship'
+already_submitted_fam_keyword = f'Active: Stewardship {stewardship_year}'
 
 #--------------------------------------------------------------------------
 
