@@ -464,6 +464,13 @@ def get_synchronizations():
 
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "103"},
+                               'purpose' : "Worship ministry chair" }, ],
+            'ggroup'     : f'worship-chair{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "309"},
                                'purpose' : "Worship/acolytes ministry chair" }, ],
             'ggroup'     : f'worship-acolytes-chair{ecc}',
