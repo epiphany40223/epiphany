@@ -125,6 +125,11 @@ calendars = [
         "check_conflicts" : True,
     },
     {
+        "name" : "Epiphany House-1-Polycom",
+        "id" : "c_188am3mlh8ghkjovnmm43cqqhdgla@resource.calendar.google.com",
+        "check_conflicts" : True,
+    },
+    {
         "name" : "Kitchen (CC)",
         "id" : "churchofepiphany.com_34383131343230342d333531@resource.calendar.google.com",
         "check_conflicts" : True,
