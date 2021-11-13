@@ -1404,6 +1404,7 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
     _add_col('Category', width=25)
     _add_col('Current ministry status', width=50)
     _add_col('MID')
+    _add_col('PDS ministry name', width=50)
 
     for ministry_name in sorted(output.keys()):
         workbook = _setup_new_workbook()
@@ -1431,6 +1432,7 @@ def member_ministry_csv_report(args, google, start, end, time_period, pds_member
                 _fill('Category', category.capitalize(), align=wrap_align)
                 _fill('Current ministry status', member['jotform'][ministry_name], align=wrap_align)
                 _fill('MID', member['MemRecNum'])
+                _fill('PDS ministry name', ministry_name)
 
                 xlsx_row += 1
 
