@@ -3,11 +3,20 @@
 # Make sure to pip install everything in requirements.txt.
 
 import sys
-sys.path.insert(0, '../../python')
 
+import os
 import datetime
 import argparse
-import os
+
+# We assume that there is a "ecc-python-modules" sym link in this
+# directory that points to the directory with ECC.py and friends.
+moddir = os.path.join(os.getcwd(), 'ecc-python-modules')
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ecc-python-modules directory.")
+    print("ERROR: Please make a ecc-python-modules sym link and run again.")
+    exit(1)
+
+sys.path.insert(0, moddir)
 
 import ECC
 import Google
@@ -20,8 +29,10 @@ from datetime import datetime
 from datetime import timedelta
 
 from oauth2client import tools
-from apiclient.http import MediaFileUpload
-from email.message import EmailMessage
+from googleapiclient.http import MediaFileUpload
+
+import googleapiclient
+from google.api_core import retry
 
 import openpyxl
 from openpyxl import Workbook
@@ -35,12 +46,13 @@ gapp_id         = 'client_id.json'
 guser_cred_file = 'user-credentials.json'
 
 source_google_shared_drive = '0AHQEqKijqXcFUk9PVA'
-source_google_drive_folder = '1lXPirX51BeTVRqau1H2K0DevTYS7Lq_Q'
+source_google_drive_folder = '15gISGMwGS8F3qziEaWPeT5YhW6oHKH6y'
 
 ##############################################################################
 
 def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, local_filename, remove_local, log):
-    try:
+    @retry.Retry(predicate=Google.retry_errors)
+    def _upload():
         log.info(f'Uploading file to google "{local_filename}" -> "{google_filename}"')
         metadata = {
             'name'     : google_filename,
@@ -57,16 +69,15 @@ def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, loca
                                      fields='id').execute()
         log.debug(f'Successfully uploaded file: "{google_filename}" (ID: {file["id"]})')
 
-    except:
-        log.error('Google upload failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+        return file
 
     # Set permissions on the GSheet to allow the
     # workers group to edit the file (if you are view-only, you
     # can't even adjust the column widths, which will be
     # problematic for the comments report!).
-    try:
+    @retry.Retry(predicate=Google.retry_errors)
+    def _set_perms():
+        log.debug(f"Setting Google permission for file: {id}")
         perm = {
             'type': 'group',
             'role': 'writer',
@@ -77,11 +88,9 @@ def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, loca
                                           sendNotificationEmail=False,
                                           body=perm,
                                           fields='id').execute()
-        log.debug(f"Set Google permission for file: {id}")
-    except:
-        log.error('Google set permission failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+
+    file = _upload()
+    out = _set_perms(file)
 
     # Remove the temp file when we're done
     if remove_local:
@@ -95,9 +104,13 @@ def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, loca
 ##############################################################################
 
 def _download_google_sheet(google, gfile, log):
-    log.info(f"Downloading Sheet {gfile['name']}...")
-    xlsx_content = google.files().export(fileId=gfile['id'],
-                                         mimeType=Google.mime_types['xlsx']).execute()
+    @retry.Retry(predicate=Google.retry_errors)
+    def _download():
+        log.info(f"Downloading Sheet {gfile['name']}...")
+        return google.files().export(fileId=gfile['id'],
+                                     mimeType=Google.mime_types['xlsx']).execute()
+
+    xlsx_content = _download()
 
     # Write the downloaded XLSX content into a file and then use
     # Openpyxl to load it.
@@ -112,39 +125,34 @@ def _download_google_sheet(google, gfile, log):
 
     return workbook
 
-def download_google_sheets(google, args, log):
-    log.info(f"Finding Google Sheets in Team Drive {args.shared_drive_id}, folder {args.gdrive_folder_id}")
+#-----------------------------------------------------------------------------
 
-    mime = Google.mime_types['sheet']
-    q = f'"{args.gdrive_folder_id}" in parents and mimeType="{mime}" and trashed=false'
-    response = google.files().list(corpora='drive',
-                                   driveId=args.shared_drive_id,
-                                   includeTeamDriveItems=True,
-                                   supportsAllDrives=True,
-                                   q=q,
-                                   fields='files(name,id)').execute()
+def download_google_sheets(google, args, log):
+    @retry.Retry(predicate=Google.retry_errors)
+    def _get_file_list():
+        log.info(f"Finding Google Sheets in Team Drive {args.shared_drive_id}, folder {args.gdrive_folder_id}")
+        mime = Google.mime_types['sheet']
+        q = f'"{args.gdrive_folder_id}" in parents and mimeType="{mime}" and trashed=false'
+        response = google.files().list(corpora='drive',
+                                       driveId=args.shared_drive_id,
+                                       includeTeamDriveItems=True,
+                                       supportsAllDrives=True,
+                                       q=q,
+                                       fields='files(name,id)').execute()
+        return response
+
+    response = _get_file_list()
     gfiles = response.get('files', [])
 
     # Make a sorted list of files
     sortable_gfiles = dict()
     for gfile in gfiles:
-        # Skip the "bad" Linda file
-        if (gfile['id'] != '1ShIqWfZguwgL07K7WSyyGhwpNoW2oJnXzysut4wZZOA' and
-            not gfile['name'].startswith('2020')):
-            sortable_gfiles[gfile['name']] = gfile
-
-    # JMS delete me
-    jms_count = 0
+        sortable_gfiles[gfile['name']] = gfile
 
     workbooks = list()
     for name in sorted(sortable_gfiles):
         gfile = sortable_gfiles[name]
         workbooks.append(_download_google_sheet(google, gfile, log))
-
-        # JMS delete me
-        if jms_count >= 999:
-            break
-        jms_count += 1
 
     return workbooks
 
@@ -153,8 +161,19 @@ def download_google_sheets(google, args, log):
 def squish(workbooks, log):
     def _copy_row(src_row, dest_sheet, row_number):
         for cell in src_row:
-            if cell.value == '':
+            val = cell.value
+            if val == '':
                 continue
+
+            # A few common mistakes people make
+            if val == 'inactive':
+                cell.value = 'Inactive'
+            elif type(val) is str and val.lower() == 'active':
+                cell.value = 'Actively Involved'
+            elif val == 'interested':
+                cell.value = 'Interested'
+            elif type(val) is str and val.lower() == 'no longer interested':
+                cell.value = 'No longer interested'
 
             log.debug(f"Copying cell: row={row_number}, col={cell.col_idx}, value={cell.value}")
             new_cell = dest_sheet.cell(row=row_number,

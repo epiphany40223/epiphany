@@ -20,8 +20,8 @@ from datetime import datetime
 from datetime import timedelta
 
 from oauth2client import tools
-from apiclient.http import MediaFileUpload
-from email.message import EmailMessage
+from googleapiclient.http import MediaFileUpload
+from google.api_core import retry
 
 import openpyxl
 from openpyxl import Workbook
@@ -40,7 +40,8 @@ source_google_drive_folder = '1lXPirX51BeTVRqau1H2K0DevTYS7Lq_Q'
 ##############################################################################
 
 def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, local_filename, remove_local, log):
-    try:
+    @retry.Retry(predicate=Google.retry_errors)
+    def _upload():
         log.info(f'Uploading file to google "{local_filename}" -> "{google_filename}"')
         metadata = {
             'name'     : google_filename,
@@ -57,16 +58,14 @@ def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, loca
                                      fields='id').execute()
         log.debug(f'Successfully uploaded file: "{google_filename}" (ID: {file["id"]})')
 
-    except:
-        log.error('Google upload failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+        return file
 
     # Set permissions on the GSheet to allow the
     # workers group to edit the file (if you are view-only, you
     # can't even adjust the column widths, which will be
     # problematic for the comments report!).
-    try:
+    @retry.Retry(predicate=Google.retry_errors)
+    def _set_perms():
         perm = {
             'type': 'group',
             'role': 'writer',
@@ -78,10 +77,9 @@ def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, loca
                                           body=perm,
                                           fields='id').execute()
         log.debug(f"Set Google permission for file: {id}")
-    except:
-        log.error('Google set permission failed for some reason:')
-        log.error(traceback.format_exc())
-        exit(1)
+
+    file = _upload()
+    out = _set_perms(file)
 
     # Remove the temp file when we're done
     if remove_local:
@@ -95,9 +93,13 @@ def _upload_to_gsheet(google, google_folder_id, google_filename, mime_type, loca
 ##############################################################################
 
 def _download_google_sheet(google, gfile, log):
-    log.info(f"Downloading Sheet {gfile['name']}...")
-    xlsx_content = google.files().export(fileId=gfile['id'],
-                                         mimeType=Google.mime_types['xlsx']).execute()
+    @retry.Retry(predicate=Google.retry_errors)
+    def _download():
+        log.info(f"Downloading Sheet {gfile['name']}...")
+        return google.files().export(fileId=gfile['id'],
+                                     mimeType=Google.mime_types['xlsx']).execute()
+
+    xlsx_content = _download()
 
     # Write the downloaded XLSX content into a file and then use
     # Openpyxl to load it.
