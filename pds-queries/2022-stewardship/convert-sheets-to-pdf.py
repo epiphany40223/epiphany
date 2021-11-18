@@ -13,11 +13,20 @@
 # be downloaded to the browser's default location (e.g., ~/Downloads) -- that's
 # the important part.
 
-import sys
-sys.path.insert(0, '../../python')
-
 import argparse
+import time
+import sys
 import os
+
+# We assume that there is a "ecc-python-modules" sym link in this
+# directory that points to the directory with ECC.py and friends.
+moddir = os.path.join(os.getcwd(), 'ecc-python-modules')
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ecc-python-modules directory.")
+    print("ERROR: Please make a ecc-python-modules sym link and run again.")
+    exit(1)
+
+sys.path.insert(0, moddir)
 
 import ECC
 import Google
@@ -26,8 +35,7 @@ import GoogleAuth
 import subprocess
 
 from oauth2client import tools
-from apiclient.http import MediaFileUpload
-from email.message import EmailMessage
+from google.api_core import retry
 
 ##############################################################################
 
@@ -35,24 +43,26 @@ gapp_id         = 'client_id.json'
 guser_cred_file = 'user-credentials.json'
 
 source_google_shared_drive = '0AHQEqKijqXcFUk9PVA'
-source_google_drive_folder = '1ukc65NcJDbOIGZebmhR-l-1l83uPQY4T'
-
-# jms folder
-source_google_drive_folder = '1SXxYpO6nH9B5kikGSdZ41yCL8qZLmXP2'
+source_google_drive_folder = '1AawyCq78S0hd6GTSpPr7Rmqx89u3t4fo'
 
 ##############################################################################
 
 def download_google_sheets(google, args, log):
-    log.info(f"Finding Google Sheets in Team Drive {args.shared_drive_id}, folder {args.gdrive_folder_id}")
+    @retry.Retry(predicate=Google.retry_errors)
+    def _download():
+        log.info(f"Finding Google Sheets in Team Drive {args.shared_drive_id}, folder {args.gdrive_folder_id}")
+        response = google.files().list(corpora='drive',
+                                       driveId=args.shared_drive_id,
+                                       includeTeamDriveItems=True,
+                                       supportsAllDrives=True,
+                                       q=q,
+                                       fields='files(name,id)').execute()
+        return response
 
     mime = Google.mime_types['sheet']
     q = f'"{args.gdrive_folder_id}" in parents and mimeType="{mime}" and trashed=false'
-    response = google.files().list(corpora='drive',
-                                   driveId=args.shared_drive_id,
-                                   includeTeamDriveItems=True,
-                                   supportsAllDrives=True,
-                                   q=q,
-                                   fields='files(name,id)').execute()
+
+    response = _download()
     gfiles = response.get('files', [])
 
     # Download the file as a PDF
@@ -64,9 +74,13 @@ def download_google_sheets(google, args, log):
     # mode.
     base   = 'https://docs.google.com/a/mydomain.org/spreadsheets/d/'
     suffix = '/export?exportFormat=pdf&format=pdf&portrait=false'
-    for gfile in gfiles:
+    for i, gfile in enumerate(gfiles):
         log.info(f"Opening Sheet {gfile['name']}...")
         subprocess.run(args=["open", f"{base}{gfile['id']}{suffix}"])
+
+        # Add a little delay to let the browser catch up
+        if i % 10 == 0:
+            time.sleep(2)
 
 ##############################################################################
 
