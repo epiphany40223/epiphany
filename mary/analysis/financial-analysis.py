@@ -423,11 +423,11 @@ def main():
     print(f"Loaded {len(families)} total Families")
 
     squyres = 119353
-    for year in range(2015, 2020+1):
+    for year in range(2015, 2021+1):
         data = find_family_funding(year, families[squyres])
         print(f"Squyres {year}: {data}")
 
-    results = analyze(start=2015, end=2021,
+    results = analyze(start=2015, end=2022,
         families=families, members=members, log=log)
 
     show_family_stats(results)
