@@ -12,26 +12,16 @@
 
 import os
 import sys
-
-# We assume that there is a "ecc-python-modules" sym link in this
-# directory that points to the directory with ECC.py and friends.
-moddir = os.path.join(os.getcwd(), 'ecc-python-modules')
-if not os.path.exists(moddir):
-    print("ERROR: Could not find the ecc-python-modules directory.")
-    print("ERROR: Please make a ecc-python-modules sym link and run again.")
-    exit(1)
-
-sys.path.insert(0, moddir)
+import datetime
 
 import ECC
-import Google
-import GoogleAuth
+import ECC.Google
+import ECC.GoogleAuth
+import ECC.Calendars
+
 from google.api_core import retry
-
-import datetime
-from datetimerange import DateTimeRange
-
 from oauth2client import tools
+from datetimerange import DateTimeRange
 
 default_app_json  = 'gcalendar-reservations-client-id.json'
 default_user_json = 'user-credentials.json'
@@ -39,171 +29,6 @@ default_user_json = 'user-credentials.json'
 verbose = True
 debug   = False
 logfile = None
-
-default_timezone = 'America/New_York'
-
-# Dictionary of calendars on which we're checking for events
-calendars = [
-    {
-        "name" : "Musicians calendar",
-        "id" : "churchofepiphany.com_ga4018ieg7n3q71ihs1ovjo9c0@group.calendar.google.com",
-        "check_conflicts" : False,
-    },
-    {
-        "name" : "Epiphany Events",
-        "id" : "churchofepiphany.com_9gueg54raienol399o0jtdgmpg@group.calendar.google.com",
-        "check_conflicts" : False,
-    },
-    {
-        "name" : "Area E (CC)",
-        "id" : "churchofepiphany.com_2d3336353235303639373131@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area F (CC)",
-        "id" : "churchofepiphany.com_2d3336333531363533393538@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area G (CC)",
-        "id" : "churchofepiphany.com_2d33363137333031353534@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area H (CC)",
-        "id" : "churchofepiphany.com_2d33353938373132352d343735@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area I (CC)",
-        "id" : "churchofepiphany.com_2d33353739373832333731@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area J (CC)",
-        "id" : "churchofepiphany.com_2d333535383831322d32@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area K (CC)",
-        "id" : "churchofepiphany.com_2d3335333231363832383335@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area L (CC)",
-        "id" : "churchofepiphany.com_2d3335313431363234383230@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Chapel (WC)",
-        "id" : "churchofepiphany.com_2d3431353233343734323336@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Coffee Bar Room (CC)",
-        "id" : "churchofepiphany.com_2d38343237303931342d373732@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Connector table 1",
-        "id" : "churchofepiphany.com_2d3538323334323031353338@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Connector table 2",
-        "id" : "churchofepiphany.com_2d3538313436353238373034@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Connector table 3",
-        "id" : "churchofepiphany.com_2d3538303631303232333033@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Dining Room (EH)",
-        "id" : "churchofepiphany.com_34373539303436353836@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Epiphany House-1-Polycom",
-        "id" : "c_188am3mlh8ghkjovnmm43cqqhdgla@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Kitchen (CC)",
-        "id" : "churchofepiphany.com_34383131343230342d333531@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Kitchen (EH)",
-        "id" : "churchofepiphany.com_2d36363539313732302d343738@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Library (CC)",
-        "id" : "churchofepiphany.com_2d3131393638363634343630@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Lighthouse",
-        "id" : "churchofepiphany.com_2d38303937383836353134@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Living Room (EH)",
-        "id" : "churchofepiphany.com_37313933333139382d323530@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Media cart and projector",
-        "id" : "churchofepiphany.com_2d37353236313138352d373236@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Narthex Gathering Area (WC)",
-        "id" : "churchofepiphany.com_3334313632303539343135@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Nursery (CC)",
-        "id" : "churchofepiphany.com_2d353231343439392d34@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Projector screen (large)",
-        "id" : "churchofepiphany.com_2d39343734383435352d323039@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Projector screen (small)",
-        "id" : "churchofepiphany.com_2d37313836393635372d313838@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Quiet Room (WC)",
-        "id" : "churchofepiphany.com_2d36343734343332342d353333@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Worship Space",
-        "id" : "churchofepiphany.com_33363131333030322d363435@resource.calendar.google.com",
-        "check_conflicts" : True,
-    }
-]
-
-# Test calendars to use when we're debugging
-calendars_debug = [
-    {
-        "name" : "Test calendar #1",
-        "id": 'c_bj96menjelb4pecracnninf45k@group.calendar.google.com',
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Test calendar #2",
-        "id" : 'c_ncm1ib261lp6c02i46mors4isc@group.calendar.google.com',
-        "check_conflicts" : True,
-    }
-]
 
 # List of the domains the calendar will accept events from, will decline events
 # from all others
@@ -352,7 +177,7 @@ def respond_to_events(events_to_respond_to, response, service, calendar, log):
         log.debug(f"Response body: {response_body}")
 
         # Make this a subroutine so that we can wrap it in retry.Retry()
-        @retry.Retry(predicate=Google.retry_errors)
+        @retry.Retry(predicate=ECC.Google.retry_errors)
         def _respond():
             if not args.dry_run:
                 service.events().patch(
@@ -387,7 +212,7 @@ def process_events(service, calendar, log):
     endString = end.isoformat() + 'Z'
 
     # Make this a subroutine so that we can wrap it in retry.Retry()
-    @retry.Retry(predicate=Google.retry_errors)
+    @retry.Retry(predicate=ECC.Google.retry_errors)
     def _download_events():
         events = list()
         page_token = None
@@ -467,18 +292,18 @@ def main():
     # to an @epiphanycatholicchurch.org account.
 
     apis = {
-        'calendar': { 'scope'       : Google.scopes['calendar'],
+        'calendar': { 'scope'       : ECC.Google.scopes['calendar'],
                       'api_name'    : 'calendar',
                       'api_version' : 'v3' },
     }
-    services = GoogleAuth.service_oauth_login(apis,
+    services = ECC.GoogleAuth.service_oauth_login(apis,
                                               app_json=args.app_id,
                                               user_json=args.user_credentials)
     calendar_service = services['calendar']
 
-    global calendars
+    calendars = ECC.Calendars.calendars
     if args.debug:
-        calendars = calendars_debug
+        calendars = ECC.Calendars.calendars_debug
 
     # iterates through the list of calendars to check for upcoming events and respond to them
     for calendar in calendars:
