@@ -164,6 +164,11 @@ def get_synchronizations():
         #############################
 
         {
+            'ministries' : [ '301-Audio/Visual/Light Minstry' ],
+            'ggroup'     : f'audio-visual-lighting-ministry{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '302-Bread Baking Ministry' ],
             'ggroup'     : f'breadmakers{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
@@ -357,6 +362,11 @@ def get_synchronizations():
         {
             'keywords'   : [ 'ECC Liturgy Plans reader' ],
             'ggroup'     : f'worship-liturgy-planning-guest{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'ECC Liturgy Particption Editor' ],
+            'ggroup'     : f'worship-liturgy-participation-materials{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {

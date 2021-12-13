@@ -85,6 +85,12 @@ ministries = [
     },
 
     {
+        "ministry"  : '301-Audio/Visual/Light Minstry',
+        "gsheet_id" : '1LtsNJc-9KYZkQqy2BITQ4Xgd_ns4Uo7z3YSQdnQrzN8',
+        "birthday"  : False,
+    },
+
+    {
         "ministry"  : [ '309-Acolytes INTERESTED ONLY',
                         '309A-Acolyte Ministry 5:30P',
                         '309B-Acolyte Ministry  9:00A',
@@ -261,9 +267,11 @@ def write_xlsx(members, ministry, name, want_birthday, log):
     timestamp = ('{year:04}-{mon:02}-{day:02} {hour:02}:{min:02}'
                 .format(year=now.year, mon=now.month, day=now.day,
                         hour=now.hour, min=now.minute))
-    if name is None:
-        name = ministry
-    filename = (f'{name} members as of {timestamp}.xlsx')
+    filename_base = name
+    if filename_base is None:
+        filename_base = ministry
+    filename_base = filename_base.replace("/", "-")
+    filename = (f'{filename_base} members as of {timestamp}.xlsx')
 
     # Put the members in a sortable form (they're currently sorted by MID)
     sorted_members = dict()
