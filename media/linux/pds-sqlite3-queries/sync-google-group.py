@@ -360,6 +360,11 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
+            'keywords'   : [ 'ECC Liturgy Particption Editor' ],
+            'ggroup'     : f'worship-liturgy-participation-materials{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
             'keywords'   : [ 'ECC Musicians Info editor' ],
             'ggroup'     : f'music-ministry-musicians-information-editor{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
