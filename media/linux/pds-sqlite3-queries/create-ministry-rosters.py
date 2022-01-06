@@ -94,6 +94,11 @@ ministries = [
         "gsheet_id" : '1LtsNJc-9KYZkQqy2BITQ4Xgd_ns4Uo7z3YSQdnQrzN8',
         "birthday"  : False,
     },
+    {
+        "ministry"  : '305-Movers Ministry',
+        "gsheet_id" : '1q0rNZQ0Od3cCoFG2qLgKZep10GzQ3nmvVIIJuUOWBgY',
+        "birthday"  : False,
+    },
 
     {
         "ministry"  : [ '309-Acolytes INTERESTED ONLY',
