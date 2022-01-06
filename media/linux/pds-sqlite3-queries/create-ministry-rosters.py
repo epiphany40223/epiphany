@@ -85,6 +85,11 @@ ministries = [
     },
 
     {
+        "ministry"  : '300-Art & Environment',
+        "gsheet_id" : '1uXy2zTQeeH_YtBAR46lDV5X8ADZRgPnNROtzDU_iqv0',
+        "birthday"  : False,
+    },
+    {
         "ministry"  : '301-Audio/Visual/Light Minstry',
         "gsheet_id" : '1LtsNJc-9KYZkQqy2BITQ4Xgd_ns4Uo7z3YSQdnQrzN8',
         "birthday"  : False,
