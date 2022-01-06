@@ -304,7 +304,7 @@ def write_xlsx(members, ministry, name, want_birthday, log):
     row = 1
     ws.merge_cells(f'A{row}:{last_col}{row}')
     cell = f'A{row}'
-    ws[cell] = f'Ministry: {name}'
+    ws[cell] = f'Ministry: {ministry}'
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 
