@@ -1255,7 +1255,7 @@ def is_parishioner(family):
 # Return the first phone number of a given type for a given Member, or
 # the first non-unlisted phone number if no numbers of a type are present
 def find_member_phone(member, type):
-    if type != None:
+    if type != None and 'phones' in member:
         for entry in member['phones']:
             if entry['unlisted']:
                 continue
@@ -1269,4 +1269,4 @@ def find_member_phone(member, type):
 
             return entry['number']
 
-        return ''
+    return None

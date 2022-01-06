@@ -85,8 +85,18 @@ ministries = [
     },
 
     {
+        "ministry"  : '300-Art & Environment',
+        "gsheet_id" : '1uXy2zTQeeH_YtBAR46lDV5X8ADZRgPnNROtzDU_iqv0',
+        "birthday"  : False,
+    },
+    {
         "ministry"  : '301-Audio/Visual/Light Minstry',
         "gsheet_id" : '1LtsNJc-9KYZkQqy2BITQ4Xgd_ns4Uo7z3YSQdnQrzN8',
+        "birthday"  : False,
+    },
+    {
+        "ministry"  : '305-Movers Ministry',
+        "gsheet_id" : '1q0rNZQ0Od3cCoFG2qLgKZep10GzQ3nmvVIIJuUOWBgY',
         "birthday"  : False,
     },
 
@@ -294,7 +304,7 @@ def write_xlsx(members, ministry, name, want_birthday, log):
     row = 1
     ws.merge_cells(f'A{row}:{last_col}{row}')
     cell = f'A{row}'
-    ws[cell] = f'Ministry: {name}'
+    ws[cell] = f'Ministry: {ministry}'
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 

@@ -164,6 +164,11 @@ def get_synchronizations():
         #############################
 
         {
+            'ministries' : [ '300-Art & Environment' ],
+            'ggroup'     : f'art-and-environment-ministry{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '301-Audio/Visual/Light Minstry' ],
             'ggroup'     : f'audio-visual-lighting-ministry{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
