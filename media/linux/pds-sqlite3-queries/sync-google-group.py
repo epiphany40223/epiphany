@@ -311,22 +311,22 @@ def get_synchronizations():
         {
             'ministries' : [ '800-ChildrenFormationCatechist' ],
             'ggroup'     : f'childrens-formation-catechists{ecc}',
-            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+            'notify'     : f'formation{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '807-RCIA Team' ],
             'ggroup'     : f'rcia-team{ecc}',
-            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+            'notify'     : f'formation{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ "811-Family&Children's WorkGrp" ],
             'ggroup'     : f'family-and-childrens-working-group{ecc}',
-            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+            'notify'     : f'formation{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '812-Adult Form. Working Group' ],
             'ggroup'     : f'adult-formation-working-group{ecc}',
-            'notify'     : f'lisa{ecc},pds-google-sync{ecc}',
+            'notify'     : f'formation{ecc},pds-google-sync{ecc}',
         },
 
         #############################
