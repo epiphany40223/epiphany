@@ -225,34 +225,66 @@ def find_about_to_expire(pds_members, expiration, log):
         if key3 not in member[key][key2]:
             continue
 
-        message     = ''
-        expire_date = None
-        mandates    = member[key][key2][key3]
-        for i, mandate in enumerate(mandates):
-            if now_str not in mandate['date_range']:
-                continue
+        # NOTE: The code below could likely be more optimial /
+        # efficient.  However, there's a bunch of different corner
+        # cases, and I thought it would be best to write the code in
+        # its simplest form -- even if it's not efficient.
 
-            # We found the mandate that we're currently in
-            if check_dt_str in mandate['date_range']:
-                # It's still good through the checked expiration
-                # -- nothing to do
-                break
-            else:
-                # Checked expiration date is not in the current
-                # mandate.  Is there another mandate that will
-                # start again in the future?
-                expire_date = mandate['end_date']
+        # Remember: the list of mandates has been consolidated/merged,
+        # so each entry in "mandates" may actually represent more than
+        # one mandate.  But that doesn't matter here: we just want to
+        # know the length of time that this Member is covered by a
+        # mandate (or set of mandates).
+        mandates = member[key][key2][key3]
 
-                # Is there some other mandate that starts after this
-                # mandate ends?
-                if len(mandates) > i + 1:
-                    m = mandates[i + 1]
-                    message = 'New mandate starts {m["start_date"]}'
+        # If today's date and the checked expiration date are both in
+        # the same mandate range, then this Member is good -- move on
+        # to check the next Member.
+        covered = False
+        for mandate in mandates:
+            if (now_str in mandate['date_range'] and
+                check_dt_str in mandate['date_range']):
+                covered = True
                 break
 
-        if not expire_date:
-            # This Member is ok; no need to list in this report.
+        if covered:
             continue
+
+        # If we got here, it's because there's a discontinuity of
+        # mandate coverage between now and the checked expiration
+        # date.  Let's see if we can come up with a helpful message
+        # for the report.
+
+        # Calculate some values
+
+        # The mandate that covers today
+        now_mandate      = None
+        # The next mandate that will be active after the mandate that
+        # covers today
+        next_mandate     = None
+
+        for i, mandate in enumerate(mandates):
+            if now_str in mandate['date_range']:
+                now_mandate = mandate
+                if i + 1 < len(mandates):
+                    next_mandate = mandates[i + 1]
+
+        log.debug(f"{member['Name']}: now {now_mandate}")
+        log.debug(f"{member['Name']}: next {next_mandate}")
+
+        # This report is only for finding people who have a current
+        # mandate that is about to expire.  So skip any Member who
+        # does not have a "now" mandate.
+        if not now_mandate:
+            continue
+
+        # If we're here, it means thart there is a Member who has a
+        # current mandate, but it will expire soon.  Make a
+        # friendly/useful message
+        expire_date = now_mandate["end_date"]
+        message = f'Currently active mandate expires {now_mandate["end_date"]}'
+        if next_mandate:
+            message += f'; next mandate starts {next_mandate["start_date"]}'
 
         out.append({
             'member'      : member,
@@ -334,9 +366,6 @@ def mandate_about_to_expire_report(ministries, pds_members,
 ###################################################################
 
 def available_filter(member, ministry_name, log):
-    if not in_ministry(member, ministry_name, log):
-        return False
-
     # If we got here, the Member is in the desired ministry.  So we
     # can just return their training status.
     # (this key should definitely be there, but it never hurts to code
@@ -368,16 +397,11 @@ def available_column_data(member, first_col, log):
 #------------------------------------------------------------------
 
 def unavailable_filter(member, ministry_name, log):
-    if not in_ministry(member, ministry_name, log):
-        return False
-
     # If we got here, the Member is in the desired ministry.  So we
     # can just return their training status.
-    # (this key should definitely be there, but it never hurts to code
-    # defensively)
     key = 'calculated'
     if key not in member:
-        return False
+        return True
     return not member[key]['active']
 
 def unavailable_column_names(log):
@@ -387,6 +411,15 @@ def unavailable_column_names(log):
 def unavailable_column_data(member, first_col, log):
     key = 'calculated'
     key2 = 'by_result'
+    key3 = 'Yes'
+
+    # It's possible that the Member has no mandates or no "Yes"
+    # mandates at all.
+    if (key not in member or
+        key2 not in member[key] or
+        key3 not in member[key][key2]):
+        return [ 'No mandates listed in PDS' ]
+
     mandates = member[key][key2]['Yes']
 
     # We know that "now" is not in any existing mandate on this
@@ -432,13 +465,19 @@ def make_xlsx_roster_workbook(members, ministry_name,
 
     filtered = list()
     for member in members.values():
-        if key not in member:
+        # Filter Members who are not in this ministry
+        if not in_ministry(member, ministry_name, log):
             continue
 
-        # Does this Member's set of reqs match our filter criteria?
-        found = filter_fn(member, ministry_name, log)
-        if found:
-            filtered.append(member)
+        log.debug(f"Found {ministry_name} member: {member['Name']}")
+
+        # Filter Members who do not match our criteria
+        matched = filter_fn(member, ministry_name, log)
+        if not matched:
+            log.debug(f"DID NOT MATCH {sheet_name}: {ministry_name} {member['Name']}")
+            continue
+
+        filtered.append(member)
 
     filtered.sort(key=lambda item: item['Name'])
 
