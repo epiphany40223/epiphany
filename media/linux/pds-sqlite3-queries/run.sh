@@ -6,9 +6,12 @@
 
 set -xeuo pipefail
 
-base=/home/coeadmin/git/epiphany/media/linux
-prog_dir=$base/pds-sqlite3-queries
-sqlite_dir=$base/pds-data
+logfile_dir=/home/coeadmin/logfiles
+credential_dir=/home/coeadmin/credentials
+
+git_base=/home/coeadmin/git/epiphany/media/linux
+prog_dir=$git_base/pds-sqlite3-queries
+sqlite_dir=$git_base/pds-data
 
 cd $prog_dir
 
@@ -21,14 +24,14 @@ cd $prog_dir
 ################################################################################
 
 # Generate the list of email addresses from PDS data and sync
-google_logfile=$HOME/logfiles/linux/sync-google-group/sync-google-group-logfile.txt
-cred_dir=$HOME/credentials/pds-sqlite3-queries
+google_logfile=$logfile_dir/linux/sync-google-group/sync-google-group-logfile.txt
+goog_cred_dir=$credential_dir/pds-sqlite3-queries
 ./sync-google-group.py \
-    --smtp-auth-file $HOME/credentials/smtp-auth.txt \
-    --slack-token-file $HOME/credentials/slack-token.txt \
+    --smtp-auth-file $credential_dir/smtp-auth.txt \
+    --slack-token-file $credential_dir/slack-token.txt \
     --sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
-    --app-id $cred_dir/client_id.json \
-    --user-credentials $cred_dir/user-credentials.json \
+    --app-id $goog_cred_dir/client_id.json \
+    --user-credentials $goog_cred_dir/user-credentials.json \
     --logfile=$google_logfile \
     --verbose
 
@@ -45,26 +48,26 @@ cred_dir=$HOME/credentials/pds-sqlite3-queries
 h=`date '+%H'`
 m=`date '+%M'`
 if test $h -eq 2 -a $m -lt 15; then
-    roster_logfile=$HOME/logfiles/linux/ministry-roster/ministry-roster-logfile.txt
-    cred_dir=$HOME/credentials/google-drive-uploader
+    roster_logfile=$logfile_dir/linux/ministry-roster/ministry-roster-logfile.txt
+    goog_cred_dir=$credential_dir/google-drive-uploader
     ./create-ministry-rosters.py \
 	--sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
 	--logfile=$roster_logfile \
-	--app-id $cred_dir/google-uploader-client-id.json \
-	--user-credentials $cred_dir/google-uploader-user-credentials.json
+	--app-id $goog_cred_dir/google-uploader-client-id.json \
+	--user-credentials $goog_cred_dir/google-uploader-user-credentials.json
 
-    roster_logfile=$HOME/logfiles/linux/training-roster/trailing-roster-logfile.txt
-    ./create-training-rosters.py \
+    roster_logfile=$logfile_dir/linux/training-roster/trailing-roster-logfile.txt
+    ./create-communion-ministry-reports.py \
 	--sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
 	--logfile=$roster_logfile \
-	--app-id $cred_dir/google-uploader-client-id.json \
-	--user-credentials $cred_dir/google-uploader-user-credentials.json
+	--app-id $goog_cred_dir/google-uploader-client-id.json \
+	--user-credentials $goog_cred_dir/google-uploader-user-credentials.json
 
-    ppc_logfile=$HOME/logfiles/linux/ppc-feedback/ppc-feedback-logfile.txt
-    cred_dir=$HOME/credentials/ppc-feedback
+    ppc_logfile=$logfile_dir/linux/ppc-feedback/ppc-feedback-logfile.txt
+    goog_cred_dir=$credential_dir/ppc-feedback
     ./ppc-feedback-google-group.py \
-        --smtp-auth-file $HOME/credentials/smtp-auth.txt \
+        --smtp-auth-file $credential_dir/smtp-auth.txt \
         --logfile=$ppc_logfile \
-	--app-id $cred_dir/client-id-ppc-feedback.json \
-	--user-credentials $cred_dir/user-credentials-ppc-feedback.json
+	--app-id $goog_cred_dir/client-id-ppc-feedback.json \
+	--user-credentials $goog_cred_dir/user-credentials-ppc-feedback.json
 fi
