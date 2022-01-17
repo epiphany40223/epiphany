@@ -56,7 +56,7 @@ if test $h -eq 2 -a $m -lt 15; then
 	--app-id $goog_cred_dir/google-uploader-client-id.json \
 	--user-credentials $goog_cred_dir/google-uploader-user-credentials.json
 
-    roster_logfile=$logfile_dir/linux/training-roster/trailing-roster-logfile.txt
+    roster_logfile=$logfile_dir/linux/training-roster/communion-ministry-logfile.txt
     ./create-communion-ministry-reports.py \
 	--sqlite3-db=$sqlite_dir/pdschurch.sqlite3 \
 	--logfile=$roster_logfile \
