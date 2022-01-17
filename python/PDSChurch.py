@@ -15,6 +15,9 @@ import pathlib
 import re
 
 import PDS
+import ECC
+
+from datetimerange import DateTimeRange
 
 ##############################################################################
 #
@@ -577,10 +580,29 @@ def _link_member_requirements(members, mem_reqs, req_types):
         if key not in m:
             m[key] = list()
 
+        start = _normalize_date(mr['ReqDate'])
+        end   = _normalize_date(mr['ExpirationDate'])
+
+        # If there was no end date, then pick a date arbitrarily 50
+        # years in the future
+        if end == date_never:
+            now = datetime.datetime.now().date()
+            end = now + datetime.timedelta(days=50*365)
+
+        start_dt = datetime.datetime(year=start.year, month=start.month,
+                                     day=start.month, tzinfo=ECC.local_tz)
+        end_dt   = datetime.datetime(year=end.year, month=end.month,
+                                     day=end.month, tzinfo=ECC.local_tz)
+
+        dtr = None
+        if start != date_never:
+            dtr = DateTimeRange(start_dt, end_dt)
+
         m[key].append({
             'description' : req_types[mr['ReqDescRec']]['Description'],
-            'start_date'  : _normalize_date(mr['ReqDate']),
-            'end_date'    : _normalize_date(mr['ExpirationDate']),
+            'start_date'  : start,
+            'end_date'    : end,
+            'date_range'  : dtr,
             'result'      : result,
             'note'        : mr['ReqNote'],
         })
