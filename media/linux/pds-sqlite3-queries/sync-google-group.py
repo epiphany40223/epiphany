@@ -332,6 +332,14 @@ def get_synchronizations():
         #############################
 
         {
+            'ministries' : [ 'WG-Livestream Team' ],
+            'ggroup'     : f'livestream-team{ecc}',
+            'notify'     : f'director-communications{ecc},pds-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
             'ministries' : [ 'E-Taize Prayer' ],
             'ggroup'     : f'taizeprayer{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
