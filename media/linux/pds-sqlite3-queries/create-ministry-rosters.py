@@ -228,6 +228,12 @@ ministries = [
     },
 
     {
+        "ministry"  : '404-Welcome Desk',
+        "gsheet_id" : '1pJwD2UXiDAKng-DFwdWMp0AbZQFSJoiOsJaQgJmfvCE',
+        "birthday"  : False,
+    },
+
+    {
         "ministry"  : '451-Livestream Team Ministry',
         "gsheet_id" : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
         "birthday"  : False,
