@@ -33,7 +33,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from oauth2client import tools
-from apiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -48,227 +48,497 @@ guser_cred_file = 'user-credentials.json'
 
 ministries = [
     {
-        "ministry"  : '100-Parish Pastoral Council',
-        "gsheet_id" : '1aIoStpSOsup8XL5eNd8nhpJwM-IqN2gTkwVf_Qvlylc',
-        "birthday"  : False,
+        'ministry' : '100-Parish Pastoral Council',
+        'gsheet_id' : '1aIoStpSOsup8XL5eNd8nhpJwM-IqN2gTkwVf_Qvlylc',
+        'birthday' : False,
     },
     {
-        "ministry"  : '102-Finance Advisory Council',
-        "gsheet_id" : '1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0',
-        "birthday"  : False,
+        'ministry' : '102-Finance Advisory Council',
+        'gsheet_id' : '1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0',
+        'birthday' : False,
     },
     {
-        "ministry"  : '103-Worship Committee',
-        "gsheet_id" : '1h_ZvhkYlnebIu0Tk7h1ldJo-VKnJsJGe1jEzY34mcd0',
-        "birthday"  : False,
+        'ministry' : '103-Worship Committee',
+        'gsheet_id' : '1h_ZvhkYlnebIu0Tk7h1ldJo-VKnJsJGe1jEzY34mcd0',
+        'birthday' : False,
     },
     {
-        "ministry"  : '106-Community Life Committee',
-        "gsheet_id" : '1k_hH1tEWBGuERCmFvhZxKOfAsBkqy0uZ16LAd0_jMDg',
-        "birthday"  : False,
+        'ministry' : '104-Stewardship & E Committee',
+        'gsheet_id' : '1avaHrl-sHOWOc541GclHZL3ajG30HozISR0HDoswKnM',
+        'birthday' : False,
     },
     {
-        "ministry"  : '107-Social Resp Steering Comm',
-        "gsheet_id" : '1Am3v0Pv4D9zubkGYgFbUd8e92PZnBPrbcwKrMrs8AnI',
-        "birthday"  : False,
+        'ministry' : '106-Community Life Committee',
+        'gsheet_id' : '1k_hH1tEWBGuERCmFvhZxKOfAsBkqy0uZ16LAd0_jMDg',
+        'birthday' : False,
     },
     {
-        "ministry"  : '110-Ten Percent Committee',
-        "gsheet_id" : '18BIrnBWf_4LS9XeC9tordSD1SBgJz67a0I9Ouj6ZcEc',
-        "birthday"  : False,
+        'ministry' : '107-Social Resp Steering Comm',
+        'gsheet_id' : '1Am3v0Pv4D9zubkGYgFbUd8e92PZnBPrbcwKrMrs8AnI',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '108-Formation Team',
+        'gsheet_id' : '1rWy81dH5ZSdjfXGyFN6nF9DIkVk1NS5G7RmHZDn5FTY',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '109-Prayer Ministry Leadership',
+        'gsheet_id' : '1pc24lv1VCXJjWbI8QMHFUNnVNqzrLIWd2mY_lcORiHU',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '110-Ten Percent Committee',
+        'gsheet_id' : '18BIrnBWf_4LS9XeC9tordSD1SBgJz67a0I9Ouj6ZcEc',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '111-Hispanic Ministry Team',
+        'gsheet_id' : '1FuUzKKmezkfBcBJdGiX1gbw4PHmqR_nivwAjoFTLjK8',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '113-Communications Adv. Comm. (no active Members)',
+        'gsheet_id' : '1erlqkK_F-ol8Bmo5Pg6SoAe355tOxwU3D4pU179foCU',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '200-Audit Committee',
+        'gsheet_id' : '1OJ3z9tS9qoZMjr4EfSh5zeKy_PKmaRja9htIthjUPpI',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '201-Collection Counter',
+        'gsheet_id' : '1w-PQ-_jnzWWRB3id-Mh4pNHTHJzf9Al1gc_p7cS0koM',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '202-Facility Mgmt & Planning',
+        'gsheet_id' : '1kcna05U9Oiy0dyvinjOjLi8tXSwQ3sHBC8N8LqjDsjU',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '203-Garden & Grounds',
+        'gsheet_id' : '1ZrJCRCrrClQuEq9KPXiRVj2s2u78L6R4-P7hbMpYqzs',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '204-Parish Office Volunteers',
+        'gsheet_id' : '1yhGeBNaUTuVkEGTRkCh5SC6hQLOpdaEVNpXaq2WmMc4',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '205-Participation Sheet Vol',
+        'gsheet_id' : '1rPf-_YTqZoOxhj_EO7a3i4tA0-1wl-OxvLyk82m6IE0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '206-Space Arrangers',
+        'gsheet_id' : '1ZIAn7MdeDVcgvHwR98dXs_ewIaU2uWbl6mvriLSk5V0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '207-Technology Committee',
+        'gsheet_id' : '1Gn2m2VMabPkWJWg_NTs6XeGPf_Qi7qPELLxyOx9Q0vU',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '208-Weekend Closer',
+        'gsheet_id' : '1pj2r_0Xjog22g-kiSmSGkO6BHIIZqW7uXcE3hUs6Xy8',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '300-Art & Environment',
+        'gsheet_id' : '1uXy2zTQeeH_YtBAR46lDV5X8ADZRgPnNROtzDU_iqv0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '301-Audio/Visual/Light Minstry',
+        'gsheet_id' : '1LtsNJc-9KYZkQqy2BITQ4Xgd_ns4Uo7z3YSQdnQrzN8',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '302-Bread Baking Ministry',
+        'gsheet_id' : '1JOHf5XwPiWWM_UtqhTbyUA_-IDzCHeE2JwvX3w1B4MM',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '303-Linens/Vestments Ministry',
+        'gsheet_id' : '1ul5doCFZx4Y_L8ZNmDarVdgLy_dQo2MkE0mdo5kbrY0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '304-Liturgical Planning',
+        'gsheet_id' : '11A59wLOy58-ADKm60YuVGDG0N02E8a9iY-VoCjQX9tY',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '305-Movers Ministry',
+        'gsheet_id' : '1q0rNZQ0Od3cCoFG2qLgKZep10GzQ3nmvVIIJuUOWBgY',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '306-Music Support for Children',
+        'gsheet_id' : '1ODBCOAUY5g93-ZDrgAx9-Fv5wT4VSeMYxHgpFeb2F4s',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '307-Wedding Assistant',
+        'gsheet_id' : '1UBzQOEpdYmb1afAnrPDlQcz0hoouvd6mkpEV6rYDMxg',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '308-Worship&Music Support Team',
+        'gsheet_id' : '1kHRnohAEeaC_2-yTTcgHe36yRVJ4EhWhmbBCZ0P_vI8',
+        'birthday' : False,
+    },
+    {
+        'ministries' : [
+            '309-Acolytes INTERESTED ONLY',
+            '309A-Acolyte Ministry 5:30P',
+            '309B-Acolyte Ministry  9:00A',
+            '309C-Acolyte Ministry 11:30A',
+        ],
+        'gsheet_id' : '1zXfAxnuQCATWQ7nU7QYn2Mvy1Ql1Huy7Ve1DW60nPKA',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '309A-Acolyte Ministry 5:30P',
+        'gsheet_id' : '17knwBLjpOgV7tSURrVXsyhWhIe0WO0h7AQZ3HIYse6g',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '309B-Acolyte Ministry  9:00A',
+        'gsheet_id' : '1mQOGaT8jKjwfLhuL7afA4zMjoHfSU0zTfqkw9t1CVoI',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '309C-Acolyte Ministry 11:30A',
+        'gsheet_id' : '1GPk3IzlCTMvGYNFR_Q_haK02NqCuaTNd7Z1CdTZGD8w',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '310-Adult Choir',
+        'gsheet_id' : '1ku8Aq9dXm_mrOq421MWVk7hAqV2Am5FFSgUACOYs2WU',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '311-Bell Choir',
+        'gsheet_id' : '1UTzXgO9ZLBHB0w-zAW8-u57cgWLbkWWGanJgPC9gboE',
+        'birthday' : True,
+    },
+    {
+        'ministry' : '312-Children\'s Music Ministry',
+        'gsheet_id' : '11H5SbDti8Jm2HMqdo3mZ3_5iTBky4OmZGdB_WeCOZYI',
+        'birthday' : False,
+    },
+    {
+        'ministries' : [
+            '313-Communion Ministers',
+            '313A-Communion Ministers: Weekday',
+            '313B-Communion Ministers: 5:30',
+            '313C-Communion Ministers: 9:00',
+            '313D-Communion Ministers:11:30',
+         ],
+        'gsheet_id' : '10Aq9XtZHL3v0m0Erm71f8BSUYr7CiEDMwzDWTSgKPJ4',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '313A-Communion: Weekday',
+        'gsheet_id' : '1ep1HrUf1jWB43e-wnHiayq6gcDImo8Y26OQ2e5b8gdw',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '313B-Communion Ministers: 5:30',
+        'gsheet_id' : '1S-mZyZwIunBJ1hZYJ942Bd1p--SMeUjEMBw3XU9y404',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '313C-Communion Ministers: 9:00',
+        'gsheet_id' : '1JHcG1krbBqlegL9NU45aAKl0zw0rSrMwmPwhKfXfIXI',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '313D-Communion Ministers:11:30',
+        'gsheet_id' : '1aqgGKqbIUyo0xHFufBPQveFMWJUQ0hVkShx_M4NTflg',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '314-Communion Min. Coordinator',
+        'gsheet_id' : '18YGA8uOv5DaDDdYsc2fri9RjfysX8i740oiziVFHbuo',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '315-Funeral Mass Ministry',
+        'gsheet_id' : '107rbGV_WbEz6m6m8XMliLWIMFKKMz8pQv8pdjgLFvLI',
+        'birthday' : False,
+    },
+    {
+        'ministries' : [
+            '316-Greeters INTERESTED ONLY',
+            '316A-Greeters 5:30P',
+            '316B-Greeters 9:00A',
+            '316C-Greeters 11:30A',
+         ],
+        'gsheet_id' : '1vd7sltcU8MVwIBad__PyXXMN_cUEFvdXpL5RkYiBWJ0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '316A-Greeters 5:30P',
+        'gsheet_id' : '1sWu0OAL03N7zeg3aB6_1sZQYQbn4uhw7MtCRa0VHy1s',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '316B-Greeters 9:00A',
+        'gsheet_id' : '11O1G4E9cVoDYKsG4ymVn68E77PgFWJnyK_FaU28F0vk',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '316C-Greeters 11:30A',
+        'gsheet_id' : '1JbBRo3DXs1bK3D_TkjRCJUVL_SF660V9YcsudDzm8cs',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '317-Instrumentalists & Cantors',
+        'gsheet_id' : '1YP3sC4dcOWH9Li1rJV8D5FI9mef50xvxqOf6K1K54_U',
+        'birthday' : True,
+    },
+    {
+        'ministries' : [
+            '318-Lectors  MASTER LIST',
+            '318A-Lector Ministry  5:30P',
+            '318B-Lector  Ministry 9:00A',
+            '318C-Lector Ministry 11:30A',
+            '318D-Lector Ministry  Spanish',
+         ],
+        'gsheet_id' : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '318A-Lector Ministry  5:30P',
+        'gsheet_id' : '1_it-a1Zl2zyWBXSwu_IfGbwbZgd0OUCJdhGtBJzNBXY',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '318B-Lector  Ministry 9:00A',
+        'gsheet_id' : '16OmohVR9zSPF68PyNgY8VV1oTzSeFyXGY7cK4dSuNnE',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '318C-Lector Ministry 11:30A',
+        'gsheet_id' : '1nKE13crOa20BaDjbmgWWRq3oklY_lkNvuHS-3X1-Rro',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '318D-Lector Ministry  Spanish',
+        'gsheet_id' : '1FZDzEquDfhTHUY2_YGR15a05gYkgIzuNR4NaDY1zyB4',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '319-Liturgical Dance Ministry',
+        'gsheet_id' : '14s4gtJMjK0qiHvN-eQ1zaD76PoSGVd9qcfIPxTDGhrc',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '321-Prayer Chain Ministry',
+        'gsheet_id' : '1Z3amqu2CwsqUNw3O7ih_awgRwyXJazBzAYt93ZgoAwQ',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '401-Epiphany Companions',
+        'gsheet_id' : '1voFdTbY3RMs3R_X-pO6-hbjBfC9Prm80ON-lLDTl2UI',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '402-New Members Coffee',
+        'gsheet_id' : '10yQUVTr2EHqRwvdotQAZT33mbVwk8jtDoIwIyWW3-to',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '404-Welcome Desk',
+        'gsheet_id' : '1pJwD2UXiDAKng-DFwdWMp0AbZQFSJoiOsJaQgJmfvCE',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '405-Parish Mission Plan Team',
+        'gsheet_id' : '1YLK4dsW2-whQeKPR0g4F8q3ZuximhwLiN1gS_ps4JgQ',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '406-Evangelization Team',
+        'gsheet_id' : '1T2FCBImLj4akVnX1hpfymi-JKV5jPf3G0ucknzQz8Io',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '407-Stewardship Team',
+        'gsheet_id' : '1vGOdc2YtiNj1VnzUMy0ftrjuwVxqSJz_8XFeTxnQ8l8',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '408-Engagement Team',
+        'gsheet_id' : '1zaVGPdnHp5zZu3zbWfGckIaxbCeCSSTYyoe4pCIlQjs',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '452-Media Communications',
+        'gsheet_id' : '1KkCF2V4JIK65b9QsfSG-lGMCASXPavxIxim-CfzxBYk',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '500-BereavementReceptionSupprt',
+        'gsheet_id' : '1qbTrDDHAyEsCT5oxzGlvnpU-kOJNS3MPv9re0x6XE2U',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '501-Care of Sick: Communion',
+        'gsheet_id' : '1fKXe-NuoObjgYoFRcbuJQwIOjFIAfT7TQB87eccgfng',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '504-DivorceCare',
+        'gsheet_id' : '1c5S-NSgGrGipzk2Wri60pazwcR5L_ZjWQc_Gzxqc-1g',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '505-Healing Blanket Ministry',
+        'gsheet_id' : '1NOijo2AHwftLBGDyCiyGMEIp4Qmfw-0jVjHG9Ygz3S8',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '508-Messages of Hope Ministry',
+        'gsheet_id' : '1Ua7pm-4Av7vPhU8quL5sAEKfowo8O_jfEF34vD1s3Wg',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '600-Men of Epiphany',
+        'gsheet_id' : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '601-Sages (for 50 yrs. +)',
+        'gsheet_id' : '1-uvQO5RRf0K6NJlR_4Mijygn4XGk0zhvowdflKLoEUc',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '602-Singles Explore Life (SEL)',
+        'gsheet_id' : '1dJ-57kiTO1SsvxG8wAXd2YlQ_vY7xmKnjvI9j0k97EM',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '604-Wednesdays for Women',
+        'gsheet_id' : '19n3zSL9bHla98_Q6d29kcp1d2lxnSpYOU6FUtU41lf4',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '605-Sunday Morning Coffee',
+        'gsheet_id' : '1QLcjLidJppCfhqaNBn10h1Toe81DEy48PwwJAhwDNUs',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '609-Octoberfest Plan Team 2022',
+        'gsheet_id' : '17QXoqgreLu8sUQpZfooNkto4NV06wdoE3yA6Q5vgiAw',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '610-FeastOfEpiphanyPlanTeam\'23',
+        'gsheet_id' : '18UNXrRqckFSO2801lmODRohk_CJVI9ko4UtRFruS9E0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '700-Advocates for Common Good',
+        'gsheet_id' : '1Iz8hz7NAhh9-dVMiC7mL8yYFi_qmM_ayB5IXhJU0uPw',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '701-CLOUT',
+        'gsheet_id' : '1gBQXnTgxodILkjXvBrfJ-sztVj6NZaZQI1kbddAESNE',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '703-Eyeglass Ministry',
+        'gsheet_id' : '1i3EBKO3Lj3lIprhnoc4VeabEIPAuce5JeV99y1zrUAc',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '704-Habitat for Humanity',
+        'gsheet_id' : '1HacDJsMK-oLKjuPjvrABhbYn-b0joox3GMY9uEA--yg',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '705-Hunger & Poverty Ministry',
+        'gsheet_id' : '1m0Cp7k0XyeJvZ8Z0IZXrudD3oALfeLr0sWvvnEEgn0o',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '706-Prison Ministry',
+        'gsheet_id' : '1lXkeHsyHNqHYH4zs_HiQdaq8PK8vh5W2koQE5sCq_7U',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '707-St. Vincent De Paul',
+        'gsheet_id' : '1tFmzvu53v-oBF3P59fl4zv46VHt4PRu066YyceuYNl4',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '709-Twinning Committee:Chiapas',
+        'gsheet_id' : '1GVKj83EQxNS6TFI1Coe9Kat2cyezcKwD8VihuVEWLMA',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '710-Environmental Concerns',
+        'gsheet_id' : '1jsoRxugVwXi_T2IDq9J-mEVdzS8xaOk9kuXGAef-YaQ',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '711-Dignity of Life Ministry (no active Members)',
+        'gsheet_id' : '1-0BwZIGvzTQL43ffyGYljYOruAE7ULES2oK52siHR0I',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '712-Legislative Network',
+        'gsheet_id' : '1SqqnAFEZlUdCAxp6NYKqpqGFy13L_aheVEGzHLLzOuk',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '800-ChildrenFormationCatechist',
+        'gsheet_id' : '1rBKiweOBT-JZFbfv5Sf4_vjjOlAYnOGaZIhadtBPxSE',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '802-GathTheChildren Catechist',
+        'gsheet_id' : '1lI9eO0bryD6GFIsgJ5FipGePK4FaJ7v8eIp71DFz_6A',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '805-Monday Adult Bible Study',
+        'gsheet_id' : '1yBnxCduZlq8l33e-YUsD2MvNY5uMnnL2Sb4FFRPX2eA',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '807-RCIA Team',
+        'gsheet_id' : '13neLXFrDTsohe_N_CVPX7ajx4pFvYb9miFtZtUqdVl4',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '809-Sunday Adult Form. Spanish',
+        'gsheet_id' : '1By2arcEe4qyBe6tDaItOZw0d8_ScElhLWSUtGgpEEXM',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '811-Family&Children\'s WorkGrp',
+        'gsheet_id' : '1ecgA_Z3pYA9LH7wt1kwyJ7RxU2ukltcCbbJMgT26BHA',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '812-Adult Form. Working Group',
+        'gsheet_id' : '1cxQYYfmxtaJtFpKBoNSmEzVXktnim7RE9ItMn9i7pWA',
+        'birthday' : False,
     },
 
     {
-        "ministry"  : '207-Technology Committee',
-        "gsheet_id" : '1Gn2m2VMabPkWJWg_NTs6XeGPf_Qi7qPELLxyOx9Q0vU',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : '300-Art & Environment',
-        "gsheet_id" : '1uXy2zTQeeH_YtBAR46lDV5X8ADZRgPnNROtzDU_iqv0',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '301-Audio/Visual/Light Minstry',
-        "gsheet_id" : '1LtsNJc-9KYZkQqy2BITQ4Xgd_ns4Uo7z3YSQdnQrzN8',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '305-Movers Ministry',
-        "gsheet_id" : '1q0rNZQ0Od3cCoFG2qLgKZep10GzQ3nmvVIIJuUOWBgY',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : [ '309-Acolytes INTERESTED ONLY',
-                        '309A-Acolyte Ministry 5:30P',
-                        '309B-Acolyte Ministry  9:00A',
-                        '309C-Acolyte Ministry 11:30A' ],
-        "name"      : '309-Acolytes (all masses)',
-        "gsheet_id" : '1zXfAxnuQCATWQ7nU7QYn2Mvy1Ql1Huy7Ve1DW60nPKA',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '309A-Acolyte Ministry 5:30P',
-        "gsheet_id" : '17knwBLjpOgV7tSURrVXsyhWhIe0WO0h7AQZ3HIYse6g',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '309B-Acolyte Ministry  9:00A',
-        "gsheet_id" : '1mQOGaT8jKjwfLhuL7afA4zMjoHfSU0zTfqkw9t1CVoI',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '309C-Acolyte Ministry 11:30A',
-        "gsheet_id" : '1GPk3IzlCTMvGYNFR_Q_haK02NqCuaTNd7Z1CdTZGD8w',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '310-Adult Choir',
-        "gsheet_id" : '1ku8Aq9dXm_mrOq421MWVk7hAqV2Am5FFSgUACOYs2WU',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '311-Bell Choir',
-        "gsheet_id" : '1UTzXgO9ZLBHB0w-zAW8-u57cgWLbkWWGanJgPC9gboE',
-        "birthday"  : True,
-    },
-    {
-        "ministry"  : [ '313-Communion Ministers',
-                        '313A-Communion Ministers: Weekday',
-                        '313B-Communion Ministers: 5:30',
-                        '313C-Communion Ministers: 9:00'
-                        '313D-Communion Ministers:11:30' ],
-        "name"      : "313-Communion Ministers (all masses)",
-        "gsheet_id" : '10Aq9XtZHL3v0m0Erm71f8BSUYr7CiEDMwzDWTSgKPJ4',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '313A-Communion: Weekday',
-        "gsheet_id" : '1ep1HrUf1jWB43e-wnHiayq6gcDImo8Y26OQ2e5b8gdw',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '313B-Communion Ministers: 5:30',
-        "gsheet_id" : '1S-mZyZwIunBJ1hZYJ942Bd1p--SMeUjEMBw3XU9y404',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '313C-Communion Ministers: 9:00',
-        "gsheet_id" : '1JHcG1krbBqlegL9NU45aAKl0zw0rSrMwmPwhKfXfIXI',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '313D-Communion Ministers:11:30',
-        "gsheet_id" : '1aqgGKqbIUyo0xHFufBPQveFMWJUQ0hVkShx_M4NTflg',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : [ '316-Greeters INTERESTED ONLY',
-                        '316A-Greeters 5:30P',
-                        '316B-Greeters 9:00A',
-                        '316C-Greeters 11:30A' ],
-        "name"      : "316-Greeters (all masses)",
-        "gsheet_id" : '1vd7sltcU8MVwIBad__PyXXMN_cUEFvdXpL5RkYiBWJ0',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '316A-Greeters 5:30P',
-        "gsheet_id" : '1sWu0OAL03N7zeg3aB6_1sZQYQbn4uhw7MtCRa0VHy1s',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '316B-Greeters 9:00A',
-        "gsheet_id" : '11O1G4E9cVoDYKsG4ymVn68E77PgFWJnyK_FaU28F0vk',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '316C-Greeters 11:30A',
-        "gsheet_id" : '1JbBRo3DXs1bK3D_TkjRCJUVL_SF660V9YcsudDzm8cs',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : '317-Instrumentalists & Cantors',
-        "gsheet_id" : '1YP3sC4dcOWH9Li1rJV8D5FI9mef50xvxqOf6K1K54_U',
-        "birthday"  : True,
-    },
-
-    {
-        "ministry"  : [ '318-Lectors  MASTER LIST',
-                        '318A-Lector Ministry  5:30P',
-                        '318B-Lector  Ministry 9:00A',
-                        '318C-Lector Ministry 11:30A',
-                        '318D-Lector Ministry  Spanish' ],
-        "name"      : "318-Lectors Ministry (all masses)",
-        "gsheet_id" : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '318A-Lector Ministry  5:30P',
-        "gsheet_id" : '1_it-a1Zl2zyWBXSwu_IfGbwbZgd0OUCJdhGtBJzNBXY',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '318B-Lector  Ministry 9:00A',
-        "gsheet_id" : '16OmohVR9zSPF68PyNgY8VV1oTzSeFyXGY7cK4dSuNnE',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '318C-Lector Ministry 11:30A',
-        "gsheet_id" : '1nKE13crOa20BaDjbmgWWRq3oklY_lkNvuHS-3X1-Rro',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '318D-Lector Ministry  Spanish',
-        "gsheet_id" : '1FZDzEquDfhTHUY2_YGR15a05gYkgIzuNR4NaDY1zyB4',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : '404-Welcome Desk',
-        "gsheet_id" : '1pJwD2UXiDAKng-DFwdWMp0AbZQFSJoiOsJaQgJmfvCE',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : '451-Livestream Team Ministry',
-        "gsheet_id" : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : '600-Men of Epiphany',
-        "gsheet_id" : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '601-Sages (for 50 yrs. +)',
-        "gsheet_id" : '1-uvQO5RRf0K6NJlR_4Mijygn4XGk0zhvowdflKLoEUc',
-        "birthday"  : False,
-    },
-
-    {
-        "ministry"  : '700-Advocates for Common Good',
-        "gsheet_id" : '1Iz8hz7NAhh9-dVMiC7mL8yYFi_qmM_ayB5IXhJU0uPw',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '710-Environmental Concerns',
-        "gsheet_id" : '1jsoRxugVwXi_T2IDq9J-mEVdzS8xaOk9kuXGAef-YaQ',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '711-Hispanic Ministry Team',
-        "gsheet_id" : '1zUJLVRkzS79uVQYgMkA9YaUfSFrY4Wax0ys5jSfpkEg',
-        "birthday"  : False,
-    },
-    {
-        "ministry"  : '803-Youth Ministry AdultMentor',
-        "gsheet_id" : '1jzg9jRNUrjb9CeMRC23d4pkr2CQOUQNaOgL-EMDXOW4',
-        "birthday"  : False,
+        'ministry' : 'WG-Livestream Team',
+        'gsheet_id' : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
+        'birthday' : False,
     },
 ]
 
@@ -370,6 +640,7 @@ def write_xlsx(members, ministry, name, want_birthday, log):
         val = '{cs}, {zip}'.format(cs=f['city_state'], zip=f['StreetZip'])
         last_row = _append(col=col, row=last_row, value=val)
         addr_last_row = last_row
+        email_last_row = last_row
 
         # The phone / email may be more than 1 row
         col = 3
@@ -464,14 +735,21 @@ def upload_overwrite(filename, google, file_id, log):
 #-------------------------------------------------------------------
 
 def create_roster(pds_members, ministry_entry, google, log):
-    ministry      = ministry_entry['ministry']
     gsheet_id     = ministry_entry['gsheet_id']
     birthday      = ministry_entry['birthday']
 
-    if type(ministry) is list:
-        ministries = ministry
+    key1 = 'ministry'
+    key2 = 'ministries'
+    if key1 in ministry_entry:
+        sheet_name = ministry_entry[key1]
+        ministries = [ sheet_name ]
+    elif key2 in ministry_entry:
+        sheet_name = ', '.join(ministry_entry[key2])
+        ministries = ministry_entry[key2]
     else:
-        ministries = [ ministry ]
+        print(f"ERROR: Cannot find {key1} or {key2} in ministry_entry!")
+        print(ministry_entry)
+        exit(1)
 
     name = None
     key = 'name'
@@ -481,17 +759,16 @@ def create_roster(pds_members, ministry_entry, google, log):
     # Find the members
     members = PDSChurch.filter_members_on_ministries(pds_members, ministries)
     if members is None or len(members) == 0:
-        log.info("No members in ministry: {min}".format(min=ministry))
-        return
+        log.info(f"No members in ministry: {sheet_name} -- writing empty sheet")
 
     # PDSChurch.filter_members() returns a dict.  Turn this into a simple
     # list of Members.
     members = [ x for x in members.values() ]
 
     # Make an xlsx
-    filename = write_xlsx(members=members, ministry=ministry, name=name,
+    filename = write_xlsx(members=members, ministry=sheet_name, name=name,
                           want_birthday=birthday, log=log)
-    log.debug("Wrote temp XLSX file: {f}".format(f=filename))
+    log.debug(f"Wrote temp XLSX file: {filename}")
 
     # Upload the xlsx to Google
     upload_overwrite(filename=filename, google=google, file_id=gsheet_id,
