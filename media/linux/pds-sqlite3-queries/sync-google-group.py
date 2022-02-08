@@ -299,7 +299,11 @@ def get_synchronizations():
             'ggroup'     : f'SVDPConference{ecc}',
             'notify'     : f'polly{ecc},pds-google-sync{ecc}',
         },
-
+        {
+            "ministries" : [ '709-Twinning Committee:Chiapas' ],
+            'ggroup'     : f'twinning-committee{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
         {
             "ministries" : [ '710-Environmental Concerns' ],
             'ggroup'     : f'environmental-concerns{ecc}',
