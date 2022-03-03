@@ -511,7 +511,7 @@ ministries = [
     },
     {
         'ministry' : '805-Monday Adult Bible Study',
-        'gsheet_id' : '1yBnxCduZlq8l33e-YUsD2MvNY5uMnnL2Sb4FFRPX2eA',
+        'gsheet_id' : '1gANQt7PBc8erErQRHrRLtkdmOF3Y7DbuLC3J6aRLu4U',
         'birthday' : False,
     },
     {
