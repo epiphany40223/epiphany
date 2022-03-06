@@ -138,42 +138,6 @@ def _walk_tasks_internal(top, topdown, onerror, flags):
                 yield entry
 
 
-def add_text_block(blocks, message, position=None):
-    block = {
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": message,
-        }
-    }
-    if position is None:
-        blocks.append(block)
-    else:
-        blocks.insert(position, block)
-
-
-def get_slack_creds():
-    """
-            This routine will read the Slack credentials file specified (in JSON format) and
-            return a dictionary with the specified contents (API token and channel).
-                    Written by DK Fowler ... 15-Oct-2021
-
-    :return:        Dictionary containing the Slack credentials (API token and channel).
-    """
-    json_slk_creds_dict = {}
-    try:
-        with open(ECCSlkAPI, "r") as slk_creds:
-            json_slk_creds_dict = json.load(slk_creds)
-    # Handle [Errno 2] No such file or directory, JSON decoding error (syntax error in file)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error(F"Missing or invalid Slack credentials JSON file...")
-        logger.error(F"...error:  {e}")
-        print(F"Missing or invalid Slack credentials JSON file...")
-        print(F"...error:  {e}")
-        sys.exit(1)
-    return json_slk_creds_dict
-
-
 def get_tasks_to_monitor():
     """
             This routine will read the tasks-to-monitor JSON file and return a dictionary with
@@ -310,10 +274,7 @@ def main():
                         send_slack = check_last_run_state(json_last_run_state_list, task_to_check, task)
                         if send_slack:
                             logger.info(f'...sending Slack message')
-                            slk_status = send_to_slack(slk_message)
-                            if not slk_status:
-                                print(f'...error occurred while sending to Slack...')
-                                logger.error(f'...error occurred while sending to Slack...')
+                            logger.critical(slk_message)
 
                     save_tasks_last_run_state(tasks_last_run_state)
 
@@ -359,26 +320,6 @@ def check_last_run_state(last_run_state_list, task_to_check, task_detail):
                      f'check-status: {task_to_check["status"]}.')
 
     return True
-
-
-def send_to_slack(slk_message):
-    blocks = list()
-    add_text_block(blocks, slk_message)
-
-    # Get Slack credentials
-    slk_creds = get_slack_creds()
-    # Create the Slack client object
-    slack_client = slack_sdk.WebClient(token=slk_creds["token"])
-    try:
-        response = slack_client.chat_postMessage(channel=slk_creds["channel"],
-                                                 blocks=blocks,
-                                                 text=slk_message)
-        return True
-        # print(response)
-    except SlackApiError as e:
-        print(f"Error occurred posting to Slack, error: {e}")
-        logger.error(f"Error occurred posting to Slack, error:  {e}")
-        return False
 
 
 def run_task(task):
