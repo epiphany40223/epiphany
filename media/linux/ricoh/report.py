@@ -45,10 +45,8 @@ def setup_cli_args():
                         required=True,
                         help='SQLite3 database from which to read values')
     parser.add_argument('--first',
-                        required=True,
                         help='First local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
     parser.add_argument('--last',
-                        required=True,
                         help='Last local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
 
     parser.add_argument('--logfile',
@@ -96,13 +94,41 @@ def setup_cli_args():
         return ts.astimezone(gmt)
 
     # Normalize the two timestamps
-    gmt        = pytz.timezone("GMT")
-    args.first = _convert_timestamp(args.first)
-    args.last  = _convert_timestamp(args.last)
+    gmt = pytz.timezone("GMT")
+    if args.first:
+        args.first = _convert_timestamp(args.first)
+    if args.last:
+        args.last  = _convert_timestamp(args.last)
 
     return args
 
 ###########################################################
+
+# Find the first and last timestamps in the database
+def find_first_last_timestamp(log, conn):
+    def _doit(direction):
+        c    = conn.cursor()
+        sql  = f'SELECT timestamp FROM printlog GROUP BY timestamp ORDER BY datetime(timestamp) {direction} LIMIT 1'
+        log.debug(f"SQL: {sql}")
+        c.execute(sql)
+        rows = c.fetchall()
+
+        return rows
+
+    log.debug(f"Looking for first and last timestamps")
+    rows = _doit("ASC")
+    if len(rows) < 1:
+        log.verbose("Database is empty: there is no first and last timestamp")
+        return None, None
+
+    first = datetime.datetime.fromisoformat(rows[0]['timestamp'])
+    log.debug(f"Found first timestamp: {first}")
+
+    rows = _doit("DESC")
+    last = datetime.datetime.fromisoformat(rows[0]['timestamp'])
+    log.debug(f"Found last timestamp: {last}")
+
+    return first, last
 
 # Find the first timestamp in the database that is >= the requested
 # timestamp. Remember that the timestamp parameter is in local time, but
@@ -337,6 +363,14 @@ def main():
                              slack_token_filename=args.slack_token_filename)
 
     conn, fields = open_db(log, args.db)
+
+    # If the first and last timestamps were not specified, use the first and
+    # last timestamps in the database.
+    first, last = find_first_last_timestamp(log, conn)
+    if args.first == None:
+        args.first = first
+    if args.last == None:
+        args.last = last
 
     # Find the earliest timestamp in the database that is greater than or equal
     # to the timestamps that were specified on the command line.
