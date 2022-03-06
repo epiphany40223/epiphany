@@ -192,6 +192,8 @@ def get_tasks_to_monitor():
     except (FileNotFoundError, json.JSONDecodeError) as e:
         logger.error(F"Missing or invalid tasks-to-monitor JSON file...")
         logger.error(F"...error:  {e}")
+        exit(1)
+
     logger.debug(json_tasks_list)
     return json_tasks_list
 
