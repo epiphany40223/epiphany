@@ -23,13 +23,22 @@
 import os
 import sys
 import argparse
-import logging
 import pywintypes
 import win32com.client
 import win32api
 import json
-import slack_sdk
-from slack_sdk.errors import SlackApiError
+
+# Import the ECC Python modules
+
+srcdir = os.path.abspath(os.path.dirname(sys.argv[0]))
+moddir = os.path.abspath(os.path.join(srcdir, "..", "..", "..", "python"))
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ECC python modules directory.")
+    exit(1)
+
+sys.path.insert(0, moddir)
+
+import ECC
 
 # Define version
 ecctasks_version = "01.20"
