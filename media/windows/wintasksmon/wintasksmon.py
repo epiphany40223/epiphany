@@ -80,18 +80,10 @@ if args.version:
     print(F"ECC Windows task schedule monitor application, version {ecctasks_version}, {ecctasks_date}...")
     sys.exit(0)
 
-# Set up logging...change as appropriate based on implementation location and logging level
-log_file_path = args.log_file_path
-# log_file_path = None  # To direct logging to console instead of file
-logging.basicConfig(
-    filename=log_file_path,
-    level=logging.DEBUG,
-    format="%(asctime)s:%(levelname)s: %(name)s: line: %(lineno)d %(message)s"
-)
-logger = logging.getLogger('ECCwintasksmon')
-
-# Location of the Slack API token
-ECCSlkAPI = args.slk_creds_file_path
+logger = ECC.setup_logging(info=True, debug=False,
+                           logfile=args.log_file_path,
+                           rotate=True,
+                           slack_token_filename=args.slk_creds_file_path)
 
 # Location of the tasks-to-monitor JSON file
 ECCTasks = args.tasks_file_path
@@ -117,7 +109,6 @@ def walk_tasks(top, topdown=True, onerror=None, include_hidden=True,
     except pywintypes.com_error as error:
         if onerror is not None:
             onerror(error)
-            print(f'...{win32api.FormatMessage(error.excepinfo[5])}')
             logger.error(f'...{win32api.FormatMessage(error.excepinfo[5])}')
         return
     for entry in _walk_tasks_internal(top, topdown, onerror, include_hidden):
@@ -131,7 +122,6 @@ def _walk_tasks_internal(top, topdown, onerror, flags):
     except pywintypes.com_error as error:
         if onerror is not None:
             onerror(error)
-            print(f'...{win32api.FormatMessage(error.excepinfo[5])}')
             logger.error(f'...{win32api.FormatMessage(error.excepinfo[5])}')
         return
 
@@ -202,9 +192,7 @@ def get_tasks_to_monitor():
     except (FileNotFoundError, json.JSONDecodeError) as e:
         logger.error(F"Missing or invalid tasks-to-monitor JSON file...")
         logger.error(F"...error:  {e}")
-        print(F"Missing or invalid tasks-to-monitor JSON file...")
-        print(F"...error:  {e}")
-    print(json_tasks_list)
+    logger.debug(json_tasks_list)
     return json_tasks_list
 
 
@@ -226,11 +214,8 @@ def get_tasks_last_run_state():
     except FileNotFoundError as e:
         logger.info(F"No existing tasks last-run-state JSON file found...")
         logger.info(F"...error:  {e}")
-        print(F"No existing tasks last-run-state JSON file found...")
-        print(F"...error:  {e}")
     except json.JSONDecodeError as e:
         logger.error(F"Invalid tasks last-run-state JSON file...aborting")
-        print(F"Invalid tasks last-run-state JSON file...aborting")
         sys.exit(1)
 
     return json_tasks_run_state_list
@@ -251,19 +236,13 @@ def save_tasks_last_run_state(tasks_states):
     # Handle [Errno 2] No such file or directory, JSON decoding error (syntax error in file)
     except json.JSONDecodeError as e:
         logger.error(F"Invalid format for saving tasks last-run-states...{e}")
-        print(F"Invalid format for saving tasks last-run-states...{e}")
         logger.error(F"...tasks run states contents:")
         logger.error(F"......{tasks_states}")
-        print(F"...tasks run states contents:")
-        print(F"......{tasks_states}")
         return False
     except Exception as e:
         logger.error(F"Error occurred while saving tasks last-run-states...{e}")
-        print(F"Error occurred while saving tasks last-run-states...{e}")
         logger.error(F"...tasks run states contents:")
         logger.error(F"......{tasks_states}")
-        print(F"...tasks run states contents:")
-        print(F"......{tasks_states}")
         return False
 
     return True
@@ -275,7 +254,6 @@ def main():
     json_task_list = get_tasks_to_monitor()  # get list of tasks and desired monitoring state
     json_last_run_state_list = get_tasks_last_run_state()  # get list of tasks last-run-state
     for task in json_task_list:
-        print(f'Task: {task["task"]}')
         logger.debug(f'Task: {task["task"]}')
     n = 0
     for folder, subfolders, tasks in walk_tasks('/'):
@@ -286,11 +264,9 @@ def main():
             for task_chk_index, task_to_check in enumerate(json_task_list):
                 if task_to_check["task"] in task.Path:
                     slk_message = ""
-                    print(f'*** Found the targeted task..."{task_to_check["task"]}"')
                     logger.debug(f'*** Found the targeted task..."{task_to_check["task"]}"')
                     if task_to_check["status"] == 'last_run':
                         if task.LastTaskResult != 0:
-                            print(f'Task failed on last run!!!')
                             logger.info(f'Task failed on last run!!!')
                             slk_message = f'Task [{task_to_check["task"]}] failed on last run!!!'
                             tasks_last_run_state.append({"task": task_to_check["task"],
@@ -301,7 +277,6 @@ def main():
                                     slk_message = slk_message + \
                                                   f'\nError occurred attempting to restart task:  {task_to_check["task"]}'
                         else:
-                            print(f'*** Task completed successfully on last run at:  {task.LastRunTime}')
                             logger.info(f'*** Task completed successfully on last run at:  {task.LastRunTime}')
                             # slk_message = f'Task [{task_to_check["task"]}] completed successfully on last run at:' \
                             #               f'  {task.LastRunTime} '
@@ -309,26 +284,22 @@ def main():
                                                          "last_state": "success"})
                     elif task_to_check["status"] == 'running':
                         if task.State != 4:
-                            print(f'Task {task_to_check["task"]} is not running!!!')
-                            logger.info(f'Task {task_to_check["task"]} is not running!!!')
                             slk_message = f'Task [{task_to_check["task"]}] is not running!!!'
+                            logger.info(slk_message)
                             if task_to_check["run_flag"] == 'restart':
                                 run_task_status = run_task(task)
                                 if not run_task_status:
-                                    slk_message = slk_message + \
-                                                  f'\nError occurred attempting to restart task:  {task_to_check["task"]}'
+                                    slk_message += \
+                                        f'\nError occurred attempting to restart task:  {task_to_check["task"]}'
                             tasks_last_run_state.append({"task": task_to_check["task"],
                                                          "last_state": "not running"})
                         else:
-                            print(f'Task {task_to_check["task"]} is running...')
-                            # print(f'...sending Slack message...')
                             logger.info(f'Task {task_to_check["task"]} is running...')
                             # logger.info(f'...sending Slack message...')
                             # slk_message = f'Task [{task_to_check["task"]}] is running...'
                             tasks_last_run_state.append({"task": task_to_check["task"],
                                                          "last_state": "running"})
                     else:
-                        print(f'Specified task status to check is invalid!')
                         logger.error(f'Specified task status to check is invalid!')
                         slk_message = f'Invalid status to check specified for task [{task_to_check["task"]}]...'
 
@@ -336,7 +307,6 @@ def main():
                         # Check the last run-status; if this matches the current state, don't send a Slack alert
                         send_slack = check_last_run_state(json_last_run_state_list, task_to_check, task)
                         if send_slack:
-                            print(f'...sending Slack message')
                             logger.info(f'...sending Slack message')
                             slk_status = send_to_slack(slk_message)
                             if not slk_status:
@@ -344,15 +314,8 @@ def main():
                                 logger.error(f'...error occurred while sending to Slack...')
 
                     save_tasks_last_run_state(tasks_last_run_state)
-            """
-            print('Path       : %s' % task.Path)
-            print('Hidden     : %s' % settings.Hidden)
-            print('State      : %s' % TASK_STATE[task.State])
-            print('Last Run   : %s' % task.LastRunTime)
-            print('Last Result: %s\n' % task.LastTaskResult)
-            """
-    print('Found %d tasks.' % n)
-    logger.debug('Found %d tasks.' % n)
+
+    logger.debug(f'Found {n} tasks.')
 
 
 def check_last_run_state(last_run_state_list, task_to_check, task_detail):
@@ -390,8 +353,6 @@ def check_last_run_state(last_run_state_list, task_to_check, task_detail):
                     (task_detail.LastTaskResult != 0):
                 return False
     else:
-        print(f'Specified task status is invalid while checking last-run status, task: {task_to_check["task"]}, '
-              f'check-status: {task_to_check["status"]}.')
         logger.error(f'Specified task status is invalid while checking last-run status, task: {task_to_check["task"]}, '
                      f'check-status: {task_to_check["status"]}.')
 
@@ -429,17 +390,13 @@ def run_task(task):
     try:
         task.Enabled = True
         running_task = task.Run(task)
-        print(f'...restarted task')
         logger.info(f'...restarted task')
         return True
     except pywintypes.com_error as error:
-        print(f'Error occurred while attempting to restart task...{error}')
-        print(f'...{win32api.FormatMessage(error.excepinfo[5])}')
         logger.error(f'Error occurred while attempting to restart task...{error}')
         logger.error(f'...{win32api.FormatMessage(error.excepinfo[5])}')
         return False
     except Exception as e:
-        print(f'Error occurred while attempting to restart task...{e}')
         logger.error(f'Error occurred while attempting to restart task...{e}')
         return False
 
