@@ -268,6 +268,11 @@ def get_synchronizations():
             'ggroup'     : f'healing-blankets-ministry{ecc}',
             'notify'     : f'frtony{ecc},pds-google-sync{ecc}',
         },
+        {
+            'ministries' : [ '508-Messages of Hope Ministry' ],
+            'ggroup'     : f'messages-of-hope{ecc}',
+            'notify'     : f'lisag{ecc},pds-google-sync{ecc}',
+        },
 
         #############################
 
