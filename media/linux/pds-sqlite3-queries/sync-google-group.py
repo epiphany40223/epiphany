@@ -486,20 +486,17 @@ def get_synchronizations():
 
         {
             'functions'  : [ { 'func' : find_ministry_chair,
-                               'kwargs' : { "ministry_prefix" : "104-Stewardship"},
-                               'purpose' : "Stewardship ministry chair" }, ],
-            'ggroup'     : f'stewardship-chair{ecc}',
-            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
-        },
-
-        #----------------------------
-
-        {
-            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "103"},
                                'purpose' : "Worship ministry chair" }, ],
             'ggroup'     : f'worship-chair{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "104-Stewardship"},
+                               'purpose' : "Stewardship ministry chair" }, ],
+            'ggroup'     : f'stewardship-chair{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
@@ -529,6 +526,15 @@ def get_synchronizations():
             'ggroup'     : f'worship-lectors-chair{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "401-Epiphany Companions"},
+                               'purpose' : "Epiphany Companions ministry chair" }, ],
+            'ggroup'     : f'companions-chair{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+
+        #----------------------------
 
         {
             'functions'  : [ { 'func' : find_instrument,
