@@ -148,6 +148,12 @@ def get_synchronizations():
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
 
+        {
+            "keywords"   : [ 'Name Badges Google Drive acces' ],
+            'ggroup'     : f'stewardship-name-badges-google-drive-access{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+
         #############################
 
         {
