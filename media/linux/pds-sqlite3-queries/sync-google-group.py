@@ -130,7 +130,7 @@ def get_synchronizations():
         {
             'ministries' : [ '106-Community Life Committee' ],
             'ggroup'     : f'community-life{ecc}',
-            'notify'     : f'lisag{ecc},pds-google-sync{ecc}',
+            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
         },
         {
             "ministries" : [ '107-Social Resp Steering Comm' ],
@@ -145,12 +145,6 @@ def get_synchronizations():
         {
             "ministries" : [ '111-Hispanic Ministry Team' ],
             'ggroup'     : f'hispanic-ministry-team{ecc}',
-            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
-        },
-
-        {
-            "keywords"   : [ 'Name Badges Google Drive acces' ],
-            'ggroup'     : f'stewardship-name-badges-google-drive-access{ecc}',
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
 
@@ -267,6 +261,12 @@ def get_synchronizations():
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
 
+        {
+            "keywords"   : [ 'Name Badges Google Drive acces' ],
+            'ggroup'     : f'stewardship-name-badges-google-drive-access{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+
         #############################
 
         {
@@ -277,7 +277,7 @@ def get_synchronizations():
         {
             'ministries' : [ '508-Messages of Hope Ministry' ],
             'ggroup'     : f'messages-of-hope{ecc}',
-            'notify'     : f'lisag{ecc},pds-google-sync{ecc}',
+            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
         },
 
         #############################
@@ -285,17 +285,17 @@ def get_synchronizations():
         {
             'ministries' : [ '600-Men of Epiphany' ],
             'ggroup'     : f'moe{ecc}',
-            'notify'     : f'lisag{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}',
+            'notify'     : f'community-life-coordinator{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '601-Sages (for 50 yrs. +)' ],
             'ggroup'     : f'sages{ecc}',
-            'notify'     : f'joanhagedorn46@gmail.com,lisag{ecc},pds-google-sync{ecc}',
+            'notify'     : f'joanhagedorn46@gmail.com,community-life-coordinator{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '602-Singles Explore Life (SEL)' ],
             'ggroup'     : f'sel{ecc}',
-            'notify'     : f'lynne{ecc},pds-google-sync{ecc}',
+            'notify'     : f'bookkeeper{ecc},pds-google-sync{ecc}',
         },
 
         #############################
@@ -308,7 +308,7 @@ def get_synchronizations():
         {
             'ministries' : [ '707-St. Vincent DePaul' ],
             'ggroup'     : f'SVDPConference{ecc}',
-            'notify'     : f'polly{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
         {
             "ministries" : [ '709-Twinning Committee:Chiapas' ],
@@ -375,7 +375,7 @@ def get_synchronizations():
         {
             'keywords'   : [ 'Registration@ECC email list' ],
             'ggroup'     : f'registration{ecc}',
-            'notify'     : f'pds-google-sync{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'Renovations@ECC email list' ],
