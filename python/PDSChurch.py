@@ -19,6 +19,8 @@ import ECC
 
 from datetimerange import DateTimeRange
 
+from pprint import pprint
+
 ##############################################################################
 #
 # Public values
@@ -28,6 +30,8 @@ pkey  = 'preferred_emails'
 npkey = 'non_preferred_emails'
 
 date_never = datetime.date.fromisoformat('1899-12-30')
+
+MEMKW_BUSINESS_LOGISTICS = 'Business Logistics Email'
 
 ##############################################################################
 
@@ -619,6 +623,31 @@ def _link_member_id(members, member_source_field, member_dest_field,
 
 #-----------------------------------------------------------------------------
 
+# If the Member has the "DO NOT CONTACT" keyword set, remove
+# their email addresses so that we do not contact them via
+# any automated processes.
+def _process_member_do_not_contact(members):
+    key1 = 'keywords'
+    key2 = 'DO NOT CONTACT'
+    dnc = key2.lower()
+
+    for member in members.values():
+        member[dnc] = False
+
+        if key1 not in member:
+            continue
+        if key2 not in member[key1]:
+            continue
+
+        # This Member has "DO NOT CONTACT" set
+        member[dnc] = True
+        token = 'preferred_emails'
+        for key in [token, f'non_{token}']:
+            if key in member:
+                del member[key]
+
+#-----------------------------------------------------------------------------
+
 # Transform the list of all family fund history (i.e., individual
 # contributions) to be:
 #
@@ -1122,6 +1151,8 @@ def load_families_and_members(filename=None, pds=None,
     _link_member_id(members, 'User4DescRec', 'occupation', mem_4kw)
     _link_member_id(members, 'User7DescRec', 'instrument', mem_7kw)
 
+    _process_member_do_not_contact(members)
+
     _link_family_funds(funds, fund_periods, fund_activities,
                        families, fam_funds, fam_fund_rates, fam_fund_history,
                        log)
@@ -1171,7 +1202,7 @@ def _filter_entity_on_keywords(entities, target_keywords):
     out = dict()
 
     # Make sure we always have a list
-    if type(target_keywords) == 'str':
+    if type(target_keywords) == str:
         target_keywords = [ target_keywords ]
 
     for id, entity in entities.items():
@@ -1248,6 +1279,50 @@ def is_member_hoh_or_spouse(member):
         return True
 
     return False
+
+#-----------------------------------------------------------------------------
+
+# Return a list of emails:
+#
+# 1. Find all Members in the Family with the "Business Logistics Email" keyword
+# and get a list of email addresses.
+#
+# 2. If that yields no email addresses, get a list of email addresses for the
+# HoH+spouse.
+#
+# 3. If that yields no email addresses, get a list of email addresses for the
+# Family
+def family_business_logistics_emails(family):
+    # First, we have to convert the list of members on the family to a dict
+    family_members = dict()
+    for member in family['members']:
+        family_members[member['MemRecNum']] = member
+
+    # We get back a dict of members from filter_members_on_keywords; examine
+    # each member and save all the email addresses
+    members = filter_members_on_keywords(family_members,
+                                         MEMKW_BUSINESS_LOGISTICS)
+    emails = dict()
+    for member in members.values():
+        for addr in find_any_email(member):
+            emails[addr] = True
+
+    # If we found no email addresses, then just make a list of all the email
+    # addresses from the HoH + spouse
+    if len(emails) == 0:
+        spouse, hoh, _ = filter_members_on_hohspouse(family['members'])
+        for member in [spouse, hoh]:
+            if member:
+                for addr in find_any_email(member):
+                    emails[addr] = True
+
+    # If we still found no email addresses, see if there's any email addresses
+    # on the Family (there usually won't be, but maybe we'll get lucky!)
+    if len(emails) == 0:
+        for addr in find_any_email(family):
+            emails[addr] = True
+
+    return list(emails.keys())
 
 #-----------------------------------------------------------------------------
 
