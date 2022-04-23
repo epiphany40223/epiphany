@@ -216,11 +216,6 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},tonya@cabral.org,pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '314-Communion Min. Coordinator'],
-            'ggroup'     : f'communion-ministers-coordinators{ecc}',
-            'notify'     : f'director-worship{ecc},tonya@cabral.org,pds-google-sync{ecc}',
-        },
-        {
             'ministries' : [ '315-Funeral Mass Ministry' ],
             'ggroup'     : f'funeral-mass-ministry{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
