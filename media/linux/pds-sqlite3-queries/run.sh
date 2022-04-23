@@ -63,11 +63,11 @@ if test $h -eq 2 -a $m -lt 15; then
 	--app-id $goog_cred_dir/google-uploader-client-id.json \
 	--user-credentials $goog_cred_dir/google-uploader-user-credentials.json
 
-    ppc_logfile=$logfile_dir/linux/ppc-feedback/ppc-feedback-logfile.txt
-    goog_cred_dir=$credential_dir/ppc-feedback
-    ./ppc-feedback-google-group.py \
+    gsheet_logfile=$logfile_dir/linux/gsheet-driven-google-group/gsheet-driven-google-group-logfile.txt
+    goog_cred_dir=$credential_dir/gsheet-driven-google-group
+    ./gsheet-driven-google-group.py \
         --smtp-auth-file $credential_dir/smtp-auth.txt \
-        --logfile=$ppc_logfile \
-	--app-id $goog_cred_dir/client-id-ppc-feedback.json \
-	--user-credentials $goog_cred_dir/user-credentials-ppc-feedback.json
+        --logfile=$gsheet_logfile \
+	--app-id $goog_cred_dir/client-id-gsheet-driven-google-group.json \
+	--user-credentials $goog_cred_dir/user-credentials-gsheet-driven-google-group.json
 fi
