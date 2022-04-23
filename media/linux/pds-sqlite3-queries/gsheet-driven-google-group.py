@@ -52,20 +52,40 @@ import Google
 args = None
 log  = None
 
-ppc_feedback = 'ppc-feedback@epiphanycatholicchurch.org'
-
 # Default for CLI arguments
 gapp_id         = 'client_id-ppc-feedback.json'
 guser_cred_file = 'user-credentials-ppc-feedback.json'
-gfile_id        = '1s9guctll5_E21uVCnamEVkkN6_91KkHxozwNy9WaMBg'
-google_group    = 'ppc-feedback@epiphanycatholicchurch.org'
 verbose         = True
 debug           = False
 logfile         = None
 
-# JMS FOR TESTING
-#gfile_id        = '1CRVoNTMIomzk5UymCcovWZ3cDd9HjB7-jVRTSryFWhc'
-#google_group    = 'test@epiphanycatholicchurch.org'
+groups = [
+    {
+        'name' : 'PPC Feedback',
+        'group' : 'ppc-feedback@epiphanycatholicchurch.org',
+        'gsheet_id' : '1s9guctll5_E21uVCnamEVkkN6_91KkHxozwNy9WaMBg',
+        'contact' : 'Angie Fox <angie@epiphanycatholicchurch.org>',
+    },
+    {
+        'name' : 'FAC Feedback',
+        'group' : 'fac-feedback@epiphanycatholicchurch.org',
+        'gsheet_id' : '1VX4DpQQxHDw76G96OhpH1Ra6rmH_WjN4eJyKSRVln4I',
+        'contact' : 'Mary Downs <mary@epiphanycatholicchurch.org>',
+    },
+]
+
+# This group is useful for testing
+groups_testing = [
+    {
+        'name' : 'Google sheet-driven Google Group testing',
+        'group' : 'test@epiphanycatholicchurch.org',
+        'gsheet_id' : '1CRVoNTMIomzk5UymCcovWZ3cDd9HjB7-jVRTSryFWhc',
+        'contact' : 'Jeff Squyres <jsquyres@epiphanycatholicchurch.org>',
+    },
+]
+# JMS Uncomment this line to use the above test group (and not the production
+# groups)
+#groups = groups_testing
 
 #-------------------------------------------------------------------
 
@@ -121,7 +141,7 @@ def delete_google_group_member(google, google_group, email, id, log):
     google.members().delete(groupKey=google_group,
                              memberKey=id).execute()
 
-def sync_members(google, google_group, current_members, desired_members, log):
+def sync_members(google, data, current_members, desired_members, log):
     # Compute which members should be added and which members should be
     # deleted.
     to_add    = list()
@@ -138,28 +158,28 @@ def sync_members(google, google_group, current_members, desired_members, log):
     for desired in desired_emails:
         if desired not in current_emails:
             to_add.append(desired)
-            add_google_group_member(google, google_group, desired, log)
+            add_google_group_member(google, data['group'], desired, log)
 
     # Compure who should be deleted
     for current in current_members:
         if current['email'] not in desired_emails:
             to_delete.append(current['email'])
-            delete_google_group_member(google, google_group, current['email'], current['id'], log)
+            delete_google_group_member(google, data['group'], current['email'], current['id'], log)
 
     if len(to_add) == 0 and len(to_delete) == 0:
         log.info("No changes necessary")
         return
 
     if len(to_add) > 0:
-        subject = "Starting: Your PPC feedback email rotation has begun"
+        subject = f"Starting: Your {data['name']} email rotation has begun"
         addrs   = ','.join(to_add)
-        content = f"""Your rotation to respond to PPC feedback emails has started!
+        content = f"""Your rotation on {data['name']} emails has started!
 
-This means that emails sent to {ppc_feedback} will be forwarded to {addrs} during this rotation.
+This means that emails sent to {data['group']} will be forwarded to {addrs} during this rotation.
 
-When you reply to these emails, the email will come from your email address.  Please be sure to CC {ppc_feedback} so that your reply is shared with others in this rotation with you and recorded in our archive.  If you have any questions about a response, please contact Angie Fox at angie@epiphanycatholicchurch.org.
+When you reply to these emails, the email will come from your email address.  Please be sure to CC {data['group']} so that your reply is shared with others in this rotation with you and recorded in our archive.  If you have any questions about a response, please contact {data['contact']}.
 
-Keep track of the emails and topics that you are hearing; you are asked to share them as part of Community Feedback during the next PPC meeting.
+Keep track of the emails and topics that you are hearing; you are asked to share them as part of our next meeting.
 
 You’ll receive another email when your rotation completes.
 
@@ -167,10 +187,10 @@ Thank you for your time and dedication to Epiphany!"""
         ECC.send_email(','.join(to_add), subject, content, log)
 
     if len(to_delete) > 0:
-        subject = "Your PPC feedback email rotation: completed!"
-        content = f"""Your rotation to respond to PPC feedback emails has completed.
+        subject = f"Your {data['name']} email rotation: completed!"
+        content = f"""Your rotation to respond to respond to {data['name']} emails has completed.
 
-This means that emails sent to {ppc_feedback} will NO LONGER be forwarded to {addrs}.
+This means that emails sent to {data['group']} will NO LONGER be forwarded to {addrs}.
 
 Thank you for your time and dedication to Epiphany!"""
         ECC.send_email(','.join(to_delete), subject, content, log)
@@ -267,16 +287,6 @@ def download_google_sheet(google, gfile, log):
 ####################################################################
 
 def setup_cli_args():
-    global gfile_id
-    tools.argparser.add_argument('--gfile-id',
-                                 default=gfile_id,
-                                 help='Google Sheet with the source data')
-
-    global google_group
-    tools.argparser.add_argument('--group',
-                                 default=google_group,
-                                 help='Google Group to update')
-
     tools.argparser.add_argument('--smtp-auth-file',
                                  required=True,
                                  help='File containing SMTP AUTH username:password')
@@ -343,12 +353,13 @@ def main():
     service_admin = services['admin']
     service_drive = services['drive']
 
-    sheet_data = download_google_sheet(service_drive, args.gfile_id, log)
-    desired    = find_desired(sheet_data, log)
+    for item in groups:
+        log.info(f"Synchronizing: {item['name']}")
+        sheet_data = download_google_sheet(service_drive, item['gsheet_id'], log)
+        desired    = find_desired(sheet_data, log)
+        current    = google_group_find_members(service_admin, item['group'], log)
 
-    current    = google_group_find_members(service_admin, args.group, log)
-
-    sync_members(service_admin, args.group, current, desired, log)
+        sync_members(service_admin, item, current, desired, log)
 
 if __name__ == '__main__':
     main()
