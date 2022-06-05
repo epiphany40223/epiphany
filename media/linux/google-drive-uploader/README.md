@@ -1,11 +1,14 @@
 # Google Uploader Python client
 
-## Instructions to setup Ubuntu
+## Instructions to setup Ubuntu or MacOS
 
 ```
-# pip3 install --upgrade httplib2
-# pip3 install --upgrade google-api-python-client oauth2client
+$ virtualenv --python=/usr/bin/python3 venv
+$ . ./venv/bin/activate
+$ pip3 install -r requirements.txt
 ```
+
+The process is likely similar on Windows...?
 
 ## Setting up credentials
 
