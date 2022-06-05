@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 """
-Script to upload specific files to Google Drive.
+This is a fairly dumb script to upload specific files to a specific
+folder/location on Google Drive.  It has no additional intelligence /
+logic.
 """
 
 import os
@@ -22,7 +24,7 @@ import ECC
 import Google
 import GoogleAuth
 
-from apiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload
 from oauth2client import tools
 
 #===================================================================
@@ -103,7 +105,6 @@ def add_cli_args():
                                  help='Filename containing Google user credentials')
 
     tools.argparser.add_argument('--slack-token-filename',
-                                 required=True,
                                  help='File containing the Slack bot authorization token')
     tools.argparser.add_argument('--logfile',
                                  required=False,
