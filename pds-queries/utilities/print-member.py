@@ -51,6 +51,18 @@ def main():
     #pprint(members[bill_carlisle])
     #exit(0)
 
+    #carl_working = 43689
+    #pprint(members[carl_working])
+    #exit(0)
+
+    desiree_hoette = 547739
+    pprint(members[desiree_hoette])
+    exit(0)
+
+    #lucas_osborne = 709804
+    #pprint(members[lucas_osborne])
+    #exit(0)
+
     #b = PDSChurch.filter_members_on_keywords(members, ['ECC Sheet Music access'])
     #a = PDSChurch.filter_members_on_ministries(members, ['207-Technology Committee'])
     #c = PDSChurch.union_of_member_dicts(a, b)
@@ -58,23 +70,15 @@ def main():
     #    print(f"member: {member['Name']}")
     #exit(0)
 
-    andrew_test = 646362
-    pprint(members[andrew_test])
+    mid = 89818 # rosemary fledkamp
+    #mid = 646362 # andrew test
+    mid = 119356 # jeff squyres
+    pprint(members[mid])
     exit(0)
 
-    jeff_squyres = 119356
-    pprint(members[jeff_squyres])
-    exit(0)
-
-    peariso_family = 205632
-    pprint(families[peariso_family])
-    exit(0)
-
-    # JMS debug
-    squyres = 119353
-    print("******** Squyres family")
-    pprint(families[squyres])
-    print("********** Squyres funding done")
+    fid = 205632 # peariso
+    fid = 119353 # squyres
+    pprint(families[fid])
     exit(0)
 
     for year in families[squyres]['funds']:
