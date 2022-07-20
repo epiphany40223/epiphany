@@ -8,6 +8,7 @@ import copy
 import datetime
 import argparse
 import openpyxl
+import itertools
 
 # Load the ECC python modules.  There will be a sym link off this directory.
 moddir = os.path.join(os.path.dirname(sys.argv[0]), 'ecc-python-modules')
@@ -589,9 +590,14 @@ def member_email_keywords(member_submissions, members, log):
 def member_cell_updates(member_submissions, members, log):
     # Calculate phone numbers to add to a Member and phone numbers to
     # remove from a Member
-    additions     = dict()
-    removals      = dict()
-    originals     = dict()
+    changes = dict()
+    empty   = {
+        "originals" : None,
+
+        "changed"   : False,
+        "additions" : list(),
+        "removals"  : list(),
+    }
 
     for mid, submission in member_submissions.items():
         member = members[mid]
@@ -613,6 +619,9 @@ def member_cell_updates(member_submissions, members, log):
         jotform_ac     = jotform_digits[0:3]
         jotform_rest   = f'{jotform_digits[3:6]}-{jotform_digits[6:]}'
 
+        # Make an entry for this member
+        changes[mid] = copy.deepcopy(empty)
+
         key = 'phones'
         original_phones = list()
         if key in member:
@@ -627,49 +636,70 @@ def member_cell_updates(member_submissions, members, log):
                 else:
                     # If this is not the phone number they gave us on the
                     # jotform, remove it.
-                    if mid not in removals:
-                        removals[mid] = list()
-                    removals[mid].append(entry['number'])
+                    changes[mid]['removals'].append(entry['number'])
+                    changes[mid]['changed'] = True
 
-        originals[mid] = ', '.join(original_phones)
+        changes[mid]['originals'] = ', '.join(original_phones)
 
         # If we didn't find the phone number they gave us on the jotform,
         # add it.
         if not found and jotform_phone != '':
-            additions[mid] = {
-                'ac'        : jotform_ac,
-                'phone'     : jotform_rest,
-                'type'      : 'Cell',
-            }
+            changes[mid]['additions'].append(f'({jotform_ac}) {jotform_rest}')
 
-    # Write the removals
-    def _make_removal_item(mid, member, value, item):
-        item['Old PDS phones'] = originals[mid]
-        item['Cell phones to remove'] = ', '.join(value)
+    # Write the changes
+    num_removals = 0
+    num_additions = 0
+    filename = f'census{census_year}-member-cell-phone-changes.csv'
+    with open(filename, 'w') as fp:
+        fields = ['MID', 'Name',
+                  'Last name',
+                  'Original PDS phones',
+                  'Member phone to remove',
+                  'Member phone to add',
+                  ]
 
-    filename = f'census{census_year}-member-cell-removals.csv'
-    fields = ['MID', 'Name', 'Old PDS phones', 'Cell phones to remove']
-    _simple_csv_member_write(filename, removals, members,
-        fields, 'Member cell removals', _make_removal_item, log)
+        writer = csv.DictWriter(fp, fieldnames=fields)
+        writer.writeheader()
 
-    # Write the additions
-    def _make_add_item(mid, member, value, item):
-        item['Old PDS phones'] = originals[mid]
-        item['Area code'] = value['ac']
-        item['Phone'] = value['phone']
-        item['Type'] = value['type']
+        for mid in sorted(changes):
+            member = members[mid]
+            entry  = changes[mid]
 
-    filename = f'census{census_year}-member-cell-additions.csv'
-    fields = ['MID', 'Name', 'Old PDS phones', 'Type', 'Area code', 'Phone']
-    _simple_csv_member_write(filename, additions, members,
-        fields, 'Member cell additions', _make_add_item, log)
+            if not entry['changed']:
+                continue
+
+            for data in itertools.zip_longest(entry['removals'], entry['additions']):
+                item   = {
+                    'MID'         : mid,
+                    'Name'        : member['Name'],
+                    'Last name'   : member['last'],
+
+                    'Original PDS phones'    : entry['originals'],
+                    'Member phone to remove' : data[0],
+                    'Member phone to add'    : data[1],
+                }
+                if data[0] is not None:
+                    num_removals += 1
+                if data[1] is not None:
+                    num_additions += 1
+
+                writer.writerow(item)
+
+    log.info(f"Removed {num_removals} member cell phones")
+    log.info(f"Added {num_additions} member cell phones")
+    log.info(f"Wrote {filename}")
 
 ###########################################################################
 
 def member_email_updates(member_submissions, members, log):
-    emails_to_remove = dict()
-    emails_to_add = dict()
-    emails_original = dict()
+    changes = dict()
+    empty   = {
+        "originals" : None,
+
+        "changed"   : False,
+        "additions" : list(),
+        "removals"  : list(),
+    }
 
     for mid, submission in member_submissions.items():
         member = members[mid]
@@ -679,6 +709,9 @@ def member_email_updates(member_submissions, members, log):
             jotform_email = ''
         else:
             jotform_email = jotform_email
+
+        # Make entry for this MID
+        changes[mid] = copy.deepcopy(empty)
 
         # Remove everything except the jotform email
         found = False
@@ -694,40 +727,50 @@ def member_email_updates(member_submissions, members, log):
                     continue
 
                 # Remove all others
-                if mid not in emails_to_remove:
-                    emails_to_remove[mid] = list()
-                emails_to_remove[mid].append(email)
+                changes[mid]['removals'].append(email)
+                changes[mid]['changed'] = True
 
         if not found and jotform_email != "":
-            emails_to_add[mid] = [ jotform_email ]
-        emails_original[mid] = ', '.join(email_list)
+            changes[mid]['additions'].append(jotform_email)
 
-    def _write_results(type, results):
-        filename = f'census{census_year}-member-email-{type}-updates.csv'
-        with open(filename, 'w') as fp:
-            fields = ['MID', 'Name', 'Email (old)', f'Email to {type}']
-            writer = csv.DictWriter(fp, fieldnames=fields)
-            writer.writeheader()
+        changes[mid]['originals'] = ', '.join(email_list)
 
-            num_updates = 0
-            for mid, values in results.items():
-                member = members[mid]
+    filename = f'census{census_year}-member-email-updates.csv'
+    with open(filename, 'w') as fp:
+        fields = ['MID', 'Name', 'Last name',
+                  'Original PDS emails',
+                  'Email to remove',
+                  'Email to add'
+                  ]
 
+        writer = csv.DictWriter(fp, fieldnames=fields)
+        writer.writeheader()
+
+        num_additions = 0
+        num_removals = 0
+        for mid in sorted(changes):
+            member = members[mid]
+            entry  = changes[mid]
+
+            for data in itertools.zip_longest(entry['removals'], entry['additions']):
                 item = {
-                    'MID'   : mid,
-                    'Name'  : member['Name'],
+                    'MID'                 : mid,
+                    'Name'                : member['Name'],
+                    'Last name'           : member['last'],
+                    'Original PDS emails' : entry['originals'],
+                    'Email to remove'     : data[0],
+                    'Email to add'        : data[1],
                 }
-                for email in values:
-                    item['Email (old)'] = emails_original[mid]
-                    item[f'Email to {type}'] = email
-                    writer.writerow(item)
-                    num_updates += 1
+                if data[0] is not None:
+                    num_removals += 1
+                if data[1] is not None:
+                    num_additions += 1
 
-            log.info(f"Write {num_updates} Member email {type} updates")
-            log.info(f"Wrote {filename}")
+                writer.writerow(item)
 
-    _write_results('remove', emails_to_remove)
-    _write_results('add', emails_to_add)
+    log.info(f"Removed {num_removals} Member emails")
+    log.info(f"Added {num_additions} Member emails")
+    log.info(f"Wrote {filename}")
 
 ###########################################################################
 
@@ -1192,9 +1235,14 @@ def family_phone_updates(submissions, families, members, log):
 
     # Calculate phone numbers to add to a Family and phone numbers to
     # remove from a Family
-    additions     = dict()
-    removals      = dict()
-    originals     = dict()
+    changes = dict()
+    empty   = {
+        "originals" : None,
+
+        "changed"   : False,
+        "additions" : list(),
+        "removals"  : list(),
+    }
 
     # We might also end up adding phone numbers to individual members
     mid_additions = dict()
@@ -1224,6 +1272,9 @@ def family_phone_updates(submissions, families, members, log):
         jotform_ac     = jotform_digits[0:3]
         jotform_rest   = f'{jotform_digits[3:6]}-{jotform_digits[6:]}'
 
+        # Make an entry for this family
+        changes[fid] = copy.deepcopy(empty)
+
         key = 'phones'
         original_phones = list()
         if key in family:
@@ -1238,11 +1289,10 @@ def family_phone_updates(submissions, families, members, log):
                 else:
                     # If this is not the phone number they gave us on the
                     # jotform, remove it.
-                    if fid not in removals:
-                        removals[fid] = list()
-                    removals[fid].append(entry['number'].strip())
+                    changes[fid]['removals'].append(entry['number'].strip())
+                    changes[fid]['changed'] = True
 
-        originals[fid] = ', '.join(original_phones)
+        changes[fid]['originals'] = ', '.join(original_phones)
 
         # If we didn't find the phone number they gave us on the jotform,
         # add it.
@@ -1293,71 +1343,62 @@ def family_phone_updates(submissions, families, members, log):
                         'phone' : jotform_rest,
                     }
 
-            additions[fid] = {
-                'ac'        : jotform_ac,
-                'phone'     : jotform_rest,
+            changes[fid]['additions'].append({
+                'phone'     : f'({jotform_ac}) {jotform_rest}',
                 'type'      : type_map[row['house phone type']],
                 'owner'     : owner,
                 'owner_mid' : owner_mid,
-            }
+            })
+            changes[fid]['changed'] = True
 
-    # Write the removals
+    # Write a sheet with all the changes
     num_removals = 0
-    filename = f'census{census_year}-family-phone-removals.csv'
+    num_additions = 0
+    filename = f'census{census_year}-family-phone-changes.csv'
     with open(filename, 'w') as fp:
         fields = ['FID', 'Env ID', 'Family name',
                   'Original PDS phones',
-                  'Family phone to remove']
+                  'Family phone to remove',
+                  'Family phone to add',
+                  'Add type',
+                  'Add owner',
+                  'Add owner MID',
+                  ]
+
         writer = csv.DictWriter(fp, fieldnames=fields)
         writer.writeheader()
 
-        for fid in sorted(removals):
+        for fid in sorted(changes):
             family = families[fid]
             env    = env_id(family)
+            entry  = changes[fid]
 
-            for phone in removals[fid]:
+            if not entry['changed']:
+                continue
+
+            for data in itertools.zip_longest(entry['removals'], entry['additions']):
                 item   = {
                     'FID'         : fid,
                     'Env ID'      : env,
                     'Family name' : family['Name'],
 
-                    'Original PDS phones'    : originals[fid],
-                    'Family phone to remove' : phone,
+                    'Original PDS phones'    : entry['originals'],
+                    'Family phone to remove' : data[0],
                 }
+                if data[0] is not None:
+                    num_removals += 1
+
+                add = data[1]
+                if add is not None:
+                    item['Family phone to add'] = add['phone']
+                    item['Add type'] = add['type']
+                    item['Add owner'] = add['owner']
+                    item['Add owner MID'] = add['owner_mid']
+                    num_additions += 1
+
                 writer.writerow(item)
-                num_removals += 1
 
     log.info(f"Removed {num_removals} family phones")
-    log.info(f"Wrote {filename}")
-
-    # Write the Family additions
-    num_additions = 0
-    filename = f'census{census_year}-family-phone-additions.csv'
-    with open(filename, 'w') as fp:
-        fields = ['FID', 'Env ID', 'Family name', 'Original PDS phones',
-                  'Area code', 'Phone', 'Type', 'Owner']
-        writer = csv.DictWriter(fp, fieldnames=fields)
-        writer.writeheader()
-
-        for fid in sorted(additions):
-            family = families[fid]
-            env    = env_id(family)
-            entry  = additions[fid]
-
-            item   = {
-                'FID'         : fid,
-                'Env ID'      : env,
-                'Family name' : family['Name'],
-                'Area code'   : entry['ac'],
-                'Phone'       : entry['phone'],
-                'Type'        : entry['type'],
-                'Owner'       : entry['owner'],
-
-                'Original PDS phones' : originals[fid],
-            }
-            writer.writerow(item)
-            num_additions += 1
-
     log.info(f"Added {num_additions} family phones")
     log.info(f"Wrote {filename}")
 
