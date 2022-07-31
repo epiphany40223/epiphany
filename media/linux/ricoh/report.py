@@ -282,9 +282,27 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
     for field in fields:
         if field in item and type(item[field]) != str:
             column_names.append(field)
+
+            # The "bwTotal" and "colorTotal" columns are special:
+            # we'll add another column after each of those two, which
+            # will be a computed value of this department's percentage
+            # of the overall total.
+            if field == 'bwTotal' or field == 'colorTotal':
+                column_names.append(f'% of overall {field}')
+
     ws.append(column_names)
 
+    # Get the last row number.  The next row is the first row of data.
+    for row in ws.rows:
+        # row is a tuple of cells
+        cell = row[0]
+        last_row = cell.row
+    first_data_row = last_row + 1
+    last_data_row = first_data_row + len(depts.keys()) - 1
+
     # Now add a row for each set of delta data
+    row = first_data_row
+    percentage_cols = list()
     for dept_id in sorted(depts.keys()):
         item  = depts[dept_id]
         # "None" renders these Python datetimes in the local timezone
@@ -298,7 +316,23 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
         for field in fields:
             if field in item['deltas'] and type(item['deltas'][field]) != str:
                 data.append(item['deltas'][field])
+
+                # Just like above, the "bwTotal" and "colorTotal"
+                # columns are special: we add in a column for this
+                # department's percentage of the overall total.  Note:
+                # we don't need to compute this value ourselves -- we
+                # just put in an Excel formula to calculate it.
+                col_letter = chr(ord('A') + len(data) - 1)
+                if field == 'bwTotal' or field == 'colorTotal':
+                    value = f'={col_letter}{row}/sum({col_letter}{first_data_row}:{col_letter}{last_data_row})'
+                    data.append(value)
+
+                    col_letter = chr(ord('A') + len(data) - 1)
+                    if col_letter not in percentage_cols:
+                        percentage_cols.append(col_letter)
+
         ws.append(data)
+        row += 1
 
     # automatically adjusts the width of every column to fit the data in it
     dims = dict()
@@ -313,6 +347,12 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
     for cell in ws[1]:
         last_col = cell.column_letter
 
+    # Get the last row number
+    for row in ws.rows:
+        # row is a tuple of cells
+        cell = row[0]
+        last_row = cell.row
+
     # Set the title rows to a nice value
     for row, title in enumerate(titles):
         ws.merge_cells(f'A{row+1}:{last_col}{row+1}')
@@ -322,6 +362,12 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
     title_font = Font(color='FAFAF9')
     title_fill = PatternFill(fgColor='228B22', fill_type='solid')
     title_align = Alignment(horizontal='center')
+
+    # Set the two percentage columns to have "Percent" formats
+    for col in percentage_cols:
+        for row in range(first_data_row, last_row + 1):
+            address = f'{col}{row}'
+            ws[address].style = 'Percent'
 
     # We color all the title rows, the blank row after the titles, and
     # the row with all the column headings
