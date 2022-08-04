@@ -501,6 +501,13 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "300"},
+                               'purpose' : "Worship/art&environment ministry chair" }, ],
+            'ggroup'     : f'worship-art-and-environment-chair{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "309"},
                                'purpose' : "Worship/acolytes ministry chair" }, ],
             'ggroup'     : f'worship-acolytes-chair{ecc}',
