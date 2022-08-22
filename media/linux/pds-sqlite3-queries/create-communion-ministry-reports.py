@@ -50,24 +50,40 @@ today = now.date()
 training_name = 'Communion Minister Certificatn'
 
 # These are all the ministries where that training name is relevant
+name_313  = '313-Communion Ministers'
+name_313a = '313A-Communion: Weekday'
+name_313b = '313B-Communion Ministers: 5:30'
+name_313c = '313C-Communion Ministers: 9:00'
+name_313d = '313D-Communion Ministers:11:30'
 ministries = [
     {
-        'name'      : '313A-Communion: Weekday',
+        'name'      : name_313a,
         'gsheet_id' : '1vK0QeKkZ67JcPANV738IbVcw7Q_JbTpfggGTMR3JGxw',
     },
     {
-        'name'      : '313B-Communion Ministers: 5:30',
+        'name'      : name_313b,
         'gsheet_id' : '1e-YxVcQI1mOPffU2KKD2rsgJAz-XgcdA9OKPrGjLWU8',
     },
     {
-        'name'      : '313C-Communion Ministers: 9:00',
+        'name'      : name_313c,
         'gsheet_id' : '1ULFpl4APhBTEwPyxR9UDvVS7-LgrqHA-MIvHZbSnfZM',
     },
     {
-        'name'      : '313D-Communion Ministers:11:30',
+        'name'      : name_313d,
         'gsheet_id' : '17KbehcPYObdhqy714lnesTh9j9NN3tv2FrTb4hO4VRI',
     },
 ]
+
+union_ministries = {
+    'names'     : [
+        name_313,
+        name_313a,
+        name_313b,
+        name_313c,
+        name_313d,
+    ],
+    'gsheet_id' : '1ZFGpGlAnB7B_cHfxZjPX0ITGZ51tYShGwesVolRrsbw',
+}
 
 # This is the Google sheet ID of the "About to expire" report
 about_to_expire_gsheet_id = '1hMga-0PWSAl91eL3FBBhyMwUArT13xS9YmSvVZgJ7n8'
@@ -375,6 +391,18 @@ def available_filter(member, ministry_name, log):
         return False
     return member[key]['active']
 
+def union_filter(member, ministry_name, log):
+    # This filter is used for the "union" report -- i.e., the union of
+    # all active Members who have an active mandate.
+    #
+    # If we got here, the Member is alredy in at least one of the
+    # desired ministries.  So we can just return their training
+    # status.
+    key = 'calculated'
+    if key not in member:
+        return False
+    return member[key]['active']
+
 def available_column_names(log):
     cols = [ ('Current mandate ends' , 15), ]
     return cols
@@ -466,7 +494,8 @@ def make_xlsx_roster_workbook(members, ministry_name,
     filtered = list()
     for member in members.values():
         # Filter Members who are not in this ministry
-        if not in_ministry(member, ministry_name, log):
+        if (ministry_name is not None and
+            not in_ministry(member, ministry_name, log)):
             continue
 
         log.debug(f"Found {ministry_name} member: {member['Name']}")
@@ -491,7 +520,9 @@ def make_xlsx_roster_workbook(members, ministry_name,
                       ('Envelope number', 10),
                       ('Email Address',   30),
                       ('Phone Number',    20), ]
-    title = f'Communion Ministers with active mandate: {ministry_name}'
+    title = 'Communion Ministers with active mandate'
+    if ministry_name is not None:
+        title += f': {ministry_name}'
     last_fixed_col, data_start_row = xlsx_create_headers(ws, title,
                                                          fixed_columns,
                                                          column_name_fn, log)
@@ -527,6 +558,30 @@ def make_xlsx_roster_workbook(members, ministry_name,
                 col = chr(ord(col) + 1)
 
         row += 1
+
+#------------------------------------------------------------------
+
+# Make a sheet with all Active Members who have a current mandate,
+# regardless of their participation in any ministry.
+def union_report(pds_members, training_name,
+                 ministries, google, args, log):
+        wb = Workbook()
+        make_xlsx_roster_workbook(pds_members, None,
+                                  wb, "Any",
+                                  union_filter,
+                                  available_column_names,
+                                  available_column_data,
+                                  log)
+
+        # Delete the default sheet that was automatically created
+        key = 'Sheet'
+        if key in wb.sheetnames:
+            del wb[key]
+
+        filename = 'All Active ECC parishioners with a current Communion Minister mandate',
+        upload_workbook(filename, wb, args, google,
+                        ministries['gsheet_id'],
+                        log)
 
 #------------------------------------------------------------------
 
@@ -732,6 +787,11 @@ def main():
 
     # Setup metadata on PDS Member records
     find_pds_training(pds_members, training_name, log)
+
+    # Union of all who have active mandates
+    union_report(pds_members, training_name,
+                 union_ministries,
+                 google, args, log)
 
     # Write per-ministry reports
     per_ministry_reports(ministries, pds_members, google, args, log)
