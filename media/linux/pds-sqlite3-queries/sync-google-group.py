@@ -189,7 +189,8 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},awsimpson57@gmail.com,pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '309A-Acolyte Ministry 5:30P',
+            'ministries' : [ '309-Acolytes INTERESTED ONLY',
+                             '309A-Acolyte Ministry 5:30P',
                              '309B-Acolyte Ministry  9:00A',
                              '309C-Acolyte Ministry 11:30A' ],
             'ggroup'     : f'acolytes{ecc}',
@@ -221,7 +222,8 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '316A-Greeters 5:30P',
+            'ministries' : [ '316-Greeters INTERESTED ONLY',
+                             '316A-Greeters 5:30P',
                              '316B-Greeters 9:00A',
                              '316C-Greeters 11:30A' ],
             'ggroup'     : f'greeters{ecc}',
