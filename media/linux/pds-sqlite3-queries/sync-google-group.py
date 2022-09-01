@@ -543,6 +543,13 @@ def get_synchronizations():
             'ggroup'     : f'companions-chair{ecc}',
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : '602-Singles Explore Life (SEL)' },
+                               'purpose' : "SEL ministry chair" }, ],
+            'ggroup'     : f'sel-chair{ecc}',
+            'notify'     : f'pds-google-sync{ecc}',
+        },
 
         #----------------------------
 
