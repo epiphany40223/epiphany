@@ -292,7 +292,8 @@ def get_synchronizations():
         {
             'ministries' : [ '602-Singles Explore Life (SEL)' ],
             'ggroup'     : f'sel{ecc}',
-            'notify'     : f'bookkeeper{ecc},pds-google-sync{ecc}',
+            # Lynne Webb
+            'notify'     : f'justlmw@att.net,pds-google-sync{ecc}',
         },
 
         #############################
