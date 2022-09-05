@@ -174,11 +174,6 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '302-Bread Baking Ministry' ],
-            'ggroup'     : f'breadmakers{ecc}',
-            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
-        },
-        {
             'ministries' : [ '304-Liturgical Planning' ],
             'ggroup'     : f'liturgy-planning{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
@@ -189,10 +184,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},awsimpson57@gmail.com,pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '309-Acolytes INTERESTED ONLY',
-                             '309A-Acolyte Ministry 5:30P',
-                             '309B-Acolyte Ministry  9:00A',
-                             '309C-Acolyte Ministry 11:30A' ],
+            'ministries' : [ '309-Acolytes', ],
             'ggroup'     : f'acolytes{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
@@ -208,11 +200,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '313-Communion Ministers',
-                             '313A-Communion: Weekday',
-                             '313B-Communion Ministers: 5:30',
-                             '313C-Communion Ministers: 9:00',
-                             '313D-Communion Ministers:11:30' ],
+            'ministries' : [ '313-Communion Ministers', ],
             'ggroup'     : f'communion-ministers{ecc}',
             'notify'     : f'director-worship{ecc},tonya@cabral.org,pds-google-sync{ecc}',
         },
@@ -222,10 +210,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '316-Greeters INTERESTED ONLY',
-                             '316A-Greeters 5:30P',
-                             '316B-Greeters 9:00A',
-                             '316C-Greeters 11:30A' ],
+            'ministries' : [ '316-Greeters', ],
             'ggroup'     : f'greeters{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
@@ -236,11 +221,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '318-Lectors  MASTER LIST',
-                             '318A-Lector Ministry  5:30P',
-                             '318B-Lector  Ministry 9:00A',
-                             '318C-Lector Ministry 11:30A',
-                             '318D-Lector Ministry  Spanish' ],
+            'ministries' : [ '318-Lectors', ],
             'ggroup'     : f'lectors{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
@@ -322,30 +303,20 @@ def get_synchronizations():
         #############################
 
         {
-            'ministries' : [ '800-ChildrenFormationCatechist' ],
+            'ministries' : [ '800-Catechists for Children' ],
             'ggroup'     : f'childrens-formation-catechists{ecc}',
             'notify'     : f'formation{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '807-RCIA Team' ],
+            'ministries' : [ '807-Catechumenate/InitiationTm' ],
             'ggroup'     : f'rcia-team{ecc}',
-            'notify'     : f'formation{ecc},pds-google-sync{ecc}',
-        },
-        {
-            'ministries' : [ "811-Family&Children's WorkGrp" ],
-            'ggroup'     : f'family-and-childrens-working-group{ecc}',
-            'notify'     : f'formation{ecc},pds-google-sync{ecc}',
-        },
-        {
-            'ministries' : [ '812-Adult Form. Working Group' ],
-            'ggroup'     : f'adult-formation-working-group{ecc}',
             'notify'     : f'formation{ecc},pds-google-sync{ecc}',
         },
 
         #############################
 
         {
-            'ministries' : [ 'WG-Livestream Team' ],
+            'keywords'   : [ 'Livestream Team' ],
             'ggroup'     : f'livestream-team{ecc}',
             'notify'     : f'director-communications{ecc},pds-google-sync{ecc}',
         },
