@@ -688,7 +688,7 @@ def compute_sync(sync, pds_members, group_members, log=None):
 
 #-------------------------------------------------------------------
 
-def do_sync(sync, group_permissions, service, actions, log=None):
+def do_sync(args, sync, group_permissions, service, actions, log=None):
     ministries = sync['ministries'] if 'ministries' in sync else 'None'
     keywords   = sync['keywords']   if 'keywords'   in sync else 'None'
 
@@ -728,10 +728,10 @@ def do_sync(sync, group_permissions, service, actions, log=None):
         msg = None
         if a == 'change role':
             if r == 'OWNER':
-                msg = _sync_member_to_owner(sync, group_permissions,
+                msg = _sync_member_to_owner(args, sync, group_permissions,
                                             service, action, mem_names, log)
             elif r == 'MEMBER':
-                msg = _sync_owner_to_member(sync, group_permissions,
+                msg = _sync_owner_to_member(args, sync, group_permissions,
                                             service, action, mem_names, log)
             else:
                 log.error("Action: change role, unknown role: {role} -- PDS Member {name} (skipped)"
@@ -739,18 +739,19 @@ def do_sync(sync, group_permissions, service, actions, log=None):
                 continue
 
         elif a == 'add':
-            msg = _sync_add(sync, group_permissions,
+            msg = _sync_add(args, sync, group_permissions,
                             service=service, action=action,
                             name=mem_names, log=log)
 
         elif a == 'delete':
-            msg = _sync_delete(sync, service, action, mem_names, log)
+            msg = _sync_delete(args, sync, service, action, mem_names, log)
 
         else:
             log.error("Unknown action: {action} -- PDS Member {name} (skipped)"
                       .format(action=a, name=mem_names))
 
-        if msg:
+        # Don't send email if --dry-run
+        if msg and not args.dry_run:
             email = action['email']
             i     = len(changes) + 1
             changes.append("<tr>\n<td>{i}.</td>\n<td>{name}</td>\n<td>{email}</td>\n<td>{msg}</td>\n</tr>"
@@ -760,7 +761,9 @@ def do_sync(sync, group_permissions, service, actions, log=None):
                                    msg=msg))
 
     # If we have changes to report, email them
-    if len(changes) > 0:
+    # NOTE: len(changes) will == 0 if args.dry_run, but we check for
+    # it any way (defensive programming!).
+    if len(changes) > 0 and not args.dry_run:
         subject = 'Update to Google Group for '
 
         subject_add = list()
@@ -834,7 +837,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }'''
 #-------------------------------------------------------------------
 
 @retry.Retry(predicate=Google.retry_errors)
-def _sync_member_to_owner(sync, group_permissions, service, action, name, log=None):
+def _sync_member_to_owner(args, sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Member to Owner"
@@ -856,9 +859,10 @@ def _sync_member_to_owner(sync, group_permissions, service, action, name, log=No
         'email' : email,
         'role'  : 'OWNER',
     }
-    service.members().update(groupKey=sync['ggroup'],
-                             memberKey=email,
-                             body=group_entry).execute()
+    if not args.dry_run:
+        service.members().update(groupKey=sync['ggroup'],
+                                 memberKey=email,
+                                 body=group_entry).execute()
 
     if group_permissions == BROADCAST:
         msg = "Change to: owner (can post to this group)"
@@ -868,7 +872,7 @@ def _sync_member_to_owner(sync, group_permissions, service, action, name, log=No
     return msg
 
 @retry.Retry(predicate=Google.retry_errors)
-def _sync_owner_to_member(sync, group_permissions, service, action, name, log=None):
+def _sync_owner_to_member(args, sync, group_permissions, service, action, name, log=None):
     email = action['email']
     if log:
         log.info("Changing PDS Member {name} ({email}) from Google Group Owner to Member"
@@ -878,9 +882,10 @@ def _sync_owner_to_member(sync, group_permissions, service, action, name, log=No
         'email' : email,
         'role'  : 'MEMBER',
     }
-    service.members().update(groupKey=sync['ggroup'],
-                             memberKey=email,
-                             body=group_entry).execute()
+    if not args.dry_run:
+        service.members().update(groupKey=sync['ggroup'],
+                                 memberKey=email,
+                                 body=group_entry).execute()
 
     if group_permissions == BROADCAST:
         msg = "Change to: member (can <strong><em>not</em></strong> post to this group)"
@@ -890,7 +895,7 @@ def _sync_owner_to_member(sync, group_permissions, service, action, name, log=No
     return msg
 
 @retry.Retry(predicate=Google.retry_errors)
-def _sync_add(sync, group_permissions, service, action, name, log=None):
+def _sync_add(args, sync, group_permissions, service, action, name, log=None):
     email = action['email']
     role  = action['role']
     if log:
@@ -902,8 +907,9 @@ def _sync_add(sync, group_permissions, service, action, name, log=None):
         'role'  : role,
     }
     try:
-        service.members().insert(groupKey=sync['ggroup'],
-                                 body=group_entry).execute()
+        if not args.dry_run:
+            service.members().insert(groupKey=sync['ggroup'],
+                                     body=group_entry).execute()
 
         if group_permissions == BROADCAST:
             if role == 'OWNER':
@@ -945,7 +951,7 @@ def _sync_add(sync, group_permissions, service, action, name, log=None):
     return msg
 
 @retry.Retry(predicate=Google.retry_errors)
-def _sync_delete(sync, service, action, name, log=None):
+def _sync_delete(args, sync, service, action, name, log=None):
     email = action['email']
 
     # We delete by ID (instead of by email address) because of a weird
@@ -970,8 +976,9 @@ def _sync_delete(sync, service, action, name, log=None):
         log.info("Deleting PDS Member {name} ({email}) from group {group}"
                  .format(name=name, email=email, group=sync['ggroup']))
 
-    service.members().delete(groupKey=sync['ggroup'],
-                             memberKey=id).execute()
+    if not args.dry_run:
+        service.members().delete(groupKey=sync['ggroup'],
+                                 memberKey=id).execute()
 
     msg = "Removed from the group"
     return msg
@@ -1370,8 +1377,7 @@ def main():
         actions = compute_sync(sync,
                                pds_ministry_members,
                                group_members, log=log)
-        if not args.dry_run:
-            do_sync(sync, group_permissions, service_admin, actions, log=log)
+        do_sync(args, sync, group_permissions, service_admin, actions, log=log)
 
     # All done
     log.info("Synchronization complete")
