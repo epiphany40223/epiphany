@@ -83,11 +83,6 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '109-Prayer Ministry Leadership',
-        'gsheet_id' : '1pc24lv1VCXJjWbI8QMHFUNnVNqzrLIWd2mY_lcORiHU',
-        'birthday' : False,
-    },
-    {
         'ministry' : '110-Ten Percent Committee',
         'gsheet_id' : '18BIrnBWf_4LS9XeC9tordSD1SBgJz67a0I9Ouj6ZcEc',
         'birthday' : False,
@@ -98,8 +93,13 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '113-Communications Adv. Comm. (no active Members)',
+        'ministry' : '113-Communications Plan. Comm.',
         'gsheet_id' : '1erlqkK_F-ol8Bmo5Pg6SoAe355tOxwU3D4pU179foCU',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '114-Long Range Plan 2029 Comm',
+        'gsheet_id' : '1Ohroqv1OSZJuhJ0y4z2dIEt4gCkxdkyudAqZ0XpuPTQ',
         'birthday' : False,
     },
     {
@@ -158,11 +158,6 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '302-Bread Baking Ministry',
-        'gsheet_id' : '1JOHf5XwPiWWM_UtqhTbyUA_-IDzCHeE2JwvX3w1B4MM',
-        'birthday' : False,
-    },
-    {
         'ministry' : '303-Linens/Vestments Ministry',
         'gsheet_id' : '1ul5doCFZx4Y_L8ZNmDarVdgLy_dQo2MkE0mdo5kbrY0',
         'birthday' : False,
@@ -193,28 +188,8 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministries' : [
-            '309-Acolytes INTERESTED ONLY',
-            '309A-Acolyte Ministry 5:30P',
-            '309B-Acolyte Ministry  9:00A',
-            '309C-Acolyte Ministry 11:30A',
-        ],
+        'ministry' : '309-Acolytes',
         'gsheet_id' : '1zXfAxnuQCATWQ7nU7QYn2Mvy1Ql1Huy7Ve1DW60nPKA',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '309A-Acolyte Ministry 5:30P',
-        'gsheet_id' : '17knwBLjpOgV7tSURrVXsyhWhIe0WO0h7AQZ3HIYse6g',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '309B-Acolyte Ministry  9:00A',
-        'gsheet_id' : '1mQOGaT8jKjwfLhuL7afA4zMjoHfSU0zTfqkw9t1CVoI',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '309C-Acolyte Ministry 11:30A',
-        'gsheet_id' : '1GPk3IzlCTMvGYNFR_Q_haK02NqCuaTNd7Z1CdTZGD8w',
         'birthday' : False,
     },
     {
@@ -233,39 +208,8 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministries' : [
-            '313-Communion Ministers',
-            '313A-Communion Ministers: Weekday',
-            '313B-Communion Ministers: 5:30',
-            '313C-Communion Ministers: 9:00',
-            '313D-Communion Ministers:11:30',
-         ],
+        'ministry' : '313-Communion Ministers',
         'gsheet_id' : '10Aq9XtZHL3v0m0Erm71f8BSUYr7CiEDMwzDWTSgKPJ4',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '313A-Communion: Weekday',
-        'gsheet_id' : '1ep1HrUf1jWB43e-wnHiayq6gcDImo8Y26OQ2e5b8gdw',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '313B-Communion Ministers: 5:30',
-        'gsheet_id' : '1S-mZyZwIunBJ1hZYJ942Bd1p--SMeUjEMBw3XU9y404',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '313C-Communion Ministers: 9:00',
-        'gsheet_id' : '1JHcG1krbBqlegL9NU45aAKl0zw0rSrMwmPwhKfXfIXI',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '313D-Communion Ministers:11:30',
-        'gsheet_id' : '1aqgGKqbIUyo0xHFufBPQveFMWJUQ0hVkShx_M4NTflg',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '314-Communion Min. Coordinator',
-        'gsheet_id' : '18YGA8uOv5DaDDdYsc2fri9RjfysX8i740oiziVFHbuo',
         'birthday' : False,
     },
     {
@@ -274,28 +218,8 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministries' : [
-            '316-Greeters INTERESTED ONLY',
-            '316A-Greeters 5:30P',
-            '316B-Greeters 9:00A',
-            '316C-Greeters 11:30A',
-         ],
+        'ministry' : '316-Greeters',
         'gsheet_id' : '1vd7sltcU8MVwIBad__PyXXMN_cUEFvdXpL5RkYiBWJ0',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '316A-Greeters 5:30P',
-        'gsheet_id' : '1sWu0OAL03N7zeg3aB6_1sZQYQbn4uhw7MtCRa0VHy1s',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '316B-Greeters 9:00A',
-        'gsheet_id' : '11O1G4E9cVoDYKsG4ymVn68E77PgFWJnyK_FaU28F0vk',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '316C-Greeters 11:30A',
-        'gsheet_id' : '1JbBRo3DXs1bK3D_TkjRCJUVL_SF660V9YcsudDzm8cs',
         'birthday' : False,
     },
     {
@@ -304,34 +228,8 @@ ministries = [
         'birthday' : True,
     },
     {
-        'ministries' : [
-            '318-Lectors  MASTER LIST',
-            '318A-Lector Ministry  5:30P',
-            '318B-Lector  Ministry 9:00A',
-            '318C-Lector Ministry 11:30A',
-            '318D-Lector Ministry  Spanish',
-         ],
+        'ministry' : '318-Lectors  MASTER LIST',
         'gsheet_id' : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '318A-Lector Ministry  5:30P',
-        'gsheet_id' : '1_it-a1Zl2zyWBXSwu_IfGbwbZgd0OUCJdhGtBJzNBXY',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '318B-Lector  Ministry 9:00A',
-        'gsheet_id' : '16OmohVR9zSPF68PyNgY8VV1oTzSeFyXGY7cK4dSuNnE',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '318C-Lector Ministry 11:30A',
-        'gsheet_id' : '1nKE13crOa20BaDjbmgWWRq3oklY_lkNvuHS-3X1-Rro',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '318D-Lector Ministry  Spanish',
-        'gsheet_id' : '1FZDzEquDfhTHUY2_YGR15a05gYkgIzuNR4NaDY1zyB4',
         'birthday' : False,
     },
     {
@@ -380,17 +278,22 @@ ministries = [
         'birthday' : False,
     },
     {
+        'ministry' : '409-Sunday Morning Coffee',
+        'gsheet_id' : '1QLcjLidJppCfhqaNBn10h1Toe81DEy48PwwJAhwDNUs',
+        'birthday' : False,
+    },
+    {
         'ministry' : '452-Media Communications',
         'gsheet_id' : '1KkCF2V4JIK65b9QsfSG-lGMCASXPavxIxim-CfzxBYk',
         'birthday' : False,
     },
     {
-        'ministry' : '500-BereavementReceptionSupprt',
+        'ministry' : '500-Bereavement Support',
         'gsheet_id' : '1qbTrDDHAyEsCT5oxzGlvnpU-kOJNS3MPv9re0x6XE2U',
         'birthday' : False,
     },
     {
-        'ministry' : '501-Care of Sick: Communion',
+        'ministry' : '501-Care of Sick: Eucharist',
         'gsheet_id' : '1fKXe-NuoObjgYoFRcbuJQwIOjFIAfT7TQB87eccgfng',
         'birthday' : False,
     },
@@ -430,11 +333,6 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '605-Sunday Morning Coffee',
-        'gsheet_id' : '1QLcjLidJppCfhqaNBn10h1Toe81DEy48PwwJAhwDNUs',
-        'birthday' : False,
-    },
-    {
         'ministry' : '609-Octoberfest Plan Team 2022',
         'gsheet_id' : '17QXoqgreLu8sUQpZfooNkto4NV06wdoE3yA6Q5vgiAw',
         'birthday' : False,
@@ -442,6 +340,11 @@ ministries = [
     {
         'ministry' : '610-FeastOfEpiphanyPlanTeam\'23',
         'gsheet_id' : '18UNXrRqckFSO2801lmODRohk_CJVI9ko4UtRFruS9E0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '611-Bereavement Receptions',
+        'gsheet_id' : '1r6FNXGn-T5anj9X7HGlB2EpZ9oXfy5dQXD6z-OQEGgE',
         'birthday' : False,
     },
     {
@@ -490,22 +393,17 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '711-Dignity of Life Ministry (no active Members)',
-        'gsheet_id' : '1-0BwZIGvzTQL43ffyGYljYOruAE7ULES2oK52siHR0I',
-        'birthday' : False,
-    },
-    {
         'ministry' : '712-Legislative Network',
         'gsheet_id' : '1SqqnAFEZlUdCAxp6NYKqpqGFy13L_aheVEGzHLLzOuk',
         'birthday' : False,
     },
     {
-        'ministry' : '800-ChildrenFormationCatechist',
+        'ministry' : '800-Catechists for Children',
         'gsheet_id' : '1rBKiweOBT-JZFbfv5Sf4_vjjOlAYnOGaZIhadtBPxSE',
         'birthday' : False,
     },
     {
-        'ministry' : '802-GathTheChildren Catechist',
+        'ministry' : '802-Gather the Children',
         'gsheet_id' : '1lI9eO0bryD6GFIsgJ5FipGePK4FaJ7v8eIp71DFz_6A',
         'birthday' : False,
     },
@@ -515,28 +413,15 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '807-RCIA Team',
+        'ministry' : '807-Catechumenate/InitiationTm',
         'gsheet_id' : '13neLXFrDTsohe_N_CVPX7ajx4pFvYb9miFtZtUqdVl4',
         'birthday' : False,
     },
-    {
-        'ministry' : '809-Sunday Adult Form. Spanish',
-        'gsheet_id' : '1By2arcEe4qyBe6tDaItOZw0d8_ScElhLWSUtGgpEEXM',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '811-Family&Children\'s WorkGrp',
-        'gsheet_id' : '1ecgA_Z3pYA9LH7wt1kwyJ7RxU2ukltcCbbJMgT26BHA',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '812-Adult Form. Working Group',
-        'gsheet_id' : '1cxQYYfmxtaJtFpKBoNSmEzVXktnim7RE9ItMn9i7pWA',
-        'birthday' : False,
-    },
+]
 
+keywords = [
     {
-        'ministry' : 'WG-Livestream Team',
+        'keyword' : 'Livestream Team',
         'gsheet_id' : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
         'birthday' : False,
     },
@@ -544,7 +429,7 @@ ministries = [
 
 ####################################################################
 
-def write_xlsx(members, ministry, name, want_birthday, log):
+def write_xlsx(members, ministry_name, name, want_birthday, log):
     # Make the microseconds be 0, just for simplicity
     now = datetime.now()
     us = timedelta(microseconds=now.microsecond)
@@ -555,7 +440,7 @@ def write_xlsx(members, ministry, name, want_birthday, log):
                         hour=now.hour, min=now.minute))
     filename_base = name
     if filename_base is None:
-        filename_base = ministry
+        filename_base = ministry_name
     filename_base = filename_base.replace("/", "-")
     filename = (f'{filename_base} members as of {timestamp}.xlsx')
 
@@ -580,7 +465,7 @@ def write_xlsx(members, ministry, name, want_birthday, log):
     row = 1
     ws.merge_cells(f'A{row}:{last_col}{row}')
     cell = f'A{row}'
-    ws[cell] = f'Ministry: {ministry}'
+    ws[cell] = f'Ministry: {ministry_name}'
     ws[cell].fill = title_fill
     ws[cell].font = title_font
 
@@ -734,7 +619,35 @@ def upload_overwrite(filename, google, file_id, log):
 
 #-------------------------------------------------------------------
 
-def create_roster(pds_members, ministry_entry, google, log):
+def _create_roster(pds_members, ministry_name, sheet_name,
+                   birthday, gsheet_id, google, log):
+    # PDSChurch.filter_members() returns a dict.  Turn this into a simple
+    # list of Members.
+    members = [ x for x in pds_members.values() ]
+
+    # Make an xlsx
+    filename = write_xlsx(members=members,
+                          ministry_name=sheet_name,
+                          name=ministry_name,
+                          want_birthday=birthday, log=log)
+    log.debug(f"Wrote temp XLSX file: {filename}")
+
+    # Upload the xlsx to Google
+    upload_overwrite(filename=filename, google=google, file_id=gsheet_id,
+                     log=log)
+    log.debug("Uploaded XLSX file to Google")
+
+    # Remove the temp local XLSX file
+    try:
+        os.unlink(filename)
+        log.debug("Unlinked temp XLSX file")
+    except Exception as e:
+        log.info("Failed to unlink temp XLSX file!")
+        log.error(e)
+
+#-------------------------------------------------------------------
+
+def create_ministry_roster(pds_members, ministry_entry, google, log):
     gsheet_id     = ministry_entry['gsheet_id']
     birthday      = ministry_entry['birthday']
 
@@ -761,27 +674,36 @@ def create_roster(pds_members, ministry_entry, google, log):
     if members is None or len(members) == 0:
         log.info(f"No members in ministry: {sheet_name} -- writing empty sheet")
 
-    # PDSChurch.filter_members() returns a dict.  Turn this into a simple
-    # list of Members.
-    members = [ x for x in members.values() ]
+    _create_roster(members, name, sheet_name,
+                   birthday, gsheet_id, google, log)
 
-    # Make an xlsx
-    filename = write_xlsx(members=members, ministry=sheet_name, name=name,
-                          want_birthday=birthday, log=log)
-    log.debug(f"Wrote temp XLSX file: {filename}")
+#-------------------------------------------------------------------
 
-    # Upload the xlsx to Google
-    upload_overwrite(filename=filename, google=google, file_id=gsheet_id,
-                     log=log)
-    log.debug("Uploaded XLSX file to Google")
+def create_keyword_roster(pds_members, keyword_entry, google, log):
+    gsheet_id = keyword_entry['gsheet_id']
+    birthday  = keyword_entry['birthday']
 
-    # Remove the temp local XLSX file
-    try:
-        os.unlink(filename)
-        log.debug("Unlinked temp XLSX file")
-    except Exception as e:
-        log.info("Failed to unlink temp XLSX file!")
-        log.error(e)
+    key = 'keyword'
+    if key in keyword_entry:
+        sheet_name = keyword_entry[key]
+        keywords = [ sheet_name ]
+    else:
+        print(f"ERROR: Cannot find {key1} or {key2} in ministry_entry!")
+        print(ministry_entry)
+        exit(1)
+
+    name = None
+    key = 'name'
+    if key in keyword_entry:
+        name = keyword_entry[key]
+
+    # Find the members
+    members = PDSChurch.filter_members_on_keywords(pds_members, keywords)
+    if members is None or len(members) == 0:
+        log.info(f"No members with keyword: {sheet_name} -- writing empty sheet")
+
+    _create_roster(members, name, sheet_name,
+                   birthday, gsheet_id, google, log)
 
 ####################################################################
 
@@ -840,11 +762,16 @@ def main():
                                               log=log)
     google = services['drive']
 
+    for keyword in keywords:
+        create_keyword_roster(pds_members=pds_members,
+                              keyword_entry=keyword,
+                              google=google,
+                              log=log)
     for ministry in ministries:
-        create_roster(pds_members=pds_members,
-                      ministry_entry=ministry,
-                      google=google,
-                      log=log)
+        create_ministry_roster(pds_members=pds_members,
+                               ministry_entry=ministry,
+                               google=google,
+                               log=log)
 
     # All done
     pds.connection.close()
