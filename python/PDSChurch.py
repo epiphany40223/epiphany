@@ -220,6 +220,7 @@ def _load_families(pds, columns=None,
         _normalize_boolean(f, src='SendNoMail')
         _normalize_boolean(f, src='EnvelopeUser')
         _normalize_filename(f, src='PictureFile')
+        f['date_registered'] = _normalize_date(f['DateRegistered'], sentinel=False)
 
     return families
 
