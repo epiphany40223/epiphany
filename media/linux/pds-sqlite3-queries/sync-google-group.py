@@ -933,6 +933,15 @@ def _sync_add(args, sync, group_permissions, service, action, name, log=None):
                               "already in the group -- ignoring")
                 return None
 
+            elif 'Resource Not Found' in err['reason']:
+                # If this is an invalid Gmail address (i.e., Google
+                # says this email address does not exist), then just
+                # log the error and keep going.
+                log.warning(f"Google says {email} "
+                            "is not a valid Gmail address -- ignoring")
+                msg = f'NOT added: {email} is not a valid Gmail address'
+                break
+
             # Re-raise the error and let retry.Retry() determine if we should
             # try again.
             raise e
