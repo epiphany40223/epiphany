@@ -40,6 +40,8 @@ def main():
 
     (pds, families,
      members) = PDSChurch.load_families_and_members(filename='pdschurch.sqlite3',
+                                                    active_only=False,
+                                                    parishioners_only=False,
                                                     log=log)
 
     #num_fam = len(families)
@@ -55,9 +57,13 @@ def main():
     #pprint(members[carl_working])
     #exit(0)
 
-    desiree_hoette = 547739
-    pprint(members[desiree_hoette])
+    ann_hall = 549105
+    pprint(members[ann_hall])
     exit(0)
+
+    #desiree_hoette = 547739
+    #pprint(members[desiree_hoette])
+    #exit(0)
 
     #lucas_osborne = 709804
     #pprint(members[lucas_osborne])
