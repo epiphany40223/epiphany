@@ -263,7 +263,7 @@ def get_synchronizations():
         {
             'ministries' : [ '600-Men of Epiphany' ],
             'ggroup'     : f'moe{ecc}',
-            'notify'     : f'community-life-coordinator{ecc},brayton@howlandgroup.com,pds-google-sync{ecc}',
+            'notify'     : f'community-life-coordinator{ecc},moe-chair{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '601-Sages (for 50 yrs. +)' ],
@@ -468,6 +468,13 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "106"},
+                               'purpose' : "Community Life chair" }, ],
+            'ggroup'     : f'community-life-chair{ecc}',
+            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "104-Stewardship"},
                                'purpose' : "Stewardship ministry chair" }, ],
             'ggroup'     : f'stewardship-chair{ecc}',
@@ -514,6 +521,13 @@ def get_synchronizations():
                                'purpose' : "Epiphany Companions ministry chair" }, ],
             'ggroup'     : f'companions-chair{ecc}',
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : '600' },
+                               'purpose' : "MOE ministry chair" }, ],
+            'ggroup'     : f'moe-chair{ecc}',
+            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
