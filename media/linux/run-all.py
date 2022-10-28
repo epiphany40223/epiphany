@@ -41,26 +41,31 @@ class LockFile:
         self.opened = False
         self.log = log
 
-        self.max_lockfile_age = datetime.timedelta(minutes=60)
+        # JMS Oct 2022: Change max lockfile timeout to 16 minutes
+        self.max_lockfile_age = datetime.timedelta(minutes=16)
 
     def __enter__(self):
-        try:
-            fp = open(self.lockfile, mode='x')
-            fp.write(time.ctime())
-            fp.close()
-            self.log.debug("Locked!")
-            self.opened = True
-        except:
-            # We weren't able to create the file, so that means
-            # someone else has it locked.  If the lockfile is "old"
-            # (e.g., over an hour old), then something is wrong --
-            # alert a human.
-            self._check_lockfile_age()
+        while True:
+            try:
+                fp = open(self.lockfile, mode='x')
+                fp.write(time.ctime())
+                fp.close()
+                self.log.debug("Locked!")
+                self.opened = True
+                return
+            except:
+                # We weren't able to create the file, so that means
+                # someone else has it locked.  If the lockfile is "old"
+                # (e.g., over an hour old), then something is wrong --
+                # alert a human.
+                try_again = self._check_lockfile_age()
+                if try_again:
+                    continue
 
-            # If we get here, the lock file isn't old.  So this is not
-            # an error -- we just exit.
-            self.log.warning("Unable to obtain lockfile -- exiting")
-            exit(0)
+                # If we get here, the lock file isn't old.  So this is not
+                # an error -- we just exit.
+                self.log.warning("Unable to obtain lockfile -- exiting")
+                exit(0)
 
     def _check_lockfile_age(self):
         try:
@@ -76,10 +81,16 @@ class LockFile:
             self.log.error(f"Lockfile is too old ({self.lockfile})")
             self.log.error(f"Created: {lockfile_create}")
             self.log.error(f"Age: {age}")
-            exit(1)
+            # In Oct 2022, some "awk" process is hanging every day,
+            # and we get stale lockfiles.  Hence, after the timeout,
+            # just remove the lockfile (vs. exiting in error).
+            #exit(1)
+            self.log.error("REMOVING LOCKFILE")
+            os.unlink(self.lockfile)
+            return True
 
         # If we get here, the lockfile isn't too old.  So just return.
-        return
+        return False
 
     def __exit__(self, exception_type, exception_value, exeception_traceback):
         if self.opened:
