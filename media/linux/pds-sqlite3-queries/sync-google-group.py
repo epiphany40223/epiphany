@@ -130,7 +130,7 @@ def get_synchronizations():
         {
             'ministries' : [ '106-Community Life Committee' ],
             'ggroup'     : f'community-life{ecc}',
-            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             "ministries" : [ '107-Social Resp Steering Comm' ],
@@ -255,7 +255,7 @@ def get_synchronizations():
         {
             'ministries' : [ '508-Messages of Hope Ministry' ],
             'ggroup'     : f'messages-of-hope{ecc}',
-            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
 
         #############################
@@ -263,12 +263,12 @@ def get_synchronizations():
         {
             'ministries' : [ '600-Men of Epiphany' ],
             'ggroup'     : f'moe{ecc}',
-            'notify'     : f'community-life-coordinator{ecc},moe-chair{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},moe-chair{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '601-Sages (for 50 yrs. +)' ],
             'ggroup'     : f'sages{ecc}',
-            'notify'     : f'joanhagedorn46@gmail.com,community-life-coordinator{ecc},pds-google-sync{ecc}',
+            'notify'     : f'joanhagedorn46@gmail.com,pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '602-Singles Explore Life (SEL)' ],
@@ -471,7 +471,7 @@ def get_synchronizations():
                                'kwargs' : { "ministry_prefix" : "106"},
                                'purpose' : "Community Life chair" }, ],
             'ggroup'     : f'community-life-chair{ecc}',
-            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
@@ -527,7 +527,7 @@ def get_synchronizations():
                                'kwargs' : { "ministry_prefix" : '600' },
                                'purpose' : "MOE ministry chair" }, ],
             'ggroup'     : f'moe-chair{ecc}',
-            'notify'     : f'community-life-coordinator{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
