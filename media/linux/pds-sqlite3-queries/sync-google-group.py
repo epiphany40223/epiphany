@@ -440,12 +440,12 @@ def get_synchronizations():
         {
             'keywords'   : [ 'YouthMin parent: Jr high' ],
             'ggroup'     : f'youth-ministry-parents-jr-high{ecc}',
-            'notify'     : f'deacontrey{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-youth{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'YouthMin parent: Sr high' ],
             'ggroup'     : f'youth-ministry-parents-sr-high{ecc}',
-            'notify'     : f'deacontrey{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-youth{ecc},pds-google-sync{ecc}',
         },
 
         #############################
