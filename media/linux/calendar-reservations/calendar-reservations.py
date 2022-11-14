@@ -338,6 +338,10 @@ def respond_to_events(events_to_respond_to, response, service, calendar, log):
         event = item['event']
         because = f" because {item['reason']}" if 'reason' in item else ""
         start = f"at {event['start']['dateTime']}" if 'dateTime' in event['start'] else f"on {event['start']['date']} (all day)"
+        key = 'summary'
+        if key not in event:
+            log.warning(f"Event {event['id']} does not have a title.  Cowardly refusing to accept it.")
+            continue
         log.info(f"Event '{event['summary']}' {start} (ID: {event['id']}) will be {response}{because}")
 
         response_body =   {
