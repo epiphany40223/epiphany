@@ -147,6 +147,11 @@ def get_synchronizations():
             'ggroup'     : f'hispanic-ministry-team{ecc}',
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
+        {
+            "ministries" : [ '113-Communications Plan. Comm.' ],
+            'ggroup'     : f'communications-planning-team{ecc}',
+            'notify'     : f'director-communications{ecc},pds-google-sync{ecc}',
+        },
 
         #############################
 
