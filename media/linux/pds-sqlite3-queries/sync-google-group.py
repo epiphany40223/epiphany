@@ -196,7 +196,7 @@ def get_synchronizations():
         {
             'ministries' : [ '310-Adult Choir' ],
             'ggroup'     : f'choir{ecc}',
-            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+            'notify'     : f'director-worship{ecc},director-choir{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '311-Bell Choir' ],
