@@ -428,6 +428,11 @@ def get_synchronizations():
             'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
         },
         {
+            'keywords'   : [ 'Auxiliary staff email list' ],
+            'ggroup'     : f'auxiliary-staff{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
+        },
+        {
             'keywords'   : [ 'Wedding Ministries email list' ],
             'ggroup'     : f'wedding-ministries{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
