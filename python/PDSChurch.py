@@ -1293,7 +1293,7 @@ def is_member_hoh_or_spouse(member):
 #
 # 3. If that yields no email addresses, get a list of email addresses for the
 # Family
-def family_business_logistics_emails(family):
+def _family_business_logistics_emails_internal(family):
     # First, we have to convert the list of members on the family to a dict
     family_members = dict()
     for member in family['members']:
@@ -1308,14 +1308,21 @@ def family_business_logistics_emails(family):
         for addr in find_any_email(member):
             emails[addr] = True
 
+    if len(emails) > 0:
+        return members, list(emails.keys())
+
     # If we found no email addresses, then just make a list of all the email
     # addresses from the HoH + spouse
-    if len(emails) == 0:
-        spouse, hoh, _ = filter_members_on_hohspouse(family['members'])
-        for member in [spouse, hoh]:
-            if member:
-                for addr in find_any_email(member):
-                    emails[addr] = True
+    spouse, hoh, _ = filter_members_on_hohspouse(family['members'])
+    members = list()
+    for member in [spouse, hoh]:
+        if member:
+            members.append(member)
+            for addr in find_any_email(member):
+                emails[addr] = True
+
+    if len(emails) > 0:
+        return members, list(emails.keys())
 
     # If we still found no email addresses, see if there's any email addresses
     # on the Family (there usually won't be, but maybe we'll get lucky!)
@@ -1323,7 +1330,15 @@ def family_business_logistics_emails(family):
         for addr in find_any_email(family):
             emails[addr] = True
 
-    return list(emails.keys())
+    return None, list(emails.keys())
+
+def family_business_logistics_emails(family):
+    _, addrs = _family_business_logistics_emails_internal(family)
+    return addrs
+
+def family_business_logistics_emails_members(family):
+    members, _ = _family_business_logistics_emails_internal(family)
+    return members
 
 #-----------------------------------------------------------------------------
 
