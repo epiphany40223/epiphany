@@ -243,6 +243,11 @@ def get_synchronizations():
             'ggroup'     : f'welcome-desk{ecc}',
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
+        {
+            'ministries' : [ '407-Stewardship Team' ],
+            'ggroup'     : f'stewardship-team{ecc}',
+            'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
 
         {
             "keywords"   : [ 'Name Badges Google Drive acces' ],
