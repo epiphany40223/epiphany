@@ -1357,6 +1357,10 @@ def union_of_member_dicts(members1, members2):
 #-----------------------------------------------------------------------------
 
 def is_parishioner(family):
+    # Sometimes there is bad data :-(
+    if family['ParKey'] is None or len(family['ParKey']) == 0:
+        return False
+
     parkey = int(family['ParKey'])
 
     # Look for family ParKey >= 9,000 or if they have the "Visitor"
