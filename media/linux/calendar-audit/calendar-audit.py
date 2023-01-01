@@ -2,21 +2,24 @@
 #
 # Download Google's calendar audit data JSON and save in a Google
 # Drive target folder.
-#
-# Needs:
-#
-# pip3 install --upgrade python-dateutil
-# pip3 install --upgrade pytz
-#
 
+import os
 import sys
-sys.path.insert(0, '../../../python')
+
+# We assume that there is a "ecc-python-modules" sym link in this
+# directory that points to the directory with ECC.py and friends.
+moddir = os.path.join(os.getcwd(), 'ecc-python-modules')
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ecc-python-modules directory.")
+    print("ERROR: Please make a ecc-python-modules sym link and run again.")
+    exit(1)
+
+sys.path.insert(0, moddir)
 
 import ECC
 import Google
 import GoogleAuth
 
-import os
 import json
 import time
 import tempfile
@@ -56,6 +59,9 @@ def setup_cli_args():
     tools.argparser.add_argument('--user-credentials',
                                  default=default_user_json,
                                  help='Filename containing Google user credentials')
+    tools.argparser.add_argument('--slack-token-filename',
+                                 required=True,
+                                 help='File containing the Slack bot authorization token')
 
     global default_google_team_drive_folder_id
     tools.argparser.add_argument('--target-google-folder',
@@ -95,12 +101,10 @@ def verify_target_google_folder(service, id, log):
     folder = Google.call_api(http, log=log)
 
     if folder is None or folder['mimeType'] != Google.mime_types['folder']:
-        log.error("Error: Could not find any contents of folder ID: {0}"
-                  .format(id))
+        log.error(f"Error: Could not find any contents of folder ID: {id}")
         exit(1)
 
-    log.info("Valid folder ID: {id} ({name})"
-             .format(id=id, name=folder['name']))
+    log.info(f"Valid folder ID: {id} ({folder['name']})")
 
 ####################################################################
 
@@ -233,7 +237,8 @@ def main():
 
     log = ECC.setup_logging(info=args.verbose,
                             debug=args.debug,
-                            logfile=args.logfile)
+                            logfile=args.logfile, rotate=True,
+                            slack_token_filename=args.slack_token_filename)
 
     # Note: these logins have been configured on the Google cloud
     # console to only allow logins with @epiphanycatholicchurch.org
