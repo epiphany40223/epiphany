@@ -1,8 +1,4 @@
-httplib2
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
 python-dateutil
 pytz
-oauth2client
 DateTimeRange
+-r ecc-python-modules/requirements.txt
