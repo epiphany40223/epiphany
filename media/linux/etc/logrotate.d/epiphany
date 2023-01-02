@@ -1,0 +1,17 @@
+/home/coeadmin/logfiles/lock-logfile.txt {
+    compress
+    size 10M
+    rotate 50
+}
+
+/home/coeadmin/logfiles/linux/runner-log.txt {
+    compress
+    size 10M
+    rotate 50
+}
+
+/home/coeadmin/logfiles/linux/*/*logfile.txt {
+    compress
+    size 10M
+    rotate 50
+}
