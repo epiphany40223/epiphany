@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 
@@ -129,7 +129,7 @@ archive_dir = None
 smtp = ["smtp-relay.gmail.com",
         "jsquyres@epiphanycatholicchurch.org",
         "no-reply@epiphanycatholicchurch.org"]
-incoming_ftp_dir = 'C:\\ftp\\ecc-recordings'
+incoming_ftp_dir = '/mnt/c/ftp/ECC-recordings'
 data_dir = 'data'
 app_id='client_id.json'
 target_team_drive = 'ECC Recordings'
@@ -273,7 +273,7 @@ def gtd_load_user_credentials(scope, app_cred):
     flow.user_agent = guser_agent
 
     cwd       = os.getcwd()
-    file      = os.path.join(cwd, guser_cred_file)
+    file      = os.path.join(cwd, args.user_creds)
     storage   = Storage(file)
     user_cred = storage.get()
 
@@ -593,18 +593,16 @@ def upload_to_gtd():
 ####################################################################
 
 def check_for_incoming_ftp():
-    log.debug('Checking incoming FTP directory {0}'.format(args.incoming_ftp_dir))
-
     scanned_files = find_mp3_files(args.incoming_ftp_dir)
     if len(scanned_files) == 0:
-        log.debug("No files found");
+        log.info(f'No files found in FTP directory {args.incoming_ftp_dir}')
         return
 
     for file in scanned_files:
-        log.debug("Checking file: {0}".format(file.filename))
+        log.info(f"Checking file: {args.incoming_ftp_dir}/{file.filename}")
         # If the file size is 0, skip it
         if file.size == 0:
-            log.debug("File size is 0 -- skipping")
+            log.info("--> File size is 0 -- skipping")
             continue
 
         # If the file is still being uploaded to us (i.e., if the last
@@ -612,6 +610,7 @@ def check_for_incoming_ftp():
         log.debug("File: time now: {0}".format(time.time()))
         log.debug("File: mtime:    {0}".format(file.mtime))
         if (time.time() - file.mtime) < int(args.file_stable_secs):
+            log.info("--> File is still changing -- skipping")
             continue
 
         # If we got here, the file is good! Copy it to the "to FTP"
@@ -698,7 +697,11 @@ def add_cli_args():
     tools.argparser.add_argument('--app-id',
                                  required=False,
                                  default=app_id,
-                                 help='Filename containing Google application credentials')
+                                 help='Filename containing Google application ID')
+    tools.argparser.add_argument('--user-creds',
+                                 required=False,
+                                 default=guser_cred_file,
+                                 help='Filename containing Google user credentials')
     tools.argparser.add_argument('--target-team-drive',
                                  required=False,
                                  default=target_team_drive,
