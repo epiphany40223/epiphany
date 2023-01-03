@@ -195,6 +195,7 @@ You need to restart WSL, and run these commands:
 
   sudo systemctl enable ecc-internet-connectivity-checker.service
   sudo systemctl start ecc-internet-connectivity-checker.service
+  sudo timedatectl set-timezone America/Kentucky/Louisville
 
 If you haven't done so already, add this key to github:
 
