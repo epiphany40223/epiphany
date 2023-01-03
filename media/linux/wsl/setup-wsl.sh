@@ -109,7 +109,6 @@ setup_venv py310 upload-mp3s-to-google-drive
 
 # Make logfile and credential directories
 
-mkdir -p $HOME/logfiles/linux
 mkdir -p $HOME/logfiles/linux/calendar-audit
 mkdir -p $HOME/logfiles/linux/calendar-reservations
 mkdir -p $HOME/logfiles/linux/export-pds-to-sqlite
@@ -122,12 +121,12 @@ mkdir -p $HOME/logfiles/linux/training-roster
 mkdir -p $HOME/logfiles/linux/training-roster
 mkdir -p $HOME/logfiles/linux/upload-mp3s-to-google-drive
 
-mkdir -p $HOME/credentials
 mkdir -p $HOME/credentials/calendar-audit
 mkdir -p $HOME/credentials/calendar-reservations
 mkdir -p $HOME/credentials/google-drive-uploader
 mkdir -p $HOME/credentials/gsheet-driven-google-group
 mkdir -p $HOME/credentials/pds-sqlite3-queries
+mkdir -p $HOME/credentials/upload-mp3s-to-google-drive
 
 #########################################
 
