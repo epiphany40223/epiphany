@@ -952,8 +952,21 @@ def _family_comparison_reports(pds_families, jotform, log):
                 break
 
     # Index everyone who did estewardship
+    # Jotform
     for row in jotform:
         stewardship_fids.append(int(row['fid']))
+
+    # Also look at the PDS keywords to catch people who submitted
+    # outside of the jotform
+    stewardship_keyword = f'Active: Stewardship {stewardship_year}'
+    for fid, family in pds_families.items():
+        if key not in family:
+            continue
+
+        for keyword in family[key]:
+            if keyword == stewardship_keyword:
+                stewardship_fids.append(int(fid))
+                break
 
     # Compare
     census_not_stewardship_fids = list()
