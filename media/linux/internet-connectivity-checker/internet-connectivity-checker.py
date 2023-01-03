@@ -3,6 +3,8 @@
 # Quick / simple inetnet connectivity checker
 #
 
+import os
+import sys
 import subprocess
 import datetime
 import time
@@ -22,6 +24,19 @@ form_fields = {
     "end_str" : "entry.2108161570",
     "end_timestamp" : "entry.342404331"
     }
+
+# If we're invoked by the Windows Task Scheduler, then we have to fork
+# a child into the background so that the Windows Task can complete.
+if len(sys.argv) > 1 and sys.argv[1] == 'fork':
+    val = os.fork()
+    if val == 0:
+        # Escape the pgroup of the parent
+        os.setsid()
+    elif val > 0:
+        # I am the parent -- exit here.
+        # Give the child a moment to setsid()
+        time.sleep(1)
+        exit(0)
 
 #
 # Return True if we succeed in submitting the form.
