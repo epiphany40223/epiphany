@@ -1,4 +1,3 @@
 python-dateutil
 pytz
-DateTimeRange
 -r ecc-python-modules/requirements.txt

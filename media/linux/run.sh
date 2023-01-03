@@ -9,7 +9,7 @@ cd $TOP/media/linux
 # This uses $PS1, even if it's not set :-(
 # So we have to turn off error detection for a moment...
 set +ux
-. ./py38/bin/activate
+. ./py310/bin/activate
 set -ux
 
 # Set timeout for 14.5 minutes because periodically Google APIs

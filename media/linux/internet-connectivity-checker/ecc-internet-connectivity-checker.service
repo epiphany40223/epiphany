@@ -1,0 +1,14 @@
+# See the README.md for instructions on how to install this file.
+
+[Unit]
+Description=ECC internet connectivity checker
+DefaultDependencies=no
+Conflicts=shutdown.target
+After=network.target
+
+[Service]
+ExecStart=/home/coeadmin/git/epiphany/media/linux/internet-connectivity-checker/internet-connectivity-checker.py
+Restart=always
+
+[Install]
+WantedBy=default.target
