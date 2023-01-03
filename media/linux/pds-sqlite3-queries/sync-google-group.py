@@ -179,8 +179,8 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '304-Liturgical Planning' ],
-            'ggroup'     : f'liturgy-planning{ecc}',
+            'ministries' : [ '304-LiturgicalPlanningDscrnmnt' ],
+            'ggroup'     : f'worship-liturgical-planning-discernment{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
@@ -363,12 +363,17 @@ def get_synchronizations():
         },
         {
             'keywords'   : [ 'ECC Liturgy Plans editor' ],
-            'ggroup'     : f'worship-liturgy-planning{ecc}',
+            'ggroup'     : f'worship-liturgy-plans-editor{ecc}',
+            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'keywords'   : [ 'Liturgy Planning Ldr' ],
+            'ggroup'     : f'worship-liturgy-planning-leadership{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
             'keywords'   : [ 'ECC Liturgy Plans reader' ],
-            'ggroup'     : f'worship-liturgy-planning-guest{ecc}',
+            'ggroup'     : f'worship-liturgy-planning-reader{ecc}',
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {

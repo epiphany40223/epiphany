@@ -17,7 +17,9 @@ incoming_ftp_dir=/mnt/c/ftp/ECC-recordings
 
 cd $prog_dir
 
+set +u
 . ./py310/bin/activate
+set -u
 
 ./find-and-copy.py \
     --smtp \
