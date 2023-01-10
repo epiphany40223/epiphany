@@ -258,9 +258,14 @@ def get_synchronizations():
         #############################
 
         {
+            'ministries' : [ '501-Care of Sick: Eucharist' ],
+            'ggroup'     : f'care-for-the-sick{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '505-Healing Blanket Ministry' ],
             'ggroup'     : f'healing-blankets-ministry{ecc}',
-            'notify'     : f'frtony{ecc},pds-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '508-Messages of Hope Ministry' ],
@@ -548,6 +553,13 @@ def get_synchronizations():
                                'purpose' : "Epiphany Companions ministry chair" }, ],
             'ggroup'     : f'companions-chair{ecc}',
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "501"},
+                               'purpose' : "Care for the Sick: Eucharist ministry chair" }, ],
+            'ggroup'     : f'care-for-the-sick-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
