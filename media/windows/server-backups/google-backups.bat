@@ -5,12 +5,21 @@ rem Once a day, via Windows Scheduled Tasks, run this script to
 rem robocopy/xcopy sync a bunch of local folders to c:\Epiphany_backups
 rem so that they get synced / backed up to Google Drive.
 
-robocopy E:\ "C:\Epiphany_backups\dsx-e-thumb-drive" /mir /e /r:0 /w:0
+set target=C:\Epiphany_backups
 
-robocopy "C:\DSX 37151" "C:\Epiphany_Backups\DSX 37151" /mir /e /r:0 /w:0
-robocopy "C:\WinDSX" "C:\Epiphany_Backups\WinSX" /mir /e /r:0 /w:0
+rem Thumb drive letters can change.  Ensure that we robocopy the
+rem actual DSX thumb drive, not some other disk.  Look for a sentinel
+rem file that we know should only be on this thumb drive, and not
+rem anywhere else.
+set dsx=F:\
+if exist %dsx%\DsxKey\DsxKeyData.xml (
+   robocopy %dsx% "%target%\dsx-thumb-drive" /mir /e /r:0 /w:0
+)
 
-robocopy "C:\PDSChurch\Data" "C:\Epiphany_Backups\PDSChurch\Data" /mir /e /r:0 /w:0
-robocopy "C:\PDSChurch\Backup" "C:\Epiphany_Backups\PDSChurch\Backup" /mir /e /r:0 /w:0
+robocopy "C:\DSX 37151" "%target%\DSX 37151" /mir /e /r:0 /w:0
+robocopy "C:\WinDSX" "%target%\WinSX" /mir /e /r:0 /w:0
 
-xcopy "C:\Users\coeadmin\Ubuntu1804\rootfs\home\coeadmin\git\epiphany\media\windows\ECC-Ecobee\ECCEcobee.db" "C:\Epiphany_Backups\ECCEcobee" /y
+robocopy "C:\PDSChurch\Data" "%target%\PDSChurch\Data" /mir /e /r:0 /w:0
+robocopy "C:\PDSChurch\Backup" "%target%\PDSChurch\Backup" /mir /e /r:0 /w:0
+
+xcopy "C:\Users\coeadmin\Ubuntu1804\rootfs\home\coeadmin\git\epiphany\media\windows\ECC-Ecobee\ECCEcobee.db" "%target%\ECCEcobee" /y
