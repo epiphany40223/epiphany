@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 
 # Basic script to create a list of all PDS trainings of a given type.
+#
+# Sidenote: we used to make XLSX/Google Sheets for sub-ministries of
+# the main 313 ministry.  Hence, we have a nice subroutine that was
+# capable of emitting both each of the sub-ministry sheets, and the
+# union of everyone in all of those sub-ministries.  We no longer have
+# those sub-ministries in PDS, but the infrastructure still remains
+# here in this code.
+#
+# This code is still somewhat of a mish-mash of requirements that no
+# longer exist, and should probably be cleaned up.
 
 import sys
 import os
@@ -51,42 +61,11 @@ training_name = 'Communion Minister Certificatn'
 
 # These are all the ministries where that training name is relevant
 name_313  = '313-Communion Ministers'
-name_313a = '313A-Communion: Weekday'
-name_313b = '313B-Communion Ministers: 5:30'
-name_313c = '313C-Communion Ministers: 9:00'
-name_313d = '313D-Communion Ministers:11:30'
-ministries = [
-    {
-        'name'      : name_313a,
-        'gsheet_id' : '1vK0QeKkZ67JcPANV738IbVcw7Q_JbTpfggGTMR3JGxw',
-    },
-    {
-        'name'      : name_313b,
-        'gsheet_id' : '1e-YxVcQI1mOPffU2KKD2rsgJAz-XgcdA9OKPrGjLWU8',
-    },
-    {
-        'name'      : name_313c,
-        'gsheet_id' : '1ULFpl4APhBTEwPyxR9UDvVS7-LgrqHA-MIvHZbSnfZM',
-    },
-    {
-        'name'      : name_313d,
-        'gsheet_id' : '17KbehcPYObdhqy714lnesTh9j9NN3tv2FrTb4hO4VRI',
-    },
-]
-
-union_ministries = {
-    'names'     : [
-        name_313,
-        name_313a,
-        name_313b,
-        name_313c,
-        name_313d,
-    ],
-    'gsheet_id' : '1ZFGpGlAnB7B_cHfxZjPX0ITGZ51tYShGwesVolRrsbw',
-}
+gsheet_id_313 = '1ZFGpGlAnB7B_cHfxZjPX0ITGZ51tYShGwesVolRrsbw'
 
 # This is the Google sheet ID of the "About to expire" report
 about_to_expire_gsheet_id = '1hMga-0PWSAl91eL3FBBhyMwUArT13xS9YmSvVZgJ7n8'
+about_to_expire = timedelta(days=6*30)
 
 #---------------------------------------------------------------------------
 
@@ -365,8 +344,7 @@ def make_xlsx_about_to_expire(entries, log):
 
 #------------------------------------------------------------------
 
-def mandate_about_to_expire_report(ministries, pds_members,
-                                   expiration,
+def mandate_about_to_expire_report(pds_members, expiration,
                                    google, args, log):
     filtered = find_about_to_expire(pds_members, expiration, log)
     log.info(f"Found {len(filtered)} Communion ministers with mandates that expire before {expiration}")
@@ -404,7 +382,8 @@ def union_filter(member, ministry_name, log):
     return member[key]['active']
 
 def available_column_names(log):
-    cols = [ ('Current mandate ends' , 15), ]
+    cols = [ ('Current mandate ends' , 15),
+             ('Notes' , 25), ]
     return cols
 
 def available_column_data(member, first_col, log):
@@ -418,9 +397,14 @@ def available_column_data(member, first_col, log):
 
     for mandate in mandates:
         if now_str in mandate['date_range']:
-            return [ mandate['end_date'] ]
+            values = [ mandate['end_date'] ]
+            note = ''
+            if mandate['end_date'] < today + about_to_expire:
+                note = f'Expires in the next {int(about_to_expire.total_seconds() / 24 / 3600)} days'
+            values.append(note)
+            return values
 
-    return [ '' ]
+    return [ '', '' ]
 
 #------------------------------------------------------------------
 
@@ -563,8 +547,9 @@ def make_xlsx_roster_workbook(members, ministry_name,
 
 # Make a sheet with all Active Members who have a current mandate,
 # regardless of their participation in any ministry.
-def union_report(pds_members, training_name,
-                 ministries, google, args, log):
+def report(pds_members, training_name,
+           ministry_name, gsheet_id,
+           google, args, log):
         wb = Workbook()
         make_xlsx_roster_workbook(pds_members, None,
                                   wb, "Any",
@@ -580,36 +565,8 @@ def union_report(pds_members, training_name,
 
         filename = 'All Active ECC parishioners with a current Communion Minister mandate',
         upload_workbook(filename, wb, args, google,
-                        ministries['gsheet_id'],
+                        gsheet_id,
                         log)
-
-#------------------------------------------------------------------
-
-def per_ministry_reports(ministries, pds_members, google, args, log):
-    for ministry in ministries:
-        wb = Workbook()
-        make_xlsx_roster_workbook(pds_members, ministry['name'],
-                                  wb, "Scheduleable",
-                                  available_filter,
-                                  available_column_names,
-                                  available_column_data,
-                                  log)
-
-        make_xlsx_roster_workbook(pds_members, ministry['name'],
-                                  wb, "Not scheduleable",
-                                  unavailable_filter,
-                                  unavailable_column_names,
-                                  unavailable_column_data,
-                                  log)
-
-        # Delete the default sheet that was automatically created
-        key = 'Sheet'
-        if key in wb.sheetnames:
-            del wb[key]
-
-        filename = ministry['name']
-        upload_workbook(filename, wb, args, google,
-                        ministry['gsheet_id'], log)
 
 ###################################################################
 ###################################################################
@@ -788,17 +745,13 @@ def main():
     # Setup metadata on PDS Member records
     find_pds_training(pds_members, training_name, log)
 
-    # Union of all who have active mandates
-    union_report(pds_members, training_name,
-                 union_ministries,
-                 google, args, log)
-
-    # Write per-ministry reports
-    per_ministry_reports(ministries, pds_members, google, args, log)
+    # All who have active mandates
+    report(pds_members, training_name,
+           name_313, gsheet_id_313,
+           google, args, log)
 
     # Write "everyone who is about to expire" report
-    mandate_about_to_expire_report(ministries, pds_members,
-                                   timedelta(days=6*30),
+    mandate_about_to_expire_report(pds_members, about_to_expire,
                                    google, args, log)
 
     # All done
