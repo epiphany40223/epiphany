@@ -228,7 +228,7 @@ ministries = [
         'birthday' : True,
     },
     {
-        'ministry' : '318-Lectors  MASTER LIST',
+        'ministry' : '318-Lectors',
         'gsheet_id' : '1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8',
         'birthday' : False,
     },
