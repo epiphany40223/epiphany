@@ -421,9 +421,19 @@ ministries = [
 
 keywords = [
     {
-        'keyword' : 'Livestream Team',
+        'keyword'   : 'Livestream Team',
         'gsheet_id' : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
-        'birthday' : False,
+        'birthday'  : False,
+    },
+    {
+        'keyword'   : 'YouthMin parent: Jr high',
+        'gsheet_id' : '1VIs-AezopoWd3rpVU_kqMOTTXlBPpjI9IxAbhDpSnG4',
+        'birthday'  : False,
+    },
+    {
+        'keyword'   : 'YouthMin parent: Sr high',
+        'gsheet_id' : '1B_2LeR0EbG3oDUqifvB51YhCuj30lhaYHfUb9bmCj5A',
+        'birthday'  : False,
     },
 ]
 
