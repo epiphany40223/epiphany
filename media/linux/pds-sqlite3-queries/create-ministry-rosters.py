@@ -421,9 +421,19 @@ ministries = [
 
 keywords = [
     {
-        'keyword' : 'Livestream Team',
+        'keyword'   : 'Livestream Team',
         'gsheet_id' : '1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8',
-        'birthday' : False,
+        'birthday'  : False,
+    },
+    {
+        'keyword'   : 'YouthMin parent: Jr high',
+        'gsheet_id' : '1VIs-AezopoWd3rpVU_kqMOTTXlBPpjI9IxAbhDpSnG4',
+        'birthday'  : False,
+    },
+    {
+        'keyword'   : 'YouthMin parent: Sr high',
+        'gsheet_id' : '1B_2LeR0EbG3oDUqifvB51YhCuj30lhaYHfUb9bmCj5A',
+        'birthday'  : False,
     },
 ]
 
@@ -684,20 +694,21 @@ def create_keyword_roster(pds_members, keyword_entry, google, log):
     birthday  = keyword_entry['birthday']
 
     key = 'keyword'
-    if key in keyword_entry:
-        sheet_name = keyword_entry[key]
-        keywords = [ sheet_name ]
-    else:
-        print(f"ERROR: Cannot find {key1} or {key2} in ministry_entry!")
+    if key not in keyword_entry:
+        print(f"ERROR: Cannot find {key} in ministry_entry!")
         print(ministry_entry)
         exit(1)
+
+    sheet_name = keyword_entry[key]
+    keywords = [ sheet_name,
+                 f'{sheet_name} Ldr' ]
 
     name = None
     key = 'name'
     if key in keyword_entry:
         name = keyword_entry[key]
 
-    # Find the members
+    # Find the members with the keyword or keyword+' Ldr'
     members = PDSChurch.filter_members_on_keywords(pds_members, keywords)
     if members is None or len(members) == 0:
         log.info(f"No members with keyword: {sheet_name} -- writing empty sheet")
