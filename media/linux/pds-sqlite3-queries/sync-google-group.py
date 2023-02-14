@@ -507,6 +507,20 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "201"},
+                               'purpose' : "Collection counter ministry chair" }, ],
+            'ggroup'     : f'collection-counters-chair{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "207"},
+                               'purpose' : "Technology ministry chair" }, ],
+            'ggroup'     : f'technology-chair{ecc}',
+            'notify'     : f'business-manager{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "300"},
                                'purpose' : "Worship/art&environment ministry chair" }, ],
             'ggroup'     : f'worship-art-and-environment-chair{ecc}',
@@ -553,6 +567,20 @@ def get_synchronizations():
                                'purpose' : "Epiphany Companions ministry chair" }, ],
             'ggroup'     : f'companions-chair{ecc}',
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "402"},
+                               'purpose' : "New members coffee chair" }, ],
+            'ggroup'     : f'new-members-coffee-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "409"},
+                               'purpose' : "Sunday morning coffee chair" }, ],
+            'ggroup'     : f'sunday-morning-coffee-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
