@@ -55,43 +55,13 @@ calendars = [
         "check_conflicts" : False,
     },
     {
-        "name" : "Area E (CC)",
-        "id" : "churchofepiphany.com_2d3336353235303639373131@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area F (CC)",
+        "name" : "Areas F-H (CC)",
         "id" : "churchofepiphany.com_2d3336333531363533393538@resource.calendar.google.com",
         "check_conflicts" : True,
     },
     {
-        "name" : "Area G (CC)",
-        "id" : "churchofepiphany.com_2d33363137333031353534@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area H (CC)",
-        "id" : "churchofepiphany.com_2d33353938373132352d343735@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area I (CC)",
+        "name" : "Areas I-K (CC)",
         "id" : "churchofepiphany.com_2d33353739373832333731@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area J (CC)",
-        "id" : "churchofepiphany.com_2d333535383831322d32@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area K (CC)",
-        "id" : "churchofepiphany.com_2d3335333231363832383335@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
-        "name" : "Area L (CC)",
-        "id" : "churchofepiphany.com_2d3335313431363234383230@resource.calendar.google.com",
         "check_conflicts" : True,
     },
     {
