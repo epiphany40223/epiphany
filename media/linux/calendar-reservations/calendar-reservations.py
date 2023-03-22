@@ -85,11 +85,6 @@ calendars = [
         "check_conflicts" : True,
     },
     {
-        "name" : "Connector table 3",
-        "id" : "churchofepiphany.com_2d3538303631303232333033@resource.calendar.google.com",
-        "check_conflicts" : True,
-    },
-    {
         "name" : "Dining Room (EH)",
         "id" : "churchofepiphany.com_34373539303436353836@resource.calendar.google.com",
         "check_conflicts" : True,
