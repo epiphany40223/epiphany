@@ -188,6 +188,7 @@ Thank you for your time and dedication to Epiphany!"""
 
     if len(to_delete) > 0:
         subject = f"Your {data['name']} email rotation: completed!"
+        addrs   = ','.join(to_delete)
         content = f"""Your rotation to respond to respond to {data['name']} emails has completed.
 
 This means that emails sent to {data['group']} will NO LONGER be forwarded to {addrs}.
