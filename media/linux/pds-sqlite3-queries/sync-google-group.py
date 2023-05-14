@@ -591,6 +591,13 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "505"},
+                               'purpose' : "Chair: Healing Blankets" }, ],
+            'ggroup'     : f'healing-blankets-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : '600' },
                                'purpose' : "MOE ministry chair" }, ],
             'ggroup'     : f'moe-chair{ecc}',
