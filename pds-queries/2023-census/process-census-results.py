@@ -1288,14 +1288,10 @@ def family_mass_updates(submissions, families, log):
     # Go through each submission and remove all stale keywords from the Family,
     # and add each new keyword to the Family
     key = 'keywords'
+    key2 = 'mass'
     for fid in sorted(submissions):
         row    = submissions[fid]
         family = families[fid]
-        item   = {
-            'FID'         : fid,
-            'Env ID'      : env_id(family),
-            'Family name' : family['Name'],
-        }
 
         weekday   = 'Weekly Mass - '
         spanish   = 'Spanish Mass - '
@@ -1303,7 +1299,6 @@ def family_mass_updates(submissions, families, log):
         mass_900  = '9:00am Sun. Mass - '
         mass_1130 = '11:30am Sun. Mass - '
 
-        changed = False
         for tuple in [('weekday frequency', weekday),
                       ('spanish frequency', spanish),
                       ('530 frequency', mass_530),
@@ -1319,7 +1314,7 @@ def family_mass_updates(submissions, families, log):
             jotform_keyword = f'{prefix}{jotform_value}'
 
             # Does the jotform response already exist as a keyword?
-            # If so, we're done with this entry.
+            # If so, we're done with this tuple.
             if key in family and jotform_keyword in family[key]:
                 continue
 
@@ -1327,44 +1322,45 @@ def family_mass_updates(submissions, families, log):
             # This qualifies as an addition.
             # Now we need to check and see if we need to remove another
             # existing keyword with the same prefix.
+            if key2 not in family:
+                family[key2] = {
+                    'add' : list(),
+                    'remove' : list(),
+                }
+
             if key in family:
-                to_remove = list()
                 for i, pds_keyword in enumerate(family[key]):
                     if pds_keyword.startswith(prefix):
-                        to_remove.append(i)
-
-                to_remove.reverse()
-                for i in to_remove:
-                    del family[key][i]
-
-            if key not in family:
-                family[key] = list()
-            family[key].append(jotform_keyword)
+                        family[key2]['remove'].append(pds_keyword)
+            family[key2]['add'].append(jotform_keyword)
 
     # Write out all keywords for all Families who submitted (not *all* Families
     # PDS -- just the ones who submitted census)
-    fields   = ['FID', 'Env ID', 'Family name', 'Keyword']
+    fields   = ['FID', 'Env ID', 'Family name', 'Status', 'Keyword']
     filename = f'census{census_year}-family-mass-keywords.csv'
     with open(filename, 'w') as fp:
         writer = csv.DictWriter(fp, fieldnames=fields)
         writer.writeheader()
 
-        for fid in sorted(submissions):
+        for fid in sorted(families):
             family = families[fid]
+            if key2 not in family:
+                continue
+
             item   = {
                 'FID'         : fid,
                 'Env ID'      : env_id(family),
                 'Family name' : family['Name'],
             }
 
-            for keyword in family[key]:
-                if (keyword.startswith(weekday) or
-                    keyword.startswith(spanish) or
-                    keyword.startswith(mass_530) or
-                    keyword.startswith(mass_900) or
-                    keyword.startswith(mass_1130)):
-                    item['Keyword'] = keyword
-                    writer.writerow(item)
+            item['Status'] = 'Add'
+            for keyword in family[key2]['add']:
+                item['Keyword'] = keyword
+                writer.writerow(item)
+            item['Status'] = 'Remove'
+            for keyword in family[key2]['remove']:
+                item['Keyword'] = keyword
+                writer.writerow(item)
 
     log.info(f"Wrote {filename}")
 
