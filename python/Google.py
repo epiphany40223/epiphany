@@ -39,6 +39,8 @@ mime_types = {
 
     # JMS this is probably a lie, but it's useful for comparisons
     'team_drive' : 'application/vnd.google-apps.team_drive',
+
+    'html'       : 'text/html',
 }
 
 # Scopes documented here:

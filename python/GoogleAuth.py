@@ -22,7 +22,7 @@ from oauth2client.client import OAuth2WebServerFlow
 
 # JMS Should these really be globals?
 app_cred_file = 'client_id.json'
-default_user_cred_file = 'user-credentials.json'
+default_user_cred_file = 'user_credentials.json'
 user_agent = 'gxcopy'
 
 #-------------------------------------------------------------------
