@@ -196,6 +196,7 @@ def _load_families(pds, columns=None,
     columns.append('StreetCityRec')
     columns.append('StreetZip')
     columns.append('StatDescRec')
+    columns.append('UnlAddresses')
     columns.append('PictureFile')
     columns.append('EnvelopeUser')
     columns.append('Visitor')
@@ -217,6 +218,7 @@ def _load_families(pds, columns=None,
 
     for f in families.values():
         _normalize_boolean(f, src=f'PDSInactive{db_num}', dest="Inactive")
+        _normalize_boolean(f, src='UnlAddresses')
         _normalize_boolean(f, src='SendNoMail')
         _normalize_boolean(f, src='EnvelopeUser')
         _normalize_filename(f, src='PictureFile')
