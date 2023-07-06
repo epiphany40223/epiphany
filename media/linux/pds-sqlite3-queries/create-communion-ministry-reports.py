@@ -302,7 +302,6 @@ def make_xlsx_about_to_expire(entries, log):
                 ('Envelope number',      10),
                 ('Email Address',        30),
                 ('Phone Number',         20),
-                ('Active in ministries', 10),
                 ('Expire date',          20),
                 ('Notes',                40), ]
     title = f'Communion Ministers with mandate about to expire'
@@ -324,19 +323,13 @@ def make_xlsx_about_to_expire(entries, log):
         if not phone:
             phone = PDSChurch.find_member_phone(member, 'Home')
 
-        active_in_ministry = 'No'
-        for ministry in ministries:
-            if in_ministry(member, ministry['name'], log):
-                active_in_ministry = 'Yes'
-
         # Fill in the fixed columns
         ws[f'A{row}'] = member['email_name']
         ws[f'B{row}'] = member['family']['ParKey']
         ws[f'C{row}'] = email
         ws[f'D{row}'] = phone
-        ws[f'E{row}'] = active_in_ministry
-        ws[f'F{row}'] = entry['expire date']
-        ws[f'G{row}'] = entry['message']
+        ws[f'E{row}'] = entry['expire date']
+        ws[f'F{row}'] = entry['message']
 
         row += 1
 
