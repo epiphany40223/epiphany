@@ -45,11 +45,6 @@ default_timezone = 'America/New_York'
 # Dictionary of calendars on which we're checking for events
 calendars = [
     {
-        "name" : "Musicians calendar",
-        "id" : "churchofepiphany.com_ga4018ieg7n3q71ihs1ovjo9c0@group.calendar.google.com",
-        "check_conflicts" : False,
-    },
-    {
         "name" : "Epiphany Events",
         "id" : "churchofepiphany.com_9gueg54raienol399o0jtdgmpg@group.calendar.google.com",
         "check_conflicts" : False,
