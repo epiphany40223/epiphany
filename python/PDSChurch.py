@@ -1189,6 +1189,9 @@ def find_preferred_email(member_or_family):
 # non-preferred email address (if it exists).  If no email addresses
 # exist, return an empty list.
 def find_any_email(member_or_family):
+    if member_or_family is None:
+        return []
+
     mof = member_or_family
     addrs = find_preferred_email(mof)
     if addrs:
@@ -1373,7 +1376,10 @@ def is_parishioner(family):
 
 # Return the first phone number of a given type for a given Member, or
 # the first non-unlisted phone number if no numbers of a type are present
-def find_member_phone(member, type):
+def find_member_phone(member, type, only_that_type=False):
+    if member is None:
+        return None
+
     if type != None and 'phones' in member:
         for entry in member['phones']:
             if entry['unlisted']:
@@ -1381,6 +1387,10 @@ def find_member_phone(member, type):
 
             if entry['type'] == type:
                 return entry['number']
+
+        # If we want *only* that type of phone, give up
+        if only_that_type:
+            return None
 
         for entry in member['phones']:
             if entry['unlisted']:
