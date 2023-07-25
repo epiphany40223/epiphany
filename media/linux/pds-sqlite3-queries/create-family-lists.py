@@ -81,27 +81,6 @@ def write_xlsx(families, keyword_name, name, log):
     last_col = 'I'
 
     row = 1
-    ws.merge_cells(f'A{row}:{last_col}{row}')
-    cell = f'A{row}'
-    ws[cell] = f'Keyword: {keyword_name}'
-    ws[cell].fill = title_fill
-    ws[cell].font = title_font
-
-    row = row + 1
-    ws.merge_cells(f'A{row}:{last_col}{row}')
-    cell = f'A{row}'
-    ws[cell] = f'Last updated: {now}'
-    ws[cell].fill = title_fill
-    ws[cell].font = title_font
-
-    row = row + 1
-    ws.merge_cells(f'A{row}:{last_col}{row}')
-    cell = f'A{row}'
-    ws[cell] = ''
-    ws[cell].fill = title_fill
-    ws[cell].font = title_font
-
-    row = row + 1
     columns = [(f'A{row}', 'Family name', 30),
                (f'B{row}', 'Street 1', 30),
                (f'C{row}', 'Street 2', 30),
