@@ -128,11 +128,6 @@ def get_synchronizations():
             'notify'     : f'director-parish-engagement{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '106-Community Life Committee' ],
-            'ggroup'     : f'community-life{ecc}',
-            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
-        },
-        {
             "ministries" : [ '107-Social Resp Steering Comm' ],
             'ggroup'     : f'social-responsibility-steering-commitee{ecc}',
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
@@ -148,7 +143,7 @@ def get_synchronizations():
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
         {
-            "ministries" : [ '113-Communications Plan. Comm.' ],
+            "ministries" : [ '113-Media Comms Planning Comm.' ],
             'ggroup'     : f'communications-planning-team{ecc}',
             'notify'     : f'director-communications{ecc},pds-google-sync{ecc}',
         },
@@ -205,8 +200,8 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
         },
         {
-            'ministries' : [ '313-Communion Ministers', ],
-            'ggroup'     : f'communion-ministers{ecc}',
+            'ministries' : [ '313-Eucharistic Ministers', ],
+            'ggroup'     : f'eucharistic-ministers{ecc}',
             'notify'     : f'director-worship{ecc},tonya@cabral.org,pds-google-sync{ecc}',
         },
         {
@@ -290,6 +285,11 @@ def get_synchronizations():
             'ggroup'     : f'sel{ecc}',
             # Lynne Webb
             'notify'     : f'justlmw@att.net,pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '612-Community Life Committee' ],
+            'ggroup'     : f'community-life{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
 
         #############################
@@ -493,7 +493,7 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
-                               'kwargs' : { "ministry_prefix" : "106"},
+                               'kwargs' : { "ministry_prefix" : "612"},
                                'purpose' : "Community Life chair" }, ],
             'ggroup'     : f'community-life-chair{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
