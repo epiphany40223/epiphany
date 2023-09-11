@@ -253,7 +253,7 @@ def get_synchronizations():
         #############################
 
         {
-            'ministries' : [ '501-Care of Sick: Eucharist' ],
+            'ministries' : [ '501-Eucharist to Sick&Homebnd' ],
             'ggroup'     : f'care-for-the-sick{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },

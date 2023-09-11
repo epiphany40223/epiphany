@@ -293,7 +293,7 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '501-Care of Sick: Eucharist',
+        'ministry' : '501-Eucharist to Sick&HomeBnd',
         'gsheet_id' : '1fKXe-NuoObjgYoFRcbuJQwIOjFIAfT7TQB87eccgfng',
         'birthday' : False,
     },
