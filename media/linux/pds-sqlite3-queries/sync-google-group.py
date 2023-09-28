@@ -138,6 +138,11 @@ def get_synchronizations():
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
         },
         {
+            "keywords"   : [ 'Ten Percent Treasurer' ],
+            'ggroup'     : f'ten-percent-treasurer{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
             "ministries" : [ '111-Hispanic Ministry Team' ],
             'ggroup'     : f'hispanic-ministry-team{ecc}',
             'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
