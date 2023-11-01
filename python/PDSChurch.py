@@ -202,6 +202,8 @@ def _load_families(pds, columns=None,
     columns.append('Visitor')
     columns.append('SendNoMail')
     columns.append('DateRegistered')
+    columns.append('DateLeftParish')
+    columns.append('DateLeftApprox')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Fam_DB.CensusFamily{db_num}=1'
@@ -223,6 +225,8 @@ def _load_families(pds, columns=None,
         _normalize_boolean(f, src='EnvelopeUser')
         _normalize_filename(f, src='PictureFile')
         f['date_registered'] = _normalize_date(f['DateRegistered'], sentinel=False)
+        f['date_left_parish'] = _normalize_date(f['DateLeftParish'], sentinel=False)
+        _normalize_boolean(f, src='DateLeftApprox')
 
     return families
 
