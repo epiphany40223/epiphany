@@ -556,6 +556,48 @@ def _link_member_marriage_dates(members, mem_dates, mdtid):
 
 #-----------------------------------------------------------------------------
 
+def _link_member_other_dates(members, mem_dates, date_types):
+    for md in mem_dates.values():
+        date_type_id = md['DescRec']
+        if date_type_id not in date_types:
+            continue
+        date_type_name = date_types[date_type_id]['Description']
+
+        mid = md['MemRecNum']
+        if mid and mid not in members:
+            continue
+        m = members[mid]
+
+        key = 'other_dates'
+        if key not in m:
+            m[key] = dict()
+        m[key][date_type_name] = {
+            'type' : date_type_name,
+            'date' : _normalize_date(md['Date']),
+            'status' : md['Status'],
+            'additional_status' : md['AddlStatus'],
+        }
+
+
+#-----------------------------------------------------------------------------
+
+def _link_member_cemetaries(members, cemetaries):
+    for cem in cemetaries.values():
+        mid = cem['MemRecNum']
+        if mid and mid not in members:
+            continue
+
+        members[mid]['cemetary'] = {
+            'gender' : cem['Gender'],
+            'deceased-date': cem['DeceasedDate'],
+            'funeral-date': cem['FuneralDate'],
+            'performed-by': cem['PerfBy'],
+            'place-of-funeral': cem['PlaceOfFuneral'],
+            'cemetary': cem['Cemetery'],
+        }
+
+#-----------------------------------------------------------------------------
+
 training_req_results = {
     0   :   "Pending",
     1   :   "Yes",
@@ -1037,7 +1079,7 @@ def load_families_and_members(filename=None, pds=None,
                                   log=log)
     mem_dates   = PDS.read_table(pds, 'MemDates_DB', 'MemDateRecNum',
                                  columns=['MemRecNum', 'Date',
-                                          'DescRec'],
+                                          'DescRec', 'Status', 'AddlStatus'],
                                  log=log)
     mem_ethnics = PDS.read_table(pds, 'EthType_DB', 'EthnicDescRec',
                                  columns=['Description'], log=log)
@@ -1051,6 +1093,11 @@ def load_families_and_members(filename=None, pds=None,
                                  columns=['MemRecNum', 'ReqDescRec',
                                           'ReqDate', 'ReqResult',
                                           'ReqNote', 'ExpirationDate'])
+
+    cemetaries = PDS.read_table(pds, 'MBatch_DB', 'BatchRecNum',
+                                columns=['MemRecNum',
+                                         'Gender', 'DeceasedDate', 'FuneralDate',
+                                         'PerfBy', 'PlaceOfFuneral', 'Cemetery'])
 
     relationship_types = PDS.read_table(pds, 'RelType_DB', 'RelDescRec',
                                         columns=['Description'], log=log)
@@ -1149,7 +1196,9 @@ def load_families_and_members(filename=None, pds=None,
     _link_member_ministries(members, ministries, mem_ministries, statuses)
     _link_member_talents(members, talents, mem_talents, statuses)
     _link_member_marriage_dates(members, mem_dates, mdtid)
+    _link_member_other_dates(members, mem_dates, date_types)
     _link_member_requirements(members, mem_reqs, req_types)
+    _link_member_cemetaries(members, cemetaries)
 
     _link_member_id(members, 'MaritalStatusRec', 'marital_status', marital_statuses)
     _link_member_id(members, 'LanguageRec', 'language', languages)

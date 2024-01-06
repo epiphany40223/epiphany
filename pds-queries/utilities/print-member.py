@@ -44,30 +44,9 @@ def main():
                                                     parishioners_only=False,
                                                     log=log)
 
-    #num_fam = len(families)
-    #num_mem = len(members)
-    #log.info(f"There are {num_fam} families and {num_mem} members")
-    #exit(0)
-
-    #bill_carlisle = 117745
-    #pprint(members[bill_carlisle])
-    #exit(0)
-
-    #carl_working = 43689
-    #pprint(members[carl_working])
-    #exit(0)
-
-    ann_hall = 549105
-    pprint(members[ann_hall])
-    exit(0)
-
-    #desiree_hoette = 547739
-    #pprint(members[desiree_hoette])
-    #exit(0)
-
-    #lucas_osborne = 709804
-    #pprint(members[lucas_osborne])
-    #exit(0)
+    num_fam = len(families)
+    num_mem = len(members)
+    log.info(f"There are {num_fam} families and {num_mem} members")
 
     #b = PDSChurch.filter_members_on_keywords(members, ['ECC Sheet Music access'])
     #a = PDSChurch.filter_members_on_ministries(members, ['207-Technology Committee'])
@@ -76,9 +55,17 @@ def main():
     #    print(f"member: {member['Name']}")
     #exit(0)
 
+    mid = 709804 # lucas_osborne
+    mid = 547739 # desiree_hoette
+    mid = 549105 # ann_hall
+    mid = 43689 # carl_working
+    mid = 117745 # bill carlisle
     mid = 89818 # rosemary fledkamp
-    #mid = 646362 # andrew test
+    mid = 646362 # andrew test
     mid = 119356 # jeff squyres
+    mid = 6536 # robert adams (1)
+    mid = 157822 # robert adams (2)
+    mid = 681316 # sarah abel
     pprint(members[mid])
     exit(0)
 
@@ -87,9 +74,9 @@ def main():
     pprint(families[fid])
     exit(0)
 
-    for year in families[squyres]['funds']:
+    for year in families[mid]['funds']:
         sum = compute_funding_sum(year=year, family=families[squyres])
-        print("Squyres funding in {year}: ${sum}"
+        print("MID funding in {year}: ${sum}"
                 .format(year=year, sum=sum))
 
 main()
