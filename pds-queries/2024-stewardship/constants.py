@@ -4,7 +4,7 @@ import helpers
 
 # Overall title
 
-stewardship_year = 2023
+stewardship_year = 2024
 
 title = f'Stewardship {stewardship_year}'
 
@@ -44,17 +44,17 @@ guser_cred_file = 'user-credentials.json'
 
 # Copied from the Google Spreadsheet where Jotform is writing its
 # results
-jotform_gsheet_gfile_id = '15Gg4Uenkbam7WuQbUCAE92oHZp5O51e5Gl3RmbikiJc'
+jotform_gsheet_gfile_id = '10iYPP4AZcRVRLf6Ql2nuPMD8cO_D9OmLR1MBt-iNAeA'
 
 # Last year's Jotform Gsheet results
-#from constants_prev_year import jotform_gsheet_gfile_id as \
-#    jotform_gsheet_prev_year_gfile_id
-#from constants_prev_year import jotform_gsheet_columns as \
-#    jotform_gsheet_prev_year_columns
+from constants_prev_year import jotform_gsheet_gfile_id as \
+    jotform_gsheet_prev_year_gfile_id
+from constants_prev_year import jotform_gsheet_columns as \
+    jotform_gsheet_prev_year_columns
 
 # Team Drive folder where to upload the CSV/spreadsheet comparison
 # output files
-upload_team_drive_folder_id = '1s2XTD9J31yda0dg8ApUsVUETiMlUkxp8'
+upload_team_drive_folder_id = '1OQG5lQ6G6hZ3x1zK6Gx3R9Tq-KIE0zWw'
 
 gsheet_editors = f'stewardship{stewardship_year}-workers@epiphanycatholicchurch.org'
 
@@ -62,7 +62,7 @@ gsheet_editors = f'stewardship{stewardship_year}-workers@epiphanycatholicchurch.
 
 # For members who change their ministry data, start / end dates to use
 
-ministry_start_date = '11/01/2022'
+ministry_start_date = '11/01/2023'
 ministry_end_date   = ministry_start_date
 
 #--------------------------------------------------------------------------
@@ -121,14 +121,16 @@ grid.add_row('102-Finance Advisory Council')
 grid.add_row('103-Worship Committee')
 grid.add_row('104-Stewardship & E Committee',
                 '104-Stewardship & Engagement Committee')
-grid.add_row('106-Community Life Committee')
 grid.add_row('107-Social Resp Steering Comm',
                 '107-Social Responsibility Steering Committee')
 grid.add_row('108-Faith Formation Team')
 grid.add_row('110-Ten Percent Committee')
 grid.add_row('111-Hispanic Ministry Team')
-grid.add_row('113-Communications Plan. Comm.'
-             '113-Communications Planning Committee')
+grid.add_row('113-Media Comms Planning Comm.'
+             '113-Media Communications Planning Committee')
+grid.add_row('114-Marriage Mentor Couples', new=True)
+grid.add_row('115-Parish Life Committee', new=True)
+grid.add_row('116-Youth Council', new=True)
 
 _all_ministry_grids.append(grid)
 
@@ -160,8 +162,8 @@ grid.add_row('300-Art & Environment')
 grid.add_row('301-Audio/Visual/Light Minstry',
                 '301-Audio/Visual/Lighting Ministry')
 grid.add_row('303-Linens/Vestments Ministry')
-grid.add_row('304-Liturgical Planning',
-             '304-Liturgy Planning Committee')
+grid.add_row('304-LiturgicalPlanningDscrnmnt',
+             '304-Liturgy Planning Discernment Committee')
 grid.add_row('305-Movers Ministry')
 grid.add_row('306-Music Support for Children',
              '306-Music Support for Children\'s Formation')
@@ -176,13 +178,11 @@ _all_ministry_grids.append(grid)
 
 grid = ministry_2d_grid('Liturgical Celebratory', 'lc')
 
-grid.add_row('309-Acolyte Ministry',
-             '309-Acolytes')
+grid.add_row('309-Acolytes')
 grid.add_row('310-Adult Choir')
 grid.add_row('311-Bell Choir')
 grid.add_row('312-Children\'s Music Ministry')
-grid.add_row('313-Communion Ministers',
-             '313-Eucharistic Minister')
+grid.add_row('313-Eucharistic Ministers')
 grid.add_row('315-Funeral Mass Ministry')
 grid.add_row('316-Greeters')
 grid.add_row('317-Instrumentalists & Cantors')
@@ -221,12 +221,14 @@ _all_ministry_grids.append(grid)
 
 grid = ministry_2d_grid('Community Care', 'hh')
 
-grid.add_row('500-Bereavement Supprt')
-grid.add_row('501-Care of Sick: Eucharist',
+grid.add_row('501-Eucharist to Sick&Homebnd',
                 '501-Eucharist to the Sick and Homebound')
-grid.add_row('504-DivorceCare')
 grid.add_row('505-Healing Blanket Ministry')
 grid.add_row('508-Messages of Hope Ministry')
+grid.add_row('509-HOPE Support Groups', new=True)
+grid.add_row('509-Flower Delivery to SHB',
+             '510-Flower Delivery to the Sick, Homebound, & Bereaved',
+             new=True)
 
 _all_ministry_grids.append(grid)
 
@@ -244,6 +246,8 @@ grid.add_row('609-Octoberfest Plan Team 2022',
              '609-OctoberFest Plan Team')
 grid.add_row('611-Bereavement Receptions',
              '611-Bereavement Reception')
+grid.add_row('612-Community Life Committee',
+             '612-Community Life Ministry')
 
 _all_ministry_grids.append(grid)
 
@@ -262,7 +266,7 @@ grid.add_row('706-Prison Ministry')
 grid.add_row('707-St. Vincent de Paul',
              '707-St. Vincent de Paul - Epiphany Conference')
 grid.add_row('709-Twinning Committee:Chiapas',
-                '709-Twinning Committee: Chiapas')
+             '709-Twinning Committee: Chiapas')
 grid.add_row('710-Environmental Concerns',
              '710-Environmental Concerns Committee')
 grid.add_row('712-Legislative Network',
@@ -276,11 +280,22 @@ grid = ministry_2d_grid('Formational', 'ff')
 
 grid.add_row('800-Catechists for Children',
              '800-Children\'s Formation Catechists (PreK-8th)')
-grid.add_row('802-Gather the Children',
-                '802-Gather the Children Catechists')
+grid.add_row('802-Gather the Children')
 grid.add_row('805-Monday Adult Bible Study')
-grid.add_row('807-Catechumenate / Initiation Team',
-             '807-Catechumenate/InitiationTm')
+grid.add_row('807-Catechumenate/InitiationTm',
+             '807-Catechumenate / Initiation Team')
+grid.add_row('808-BibleTimes Core Team')
+
+_all_ministry_grids.append(grid)
+
+#----------------------------------------------------------------------------
+
+grid = ministry_2d_grid('Youth Ministires', 'ym')
+
+grid.add_row('901-Youth Ministry Adult Vols',
+             '901-Youth Ministry Adult Volunteers')
+grid.add_row('902-Adult Advisory Council')
+grid.add_row('903-Confirmation Core Team')
 
 _all_ministry_grids.append(grid)
 
@@ -314,7 +329,7 @@ class jotform_class:
 
 last_updated = datetime.datetime.now().strftime('%A %B %d, %Y at %I:%M%p')
 
-jotform = jotform_class('https://form.jotform.com/220253639375155',
+jotform = jotform_class('https://form.jotform.com/223634398375163',
                     _all_ministry_grids)
 
 # These Jotform fields are for the overall Family
@@ -342,15 +357,6 @@ jotform.add_family_pre_fill_data('Family name',
 jotform.add_family_pre_fill_data('Family annual pledge for stewardship_year-1',
                     lambda fam: jf_money_str(fam['calculated']['pledged']) if 'calculated' in fam else "%240",
                     'previousPledge')
-jotform.add_family_pre_fill_data('Family contributed so far in stewardship_year-1',
-                    lambda fam: jf_money_str(fam['calculated']['gifts']) if 'calculated' in fam else "%240",
-                    'giftsThisYear_fmt')
-jotform.add_family_pre_fill_data('Family contributed so far in stewardship_year-1, hidden, just number',
-                    lambda fam: f"{fam['calculated']['gifts']}" if 'calculated' in fam else "0",
-                    'giftsThisYear')
-jotform.add_family_pre_fill_data('Family contributed to campaign in stewardship_year-1',
-                    lambda fam: f"{fam['calculated']['campaign']}" if 'calculated' in fam else "0",
-                    'campaign')
 
 # These Jotform fields are specific to a Member
 jotform.add_member_pre_fill_data('mid',
@@ -359,6 +365,8 @@ jotform.add_member_pre_fill_data('mid',
 jotform.add_member_pre_fill_data('name',
                     lambda mem: helpers.url_escape(mem['full_name']),
                     [ f'name{i}' for i in range(1, MAX_PDS_FAMILY_MEMBER_NUM+1) ])
+jotform.add_member_pre_fill_data('talent', '',
+                    [ f'talent{i}' for i in range(1, MAX_PDS_FAMILY_MEMBER_NUM+1) ])
 jotform.add_member_pre_fill_data('participation',
                     lambda mem: '',
                     [ f'mp{i}' for i in range(1, MAX_PDS_FAMILY_MEMBER_NUM+1) ])
@@ -412,14 +420,13 @@ jotform_gsheet_columns['family'] = [
     'Gifts this year',
     'Family names',
     f'CY{stewardship_year-1} pledge',
-    f'CY{stewardship_year-1} gifts',
     f'CY{stewardship_year} participation',
-    f'CY{stewardship_year} pledge',
+    f'CY{stewardship_year} whole year pledge',
+    f'CY{stewardship_year} how fullfill',
     f'CY{stewardship_year} weekly',
     f'CY{stewardship_year} monthly',
     f'CY{stewardship_year} quarterly',
-    f'CY{stewardship_year} frequency',
-    f'CY{stewardship_year} mechanisms',
+    f'CY{stewardship_year} how',
     'Comments',
 ]
 
