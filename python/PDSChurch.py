@@ -1152,8 +1152,9 @@ def load_families_and_members(filename=None, pds=None,
     # cross-referenced to fam_funds.
     fam_fund_history = PDS.read_table(pds, 'FamFundHist_DB', 'FERecNum',
                                 columns=['FEDate', 'ActRecNum', 'FEFundRec',
-                                        'FEFamRec', 'FEAmt', 'FEBatch',
-                                        'MemRecNum', 'FEChk', 'FEComment'],
+                                         'FEFamRec', 'FEAmt', 'FEBatch',
+                                         'MemRecNum', 'FEChk', 'FEComment',
+                                         'FEChk'],
                                 log=log)
 
     member_types = _find_member_types()

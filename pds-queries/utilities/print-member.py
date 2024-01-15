@@ -48,13 +48,6 @@ def main():
     num_mem = len(members)
     log.info(f"There are {num_fam} families and {num_mem} members")
 
-    #b = PDSChurch.filter_members_on_keywords(members, ['ECC Sheet Music access'])
-    #a = PDSChurch.filter_members_on_ministries(members, ['207-Technology Committee'])
-    #c = PDSChurch.union_of_member_dicts(a, b)
-    #for member in c.values():
-    #    print(f"member: {member['Name']}")
-    #exit(0)
-
     mid = 709804 # lucas_osborne
     mid = 547739 # desiree_hoette
     mid = 549105 # ann_hall

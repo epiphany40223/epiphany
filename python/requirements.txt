@@ -5,3 +5,5 @@ google-api-python-client
 oauth2client
 python-dateutil
 DateTimeRange
+requests
+urllib3
