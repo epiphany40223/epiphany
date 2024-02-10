@@ -292,6 +292,12 @@ def get_synchronizations():
             'notify'     : f'justlmw@att.net,pds-google-sync{ecc}',
         },
         {
+            'ministries' : [ '611-Bereavement Receptions' ],
+            'ggroup'     : f'bereavement-receptions{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+
+        {
             'ministries' : [ '612-Community Life Committee' ],
             'ggroup'     : f'community-life{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
@@ -614,6 +620,13 @@ def get_synchronizations():
                                'purpose' : "SEL ministry chair" }, ],
             'ggroup'     : f'sel-chair{ecc}',
             'notify'     : f'pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "611"},
+                               'purpose' : "New members coffee chair" }, ],
+            'ggroup'     : f'bereavement-receptions-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
 
         #----------------------------
