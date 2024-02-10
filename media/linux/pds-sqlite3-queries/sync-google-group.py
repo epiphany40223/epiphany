@@ -631,7 +631,7 @@ def get_synchronizations():
         {
             'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "611"},
-                               'purpose' : "New members coffee chair" }, ],
+                               'purpose' : "Chair: Bereavement receptions" }, ],
             'ggroup'     : f'bereavement-receptions-chair{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
