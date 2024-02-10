@@ -609,6 +609,13 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "509"},
+                               'purpose' : "Chair: HOPE support groups" }, ],
+            'ggroup'     : f'hope-support-groups-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : '600' },
                                'purpose' : "MOE ministry chair" }, ],
             'ggroup'     : f'moe-chair{ecc}',
@@ -624,7 +631,7 @@ def get_synchronizations():
         {
             'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "611"},
-                               'purpose' : "New members coffee chair" }, ],
+                               'purpose' : "Chair: Bereavement receptions" }, ],
             'ggroup'     : f'bereavement-receptions-chair{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
