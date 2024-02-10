@@ -288,11 +288,6 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '500-Bereavement Support',
-        'gsheet_id' : '1qbTrDDHAyEsCT5oxzGlvnpU-kOJNS3MPv9re0x6XE2U',
-        'birthday' : False,
-    },
-    {
         'ministry' : '501-Eucharist to Sick&HomeBnd',
         'gsheet_id' : '1fKXe-NuoObjgYoFRcbuJQwIOjFIAfT7TQB87eccgfng',
         'birthday' : False,
