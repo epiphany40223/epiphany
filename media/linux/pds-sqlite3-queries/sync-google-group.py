@@ -259,7 +259,7 @@ def get_synchronizations():
 
         {
             'ministries' : [ '501-Eucharist to Sick&Homebnd' ],
-            'ggroup'     : f'care-for-the-sick{ecc}',
+            'ggroup'     : f'eucharist-to-the-sick-and-homebound{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
@@ -596,8 +596,8 @@ def get_synchronizations():
         {
             'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "501"},
-                               'purpose' : "Care for the Sick: Eucharist ministry chair" }, ],
-            'ggroup'     : f'care-for-the-sick-chair{ecc}',
+                               'purpose' : "Eucharist to the Sick and Homebound chair" }, ],
+            'ggroup'     : f'eucharist-to-the-sick-and-homebound-chair{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
