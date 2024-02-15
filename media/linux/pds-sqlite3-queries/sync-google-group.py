@@ -518,6 +518,13 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "110"},
+                               'purpose' : "Ten Percent committee chair" }, ],
+            'ggroup'     : f'ten-percent-chair{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "201"},
                                'purpose' : "Collection counter ministry chair" }, ],
             'ggroup'     : f'collection-counters-chair{ecc}',
