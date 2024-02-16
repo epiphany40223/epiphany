@@ -68,11 +68,6 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '106-Community Life Committee',
-        'gsheet_id' : '1k_hH1tEWBGuERCmFvhZxKOfAsBkqy0uZ16LAd0_jMDg',
-        'birthday' : False,
-    },
-    {
         'ministry' : '107-Social Resp Steering Comm',
         'gsheet_id' : '1Am3v0Pv4D9zubkGYgFbUd8e92PZnBPrbcwKrMrs8AnI',
         'birthday' : False,
@@ -100,6 +95,16 @@ ministries = [
     {
         'ministry' : '114-Long Range Plan 2029 Comm',
         'gsheet_id' : '1Ohroqv1OSZJuhJ0y4z2dIEt4gCkxdkyudAqZ0XpuPTQ',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '115-Parish Life Committee',
+        'gsheet_id' : '1bKiNztcE20jrK24ccoCzOJDuJsA-nAR-P-6BYstIDog',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '116-Youth Council',
+        'gsheet_id' : '1dM3gNsnTJyQDLeRSmP1iRhjWlXV0aHiOCmdLtG3KnKc',
         'birthday' : False,
     },
     {
@@ -308,6 +313,16 @@ ministries = [
         'birthday' : False,
     },
     {
+        'ministry' : '509-HOPE Support Groups',
+        'gsheet_id' : '160CPnzR_Q-kph_36LLCPFMC_pLRdMFbUQ2fkQ90LEw0',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '510-Flower Delivery to SHB',
+        'gsheet_id' : '1Fq11QLU7OQ_yHYPeDPXT8JaA31ackl3eJ2xOvecG_go',
+        'birthday' : False,
+    },
+    {
         'ministry' : '600-Men of Epiphany',
         'gsheet_id' : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
         'birthday' : False,
@@ -340,6 +355,11 @@ ministries = [
     {
         'ministry' : '611-Bereavement Receptions',
         'gsheet_id' : '1r6FNXGn-T5anj9X7HGlB2EpZ9oXfy5dQXD6z-OQEGgE',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '612-Community Life Committee',
+        'gsheet_id' : '1k_hH1tEWBGuERCmFvhZxKOfAsBkqy0uZ16LAd0_jMDg',
         'birthday' : False,
     },
     {
