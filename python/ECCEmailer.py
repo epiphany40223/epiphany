@@ -24,39 +24,16 @@ import smtplib
 import argparse
 
 from email.message import EmailMessage
+import mimetypes
 
 import ECC
+import Google
 
 smtp_server     = 'smtp-relay.gmail.com'
 smtp_from = 'no-reply@epiphanycatholicchurch.org'
 
-def setup_cli_args():
-    parser = argparse.ArgumentParser(description='Epiphany email sender')
-    parser.add_argument(f'--smtp-auth-file',
-                        required=True,
-                        help='File containing SMTP AUTH username:password for {smtp_server}')
-    parser.add_argument(f'--html-body-file',
-                        required=False,
-                        help='File containing HTML code to constitute email body')
-    parser.add_argument(f'--subject',
-                        required=True,
-                        help='String to be inserted as email subject line')
-    parser.add_argument(f'--recipient',
-                        required=True,
-                        help='Valid email address of recipient')
-    parser.add_argument('--logfile',
-                        default='log.txt',
-                        help='Log file name')
-    parser.add_argument(f'--slack-token-filename',
-                        help='File containing the Slack bot authorization token')
-    parser.add_argument(f'--client',
-                        help='Sender address',
-                        default=smtp_from)
-    args = parser.parse_args()
-
-    return args
-
-#------------------------------------------------------------------
+default_smtp_auth   = 'smtp_auth.txt'
+default_body_file   = 'body_file.txt'
 
 def read_smtp_credentials(smtp_auth_file):
     with open(smtp_auth_file) as f:
@@ -64,20 +41,29 @@ def read_smtp_credentials(smtp_auth_file):
         smtp_username, smtp_password = line.split(':')
         return smtp_username, smtp_password
 
-#------------------------------------------------------------------
+###########################################################
 
-def set_email_body(body_file):
-    with open(body_file) as f:
-        content = f.read()
-        return content
+def set_attachments(attachments, msg, log):
+    for attachment in attachments.values():
+        fname = attachment['filename']
+        ftype = attachment['type']
+        log.debug(f"Attachment is: {fname}")
+        log.debug(f'Ftype is: {ftype}')
+        log.debug(f'mime types are {Google.mime_types[ftype]}')
+        mime_type, mime_subtype = Google.mime_types[ftype].split('/')
 
-#------------------------------------------------------------------
+        with open(fname, 'rb') as ap:
+            msg.add_attachment(ap.read(), maintype = mime_type, subtype = mime_subtype,
+                                filename = fname)
 
-def send_email(body_file, smtp_auth_file, recipient, subject, client, log): 
+    return msg
+
+###########################################################
+
+def send_email(body, bodytype, attachments, smtp_auth_file, recipient, subject, client, log): 
     with smtplib.SMTP_SSL(host=smtp_server,
                           local_hostname='epiphanycatholicchurch.org') as smtp:
         msg = EmailMessage()
-        body = set_email_body(body_file)
         msg.set_content(body)
 
         # Login; we can't rely on being IP allowlisted.
@@ -91,18 +77,10 @@ def send_email(body_file, smtp_auth_file, recipient, subject, client, log):
         msg['From']    = client
         msg['To']      = recipient
         msg['Subject'] = subject
-        msg.replace_header('Content-Type', 'text/html')
+        msg.replace_header('Content-Type', Google.mime_types[bodytype])
+
+        msg = set_attachments(attachments, msg, log)
 
         smtp.send_message(msg)
 
-#------------------------------------------------------------------
-
-def main():
-    args = setup_cli_args()
-    log  = ECC.setup_logging(logfile=args.logfile,
-                            rotate=True,
-                            slack_token_filename=args.slack_token_filename)
-
-    send_email(args.html_body_file, args.smtp_auth_file, args.recipient, args.subject, args.client, log)
-    
-main()
+###########################################################

@@ -10,6 +10,8 @@ import sqlite3
 import argparse
 import datetime
 
+from oauth2client import tools
+
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -34,39 +36,87 @@ except Exception as e:
     sys.stderr.write(f"{e}\n")
     exit(1)
 
+import ECCEmailer
+import ECCUploader
+
+default_app_json                    = 'client_id.json'
+default_user_json                   = 'user_credentials.json'
+default_google_team_drive_folder_id = '1SYDgNiGgRGTZ8EsmRxsg3PE6sL4GzJTE'
+default_smtp_auth                   = 'smtp_auth.txt'
+default_recipient                   = 'harrison@epiphanycatholicchurch.org'
+default_client                      = 'no-reply@epiphanycatholicchurch.org'
+
 ###########################################################
 
+def find_relevant_datetimes(args_date):
+    if not isinstance(args_date, datetime.datetime):
+        end_date = datetime.datetime.fromisoformat(args_date)
+    else: end_date = args_date
+    month_start = end_date.replace(day=1)                                           # Monthly defaults to 1st of current month
+    quarter_start = month_start                                                     # Quarter and Fiscal default to monthly (so they won't run)
+    fiscal_start = month_start                                
+    if end_date.day == 1:
+        month_start = end_date.replace(month=end_date.month-1)                      # On the 1st, Monthly starts at 1st of previous month
+        if end_date.month in [1,4,7,10]:
+            quarter_start = month_start.replace(month=month_start.month-3)          # Quarterly reports generated on Oct/Jan/Apr/Jul 1st
+            fiscal_start = month_start.replace(month = 7)
+            if end_date.month in [1,4,7]:
+                fiscal_start = fiscal_start.replace(year=fiscal_start.year-1)       # Jan/April/July FY reports start in previous calendar year
+                if end_date.month == 1:
+                    quarter_start = quarter_start.replace(year=quarter_start.year-1)# Jan quarterly report needs data from previous Oct
+
+    return end_date, month_start, quarter_start, fiscal_start
+
 def setup_cli_args():
-    parser = argparse.ArgumentParser(description='Import Ricoh data into an SQLite3 database.')
-    parser.add_argument('--xlsx',
+    tools.argparser.add_argument('--xlsx',
                         default='printlog.xlsx',
                         help='XLSX file to write')
-    parser.add_argument('--db',
+    tools.argparser.add_argument('--db',
                         required=True,
                         help='SQLite3 database from which to read values')
-    parser.add_argument('--first',
+    tools.argparser.add_argument('--first',
                         help='First local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
-    parser.add_argument('--last',
+    tools.argparser.add_argument('--last',
                         help='Last local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
+    tools.argparser.add_argument('--end-date',
+                        default=datetime.datetime.today(),
+                        help='Date of generated report')
 
-    parser.add_argument('--logfile',
+    tools.argparser.add_argument('--logfile',
                         default=None,
                         help='Optional output logfile')
 
-    parser.add_argument('--slack-token-filename',
-                        required=False, #TODO: switch back to True after debugging
+    tools.argparser.add_argument('--slack-token-filename',
+                        required=False,
                         help='File containing the Slack bot authorization token')
 
-    parser.add_argument('--verbose',
+    tools.argparser.add_argument('--verbose',
                         default=False,
                         action='store_true',
                         help='Enable verbose output')
-    parser.add_argument('--debug',
+    tools.argparser.add_argument('--debug',
                         default=False,
                         action='store_true',
                         help='Enable extra debugging')
-
-    args = parser.parse_args()
+    tools.argparser.add_argument(f'--app-id',
+                        default=default_app_json,
+                        help='Filename containing Google application credentials')
+    tools.argparser.add_argument(f'--user_credentials',
+                        default=default_user_json,
+                        help='Filename containing Google user credentials')
+    tools.argparser.add_argument(f'--drive_folder',
+                        default=default_google_team_drive_folder_id,
+                        help='Destination Google Drive folder for uploads')
+    tools.argparser.add_argument(f'--smtp-auth-file',
+                        default=default_smtp_auth,
+                        help='File containing SMTP AUTH username:password for {smtp_server}')
+    tools.argparser.add_argument(f'--recipient',
+                        default=default_recipient,
+                        help='Valid email address of recipient')
+    tools.argparser.add_argument(f'--client',
+                        help='Sender address',
+                        default=default_client)
+    args = tools.argparser.parse_args()
 
     # Sanity check
     if not os.path.exists(args.db):
@@ -103,32 +153,6 @@ def setup_cli_args():
     return args
 
 ###########################################################
-
-# Find the first and last timestamps in the database
-def find_first_last_timestamp(log, conn):
-    def _doit(direction):
-        c    = conn.cursor()
-        sql  = f'SELECT timestamp FROM printlog GROUP BY timestamp ORDER BY datetime(timestamp) {direction} LIMIT 1'
-        log.debug(f"SQL: {sql}")
-        c.execute(sql)
-        rows = c.fetchall()
-
-        return rows
-
-    log.debug(f"Looking for first and last timestamps")
-    rows = _doit("ASC")
-    if len(rows) < 1:
-        log.verbose("Database is empty: there is no first and last timestamp")
-        return None, None
-
-    first = datetime.datetime.fromisoformat(rows[0]['timestamp'])
-    log.debug(f"Found first timestamp: {first}")
-
-    rows = _doit("DESC")
-    last = datetime.datetime.fromisoformat(rows[0]['timestamp'])
-    log.debug(f"Found last timestamp: {last}")
-
-    return first, last
 
 # Find the first timestamp in the database that is >= the requested
 # timestamp. Remember that the timestamp parameter is in local time, but
@@ -378,6 +402,34 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
 
     wb.save(filename)
     log.info(f"Wrote {filename}")
+    return filename
+
+###########################################################
+
+def generate_report(log, conn, timestamp_first, timestamp_last, depts_last, fields, xlsx):
+    # Fetch all the departments that are available at those two timestamps.
+    depts_first = fetch_depts_at_timestamp(log, conn, timestamp_first)
+
+    # We may have found a different set of departments at the first and last
+    # timestamps (e.g., if a department was added or deleted between the two
+    # timestamps).  Compute the union of departments that we found.
+    depts = compute_depts_union(log, depts_first, depts_last)
+
+    # Go fetch any missing data (i.e., a department for which we have only a
+    # first or last set of data).
+    fetch_missing_timestamps(log, conn, timestamp_first, timestamp_last, depts)
+
+    # Now that we have all the timestamps, fetch all the data
+    fetch_data(log, conn, depts)
+
+    # Now that we have first and last data for every single department, compute
+    # the deltas for all of them.
+    compute_deltas(log, depts)
+
+    report = write_to_xlsx(log, fields, depts, xlsx, timestamp_first, timestamp_last)
+
+    return report
+
 
 ###########################################################
 
@@ -410,13 +462,7 @@ def main():
 
     conn, fields = open_db(log, args.db)
 
-    # If the first and last timestamps were not specified, use the first and
-    # last timestamps in the database.
-    first, last = find_first_last_timestamp(log, conn)
-    if args.first == None:
-        args.first = first
-    if args.last == None:
-        args.last = last
+    last, first_month, first_quarter, first_year = find_relevant_datetimes(args.end_date)
 
     # Find the earliest timestamp in the database that is greater than or equal
     # to the timestamps that were specified on the command line.
@@ -427,31 +473,65 @@ def main():
             exit(1)
         return ts
 
-    timestamp_first = _check('first', args.first)
-    timestamp_last  = _check('last', args.last)
+    timestamp_month   = _check('month', first_month)
+    timestamp_last    = _check('last', last)
 
-    # Fetch all the departments that are available at those two timestamps.
-    depts_first = fetch_depts_at_timestamp(log, conn, timestamp_first)
+    reports={}
+
     depts_last  = fetch_depts_at_timestamp(log, conn, timestamp_last)
 
-    # We may have found a different set of departments at the first and last
-    # timestamps (e.g., if a department was added or deleted between the two
-    # timestamps).  Compute the union of departments that we found.
-    depts = compute_depts_union(log, depts_first, depts_last)
+    reports['month'] = {
+        'filename': generate_report(log, conn, timestamp_month, timestamp_last, depts_last, fields, args.end_date + ' monthly.xlsx'),
+        'type': 'xlsx',
+    }
 
-    # Go fetch any missing data (i.e., a department for which we have only a
-    # first or last set of data).
-    fetch_missing_timestamps(log, conn, timestamp_first, timestamp_last, depts)
+    if first_quarter != first_month:
+        timestamp_quarter = _check('quarter', first_quarter)
+        quarterly_label = args.date + ' quarterly report.xlsx'
+        reports['quarter'] = {
+            'filename': generate_report(log, conn, timestamp_quarter, timestamp_last, depts_last, fields, args.end_date + ' quarterly.xlsx'),
+            'type': 'xlsx',
+        }
 
-    # Now that we have all the timestamps, fetch all the data
-    fetch_data(log, conn, depts)
-
-    # Now that we have first and last data for every single department, compute
-    # the deltas for all of them.
-    compute_deltas(log, depts)
-
-    write_to_xlsx(log, fields, depts, args.xlsx, timestamp_first, timestamp_last)
+    if first_year != first_month:
+        timestamp_year = _check('year', first_year)
+        reports['year'] = {
+            'filename': generate_report(log, conn, timestamp_year, timestamp_last, depts_last, fields, args.end_date + ' yearly.xlsx'),
+            'type': 'xlsx',
+        }
+        
 
     conn.close()
+    body = f'''<h1>Ricoh Reports</h1>
+
+<p>The monthly Ricoh report from {args.end_date} is attached'''
+
+    if first_quarter != first_month:
+        body = body + ''', along with the quarterly report'''
+    if first_year != first_month:
+        body = body + ''' and the yearly report'''
+
+    body = body + '''.</p>
+
+<p>Your friendly server,<br />
+Myrador</p>'''
+    bodytype = 'html'
+
+    service_drive = ECCUploader.setup_services(args.app_id, args.user_credentials, log)
+
+    ECCUploader.verify_target_google_folder(service_drive, args.drive_folder, log)
+
+    # Upload the report files to the target ID folder
+    # This script creates an xlsx, but we want a Google sheet on Drive, so pass
+    # 'sheet' subtype rather than 'xlsx' so Google converts it.
+    for report in reports.values():
+        log.info(f"Uploading file {report}")
+        ECCUploader.upload_to_google(service_drive, report['filename'], 'sheet',
+                         args.drive_folder, log)
+
+    subject = f'{args.end_date} Ricoh Reports'
+    log.debug(f'Reports is: {reports.values()}')
+    ECCEmailer.send_email(body, bodytype, reports, args.smtp_auth_file, args.recipient,
+                          subject, args.client, log)
 
 main()
