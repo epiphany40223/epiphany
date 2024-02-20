@@ -152,6 +152,11 @@ def get_synchronizations():
             'ggroup'     : f'communications-planning-team{ecc}',
             'notify'     : f'director-communications{ecc},pds-google-sync{ecc}',
         },
+        {
+            "ministries" : [ '115-Parish Life Committee' ],
+            'ggroup'     : f'parish-life-committee{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
 
         #############################
 
@@ -272,6 +277,16 @@ def get_synchronizations():
             'ggroup'     : f'messages-of-hope{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
+        {
+            'ministries' : [ '509-HOPE Support Groups' ],
+            'ggroup'     : f'hope-support-groups{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '510-Flower Delivery to SHB' ],
+            'ggroup'     : f'flower-delivery{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
 
         #############################
 
@@ -290,6 +305,11 @@ def get_synchronizations():
             'ggroup'     : f'sel{ecc}',
             # Lynne Webb
             'notify'     : f'justlmw@att.net,pds-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '604-Wednesdays for Women' ],
+            'ggroup'     : f'wednesdays-for-women{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
         {
             'ministries' : [ '611-Bereavement Receptions' ],
@@ -518,6 +538,27 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "115"},
+                               'purpose' : "Parish Life chair" }, ],
+            'ggroup'     : f'parish-life-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "107"},
+                               'purpose' : "Social Responsibility committee chair" }, ],
+            'ggroup'     : f'social-responsibility-chair{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "110"},
+                               'purpose' : "Ten Percent committee chair" }, ],
+            'ggroup'     : f'ten-percent-chair{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "201"},
                                'purpose' : "Collection counter ministry chair" }, ],
             'ggroup'     : f'collection-counters-chair{ecc}',
@@ -595,6 +636,13 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "510"},
+                               'purpose' : "Chair: Flower Delivery" }, ],
+            'ggroup'     : f'flower-delivery-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "501"},
                                'purpose' : "Eucharist to the Sick and Homebound chair" }, ],
             'ggroup'     : f'eucharist-to-the-sick-and-homebound-chair{ecc}',
@@ -633,6 +681,13 @@ def get_synchronizations():
                                'kwargs' : { "ministry_prefix" : "611"},
                                'purpose' : "Chair: Bereavement receptions" }, ],
             'ggroup'     : f'bereavement-receptions-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "604"},
+                               'purpose' : "Chair: Wednesdays for Women" }, ],
+            'ggroup'     : f'wednesdays-for-women-chair{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
 
