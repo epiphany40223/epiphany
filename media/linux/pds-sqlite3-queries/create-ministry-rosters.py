@@ -88,7 +88,7 @@ ministries = [
         'birthday' : False,
     },
     {
-        'ministry' : '113-Communications Plan. Comm.',
+        'ministry' : '113-Media Comms Planning Comm.',
         'gsheet_id' : '1erlqkK_F-ol8Bmo5Pg6SoAe355tOxwU3D4pU179foCU',
         'birthday' : False,
     },
