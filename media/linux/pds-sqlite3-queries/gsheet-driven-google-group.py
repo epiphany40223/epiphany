@@ -64,13 +64,13 @@ groups = [
         'name' : 'PPC Feedback',
         'group' : 'ppc-feedback@epiphanycatholicchurch.org',
         'gsheet_id' : '1s9guctll5_E21uVCnamEVkkN6_91KkHxozwNy9WaMBg',
-        'contact' : 'Angie Fox <angie@epiphanycatholicchurch.org>',
+        'contact' : 'Parish Engagement <director-parish-engagement@epiphanycatholicchurch.org>',
     },
     {
         'name' : 'FAC Feedback',
         'group' : 'fac-feedback@epiphanycatholicchurch.org',
         'gsheet_id' : '1VX4DpQQxHDw76G96OhpH1Ra6rmH_WjN4eJyKSRVln4I',
-        'contact' : 'Mary Downs <mary@epiphanycatholicchurch.org>',
+        'contact' : 'Business Manager <business-manager@epiphanycatholicchurch.org>',
     },
 ]
 
