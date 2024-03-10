@@ -691,30 +691,6 @@ def get_synchronizations():
             'notify'     : f'pastoral-associate-parish-life{ecc},pds-google-sync{ecc}',
         },
 
-        #----------------------------
-
-        {
-            'functions'  : [ { 'func' : find_instrument,
-                               'kwargs' : { "instrument" : "Voice" },
-                               'purpose' : "Find musicians: singers" }, ],
-            'ggroup'     : f'musicians-singers{ecc}',
-            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
-        },
-        {
-            'functions'  : [ { 'func' : find_instrument,
-                               'kwargs' : { "instrument" : "Guitar" },
-                               'purpose' : "Find musicians: guitarists" }, ],
-            'ggroup'     : f'musicians-guitarists{ecc}',
-            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
-        },
-        {
-            'functions'  : [ { 'func' : find_instrument,
-                               'kwargs' : { "instrument" : "Piano" },
-                               'purpose' : "Find musicians: pianists" }, ],
-            'ggroup'     : f'musicians-pianists{ecc}',
-            'notify'     : f'director-worship{ecc},pds-google-sync{ecc}',
-        },
-
     ]
 
     return synchronizations
@@ -1305,50 +1281,6 @@ def find_ministry_chair(member, **kwargs):
             return True, True
 
     return False, False
-
-# Returns two values:
-# Boolean (member): if the Member is active in the 317 musicians ministry AND
-#                   has the desired instrument on their Member record,
-# Boolean (leader): is a Chair in the 317 musicians ministry
-def find_instrument(pds_member, **kwargs):
-    def _ministry_membership():
-        key = 'active_ministries'
-        if key not in pds_member:
-            return False, False
-
-        member = False
-        leader = False
-        for ministry in pds_member['active_ministries']:
-            # Is this member active in the 317 ministry?
-            if ministry['Description'].startswith(musician_ministry_prefix):
-                member = True
-                # If they're in the 317, are they a chair of it?
-                if 'Chair' in ministry['status']:
-                    leader = True
-
-        return member, leader
-
-    #--------------------------------------------------------------------
-
-    def _has_instrument():
-        key = 'instrument'
-        if key not in kwargs:
-            return False
-
-        target_instrument = kwargs[key]
-        if key not in pds_member:
-            return False
-        if target_instrument not in pds_member[key]:
-            return False
-
-        return True
-
-    #--------------------------------------------------------------------
-
-    member, leader = _ministry_membership()
-    instrument     = _has_instrument()
-
-    return (member & instrument), leader
 
 def pds_find_ministry_members(members, sync, log=None):
     ministry_members = list()
