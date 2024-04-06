@@ -156,7 +156,8 @@ def _compute_family_hoh_and_spouse_salutations(families, log):
                     first_names.append(member['first'])
                 else:
                     first_names.append("***UNKNOWN***")
-                    log.warn(f"Unknown first name: {member['Name']}")
+                    if log:
+                        log.warning(f"Unknown first name: {member['Name']}")
 
             if len(salutation) > 0:
                 salutation += ' and '
