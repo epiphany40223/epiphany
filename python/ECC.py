@@ -120,7 +120,7 @@ def setup_logging(name=sys.argv[0], info=True, debug=False, logfile=None,
 
         log.addHandler(syslog)
 
-    log.info('Starting')
+    log.debug('Starting')
 
     return log
 

@@ -28,7 +28,7 @@ git_top = out.stdout.decode('utf-8').strip()
 
 # Globals
 logfile  = os.path.join(os.environ['HOME'], 'logfiles', 'lock-logfile.txt')
-lockfile = os.path.join(git_top, 'media', 'linux', 'pds-run-all.lock')
+lockfile = os.path.join(git_top, 'media', 'linux', 'ps-run-all.lock')
 
 ###############################################################################
 
@@ -108,8 +108,7 @@ def main():
         for subdir in [
                 'ricoh',
                 'email-patch-tuesday',
-                'export-pds-into-sqlite',
-                'pds-sqlite3-queries',
+                'ps-queries',
                 'calendar-audit',
                 'calendar-reservations',
             ]:

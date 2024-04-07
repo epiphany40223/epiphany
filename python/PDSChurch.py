@@ -156,7 +156,8 @@ def _compute_family_hoh_and_spouse_salutations(families, log):
                     first_names.append(member['first'])
                 else:
                     first_names.append("***UNKNOWN***")
-                    log.warn(f"Unknown first name: {member['Name']}")
+                    if log:
+                        log.warning(f"Unknown first name: {member['Name']}")
 
             if len(salutation) > 0:
                 salutation += ' and '
@@ -831,13 +832,13 @@ def _parse_family_name(name, log=None):
     last = parts[0]
 
     spouse = None
-    result = re.search("\((.+?)\)", name)
+    result = re.search(r"((.+?))", name)
     if result:
         # Remove the spouse from the name, just so that we can split the
         # remainder of the name on "," and know that all of those parts belong
         # to the HoH
         spouse = result[0]
-        name   = re.sub(f'\({spouse}\)', '', name)
+        name   = re.sub(f'({spouse})', '', name)
         parts  = name.split(',')
 
     first = parts[1]
@@ -945,21 +946,21 @@ def _parse_member_name(name, log=None):
     maiden = None
     if len(parts) > 1:
         more = parts[1]
-        result = re.match('([^\(\{\[]+)', more)
+        result = re.match(r'([^\(\{\[]+)', more)
         if result:
             first = result.group(1)
         else:
             first = 'Unknown'
 
-        result = re.search('\{(.+)\}', more)
+        result = re.search(r'\{(.+)\}', more)
         if result:
             middle = result.group(1)
 
-        result = re.search('\((.+)\)', more)
+        result = re.search(r'\((.+)\)', more)
         if result:
             nickname = result.group(1)
 
-        result = re.search('\[(.+)\]', more)
+        result = re.search(r'\[(.+)\]', more)
         if result:
             maiden = result.group(1)
 
@@ -1151,8 +1152,9 @@ def load_families_and_members(filename=None, pds=None,
     # cross-referenced to fam_funds.
     fam_fund_history = PDS.read_table(pds, 'FamFundHist_DB', 'FERecNum',
                                 columns=['FEDate', 'ActRecNum', 'FEFundRec',
-                                        'FEFamRec', 'FEAmt', 'FEBatch',
-                                        'MemRecNum', 'FEChk', 'FEComment'],
+                                         'FEFamRec', 'FEAmt', 'FEBatch',
+                                         'MemRecNum', 'FEChk', 'FEComment',
+                                         'FEChk'],
                                 log=log)
 
     member_types = _find_member_types()
