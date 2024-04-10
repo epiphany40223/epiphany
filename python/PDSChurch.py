@@ -256,6 +256,7 @@ def _load_members(pds, columns=None,
     columns.append('User4DescRec') # Occupation
     columns.append('User7DescRec') # Instrument
     columns.append('Deceased')
+    columns.append('DeceasedDate')
     columns.append('PDSInactive{num}'.format(num=db_num))
 
     where = ('Mem_DB.CensusMember{db_num}=1'
@@ -276,6 +277,7 @@ def _load_members(pds, columns=None,
         _normalize_boolean(m, src=f'PDSInactive{db_num}', dest="Inactive")
         _normalize_filename(m, src='PictureFile')
         m['date_of_birth'] = _normalize_date(m['DateOfBirth'], sentinel=False)
+        m['deceased_date'] = _normalize_date(m['DeceasedDate'], sentinel=False)
 
     return members
 
