@@ -473,7 +473,7 @@ def write_xlsx(members, ministry_name, name, want_birthday, log):
     sorted_members = dict()
     for m in members:
         # 'Name' will be "Last,First..."
-        sorted_members[m['display_FullName']] = m
+        sorted_members[m['display_FullName'] + " " + str(m['memberDUID'])] = m
 
     wb = Workbook()
     ws = wb.active
@@ -636,8 +636,6 @@ def upload_overwrite(filename, google, file_id, log):
 
 def _create_roster(ps_members, ministry_name, sheet_name,
                    birthday, gsheet_id, google, log):
-    # PDSChurch.filter_members() returns a dict.  Turn this into a simple
-    # list of Members.
     members = [ x for x in ps_members.values() ]
 
     # Make an xlsx
