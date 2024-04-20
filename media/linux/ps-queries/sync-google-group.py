@@ -330,6 +330,14 @@ def get_synchronizations():
         #############################
 
         {
+            'ministries' : [ '903-Confirmation Core Team' ],
+            'ggroup'     : f'confirmation-core{ecc}',
+            'notify'     : f'youth-minister{ecc},ps-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
             'workgroups' : [ 'Livestream Team' ],
             'ggroup'     : f'livestream-team{ecc}',
             'notify'     : f'director-communications{ecc},ps-google-sync{ecc}',
@@ -608,6 +616,20 @@ def get_synchronizations():
                                'purpose' : "SEL ministry chair" }, ],
             'ggroup'     : f'sel-chair{ecc}',
             'notify'     : f'ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : '901' },
+                               'purpose' : "Youth Ministry Adult Volunteers" }, ],
+            'ggroup'     : f'youth-ministry-adult-volunteers-chair{ecc}',
+            'notify'     : f'youth-minister{ecc},ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : '903' },
+                               'purpose' : "Confirmation Core Team Chair" }, ],
+            'ggroup'     : f'confirmation-core-chair{ecc}',
+            'notify'     : f'youth-minister{ecc},ps-google-sync{ecc}',
         },
     ]
 

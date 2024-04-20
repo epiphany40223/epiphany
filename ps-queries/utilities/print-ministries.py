@@ -64,26 +64,14 @@ def main():
                                              parishioners_only=False,
                                              log=log)
 
-    num_fam = len(families)
-    num_mem = len(members)
-    log.info(f"There are {num_fam} families and {num_mem} members")
+    # Get a de-duplicated list of names (it should be de-duplicated
+    # already, but we can do it too, just to be sure).  Then sort them
+    # so that they're easy to find / read.
+    names = dict()
+    for duid, ministry in ministries.items():
+        names[ministry['name']] = True
 
-    mid = 1137297 # tracy squyres
-    mid = 1139348 # kathryn squyres
-    mid = 1139349 # kaitlyn squyres
-    mid = 1140048 # tracey zoeller
-    mid = 1139251 # Jill Zamiska
-    mid = 1141967 # Andrew Test
-    mid = 1136734 # erin mchugh
-    mid = 1137296 # jeff squyres
-
-    pprint(members[mid], width=200)
-    exit(0)
-
-    fid = 156881 # squyres
-    fid = 156657 # zoeller
-
-    pprint(families[fid])
-    exit(0)
+    n = sorted(names.keys())
+    pprint(n)
 
 main()
