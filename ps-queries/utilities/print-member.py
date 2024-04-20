@@ -56,6 +56,7 @@ def main():
     args = setup_cli()
     log = ECC.setup_logging(debug=args.debug)
 
+    log.info("Loading ParishSoft data...")
     families, members, family_workgroups, member_worksgroups, ministries = \
         ParishSoft.load_families_and_members(api_key=args.api_key,
                                              cache_dir=args.ps_cache_dir,
