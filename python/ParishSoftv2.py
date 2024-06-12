@@ -451,7 +451,10 @@ def _load_family_workgroups(session, cache_dir, log):
     elements = _get_paginated_endpoint(session,
                                        endpoint='families/workgroup/list',
                                        cache_dir=cache_dir,
-                                       params=None, log=log)
+                                       params=None,
+                                       offset_name="PageNumber",
+                                       offset_type="page",
+                                       log=log)
 
     family_groups = {
         int(element['workgroupDUID']) : {
