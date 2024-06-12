@@ -546,37 +546,21 @@ def _load_member_contactinfos(session, org_id, cache_dir, log):
 
 # Indexed by Member Workgroup DUID
 def _load_member_workgroups(session, api_key, org_id, cache_dir, log):
-    # As of 16 Mar 2024, there is no API to get the Member Workgroup
-    # IDs -- the members/workgroup/list API just returns a list of
-    # names (with no IDs).  As such, Andrew Halsted at ParishSoft ran
-    # a report on the back-end and provided the mapping for us.
-    #
-    # We'll therefore call the members/workgroup/list API to get the
-    # current list of names and then use a CSV of the data Andrew
-    # provided to us to fill in the IDs.  If we make any new member
-    # workgroups, we'll discover this by not having an ID for it.
-    log.debug("Loading Member Workgroups")
-    names = _get_endpoint(session,
-                          endpoint='members/workgroup/list',
-                          cache_dir=cache_dir,
-                          params=None, log=log)
+    elements = _get_paginated_endpoint(session,
+                                       endpoint='members/workgroup/lookup/list',
+                                       cache_dir=cache_dir,
+                                       params=None,
+                                       offset_name='PageNumber',
+                                       offset_type='page',
+                                       log=log)
 
-    filename = 'ps-provided-member-workgroups.csv'
-    log.debug(f"Loading local cache file: {filename}")
-    elements = {}
-    with open(filename) as fp:
-        reader = csv.DictReader(fp)
-        for row in reader:
-            id = row['Workgroup ID']
-            name = row['Name']
-
-            if name in names and id not in elements:
-                elements[id] = {
-                    'id' : id,
-                    'name' : name,
-                }
-
-    return elements
+    member_groups = {
+        int(element['id']) : {
+            'name' : element['name'],
+            'id' : int(element['id']),
+        } for element in elements
+    }
+    return member_groups
 
 # Indexed by Member Workgroup DUID
 # Membership is a list (not indexed)
