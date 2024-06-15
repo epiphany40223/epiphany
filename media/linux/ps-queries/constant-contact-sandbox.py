@@ -27,6 +27,9 @@ import time
 import logging
 import httplib2
 import logging.handlers
+import datetime
+import requests
+import copy
 
 # We assume that there is a "ecc-python-modules" sym link in this
 # directory that points to the directory with ECC.py and friends.
@@ -50,9 +53,6 @@ from pprint import pformat
 args = None
 log = None
 
-cc_client_id_filename = 'constant-contact-client-id.json'
-cc_access_token_filename = 'constant-contact-access-token.json'
-
 ####################################################################
 #
 # Cross-reference CC contacts to ParishSoft members
@@ -72,30 +72,12 @@ def find_ps_member(contact, ps_members, log):
 
     log.info(f"== Looking for ParishSoft member for {first_name} {last_name} <{email_address}>")
 
-    #-------------------------------------------
-
-    def _search_member_emails(member, key, email_address):
-            if key in member:
-                for entry in member[key]:
-                    if entry['EMailAddress'] == email_address:
-                        return True
-            return False
-
     # Do simple heuristics for now
     matches = list()
 
     # First, look for the email address
-    key1 = 'preferred_emails'
-    key2 = 'non_preferred_emails'
     for member in ps_members.values():
-        found = False
-        if key1 in member:
-            if _search_member_emails(member, key1, email_address):
-                found = True
-            elif _search_member_emails(member, key2, email_address):
-                found = True
-
-        if found:
+        if member['emailAddress'] == email_address:
             matches.append(member)
 
     # Did we find only a single match?
@@ -118,10 +100,14 @@ def find_ps_member(contact, ps_members, log):
     log.warning(f"Searching remaining {len(matches)} ParishSoft Members...")
     new_matches = list()
     for member in matches:
-        if member['last'] != last_name:
+        if member['lastName'] != last_name:
             continue
-        if member['first'] != first_name and member['nickname'] != first_name:
+        nickname = None
+        if 'py contactInfo' in member:
+            nickname = member['py contactInfo']['nickName']
+        if member['firstName'] != first_name and nickname != first_name:
             continue
+
 
         new_matches.append(member)
 
@@ -146,37 +132,8 @@ def link_cc_contacts_to_ps_members(cc_contacts,
     result_key = 'PS MATCH RESULT'
 
     for contact in cc_contacts:
-        key = 'memberDUID'
-        contact[result_key] = {
-            'msg' : 'no action',
-            'action' : None,
-        }
-
-        if key in contact:
-            # The contact has a ParishSoft DUID
-            duid = int(contact[key])
-            if duid in ps_members:
-                # The contact's ParishSoft DUID represents current ParishSoft Member.
-                # Huzzah!  Link the ParishSoft member to the contact.
-                member = ps_members[duid]
-                contact['ps_member'] = member
-                if 'family' in member:
-                    contact['familyDUID'] = member['familyDUID']
-                contact[result_key]['msg'] = 'has a duid that matched to an active ParishSoft Member'
-                continue
-
-            else:
-                # The contact's DUID does NOT represent a current
-                # ParishSoft Member.  We'll try to match the contact to a ParishSoft
-                # Member another way.
-                del contact[key]
-                contact[result_key]['msg'] = 'found DUID on CC record, but this is not a current ParishSoft Member; deleting DUID from CC record'
-                contact[result_key]['action'] = 'delete from cc'
-
-                # Fall through to below
-
-        # If we get here, we didn't find a valid DUID.
-        # So let's try a different way.
+        if result_key not in contact:
+            contact[result_key] = {}
         member = find_ps_member(contact, ps_members, log)
         if member:
             contact['ps_member'] = member
@@ -189,15 +146,41 @@ def link_cc_contacts_to_ps_members(cc_contacts,
             contact[result_key]['msg'] = 'failed to find a corresponding ParishSoft Member'
             contact[result_key]['action'] = 'delete from cc'
 
-def report_csv(contacts, log):
-    filename = 'cc-contacts-raw-data.csv'
+def find_no_paired_member_csv(contacts, filename, log):
+    no_pair = []
+    unsub_no_pair = []
+    for contact in contacts:
+        if 'ps_member' not in contact:
+            if contact['email_address']['permission_to_send'] == 'unsubscribed':
+                unsub_no_pair.append(contact)
+            else:
+                no_pair.append(contact)
+    report_csv(no_pair, filename, log)
+    report_csv(unsub_no_pair, 'unsubscribed_'+filename, log)
+
+
+def find_inactive_paired_member_csv(contacts, filename, log):
+    inactive_pair = []
+    unsub_inactive_pair = []
+    for contact in contacts:
+        if 'ps_member' not in contact:
+            continue
+        if not ParishSoft.member_is_active(contact['ps_member']):
+            if contact['email_address']['permission_to_send'] == 'unsubscribed':
+                unsub_inactive_pair.append(contact)
+            else:
+                inactive_pair.append(contact)
+    report_csv(inactive_pair, filename, log)
+    report_csv(unsub_inactive_pair, 'unsubscribed_'+filename, log)
+
+def report_csv(contacts, filename, log):
     fields = ['Email address', 'First name', 'Last name',
               'Matched to ParishSoft Member', 'Active ParishSoft Member',
-              'In Constant Contact Lists',
+              'ParishSoft Family DUID', 'In Constant Contact Lists',
               'Constant Contact Status', 'Constant Contact opt-out reason',
               'CC Street address', 'CC City', 'CC State', 'CC Zip']
 
-    with open(filename, 'w') as fp:
+    with open(filename, 'w', newline='') as fp:
         writer = csv.DictWriter(fp, fieldnames = fields)
         writer.writeheader()
         for contact in contacts:
@@ -210,12 +193,13 @@ def report_csv(contacts, log):
             if 'last_name' in contact:
                 last_name = contact['last_name']
 
+            familyDUID = None
             matched = 'No'
             active_ps_member = ''
             if 'memberDUID' in contact:
                 matched = 'Yes'
                 member = contact['ps_member']
-                if member['Inactive']:
+                if not ParishSoft.member_is_active(member):
                     active_ps_member = 'No'
                 else:
                     active_ps_member = 'Yes'
@@ -244,7 +228,7 @@ def report_csv(contacts, log):
                         return contact[key][0][field]
                     return ''
 
-                cc_street = _lookup(contact, key, 'street')
+                cc_street = _lookup(contact, key, 'street').strip()
                 cc_city = _lookup(contact, key, 'city')
                 cc_state = _lookup(contact, key, 'state')
                 cc_zip = _lookup(contact, key, 'postal_code')
@@ -639,12 +623,26 @@ def cc_get_access_token(args, client_id, log):
 
 def setup_cli_args():
 
+    tools.argparser.add_argument('--cc-auth-only',
+                                default=False,
+                                action='store_true',
+                                help='Only authorizes to Constant Contact, does not do any work')
+
     tools.argparser.add_argument('--ps-api-keyfile',
                                  required=True,
                                  help='File containing the ParishSoft API key')
+
     tools.argparser.add_argument('--ps-cache-dir',
-                                 default='.',
+                                 default='datacache',
                                  help='Directory to cache the ParishSoft data')
+
+    tools.argparser.add_argument('--cc-client-id',
+                                default='constant-contact-client-id.json',
+                                help="File containing the Constant Contact Client ID")
+
+    tools.argparser.add_argument('--cc-access-token',
+                                default='constant-contact-access-token.json',
+                                help='File containing the Constant Contact access token')
 
     tools.argparser.add_argument('--dry-run',
                                  action='store_true',
@@ -695,8 +693,8 @@ def main():
     log.info("Loading ParishSoft info...")
     families, members, family_workgroups, member_workgroups, ministries = \
         ParishSoft.load_families_and_members(api_key=args.api_key,
-                                             active_only=True,
-                                             parishoners_only=False,
+                                             active_only=False,
+                                             parishioners_only=False,
                                              cache_dir=args.ps_cache_dir,
                                              log=log)
 
@@ -720,14 +718,13 @@ def main():
                         log,
                         include='custom_fields,list_memberships,street_addresses')
 
-    exit(1)
-
     cc_resolve(cc_contacts, cc_contact_custom_fields,
                 cc_lists, log)
 
     link_cc_contacts_to_ps_members(cc_contacts, members, log)
 
-
+    find_no_paired_member_csv(cc_contacts, "cc_with_no_ps_member.csv", log)
+    find_inactive_paired_member_csv(cc_contacts, 'cc_with_inactive_ps_member.csv', log)
 
 if __name__ == '__main__':
     main()
