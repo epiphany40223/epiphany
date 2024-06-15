@@ -420,7 +420,7 @@ def get_synchronizations():
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
         },
         {
-            'workgroups' : [ 'Maintenance staff email list' ],
+            'workgroups' : [ 'Staff: Maintenance' ],
             'ggroup'     : f'maintenance-staff{ecc}',
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
         },
@@ -430,7 +430,7 @@ def get_synchronizations():
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
         },
         {
-            'workgroups' : [ 'Pastoral staff email list' ],
+            'workgroups' : [ 'Staff: Pastoral' ],
             'ggroup'     : f'pastoral-staff{ecc}',
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
         },
@@ -445,12 +445,12 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
         {
-            'workgroups' : [ 'Support staff email list' ],
+            'workgroups' : [ 'Staff: Support' ],
             'ggroup'     : f'support-staff{ecc}',
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
         },
         {
-            'workgroups' : [ 'Auxiliary staff email list' ],
+            'workgroups' : [ 'Staff: Auxiliary' ],
             'ggroup'     : f'auxiliary-staff{ecc}',
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
         },
