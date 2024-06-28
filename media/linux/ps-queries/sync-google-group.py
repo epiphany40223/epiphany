@@ -104,7 +104,7 @@ def get_synchronizations():
         {
             'ministries' : [ '100-Parish Pastoral Council' ],
             'ggroup'     : f'ppc{ecc}',
-            'notify'     : f'bookkeeper{ecc},ps-google-sync{ecc}',
+            'notify'     : f'administrative-assistant{ecc},ps-google-sync{ecc}',
         },
         {
             'ministries' : [ '102-Finance Advisory Council' ],
@@ -437,7 +437,7 @@ def get_synchronizations():
         {
             'workgroups' : [ 'PPC Executive Committee' ],
             'ggroup'     : f'ppc-exec{ecc}',
-            'notify'     : f'bookkeeper{ecc},ps-google-sync{ecc}',
+            'notify'     : f'administative-assistant{ecc},ps-google-sync{ecc}',
         },
         {
             'workgroups' : [ 'Recordings access' ],
