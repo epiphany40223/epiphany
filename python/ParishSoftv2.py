@@ -731,6 +731,8 @@ def _link_member_ministries(members, ministry_type_memberships, log):
     for member in members.values():
         member['py ministries'] = dict()
 
+    today = datetime.date.today()
+
     key = 'membership'
     for min_id, ministry in ministry_type_memberships.items():
         if key not in ministry:
@@ -752,11 +754,23 @@ def _link_member_ministries(members, ministry_type_memberships, log):
                 # output a nightmare.
                 record['py member duid'] = mem_duid
                 record['py family duid'] = fam_duid
+
+                # At least for the moment, don't list any historical
+                # or future data on the member.  I.e., only include
+                # ministry records that are current for today.
+                start = record['startDate']
+                end = record['endDate']
+                if start is None and end is None:
+                    continue
+                if (start and today < start) or (end and today > end):
+                    continue
+
                 members[mem_duid]['py ministries'][ministry['name']] = {
                     'id' : ministry['id'],
                     'name' : ministry['name'],
                     'role' : record['ministryRoleName'],
                     'start date' : record['startDate'],
+                    'end date' : record['endDate'],
                     'member duid' : mem_duid,
                     'family duid' : fam_duid,
                 }
