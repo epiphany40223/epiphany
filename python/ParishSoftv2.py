@@ -762,7 +762,7 @@ def _link_member_ministries(members, ministry_type_memberships, log):
                 end = record['endDate']
                 if start is None and end is None:
                     continue
-                if (start and today < start) or (end and today > end):
+                if (start and today < start) or (end and today >= end):
                     continue
 
                 members[mem_duid]['py ministries'][ministry['name']] = {
