@@ -249,6 +249,11 @@ def check_for_ministries_with_inactive_members(families, members, log, args):
         body = "\n".join(bodylist)
         ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
 
+    # Sort results by Ministry
+    # Have 1 HTML table per ministry
+    # Sort the rows in the ministry by Member lastname, firstname
+    # Also show the member DUID
+
 ##############################################################################
 
 def check_for_member_workgroups_with_inactive_members(member_workgroups, log, args):
@@ -257,6 +262,11 @@ def check_for_member_workgroups_with_inactive_members(member_workgroups, log, ar
     for wg in member_workgroups.items():
         pprint(wg)
         exit(0)
+
+    # Sort results by workgroups
+    # Have 1 HTML table per workgroup
+    # Sort the rows in the workgroup by Member lastname, firstname
+    # Also show the member DUID
 
 ##############################################################################
 
@@ -267,6 +277,11 @@ def check_for_family_workgroups_with_inactive_families(family_workgroups, log, a
     for wg in family_workgroups.items():
         pprint(wg)
         exit(0)
+
+    # Sort results by workgroups
+    # Have 1 HTML table per workgroup
+    # Sort the rows in the workgroup by Family lastname, firstname
+    # Also show the family DUID
 
 ##############################################################################
 
@@ -279,6 +294,9 @@ def check_for_ministries_with_no_staff_or_chair(ministries, log, args):
             pass
 
     #HJCTODO: Fill this out
+
+    # Sort results by ministry
+    # This could be as simple as an <ol>, not necessarily a <table>
 
 ##############################################################################
 
