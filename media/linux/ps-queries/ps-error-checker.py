@@ -15,16 +15,34 @@ if not os.path.exists(moddir):
     print("ERROR: Could not find the ecc-python-modules directory.")
     print("ERROR: Please make a ecc-python-modules sym link and run again.")
     exit(1)
+if os.path.isfile(moddir):
+    with open(moddir) as fp:
+        dir = fp.readlines()
+    moddir = os.path.join(os.getcwd(), dir[0])
 
 sys.path.insert(0, moddir)
 
 import ECC
+import ECCEmailer
 import ParishSoftv2 as ParishSoft
 
 from pprint import pprint
 from pprint import pformat
 
 from datetime import datetime
+
+#HJCTODO: Make pretty
+emailhead = '''
+<html>
+<head>
+<style>
+    table {
+        border-collapse: collapse;}
+    th, td {
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid #ddd;}\ntr:nth-child(even) {background-color: #f2f2f2; }</style></head><body>
+        '''
 
 ##############################################################################
 
@@ -36,21 +54,27 @@ def _family_in_inactive_group(family):
 
 ##############################################################################
 
+#HJCTODO: Create sort function for families, members, workgroups
+
+##############################################################################
+
 def check_for_families_without_members(families, log, args):
     key = 'py members'
     families_without_members = []
     for duid, family in families.items():
         if key not in family:
-            families_without_members.append(f'<tr><td>{family["DUID"]}</td><td>{family["lastName"]}</td><td>Remove from ParishSoft</td></tr>')
+            families_without_members.append(f'<tr><td>{family["familyDUID"]}</td><td>{family["firstName"]}</td><td>{family["lastName"]}</td><td>Remove from ParishSoft</td></tr>')
             log.error(f'Family without Members: {family["firstName"]} {family["lastName"]} (DUID: {duid})')
 
-    if families_without_members.length != 0:
+    #HJCTODO: Sort list alphabetically by last name, first name
+
+    if len(families_without_members) != 0:
         bodylist = []
-        bodylist.append('<html><head>\n<style>table {border-collapse: collapse;}\nth, td {text-align: left; padding: 8px; border-bottom: 1px solid #ddd;}\ntr:nth-child(even) {background-color: #f2f2f2; }</style></head><body>')
+        bodylist.append(emailhead)
         bodylist.append('<p>We have identified the following families in ParishSoft that have no members:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
-        bodylist.append('<th>Family DUID</th><th>Last Name</th><th>Action</th></tr>')
+        bodylist.append('<th>Family DUID</th><th>Family First Name</th><th>Last Name</th><th>Action</th></tr>')
         for family in families_without_members:
             bodylist.append(family)
         bodylist.append('/table></p>')
@@ -62,7 +86,7 @@ def check_for_families_without_members(families, log, args):
 
 def check_for_active_families_with_inactive_members(families, log, args):
     key = 'py members'
-    active_families_with_inactive_members = []
+    active_families_without_active_members = []
     for duid, family in families.items():
         if key not in family:
             continue
@@ -76,22 +100,24 @@ def check_for_active_families_with_inactive_members(families, log, args):
                 break
 
         if all_inactive:
-            families_without_active_members.append(f'<tr><td>{family["DUID"]}</td><td>{family["lastName"]}</td><td>Make Inactive in ParishSoft</td></tr>')
+            active_families_without_active_members.append(f'<tr><td>{family["familyDUID"]}</td><td>{family["lastName"]}</td><td>{family["firstName"]}</td><td>Make Inactive in ParishSoft</td></tr>')
             log.error(f'Active Family without Active Members: {family["firstName"]} {family["lastName"]} (DUID: {duid})')
 
-    if families_without_active_members.length != 0:
+    #HJCTODO: Sort list alphabetically by last name, first name
+
+    if len(active_families_without_active_members) != 0:
         bodylist = []
-        bodylist.append('<html><head>\n<style>table {border-collapse: collapse;}\nth, td {text-align: left; padding: 8px; border-bottom: 1px solid #ddd;}\ntr:nth-child(even) {background-color: #f2f2f2; }</style></head><body>')
+        bodylist.append(emailhead)
         bodylist.append('<p>We have identified the following families in ParishSoft that have no active members:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
-        bodylist.append('<th>Family DUID</th><th>Last Name</th><th>Action</th></tr>')
-        for family in families_without_active_members:
+        bodylist.append('<th>Family DUID</th><th>Last Name</th><th>First Name</th><th>Action</th></tr>')
+        for family in active_families_without_active_members:
             bodylist.append(family)
         bodylist.append('/table></p>')
 
         body = "\n".join(bodylist)
-        EECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.afamimemrecip, 'ParishSoft Families with No Active Members', log)
+        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.afamimemrecip, 'ParishSoft Families with No Active Members', args.smtp_client, log)
 
 ##############################################################################
 
@@ -114,9 +140,11 @@ def check_for_inactive_families_with_active_members(families, log, args):
             inactive_families_with_active_members.append(f'<tr><td>{family["DUID"]}</td><td>{family["lastName"]}</td><td>Make Active in ParishSoft</td></tr>')
             log.error(f'Inactive Family with Active Members: {family["firstName"]} {family["lastName"]} (DUID: {duid})')
 
-    if inactive_families_with_active_members.length != 0:
+    #HJCTODO: Sort list alphabetically by last name, first name
+
+    if len(inactive_families_with_active_members) != 0:
         bodylist = []
-        bodylist.append('<html><head>\n<style>table {border-collapse: collapse;}\nth, td {text-align: left; padding: 8px; border-bottom: 1px solid #ddd;}\ntr:nth-child(even) {background-color: #f2f2f2; }</style></head><body>')
+        bodylist.append(emailhead)
         bodylist.append('<p>We have identified the following inactive families in ParishSoft that have active members:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
@@ -126,7 +154,7 @@ def check_for_inactive_families_with_active_members(families, log, args):
         bodylist.append('/table></p>')
 
         body = "\n".join(bodylist)
-        EECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.ifamamemrecip, 'ParishSoft Inactive Families with Active Members', log)
+        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.ifamamemrecip, 'ParishSoft Inactive Families with Active Members', args.smtp_client, log)
 
 ##############################################################################
 
@@ -161,9 +189,9 @@ def check_for_whitespace_data(members, families, log, args):
                 name = f'Member {member["py friendly name FL"]} (DUID: {duid})'
                 _check(name, member)
 
-    if whitespace_data != 0:
+    if len(whitespace_data) != 0:
         bodylist = []
-        bodylist.append('<html><head>\n<style>table {border-collapse: collapse;}\nth, td {text-align: left; padding: 8px; border-bottom: 1px solid #ddd;}\ntr:nth-child(even) {background-color: #f2f2f2; }</style></head><body>')
+        bodylist.append(emailhead)
         bodylist.append('<p>We have identified the following DUIDs in ParishSoft that have whitespace in thier fields:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
@@ -173,7 +201,7 @@ def check_for_whitespace_data(members, families, log, args):
         bodylist.append('/table></p>')
 
         body = "\n".join(bodylist)
-        EECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', log)
+        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
 
 ##############################################################################
 
@@ -188,9 +216,9 @@ def check_for_ministries_with_inactive_members(families, members, log, args):
         for ministry in member['ministries']:
             inactive_members_in_ministries.append(f"<tr><td>{member['py friendly name FL']}</td><td>{ministry}</td><td>Remove from Ministry</td></tr>")
 
-    if inactive_members_in_ministries != 0:
+    if len(inactive_members_in_ministries) != 0:
         bodylist = []
-        bodylist.append('<html><head>\n<style>table {border-collapse: collapse;}\nth, td {text-align: left; padding: 8px; border-bottom: 1px solid #ddd;}\ntr:nth-child(even) {background-color: #f2f2f2; }</style></head><body>')
+        bodylist.append(emailhead)
         bodylist.append('<p>We have identified the following Inactive Members in ParishSoft Minstries:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
@@ -200,7 +228,7 @@ def check_for_ministries_with_inactive_members(families, members, log, args):
         bodylist.append('/table></p>')
 
         body = "\n".join(bodylist)
-        EECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', log)
+        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
 
 ##############################################################################
 
@@ -224,7 +252,13 @@ def check_for_family_workgroups_with_inactive_families(family_workgroups, log, a
 ##############################################################################
 
 def check_for_ministries_with_no_staff_or_chair(ministries, log, args):
-    pass
+    
+    for ministry in ministries.items():
+        no_chair = True
+        no_staff = True
+        for member in ministry:
+            pass
+
     #HJCTODO: Fill this out
 
 ##############################################################################
