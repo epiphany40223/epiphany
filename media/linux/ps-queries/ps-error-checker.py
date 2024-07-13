@@ -58,35 +58,64 @@ def _family_in_inactive_group(family):
 
 ##############################################################################
 
+def send_families_email(to, subject, families, args, log):
+    if len(families) == 0:
+        log.debug(f"Found NO matching families - no need to send an email")
+        return
+
+    columns = [('familyDUID', 'Family DUID'),
+               ('firstName', 'Family First Name'),
+               ('lastName', 'Family Last Name')]
+
+    # JMS call the thingy to sort families by last, first
+
+    bodylist = []
+    bodylist.append(emailhead)
+    bodylist.append('<p>We have identified the following families in ParishSoft that have no members:</p>')
+    bodylist.append('<p><table border=0>\n<tr>')
+    bodylist.append('<tr>')
+    for tuple in columns:
+        bodylist.append(f'<th>{tuple[1]}</th>')
+    bodylist.append('</tr>')
+    for family in families:
+        bodylist.append('<tr>')
+        for tuple in columns:
+            key = tuple[0]
+            value = 'None'
+            if key in family:
+                value = family[key]
+            bodylist.append(f"<td>{value}</td>")
+        bodylist.append('</tr>')
+    bodylist.append('</table></p>')
+    bodylist.append('</body>')
+    bodylist.append('</html>')
+
+    body = "\n".join(bodylist)
+    ECCEmailer.send_email(body, 'html', None,
+                          args.smtp_auth_file,
+                          to, subject, args.smtp_client,
+                          log)
+
+##############################################################################
+
 def check_for_families_without_members(families, log, args):
     key = 'py members'
-    families_without_members = []
+    results = list()
     for duid, family in families.items():
-        if key not in family:
-            families_without_members.append(f'<tr><td>{family["familyDUID"]}</td><td>{family["firstName"]}</td><td>{family["lastName"]}</td><td>Remove from ParishSoft</td></tr>')
-            log.error(f'Family without Members: {family["firstName"]} {family["lastName"]} (DUID: {duid})')
+        if key not in family or len(family[key]) == 0:
+            results.append(family)
 
-    #HJCTODO: Sort list alphabetically by last name, first name
-
-    if len(families_without_members) != 0:
-        bodylist = []
-        bodylist.append(emailhead)
-        bodylist.append('<p>We have identified the following families in ParishSoft that have no members:</p>')
-
-        bodylist.append('<p><table border=0>\n<tr>')
-        bodylist.append('<th>Family DUID</th><th>Family First Name</th><th>Last Name</th><th>Action</th></tr>')
-        for family in families_without_members:
-            bodylist.append(family)
-        bodylist.append('/table></p>')
-
-        body = "\n".join(bodylist)
-        EECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.famnomemrecip, 'ParishSoft Families with No Members', log)
+    send_families_email(to=args.famnomemrecip,
+                        subject="Families without members",
+                        families=results,
+                        args=args,
+                        log=log)
 
 ##############################################################################
 
 def check_for_active_families_with_inactive_members(families, log, args):
     key = 'py members'
-    active_families_without_active_members = []
+    results = []
     for duid, family in families.items():
         if key not in family:
             continue
@@ -100,24 +129,14 @@ def check_for_active_families_with_inactive_members(families, log, args):
                 break
 
         if all_inactive:
-            active_families_without_active_members.append(f'<tr><td>{family["familyDUID"]}</td><td>{family["lastName"]}</td><td>{family["firstName"]}</td><td>Make Inactive in ParishSoft</td></tr>')
-            log.error(f'Active Family without Active Members: {family["firstName"]} {family["lastName"]} (DUID: {duid})')
+            results.append(family)
 
-    #HJCTODO: Sort list alphabetically by last name, first name
-
-    if len(active_families_without_active_members) != 0:
-        bodylist = []
-        bodylist.append(emailhead)
-        bodylist.append('<p>We have identified the following families in ParishSoft that have no active members:</p>')
-
-        bodylist.append('<p><table border=0>\n<tr>')
-        bodylist.append('<th>Family DUID</th><th>Last Name</th><th>First Name</th><th>Action</th></tr>')
-        for family in active_families_without_active_members:
-            bodylist.append(family)
-        bodylist.append('/table></p>')
-
-        body = "\n".join(bodylist)
-        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.afamimemrecip, 'ParishSoft Families with No Active Members', args.smtp_client, log)
+    # JMS The "to" is wrong
+    send_families_email(to=args.famnomemrecip,
+                        subject="Families without active members",
+                        families=results,
+                        args=args,
+                        log=log)
 
 ##############################################################################
 
@@ -252,7 +271,7 @@ def check_for_family_workgroups_with_inactive_families(family_workgroups, log, a
 ##############################################################################
 
 def check_for_ministries_with_no_staff_or_chair(ministries, log, args):
-    
+
     for ministry in ministries.items():
         no_chair = True
         no_staff = True
@@ -287,6 +306,8 @@ def setup_cli():
     parser.add_argument('--smtp-client',
                         default= default_client,
                         help= 'Email address to be used as sender client')
+
+    # JMS Let's make these CLI options a bit nicer
     parser.add_argument('--famnomemrecip',
                         default= default_email,
                         help= 'Recipient for the Families with No Members email')
@@ -332,6 +353,9 @@ def main():
     check_for_families_without_members(families, log, args)
 
     check_for_active_families_with_inactive_members(families, log, args)
+
+    # JMS Exit early
+    exit(1)
 
     check_for_inactive_families_with_active_members(families, log, args)
 
