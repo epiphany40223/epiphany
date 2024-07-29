@@ -338,6 +338,20 @@ def get_synchronizations():
         #############################
 
         {
+            'workgroups' : [ 'DWM Search' ],
+            'ggroup'     : f'dwm-search{ecc}',
+            'notify'     : f'ps-google-sync{ecc}',
+        },
+
+        {
+            'workgroups' : [ 'DWM Search chair' ],
+            'ggroup'     : f'dwm-search-chair{ecc}',
+            'notify'     : f'ps-google-sync{ecc}',
+        },
+
+        #############################
+
+        {
             'workgroups' : [ 'Livestream Team' ],
             'ggroup'     : f'livestream-team{ecc}',
             'notify'     : f'director-communications{ecc},ps-google-sync{ecc}',
