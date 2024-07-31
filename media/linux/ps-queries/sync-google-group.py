@@ -645,6 +645,13 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : '802' },
+                               'purpose' : "Gather the Children chair" }, ],
+            'ggroup'     : f'gather-the-children-chair{ecc}',
+            'notify'     : f'formation{ecc},ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : '901' },
                                'purpose' : "Youth Ministry Adult Volunteers" }, ],
             'ggroup'     : f'youth-ministry-adult-volunteers-chair{ecc}',
