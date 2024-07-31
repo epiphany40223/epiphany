@@ -322,6 +322,11 @@ def get_synchronizations():
             'notify'     : f'formation{ecc},ps-google-sync{ecc}',
         },
         {
+            'ministries' : [ '802-Gather the Children' ],
+            'ggroup'     : f'gather-the-children{ecc}',
+            'notify'     : f'formation{ecc},ps-google-sync{ecc}',
+        },
+        {
             'ministries' : [ '807-Catechumenate/InitiationTm' ],
             'ggroup'     : f'rcia-team{ecc}',
             'notify'     : f'formation{ecc},ps-google-sync{ecc}',
