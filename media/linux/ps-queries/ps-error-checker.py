@@ -58,7 +58,8 @@ def _family_in_inactive_group(family):
 
 ##############################################################################
 
-def send_families_email(to, subject, families, args, log):
+def send_families_email(to, subject, description, families, args, log):
+
     if len(families) == 0:
         log.debug(f"Found NO matching families - no need to send an email")
         return
@@ -67,11 +68,11 @@ def send_families_email(to, subject, families, args, log):
                ('firstName', 'Family First Name'),
                ('lastName', 'Family Last Name')]
 
-    # JMS call the thingy to sort families by last, first
+    families = sorted(families, key=lambda family: (family["lastName"], family["firstName"]))
 
     bodylist = []
     bodylist.append(emailhead)
-    bodylist.append('<p>We have identified the following families in ParishSoft that have no members:</p>')
+    bodylist.append(f'<p>{description}</p>')
     bodylist.append('<p><table border=0>\n<tr>')
     bodylist.append('<tr>')
     for tuple in columns:
@@ -98,6 +99,43 @@ def send_families_email(to, subject, families, args, log):
 
 ##############################################################################
 
+def send_groups_email(to, subject, columns, description, items, args, log):
+
+    if len(items) == 0:
+        log.debug(f"Found NO matching groups - no need to send an email")
+        return
+
+    items = sorted(items, key=lambda item: (item["ministryName"], item["lastName"], item["firstName"]))
+
+    bodylist = []
+    bodylist.append(emailhead)
+    bodylist.append(f'<p>{description}</p>')
+    bodylist.append('<p><table border=0>\n<tr>')
+    bodylist.append('<tr>')
+    for tuple in columns:
+        bodylist.append(f'<th>{tuple[1]}</th>')
+    bodylist.append('</tr>')
+    for item in items:
+        bodylist.append('<tr>')
+        for tuple in columns:
+            key = tuple[0]
+            value = 'None'
+            if key in item:
+                value = item[key]
+            bodylist.append(f"<td>{value}</td>")
+        bodylist.append('</tr>')
+    bodylist.append('</table></p>')
+    bodylist.append('</body>')
+    bodylist.append('</html>')
+
+    body = "\n".join(bodylist)
+    ECCEmailer.send_email(body, 'html', None,
+                          args.smtp_auth_file,
+                          to, subject, args.smtp_client,
+                          log)
+
+##############################################################################
+
 def check_for_families_without_members(families, log, args):
     key = 'py members'
     results = list()
@@ -107,6 +145,7 @@ def check_for_families_without_members(families, log, args):
 
     send_families_email(to=args.famnomemrecip,
                         subject="Families without members",
+                        description="We have identified the following families in ParishSoft that have no members:",
                         families=results,
                         args=args,
                         log=log)
@@ -132,17 +171,19 @@ def check_for_active_families_with_inactive_members(families, log, args):
             results.append(family)
 
     # JMS The "to" is wrong
-    send_families_email(to=args.famnomemrecip,
-                        subject="Families without active members",
-                        families=results,
-                        args=args,
-                        log=log)
+    if len(results) != 0:
+        send_families_email(to=args.afamimemrecip,
+                            subject="Families without active members",
+                            description="We have identified the following families in ParishSoft that have no active members:",
+                            families=results,
+                            args=args,
+                            log=log)
 
 ##############################################################################
 
 def check_for_inactive_families_with_active_members(families, log, args):
     key = 'py members'
-    inactive_families_with_active_members = []
+    results = []
     for duid, family in families.items():
         if key not in family:
             continue
@@ -156,30 +197,21 @@ def check_for_inactive_families_with_active_members(families, log, args):
                 break
 
         if any_active:
-            inactive_families_with_active_members.append(f'<tr><td>{family["DUID"]}</td><td>{family["lastName"]}</td><td>Make Active in ParishSoft</td></tr>')
-            log.error(f'Inactive Family with Active Members: {family["firstName"]} {family["lastName"]} (DUID: {duid})')
+            results.append(family)
 
-    #HJCTODO: Sort list alphabetically by last name, first name
-
-    if len(inactive_families_with_active_members) != 0:
-        bodylist = []
-        bodylist.append(emailhead)
-        bodylist.append('<p>We have identified the following inactive families in ParishSoft that have active members:</p>')
-
-        bodylist.append('<p><table border=0>\n<tr>')
-        bodylist.append('<th>Family DUID</th><th>Last Name</th><th>Action</th></tr>')
-        for family in inactive_families_with_active_members:
-            bodylist.append(family)
-        bodylist.append('/table></p>')
-
-        body = "\n".join(bodylist)
-        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.ifamamemrecip, 'ParishSoft Inactive Families with Active Members', args.smtp_client, log)
+    if len(results) != 0:
+         send_families_email(to=args.ifamamemrecip,
+                            subject="Inactive families with active members",
+                            description="We have identified the following inactive families in ParishSoft that have active members:",
+                            families=results,
+                            args=args,
+                            log=log)
 
 ##############################################################################
 
 def check_for_whitespace_data(members, families, log, args):
     whitespace_data = []
-    def _check(name, item):
+    def _check(type, name, item):
         for key, value in family.items():
             if type(value) is not str:
                 continue
@@ -195,18 +227,18 @@ def check_for_whitespace_data(members, families, log, args):
                     description = 'suffix'
 
                 log.error(f'{name}: field {key} has {description} whitespace')
-                whitespace_data.append(f'<tr><td>{name}</td><td>{key}</td><td>{description} whitespace</td><td>Remove Whitespace</td></tr>')
+                whitespace_data.append(f'<tr><td>{type}</td><td>{name}</td><td>{key}</td><td>{description} whitespace</td><td>Remove Whitespace</td></tr>')
 
     key = 'py members'
     for duid, family in families.items():
-        name = f'Family {family["firstName"]} {family["lastName"]} (DUID: {duid})'
-        _check(name, family)
+        name = f'{family["firstName"]} {family["lastName"]} (DUID: {duid})'
+        _check("Family", name, family)
 
         if key in family:
             for member in family[key]:
                 duid = member['memberDUID']
-                name = f'Member {member["py friendly name FL"]} (DUID: {duid})'
-                _check(name, member)
+                name = f'{member["py friendly name FL"]} (DUID: {duid})'
+                _check("Member", name, member)
 
     if len(whitespace_data) != 0:
         bodylist = []
@@ -214,10 +246,11 @@ def check_for_whitespace_data(members, families, log, args):
         bodylist.append('<p>We have identified the following DUIDs in ParishSoft that have whitespace in thier fields:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
-        bodylist.append('<th>Name</th><th>Key</th><th>Description</th><th>Action</th></tr>')
+        bodylist.append('<th>Type</th><th>Name</th><th>Key</th><th>Description</th><th>Action</th></tr>')
         for duid in whitespace_data:
             bodylist.append(duid)
-        bodylist.append('/table></p>')
+        bodylist.append('</table></p>')
+        bodylist.append('</body></html>')
 
         body = "\n".join(bodylist)
         ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
@@ -226,33 +259,33 @@ def check_for_whitespace_data(members, families, log, args):
 
 def check_for_ministries_with_inactive_members(families, members, log, args):
     #HJCTODO: Fill this out
-    inactive_members_in_ministries: []
+    results = []
 
-    for duid, member in members.itemms():
+    for duid, member in members.items():
         if ParishSoft.member_is_active(member):
             continue
         ministries = []
-        for ministry in member['ministries']:
-            inactive_members_in_ministries.append(f"<tr><td>{member['py friendly name FL']}</td><td>{ministry}</td><td>Remove from Ministry</td></tr>")
+        for name, ministry in member['py ministries'].items():
+            results.append({'ministryName': ministry['name'], 
+                           'memberDUID': member['memberDUID'],
+                           'lastName': member['lastName'],
+                           'firstName': member['firstName']}),
 
-    if len(inactive_members_in_ministries) != 0:
-        bodylist = []
-        bodylist.append(emailhead)
-        bodylist.append('<p>We have identified the following Inactive Members in ParishSoft Minstries:</p>')
+    columns = [('ministryName', 'Ministry Name'),
+               ('memberDUID', 'Member DUID'),
+               ('lastName', 'Member Last Name'),
+               ('firstName', 'Member First Name')]
 
-        bodylist.append('<p><table border=0>\n<tr>')
-        bodylist.append('<th>Name</th><th>Ministry</th><th>Action</th></tr>')
-        for line in inactive_members_in_ministries:
-            bodylist.append(line)
-        bodylist.append('/table></p>')
+    if len(results) != 0:
+        send_groups_email(to=args.ministryrecip,
+                          subject="Ministries with Inactive Members",
+                          columns = columns,
+                          description="We have identified the following ministries in ParishSoft that have inactive members:",
+                          items=results,
+                          args=args,
+                          log=log)
 
-        body = "\n".join(bodylist)
-        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
-
-    # Sort results by Ministry
     # Have 1 HTML table per ministry
-    # Sort the rows in the ministry by Member lastname, firstname
-    # Also show the member DUID
 
 ##############################################################################
 
@@ -338,6 +371,9 @@ def setup_cli():
     parser.add_argument('--whitespace',
                         default= default_email,
                         help= 'Recipient for the Whitespace Data email')
+    parser.add_argument('--ministryrecip',
+                        default= default_email,
+                        help= 'Recipient for the Ministries with Inactive Members email')
     parser.add_argument('--familyworkgrouprecip',
                         default= default_email)
     parser.add_argument('--memberworkgrouprecip',
@@ -361,7 +397,7 @@ def main():
     log = ECC.setup_logging(debug=args.debug)
 
     log.info("Loading ParishSoft data...")
-    families, members, family_workgroups, member_worksgroups, ministries = \
+    families, members, family_workgroups, member_workgroups, ministries = \
         ParishSoft.load_families_and_members(api_key=args.api_key,
                                              cache_dir=args.ps_cache_dir,
                                              active_only=False,
@@ -371,9 +407,6 @@ def main():
     check_for_families_without_members(families, log, args)
 
     check_for_active_families_with_inactive_members(families, log, args)
-
-    # JMS Exit early
-    exit(1)
 
     check_for_inactive_families_with_active_members(families, log, args)
 
