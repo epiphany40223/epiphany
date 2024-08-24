@@ -46,10 +46,6 @@ emailhead = '''
 
 ##############################################################################
 
-#HJCTODO: Create sort function for families, members, workgroups
-
-##############################################################################
-
 def send_families_email(to, subject, description, families, args, log):
 
     if len(families) == 0:
@@ -93,10 +89,6 @@ def send_families_email(to, subject, description, families, args, log):
 
 def send_groups_email(to, subject, columns, description, items, args, log, group_column = None):
 
-    if len(items) == 0:
-        log.debug(f"Found NO matching groups - no need to send an email")
-        return
-
     bodylist = []
     bodylist.append(emailhead)
     bodylist.append(f'<p>{description}</p>')
@@ -107,7 +99,7 @@ def send_groups_email(to, subject, columns, description, items, args, log, group
     bodylist.append('</tr>')
 
     #HJCTODO: Add newlines between groups
-    last_row_value = None
+    prev_value = None
     for item in items:
         bodylist.append('<tr>')
         for tuple in columns:
@@ -116,13 +108,13 @@ def send_groups_email(to, subject, columns, description, items, args, log, group
             if key in item:
                 value = item[key]
             if key == group_column:
-                last_value = value
+                if prev_value != None and value != prev_value:
+                    bodylist.append('<td><br /> </td></tr><tr>')
+                    prev_value = value
+                else:
+                    prev_value = value
             bodylist.append(f"<td>{value}</td>")
         bodylist.append('</tr>')
-
-        if last_row_value is not None and last_row_value != last_value:
-            #bodylist.append('<tr></tr>')
-            pass
 
     bodylist.append('</table></p>')
     bodylist.append('</body>')
@@ -137,11 +129,14 @@ def send_groups_email(to, subject, columns, description, items, args, log, group
 ##############################################################################
 
 def check_for_families_without_members(families, log, args):
+    log.debug('Checking for Families without Members')
     key = 'py members'
     results = list()
     for duid, family in families.items():
         if key not in family or len(family[key]) == 0:
             results.append(family)
+
+    log.debug(f'Found {len(results)} results')
 
     send_families_email(to=args.famnomemrecip,
                         subject="Families without members",
@@ -153,6 +148,7 @@ def check_for_families_without_members(families, log, args):
 ##############################################################################
 
 def check_for_active_families_with_inactive_members(families, log, args):
+    log.debug('Checking for Active Families with Inactive Members')
     key = 'py members'
     results = []
     for duid, family in families.items():
@@ -170,18 +166,19 @@ def check_for_active_families_with_inactive_members(families, log, args):
         if all_inactive:
             results.append(family)
 
-    # JMS The "to" is wrong
-    if len(results) != 0:
-        send_families_email(to=args.afamimemrecip,
-                            subject="Families without active members",
-                            description="We have identified the following families in ParishSoft that have no active members:",
-                            families=results,
-                            args=args,
-                            log=log)
+    log.debug(f'Found {len(results)} results')
+
+    send_families_email(to=args.afamimemrecip,
+                        subject="Families without active members",
+                        description="We have identified the following families in ParishSoft that have no active members:",
+                        families=results,
+                        args=args,
+                        log=log)
 
 ##############################################################################
 
 def check_for_inactive_families_with_active_members(families, log, args):
+    log.debug('Checking for Inactive Families with Active Members')
     key = 'py members'
     results = []
     for duid, family in families.items():
@@ -199,17 +196,19 @@ def check_for_inactive_families_with_active_members(families, log, args):
         if any_active:
             results.append(family)
 
-    if len(results) != 0:
-         send_families_email(to=args.ifamamemrecip,
-                            subject="Inactive families with active members",
-                            description="We have identified the following inactive families in ParishSoft that have active members:",
-                            families=results,
-                            args=args,
-                            log=log)
+    log.debug(f'Found {len(results)} results')
+
+    send_families_email(to=args.ifamamemrecip,
+                        subject="Inactive families with active members",
+                        description="We have identified the following inactive families in ParishSoft that have active members:",
+                        families=results,
+                        args=args,
+                        log=log)
 
 ##############################################################################
 
 def check_for_whitespace_data(members, families, log, args):
+    log.debug('Checking for Members or Families with Whitespace in their field names')
     whitespace_data = []
     def _check(category, name, item):
         for key, value in item.items():
@@ -240,6 +239,8 @@ def check_for_whitespace_data(members, families, log, args):
                 name = f'{member["py friendly name FL"]} (DUID: {duid})'
                 _check("Member", name, member)
 
+    log.debug(f'Found {len(whitespace_data)} results')
+
     if len(whitespace_data) != 0:
         bodylist = []
         bodylist.append(emailhead)
@@ -254,11 +255,13 @@ def check_for_whitespace_data(members, families, log, args):
 
         body = "\n".join(bodylist)
         ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
+    else:
+        log.debug('Found NO matching members or families - no need to send an email')
 
 ##############################################################################
 
 def check_for_ministries_with_inactive_members(families, members, log, args):
-    #HJCTODO: Fill this out
+    log.debug('Checking for Ministries with Inactive Members')
     results = []
 
     for duid, member in members.items():
@@ -275,7 +278,11 @@ def check_for_ministries_with_inactive_members(families, members, log, args):
                ('lastName', 'Member Last Name'),
                ('firstName', 'Member First Name')]
 
-    if len(results) != 0:
+    log.debug(f'Found {len(results)} results')
+
+    if len(results) == 0:
+        log.debug(f"Found NO matching groups - no need to send an email")
+    else:
         results = sorted(results, key=lambda item: (item["ministryName"], item["lastName"], item["firstName"]))
         send_groups_email(to=args.ministryrecip,
                           subject="Ministries with Inactive Members",
@@ -283,15 +290,14 @@ def check_for_ministries_with_inactive_members(families, members, log, args):
                           description="We have identified the following ministries in ParishSoft that have inactive members:",
                           items=results,
                           args=args,
-                          log=log)
-
-    # Have 1 HTML table per ministry
+                          log=log,
+                          group_column='ministryName',)
 
 ##############################################################################
 
 def check_for_member_workgroups_with_inactive_members(members, log, args):
-    #HJCTODO: Fill this out
     #HJCTODO: Consolidate this, family_workgroups, and the two email checks into one abstract function that these call instead.
+    log.debug('Checking for Member Workgroups with Inactive Members')
     results = []
 
     for member in members.values():
@@ -308,7 +314,11 @@ def check_for_member_workgroups_with_inactive_members(members, log, args):
                ('lastName', 'Member Last Name'),
                ('firstName', 'Member First Name')]
 
-    if len(results) != 0:
+    log.debug(f"Found {len(results)} results")
+
+    if len(results) == 0:
+        log.debug(f"Found NO matching groups - no need to send an email")
+    else:
         results = sorted(results, key=lambda item: (item["workgroupName"], item["lastName"], item["firstName"]))
         send_groups_email(to=args.memberworkgrouprecip,
                           subject="Workgroups with Inactive Members",
@@ -316,14 +326,13 @@ def check_for_member_workgroups_with_inactive_members(members, log, args):
                           description="We have identified the following Member Workgroups in ParishSoft that have inactive members:",
                           items=results,
                           args=args,
-                          log=log)
-
-    # Have 1 HTML table per workgroup
+                          log=log,
+                          group_column='workgroupName')
 
 ##############################################################################
 
 def check_for_family_workgroups_with_inactive_families(families, log, args):
-    #HJCTODO: Fill this out
+    log.debug('Checking for Family Workgroups with Inactive Families')
     results = []
 
     for family in families.values():
@@ -342,7 +351,9 @@ def check_for_family_workgroups_with_inactive_families(families, log, args):
 
     log.debug(f"Found {len(results)} results")
 
-    if len(results) != 0:
+    if len(results) == 0:
+        log.debug(f"Found NO matching groups - no need to send an email")
+    else:
         results = sorted(results, key=lambda item: (item["workgroupName"], item["lastName"], item["firstName"]))
         send_groups_email(to=args.memberworkgrouprecip,
                           subject="Family Workgroups with Inactive Families",
@@ -350,41 +361,66 @@ def check_for_family_workgroups_with_inactive_families(families, log, args):
                           description="We have identified the following Family Workgroups in ParishSoft that have inactive families:",
                           items=results,
                           args=args,
-                          log=log)
-    # Sort results by workgroups
-    # Have 1 HTML table per workgroup
-    # Sort the rows in the workgroup by Family lastname, firstname
-    # Also show the family DUID
+                          log=log,
+                          group_column='workgroupName')
 
 ##############################################################################
 
 def check_for_ministries_with_no_staff_or_chair(ministries, log, args):
-    ministries_without_staff_or_chair: []
-    for ministry in ministries.items():
-        pass
+    log.debug('Checking for Ministries without a Staff Member and/or Chairperson')
+    results = []
+
+    for ministry_id, ministry in ministries.items():
+        #log.debug(ministry['name'])
+        #exit(0)
+        log.debug(f'Checking ministry: {ministry['name']}')
         found_chair = False
         found_staff = False
-        for member in ministry:
-            if member["role"] == "Chairperson":
+        reasons = []
+
+        for member in ministry['membership']:
+            if member["ministryRoleName"] == "Chairperson":
                 found_chair = True
-            if member["role"] == "Staff":
-                found_staff == True
-        if found_chair and found_staff:
-            continue
-        else:
-            ministries_without_staff_or_chair.append(ministry)
+                log.debug(f'({ministry['name']}) Found Chairperson: {member['firstName']} {member['lastName']}')
+            if member["ministryRoleName"] == "Staff":
+                found_staff = True
+                log.debug(f'({ministry['name']}) Found Staff member: {member['firstName']} {member['lastName']}')
 
+        if not found_chair:
+            log.debug(f'({ministry['name']}) No Chairperson found')
+            reasons.append('No chairperson found')
+        if not found_staff:
+            log.debug(f'({ministry['name']}) No Staff Member found')
+            reasons.append('No staff member found')
 
+        if len(reasons) > 0:
+            results.append({
+                'ministryName': ministry['name'],
+                'reasons': ', '.join(reasons),
+                })
 
-    #HJCTODO: Fill this out
+    columns = [('ministryName', 'Ministry Name'),
+               ('reasons', 'Reasons'),]
 
-    # Sort results by ministry
-    # This could be as simple as an <ol>, not necessarily a <table>
+    log.debug(f"Found {len(results)} results")
+
+    if len(results) == 0:
+        log.debug(f"Found NO matching groups - no need to send an email")
+    else:
+        results = sorted(results, key=lambda item: (item['ministryName']))
+        send_groups_email(to=args.nochairrecip,
+                          subject="Ministries without a Staff Member and/or Chairperson",
+                          columns = columns,
+                          description ='We have identified the following ministries in ParishSoft that are missing a Staff Member or Chairperson:',
+                          items = results,
+                          args=args,
+                          log=log)
 
 ##############################################################################
 
 def check_for_workgroups_with_members_without_emails(member_workgroups, members, families, log, args):
     #We assume we care about having emails for any given workgroup unless specifically told otherwise
+    log.debug('Checking for Workgroups with Members without Emails')
     results = []
 
     dont_care_workgroups_list = [
@@ -408,7 +444,9 @@ def check_for_workgroups_with_members_without_emails(member_workgroups, members,
         if wg['name'] in dont_care_workgroups_list:
             log.debug(f'Workgroup {wg['name']} was skipped due to dont_care_workgroups_list')
             continue
+
         log.debug(f'Checking workgroup: {wg['name']}')
+
         for entry in wg['membership']:
             reasons = []
 
@@ -440,15 +478,20 @@ def check_for_workgroups_with_members_without_emails(member_workgroups, members,
                ('firstName', 'Member First Name'),
                ('reasons', 'Reasons'),]
 
-    if len(results) != 0:
+    log.debug(f"Found {len(results)} results")
+
+    if len(results) == 0:
+        log.debug(f"Found NO matching groups - no need to send an email")
+    else:
         results = sorted(results, key=lambda item: (item["workgroupName"], item["lastName"], item["firstName"]))
-        send_groups_email(to=args.memberworkgrouprecip,
+        send_groups_email(to=args.workgroupnoemailrecip,
                           subject="Workgroups with Members that Have No Email Addresses",
                           columns = columns,
                           description="We have identified the following Member Workgroups in ParishSoft that have members without email addresses:",
                           items=results,
                           args=args,
-                          log=log)
+                          log=log,
+                          group_column='workgroupName')
 
 
 ##############################################################################
@@ -456,7 +499,7 @@ def check_for_workgroups_with_members_without_emails(member_workgroups, members,
 def check_for_associated_nonparishionar_families_with_do_not_communicate(families, log, args):
     #HCJTODO: Look at removing "columns" in favor of just having good results names
     #ANP is specifically for families that want to receive communications, so if "do not commuicate" is set, that's a contradiction
-    #HJCTODO: Fill this out
+    log.debug('Checking for Associated Non-Parishioner Families with Do Not Communicate')
     results = []
 
     for family in families.values():
@@ -487,7 +530,11 @@ def check_for_associated_nonparishionar_families_with_do_not_communicate(familie
                 ('firstName', 'Family First Name'),
                 ('reason', 'Reason'),]
 
-    if len(results) != 0:
+    log.debug(f"Found {len(results)} results")
+
+    if len(results) == 0:
+        log.debug(f"Found NO matching groups - no need to send an email")
+    else:
         results = sorted(results, key=lambda item: (item["lastName"], item["firstName"]))
         send_groups_email(to=args.nonparishionerrecip,
                           subject="Associated Non-Parishioner Families without Email",
@@ -547,6 +594,12 @@ def setup_cli():
     parser.add_argument('--memberworkgrouprecip',
                         default= default_email,
                         help= 'Recipient for the Member Workgroups with Inactive Members email')
+    parser.add_argument('--nochairrecip',
+                        default= default_email,
+                        help= 'Recipient for the Ministries without a Staff Member or Chairperson email')
+    parser.add_argument('--workgroupnoemailrecip',
+                        default= default_email,
+                        help= 'Recipient for the Workgroups with Members without Email email')
     parser.add_argument('--nonparishionerrecip',
                         default= default_email,
                         help= 'Recipient for the Associated Non-Parishioner Families without Email email')
@@ -582,18 +635,18 @@ def main():
 
     check_for_inactive_families_with_active_members(families, log, args)
 
-    #check_for_whitespace_data(members, families, log, args)
+    check_for_whitespace_data(members, families, log, args)
 
-    #check_for_ministries_with_inactive_members(families, members, log, args)
+    check_for_ministries_with_inactive_members(families, members, log, args)
 
-    #check_for_member_workgroups_with_inactive_members(members, log, args)
+    check_for_member_workgroups_with_inactive_members(members, log, args)
 
-    #check_for_family_workgroups_with_inactive_families(families, log, args)
+    check_for_family_workgroups_with_inactive_families(families, log, args)
 
-    #check_for_ministries_with_no_staff_or_chair(ministries, log, ags)
+    check_for_ministries_with_no_staff_or_chair(ministries, log, args)
 
-    #check_for_workgroups_with_members_without_emails(member_workgroups, members, families, log, args)
+    check_for_workgroups_with_members_without_emails(member_workgroups, members, families, log, args)
 
-    #check_for_associated_nonparishionar_families_with_do_not_communicate(families, log, args)
+    check_for_associated_nonparishionar_families_with_do_not_communicate(families, log, args)
 
 main()
