@@ -99,7 +99,7 @@ def send_email_existing_smtp(body, bodytype, attachments, recipient, subject,
 
 def send_email(body, bodytype, attachments, smtp_auth_file, recipient, subject,
                smtp_from, log):
-    with open_smtp_connection(smtp_auth_file) as smtp:
-        send_email_existing_stmp(body, bodytype, attachments,
+    with open_smtp_connection(smtp_auth_file, log) as smtp:
+        send_email_existing_smtp(body, bodytype, attachments,
                                  recipient, subject, smtp_from,
                                  smtp, log)

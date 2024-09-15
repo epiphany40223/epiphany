@@ -1,10 +1,12 @@
+import os
+import urllib
 import datetime
 
 import helpers
 
 # Overall title
 
-stewardship_year = 2024
+stewardship_year = 2025
 
 title = f'Stewardship {stewardship_year}'
 
@@ -22,10 +24,14 @@ smtp_from    = f'"Epiphany Catholic Church" <stewardship-{stewardship_year}@epip
 
 #--------------------------------------------------------------------------
 
-# Already submitted PDS Family Status
+# Submitted eStewardship in prior year
 
-already_submitted_fam_status = f'{stewardship_year} Stewardship'
-already_submitted_fam_keyword = f'Active: Stewardship {stewardship_year}'
+stewardship_fam_cur_year_wg = f'Active: Stewardship {stewardship_year}'
+stewardship_fam_prev_year_wg = f'Active: Stewardship {stewardship_year-1}'
+
+# ParishSoft Member Workgroup names
+
+business_logisitics_wg_name = 'Business Logistics Email'
 
 #--------------------------------------------------------------------------
 
@@ -44,29 +50,34 @@ guser_cred_file = 'user-credentials.json'
 
 # Copied from the Google Spreadsheet where Jotform is writing its
 # results
-jotform_gsheet_gfile_id = '10iYPP4AZcRVRLf6Ql2nuPMD8cO_D9OmLR1MBt-iNAeA'
+jotform_gsheet_gfile_id = '151pGPqp1wdHp3uJVAmkJ5MxMwGjm3oqp3Ost6LnqCFs'
 
 # Last year's Jotform Gsheet results
 #
 # Only load this if we're actually "constants.py" (as opposed to being
 # named -- via sym link -- "constants_prev_year.py")
-if __file__ == "constants.py":
+if os.path.basename(__file__) == "constants.py":
     from constants_prev_year import jotform_gsheet_gfile_id as \
         jotform_gsheet_prev_year_gfile_id
     from constants_prev_year import jotform_gsheet_columns as \
         jotform_gsheet_prev_year_columns
+else:
+    print(f"File is: {__file__}")
 
 # Team Drive folder where to upload the CSV/spreadsheet comparison
 # output files
-upload_team_drive_folder_id = '1OQG5lQ6G6hZ3x1zK6Gx3R9Tq-KIE0zWw'
+upload_team_drive_folder_id = '1v-n6WHgkrXks_FcST_MTtjcWpXJ1b5l5'
 
-gsheet_editors = f'stewardship{stewardship_year}-workers@epiphanycatholicchurch.org'
+# Top level folder of the Google Shared Drive
+google_shared_drive_id = '0AHQEqKijqXcFUk9PVA'
+
+gsheet_editors = f'stewardship-{stewardship_year}-workers@epiphanycatholicchurch.org'
 
 #--------------------------------------------------------------------------
 
 # For members who change their ministry data, start / end dates to use
 
-ministry_start_date = '11/01/2023'
+ministry_start_date = '11/01/2024'
 ministry_end_date   = ministry_start_date
 
 #--------------------------------------------------------------------------
@@ -78,31 +89,34 @@ ministry_end_date   = ministry_start_date
 COL_AM_INVOLVED  = 0
 COL_NOT_INVOLVED = 2
 
-MAX_PDS_FAMILY_MEMBER_NUM = 7
+MAX_PS_FAMILY_MEMBER_NUM = 7
 
 #############################################################################
 
 class ministry_2d_grid:
-    def __init__(self, name, field_prefix, field_max=MAX_PDS_FAMILY_MEMBER_NUM):
+    def __init__(self, name, field_prefix, q_prefixes,
+                 field_max=MAX_PS_FAMILY_MEMBER_NUM):
         self.name          = name
         self.rows          = list()
         self.member_fields = list()
         self.field_prefix  = field_prefix
         self.field_max     = field_max
+        self.q_prefixes    = q_prefixes
 
         for i in range(1, field_max + 1):
-            self.member_fields.append(f'{field_prefix}{i}')
+            q_prefix = f'q{q_prefixes[i-1]}_'
+            self.member_fields.append(f'{q_prefix}{field_prefix}{i}')
 
-    def add_row(self, pds_ministry, row_heading=None, new=False):
-        # If no row_heading is provided, it is the same as the PDS ministry name
+    def add_row(self, ps_ministry, row_heading=None, new=False):
+        # If no row_heading is provided, it is the same as the PS ministry name
         if row_heading is None:
-            row_heading = pds_ministry
+            row_heading = ps_ministry
 
         if new:
             row_heading = f'NEW {row_heading}'
 
         self.rows.append({
-            'pds_ministry'    : pds_ministry,
+            'ps_ministry'     : ps_ministry,
             'row_heading'     : row_heading,
             'new'             : new,
 
@@ -118,7 +132,8 @@ _all_ministry_grids = list()
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Parish Leadership', 'pl')
+grid = ministry_2d_grid('Parish Leadership', 'pl',
+                        [65, 108, 135, 162, 189, 216, 243 ])
 
 grid.add_row('100-Parish Pastoral Council')
 grid.add_row('102-Finance Advisory Council')
@@ -130,17 +145,17 @@ grid.add_row('107-Social Resp Steering Comm',
 grid.add_row('108-Faith Formation Team')
 grid.add_row('110-Ten Percent Committee')
 grid.add_row('111-Hispanic Ministry Team')
-grid.add_row('113-Media Comms Planning Comm.'
+grid.add_row('113-Media Comms Planning Comm.',
              '113-Media Communications Planning Committee')
-grid.add_row('114-Marriage Mentor Couples', new=True)
-grid.add_row('115-Parish Life Committee', new=True)
-grid.add_row('116-Youth Council', new=True)
+grid.add_row('115-Community Care Committee')
+grid.add_row('116-Youth Council')
 
 _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Administration', 'aa')
+grid = ministry_2d_grid('Administration', 'aa',
+                        [67, 110, 137, 164, 191, 218, 245 ])
 
 grid.add_row('200-Audit Committee')
 grid.add_row('201-Collection Counter')
@@ -149,8 +164,6 @@ grid.add_row('202-Facility Mgmt & Planning',
 grid.add_row('203-Garden & Grounds',
              '203-Gardens & Grounds')
 grid.add_row('204-Parish Office Volunteers')
-grid.add_row('205-Participation Sheet Vol',
-                '205-Participation Sheet Volunteers')
 grid.add_row('206-Space Arrangers')
 grid.add_row('207-Technology Committee')
 grid.add_row('208-Weekend Closer',
@@ -160,7 +173,8 @@ _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Liturgical Prepatory', 'lp')
+grid = ministry_2d_grid('Liturgical Prepatory', 'lp',
+                        [68, 112, 139, 166, 193, 220, 247 ])
 
 grid.add_row('300-Art & Environment')
 grid.add_row('301-Audio/Visual/Light Minstry',
@@ -180,7 +194,8 @@ _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Liturgical Celebratory', 'lc')
+grid = ministry_2d_grid('Liturgical Celebratory', 'lc',
+                        [69, 114, 141, 168, 195, 222, 249 ])
 
 grid.add_row('309-Acolytes')
 grid.add_row('310-Adult Choir')
@@ -193,28 +208,32 @@ grid.add_row('317-Instrumentalists & Cantors')
 grid.add_row('318-Lectors')
 grid.add_row('319-Liturgical Dance Ministry',
              '319-Liturgical Dance')
-grid.add_row('321-Prayer Chain Ministry')
 
 _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Stewardship & Engagement', 'se')
+grid = ministry_2d_grid('Stewardship & Engagement', 'se',
+                        [70, 116, 143, 170, 197, 224, 251 ])
 
 grid.add_row('401-Epiphany Companions')
-grid.add_row('402-New Members Coffee')
 grid.add_row('404-Welcome Desk')
 grid.add_row('406-Evangelization Team')
 grid.add_row('407-Stewardship Team')
 grid.add_row('408-Engagement Team')
 grid.add_row('409-Sunday Morning Coffee',
              '409-Sunday Morning Coffee Workers')
+grid.add_row('410-Epiphany Flower Guild', new=True)
+grid.add_row('411-Men of Epiphany')
+grid.add_row('412-Sages (for 50 yrs. +)')
+grid.add_row('413-Singles Explore Life (SEL)')
 
 _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Communication', 'cc')
+grid = ministry_2d_grid('Communication', 'cc',
+                        [271, 285, 286, 287, 288, 289, 290 ])
 
 grid.add_row('452-Media Communications',
              '452-Media Communications Ministry')
@@ -223,41 +242,27 @@ _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Community Care', 'hh')
+grid = ministry_2d_grid('Community Care', 'hh',
+                        [71, 118, 145, 172, 199, 226, 253 ])
 
+grid.add_row('500-Bereavement Receptions')
 grid.add_row('501-Eucharist to Sick&Homebnd',
                 '501-Eucharist to the Sick and Homebound')
 grid.add_row('505-Healing Blanket Ministry')
 grid.add_row('508-Messages of Hope Ministry')
-grid.add_row('509-HOPE Support Groups', new=True)
-grid.add_row('509-Flower Delivery to SHB',
-             '510-Flower Delivery to the Sick, Homebound, & Bereaved',
-             new=True)
+grid.add_row('509-HOPE Support Groups')
+grid.add_row('510-Flower Delivery to SHB',
+             '510-Flower Delivery to the Sick, Homebound, & Bereaved')
+grid.add_row('511-Prayer Chain Ministry')
+grid.add_row('512-Health & Wellness Ministry', new=True)
+grid.add_row('513-Blessing Card Ministry', new=True)
 
 _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Community Life', 'sf')
-
-grid.add_row('600-Men of Epiphany')
-grid.add_row('601-Sages (for 50 yrs. +)',
-                '601-Sages')
-grid.add_row('602-Singles Explore Life (SEL)',
-             '602-Singles Explore Life')
-grid.add_row('604-Wednesdays for Women')
-grid.add_row('609-Octoberfest Plan Team 2022',
-             '609-OctoberFest Plan Team')
-grid.add_row('611-Bereavement Receptions',
-             '611-Bereavement Reception')
-grid.add_row('612-Community Life Committee',
-             '612-Community Life Ministry')
-
-_all_ministry_grids.append(grid)
-
-#----------------------------------------------------------------------------
-
-grid = ministry_2d_grid('Social Responsibility', 'sr')
+grid = ministry_2d_grid('Social Responsibility', 'sr',
+                        [73, 122, 149, 176, 203, 230, 257 ])
 
 grid.add_row('700-Advocates for Common Good',
              '700-Advocates for the Common Good')
@@ -267,20 +272,18 @@ grid.add_row('704-Habitat for Humanity',
              '704-Habitat for Humanity - Epiphany Build Team')
 grid.add_row('705-Hunger & Poverty Ministry')
 grid.add_row('706-Prison Ministry')
-grid.add_row('707-St. Vincent de Paul',
-             '707-St. Vincent de Paul - Epiphany Conference')
+grid.add_row('707-St. Vincent De Paul',
+             '707-St. Vincent De Paul - Epiphany Conference')
 grid.add_row('709-Twinning Committee:Chiapas',
              '709-Twinning Committee: Chiapas')
-grid.add_row('710-Environmental Concerns',
-             '710-Environmental Concerns Committee')
-grid.add_row('712-Legislative Network',
-             '712-Epiphany Legislative Network')
+grid.add_row('710-Creation Care Team')
 
 _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Formational', 'ff')
+grid = ministry_2d_grid('Formational', 'ff',
+                        [74, 124, 151, 178, 205, 232, 259 ])
 
 grid.add_row('800-Catechists for Children',
              '800-Children\'s Formation Catechists (PreK-8th)')
@@ -289,12 +292,15 @@ grid.add_row('805-Monday Adult Bible Study')
 grid.add_row('807-Catechumenate/InitiationTm',
              '807-Catechumenate / Initiation Team')
 grid.add_row('808-BibleTimes Core Team')
+grid.add_row('809-Marriage Mentor Couples')
+grid.add_row('810-Wednesdays for Women')
 
 _all_ministry_grids.append(grid)
 
 #----------------------------------------------------------------------------
 
-grid = ministry_2d_grid('Youth Ministires', 'ym')
+grid = ministry_2d_grid('Youth Ministires', 'ym',
+                        [380, 432, 433, 434, 438, 439, 437 ])
 
 grid.add_row('901-Youth Ministry Adult Vols',
              '901-Youth Ministry Adult Volunteers')
@@ -333,16 +339,13 @@ class jotform_class:
 
 last_updated = datetime.datetime.now().strftime('%A %B %d, %Y at %I:%M%p')
 
-jotform = jotform_class('https://form.jotform.com/223634398375163',
+jotform = jotform_class('https://form.jotform.com/241424014484146',
                     _all_ministry_grids)
 
 # These Jotform fields are for the overall Family
-jotform.add_family_pre_fill_data('FID',
-                    lambda fam: fam['FamRecNum'],
-                    'fid')
-jotform.add_family_pre_fill_data('Envelope ID',
-                    lambda fam: helpers.pkey_url(fam['ParKey']),
-                    'parishKey')
+jotform.add_family_pre_fill_data('fduid',
+                    lambda fam: fam['familyDUID'],
+                    'fduid')
 jotform.add_family_pre_fill_data('Emails for Jotform to send response to',
                     lambda fam: ','.join(fam['stewardship']['to_addresses']),
                     'email')
@@ -355,25 +358,27 @@ def jf_money_str(val):
     else:
         return f'%24{val:.2f}'
 
-jotform.add_family_pre_fill_data('Family name',
-                    lambda fam: fam['hoh_and_spouse_salutation'],
-                    'household')
 jotform.add_family_pre_fill_data('Family annual pledge for stewardship_year-1',
                     lambda fam: jf_money_str(fam['calculated']['pledged']) if 'calculated' in fam else "%240",
                     'previousPledge')
+jotform.add_family_pre_fill_data('Family contributed so far in stewardship_year-1',
+                    lambda fam: jf_money_str(fam['calculated']['gifts']) if 'calculated' in fam else "%240",
+                    'giftsThisYear_fmt')
+
+jotform.add_family_pre_fill_data('Family name',
+                    lambda fam: helpers.url_escape(f'{fam["firstName"]} {fam["lastName"]}'),
+                    'householdName')
 
 # These Jotform fields are specific to a Member
-jotform.add_member_pre_fill_data('mid',
-                    lambda mem: mem['MemRecNum'],
-                    [ f'mid{i}' for i in range(1, MAX_PDS_FAMILY_MEMBER_NUM+1) ])
+jotform.add_member_pre_fill_data('mduid',
+                    lambda mem: mem['memberDUID'],
+                    [ f'mduid{i}' for i in range(1, MAX_PS_FAMILY_MEMBER_NUM+1) ])
 jotform.add_member_pre_fill_data('name',
-                    lambda mem: helpers.url_escape(mem['full_name']),
-                    [ f'name{i}' for i in range(1, MAX_PDS_FAMILY_MEMBER_NUM+1) ])
-jotform.add_member_pre_fill_data('talent', '',
-                    [ f'talent{i}' for i in range(1, MAX_PDS_FAMILY_MEMBER_NUM+1) ])
+                    lambda mem: helpers.url_escape(mem['py friendly name FL']),
+                    [ f'name{i}' for i in range(1, MAX_PS_FAMILY_MEMBER_NUM+1) ])
 jotform.add_member_pre_fill_data('participation',
                     lambda mem: '',
-                    [ f'mp{i}' for i in range(1, MAX_PDS_FAMILY_MEMBER_NUM+1) ])
+                    [ f'mp{i}' for i in range(1, MAX_PS_FAMILY_MEMBER_NUM+1) ])
 
 ###########################################################################
 
@@ -387,22 +392,27 @@ jotform_gsheet_columns = dict()
 jotform_gsheet_columns['prelude'] = [
     # This is put here by Jotform automatically
     'SubmitDate',
-    'LastUpdate',
     # This is where our fields start
-    'EnvId',
-    'fid',
+    'fduid',
     'Emails to reply to',
     'Spiritual participation',
 ]
 
 #--------------------------------------------------------------------------
 
-max_number = MAX_PDS_FAMILY_MEMBER_NUM
+max_number = MAX_PS_FAMILY_MEMBER_NUM
+
+jotform_gsheet_columns['per-member epilog'] = [
+    'member special talent',
+    'member group prayer events',
+    'member small prayer group',
+    'member protect',
+]
 
 jotform_gsheet_columns['members'] = list()
 for member_num in range(1, max_number+1):
     member_columns = list()
-    # Add the per-member columns (E.g., MID, name)
+    # Add the per-member columns (E.g., MDUID, name)
     for data in jotform.pre_fill_data['per_member']:
         member_columns.append(data['fields'][member_num - 1])
 
@@ -415,15 +425,18 @@ for member_num in range(1, max_number+1):
 
             row['jotform_columns'].append(column_name)
 
+    # Add the per-member ministry epilog columns
+    for col in jotform_gsheet_columns['per-member epilog']:
+        member_columns.append(f'{col} {member_num}')
+
     jotform_gsheet_columns['members'].append(member_columns)
 
 #--------------------------------------------------------------------------
 
 jotform_gsheet_columns['family'] = [
-    'Gifts from campaign',
-    'Gifts this year',
     'Family names',
     f'CY{stewardship_year-1} pledge',
+    f'CY{stewardship_year-1} gifts',
     f'CY{stewardship_year} participation',
     f'CY{stewardship_year} whole year pledge',
     f'CY{stewardship_year} how fullfill',
@@ -437,6 +450,9 @@ jotform_gsheet_columns['family'] = [
 #--------------------------------------------------------------------------
 
 jotform_gsheet_columns['epilog'] = [
-    'IP',
-    'Edit Link',
+    'Submission IP',
+    'Submission URL',
+    'Edit URL',
+    'Last update',
+    'Submissions ID',
 ]

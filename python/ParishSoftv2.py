@@ -858,6 +858,122 @@ def family_is_parishioner(family, org_id=None):
 
 #-----------------------------------------------------------------------------
 
+# Get a dict of Members in a Family who are one of a specific set of
+# Roles
+def get_family_heads(family):
+    heads = {}
+    target_roles = ['Head', 'Husband', 'Wife']
+    for member in family['py members']:
+        if member['memberType'] in target_roles:
+            mduid = member['memberDUID']
+            heads[mduid] = member
+
+    return heads
+
+#-----------------------------------------------------------------------------
+
+# Return a list of emails:
+#
+# 1. Find all Members in the Family in a specific Member WorkGroup,
+# and get a list of email addresses.
+#
+# 2. If that yields no email addresses, get a list of email addresses for the
+# Head, Husband, or Wife PS Role.
+#
+# 3. If that yields no email addresses, get an email address for the Family
+#
+# 4. If that yields no email addresses, get a list of email addresses for all
+# Family Members
+def _family_wg_emails_internal(family, member_workgroups, name, log):
+    found = None
+    for wg in member_workgroups.values():
+        if wg['name'] == name:
+            found = wg
+            break
+    if not found:
+        log.error("DID NOT FIND {name} MEMBER WORKGROUP!")
+        return []
+
+    emails = {}
+    members = []
+
+    # 1. See if any Members in the Family are in the WG membership
+    for wg_member in wg['membership']:
+        for member in family['py members']:
+            e = member['emailAddress']
+            if not e:
+                continue
+
+            if wg_member['py member duid'] == member['memberDUID']:
+                emails[e] = True
+                members.append(member)
+
+    if len(emails) > 0:
+        return members, list(emails.keys())
+
+    # 2. If we didn't find good info in the previous step, look for
+    # any Members in the Family with Head, Husband, or Wife as their
+    # Role.
+    heads = get_family_heads(family)
+    for memember in heads.values():
+        e = member['emailAddress']
+        if not e:
+            continue
+
+        emails[e] = True
+        members.append(member)
+
+    if len(emails) > 0:
+        return members, list(emails.keys())
+
+    # 3. If we didn't find good info in the previous step, get all
+    # email addresses for all Members of the Family.
+    for member in family['py members']:
+        e = member['emailAddress']
+        if not e:
+            continue
+
+        emails[e] = True
+        members.append(member)
+
+    if len(emails) > 0:
+        return members, list(emails.keys())
+
+    # 4. If that yields no email addresses, get an email address for
+    # the Family
+    key = 'eMailAddress'
+    if key in family and family[key]:
+        emails[family[key]] = True
+
+    return members, list(emails.keys())
+
+_business_logistics_wg_name = 'Business Logistics Email'
+
+# Convenience function get the email addresses of the Members of a
+# specific Family who should get the Business Logistics Email.
+#
+# See _family_wg_emails_internal() for details.
+def family_business_logistics_emails(family, member_workgroups, log):
+    _, emails = _family_wg_emails_internal(family,
+                                           member_workgroups,
+                                           _business_logistics_wg_name,
+                                           log)
+    return emails
+
+# Convenience function get the Members of a specific Family who should
+# get the Business Logistics Email.
+#
+# See _family_wg_emails_internal() for details.
+def family_business_logistics_emails_members(family, member_workgroups, log):
+    members, _ = _family_wg_emails_internal(family,
+                                            member_workgroups,
+                                            _business_logistics_wg_name,
+                                            log)
+
+    return members
+
+#-----------------------------------------------------------------------------
+
 # Our current definition of an "Active" Member is that they do not
 # have the "Inactive" or "Deceased" Member Status.
 def member_is_active(member):
