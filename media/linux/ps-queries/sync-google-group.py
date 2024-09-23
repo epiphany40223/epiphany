@@ -225,7 +225,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '321-Prayer Chain Ministry' ],
+            'ministries' : [ '511-Prayer Chain Ministry' ],
             'ggroup'     : f'prayer-chain-ministry{ecc}',
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
@@ -270,25 +270,20 @@ def get_synchronizations():
         #############################
 
         {
-            'ministries' : [ '600-Men of Epiphany' ],
+            'ministries' : [ '411-Men of Epiphany' ],
             'ggroup'     : f'moe{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},moe-chair{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '601-Sages (for 50 yrs. +)' ],
+            'ministries' : [ '412-Sages (for 50 yrs. +)' ],
             'ggroup'     : f'sages{ecc}',
             'notify'     : f'joanhagedorn46@gmail.com,pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '602-Singles Explore Life (SEL)' ],
+            'ministries' : [ '413-Singles Explore Life (SEL)' ],
             'ggroup'     : f'sel{ecc}',
             # Lynne Webb
             'notify'     : f'justlmw@att.net,ps-google-sync{ecc}',
-        },
-        {
-            'ministries' : [ '612-Community Life Committee' ],
-            'ggroup'     : f'community-life{ecc}',
-            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
 
         #############################
@@ -526,13 +521,6 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
-                               'kwargs' : { "ministry_prefix" : "612"},
-                               'purpose' : "Community Life chair" }, ],
-            'ggroup'     : f'community-life-chair{ecc}',
-            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
-        },
-        {
-            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "104-Stewardship"},
                                'purpose' : "Stewardship ministry chair" }, ],
             'ggroup'     : f'stewardship-chair{ecc}',
@@ -603,13 +591,6 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
-                               'kwargs' : { "ministry_prefix" : "402"},
-                               'purpose' : "New members coffee chair" }, ],
-            'ggroup'     : f'new-members-coffee-chair{ecc}',
-            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
-        },
-        {
-            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : "409"},
                                'purpose' : "Sunday morning coffee chair" }, ],
             'ggroup'     : f'sunday-morning-coffee-chair{ecc}',
@@ -631,14 +612,14 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
-                               'kwargs' : { "ministry_prefix" : '600' },
+                               'kwargs' : { "ministry_prefix" : '411' },
                                'purpose' : "MOE ministry chair" }, ],
             'ggroup'     : f'moe-chair{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
-                               'kwargs' : { "ministry_prefix" : '602-Singles Explore Life (SEL)' },
+                               'kwargs' : { "ministry_prefix" : '413-Singles Explore Life (SEL)' },
                                'purpose' : "SEL ministry chair" }, ],
             'ggroup'     : f'sel-chair{ecc}',
             'notify'     : f'ps-google-sync{ecc}',
