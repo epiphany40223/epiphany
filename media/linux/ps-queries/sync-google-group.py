@@ -304,8 +304,8 @@ def get_synchronizations():
             'notify'     : f'pastoral-associate-social-resp{ecc},ps-google-sync{ecc}',
         },
         {
-            "ministries" : [ '710-Environmental Concerns' ],
-            'ggroup'     : f'environmental-concerns{ecc}',
+            "ministries" : [ '710-Creation Care Team' ],
+            'ggroup'     : f'creation-care-team{ecc}',
             'notify'     : f'pastoral-associate-social-resp{ecc},ps-google-sync{ecc}',
         },
 
