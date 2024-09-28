@@ -72,6 +72,7 @@ def main():
         names[ministry['name']] = True
 
     n = sorted(names.keys())
-    pprint(n)
+    for name in n:
+        print(name)
 
 main()
