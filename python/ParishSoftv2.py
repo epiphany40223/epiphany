@@ -847,8 +847,7 @@ def _filter(families, members,
 
     # We have something to filter.
 
-    # Filter Members.  Parishioners are labeled at the Family level,
-    # so we only have to check here for inactive Members.
+    # Filter Members
     mem_active_key = 'py active'
     members_to_delete = list()
     for id, member in members.items():
@@ -894,11 +893,7 @@ def _filter(families, members,
     # inefficient enough to matter (it still runs in less than a
     # second).
     for mem_duid in members_to_delete:
-        # Delete from Member Workgroups
-        for id in member_workgroup_memberships.keys():
-            member_workgroup_memberships[id]['membership'][:] = \
-                [ element for element in member_workgroup_memberships[id]['membership']
-                  if element['py member duid'] != mem_duid ]
+        member = members[mem_duid]
 
         # Delete from Member Workgroups
         for id in member_workgroup_memberships.keys():
@@ -931,12 +926,6 @@ def _filter(families, members,
                 [ element for element in family_workgroup_memberships[id]['membership']
                   if element['py family duid'] != fam_duid ]
 
-        # Delete from Member Workgroups
-        for id in member_workgroup_memberships.keys():
-            member_workgroup_memberships[id]['membership'][:] = \
-                [ element for element in member_workgroup_memberships[id]['membership']
-                  if element['py family duid'] != fam_duid ]
-
         # Delete from Ministries
         for id in ministry_type_memberships.keys():
             ministry_type_memberships[id]['membership'][:] = \
@@ -962,6 +951,13 @@ def load_families_and_members(api_key=None,
                               log=None, cache_dir=None):
     if not api_key:
         raise Exception("ERROR: Must specify ParishSoft API key to login to the PS cloud")
+
+    # If the cache directory does not exist, make it
+    if cache_dir is None:
+        cache_dir = '.'
+
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir, exist_ok=True)
 
     # Setup Python session
     session = _setup_session(api_key)
