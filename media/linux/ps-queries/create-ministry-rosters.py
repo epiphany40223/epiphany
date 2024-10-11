@@ -87,12 +87,7 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '114-Marriage Mentor Couples',
-        'gsheet_id' : '1Ohroqv1OSZJuhJ0y4z2dIEt4gCkxdkyudAqZ0XpuPTQ',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '115-Parish Life Committee',
+        'ministry' : '115-Community Care Committee',
         'gsheet_id' : '1bKiNztcE20jrK24ccoCzOJDuJsA-nAR-P-6BYstIDog',
         'birthday' : False,
     },
@@ -124,11 +119,6 @@ ministry_sheets = [
     {
         'ministry' : '204-Parish Office Volunteers',
         'gsheet_id' : '1yhGeBNaUTuVkEGTRkCh5SC6hQLOpdaEVNpXaq2WmMc4',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '205-Participation Sheet Vol',
-        'gsheet_id' : '1rPf-_YTqZoOxhj_EO7a3i4tA0-1wl-OxvLyk82m6IE0',
         'birthday' : False,
     },
     {
@@ -237,18 +227,8 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '321-Prayer Chain Ministry',
-        'gsheet_id' : '1Z3amqu2CwsqUNw3O7ih_awgRwyXJazBzAYt93ZgoAwQ',
-        'birthday' : False,
-    },
-    {
         'ministry' : '401-Epiphany Companions',
         'gsheet_id' : '1voFdTbY3RMs3R_X-pO6-hbjBfC9Prm80ON-lLDTl2UI',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '402-New Members Coffee',
-        'gsheet_id' : '10yQUVTr2EHqRwvdotQAZT33mbVwk8jtDoIwIyWW3-to',
         'birthday' : False,
     },
     {
@@ -277,8 +257,28 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
+        'ministry' : '411-Men of Epiphany',
+        'gsheet_id' : '1Fq11QLU7OQ_yHYPeDPXT8JaA31ackl3eJ2xOvecG_go',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '412-Sages (for 50 yrs. +)',
+        'gsheet_id' : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '413-Singles Explore Life (SEL)',
+        'gsheet_id' : '1-uvQO5RRf0K6NJlR_4Mijygn4XGk0zhvowdflKLoEUc',
+        'birthday' : False,
+    },
+    {
         'ministry' : '452-Media Communications',
         'gsheet_id' : '1QLcjLidJppCfhqaNBn10h1Toe81DEy48PwwJAhwDNUs',
+        'birthday' : False,
+    },
+    {
+        'ministry' : '500-Bereavement Receptions',
+        'gsheet_id' : '17QXoqgreLu8sUQpZfooNkto4NV06wdoE3yA6Q5vgiAw',
         'birthday' : False,
     },
     {
@@ -304,41 +304,6 @@ ministry_sheets = [
     {
         'ministry' : '510-Flower Delivery to SHB',
         'gsheet_id' : '160CPnzR_Q-kph_36LLCPFMC_pLRdMFbUQ2fkQ90LEw0',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '600-Men of Epiphany',
-        'gsheet_id' : '1Fq11QLU7OQ_yHYPeDPXT8JaA31ackl3eJ2xOvecG_go',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '601-Sages (for 50 yrs. +)',
-        'gsheet_id' : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '602-Singles Explore Life (SEL)',
-        'gsheet_id' : '1-uvQO5RRf0K6NJlR_4Mijygn4XGk0zhvowdflKLoEUc',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '604-Wednesdays for Women',
-        'gsheet_id' : '1dJ-57kiTO1SsvxG8wAXd2YlQ_vY7xmKnjvI9j0k97EM',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '609-Octoberfest Plan Team 2022',
-        'gsheet_id' : '19n3zSL9bHla98_Q6d29kcp1d2lxnSpYOU6FUtU41lf4',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '611-Bereavement Receptions',
-        'gsheet_id' : '17QXoqgreLu8sUQpZfooNkto4NV06wdoE3yA6Q5vgiAw',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '612-Community Life Committee',
-        'gsheet_id' : '18UNXrRqckFSO2801lmODRohk_CJVI9ko4UtRFruS9E0',
         'birthday' : False,
     },
     {
@@ -382,13 +347,8 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '710-Environmental Concerns',
+        'ministry' : '710-Creation Care Team',
         'gsheet_id' : '1tFmzvu53v-oBF3P59fl4zv46VHt4PRu066YyceuYNl4',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '712-Legislative Network',
-        'gsheet_id' : '1GVKj83EQxNS6TFI1Coe9Kat2cyezcKwD8VihuVEWLMA',
         'birthday' : False,
     },
     {
