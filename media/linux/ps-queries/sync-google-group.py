@@ -1298,11 +1298,12 @@ def find_matching_members(members, sync, log=None):
 
         # This Member should be in this Google Group.  Yay!
         # But if they don't have an email address, skip them.
-        e = ps_member['emailAddress']
+        e = ps_member['py emailAddresses']
         if e is None:
             continue
 
-        e = e.lower()
+        # Use the first email address
+        e = e[0].lower()
         new_entry = {
             'ps_members' : [ ps_member ],
             'email'      : e,
