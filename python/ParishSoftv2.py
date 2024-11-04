@@ -422,14 +422,17 @@ def _load_families(session, org_id, cache_dir, log):
 
     families = { int(element['familyDUID']) : element for element in elements }
 
+    # Normalize all email addresses to lower case.
     # A bunch of families have multiple email addresses separated by
     # ";".  Split these into a Python list.
     # NOTE: Family is "eMailAddress" while the Member is "emailAddress".  Sigh.
-    key = 'py eMailAddresses'
+    key = 'eMailAddress'
+    key2 = f'py {key}es'
     for family in families.values():
         value = family['eMailAddress']
         if value:
-            family[key] = [x.strip().lower() for x in value.split(';')]
+            family[key] = family[key].lower()
+            family[key2] = [x.strip() for x in value.split(';')]
 
     return families
 
@@ -510,14 +513,17 @@ def _load_members(session, org_id, cache_dir, log):
 
     members = { int(element['memberDUID']) : element for element in elements }
 
+    # Normalize all email addresses to lower case.
     # Some members have multiple email addresses separated by ";".
     # Split these into a Python list.
     # NOTE: Family is "eMailAddress" while the Member is "emailAddress".  Sigh.
-    key = 'py emailAddresses'
+    key = 'emailAddress'
+    key2 = f'py {key}es'
     for member in members.values():
         value = member['emailAddress']
         if value:
-            member[key] = [x.strip().lower() for x in value.split(';')]
+            member[key] = member[key].lower()
+            member[key2] = [x.strip() for x in value.split(';')]
 
     return members
 
