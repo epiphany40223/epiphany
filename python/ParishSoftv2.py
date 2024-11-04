@@ -429,10 +429,10 @@ def _load_families(session, org_id, cache_dir, log):
     key = 'eMailAddress'
     key2 = f'py {key}es'
     for family in families.values():
-        value = family['eMailAddress']
+        value = family[key]
         if value:
             family[key] = family[key].lower()
-            family[key2] = [x.strip() for x in value.split(';')]
+            family[key2] = [x.strip() for x in family[key].split(';')]
 
     return families
 
@@ -480,6 +480,17 @@ def _load_family_workgroup_memberships(session, family_workgroups,
                                            cache_dir=cache_dir,
                                            offset_name="PageNumber",
                                            offset_type="page")
+
+        # Some Families have a ;-delimited list of email addresses.
+        # Separate these into a Python list.
+        key = 'email'
+        key2 = f'py {key}es'
+        for element in elements:
+            value = element[key]
+            if value:
+                element[key] = element[key].lower()
+                element[key2] = [x.strip() for x in element[key].split(';')]
+
         log.debug(f"Got {len(elements)} members of Family WorkGroup DUID {duid}: {wg['name']}")
         results[duid] = {
             'duid' : duid,
@@ -520,10 +531,10 @@ def _load_members(session, org_id, cache_dir, log):
     key = 'emailAddress'
     key2 = f'py {key}es'
     for member in members.values():
-        value = member['emailAddress']
+        value = member[key]
         if value:
             member[key] = member[key].lower()
-            member[key2] = [x.strip() for x in value.split(';')]
+            member[key2] = [x.strip() for x in member[key].split(';')]
 
     return members
 
@@ -591,6 +602,17 @@ def _load_member_workgroup_memberships(session, member_workgroups,
                                            params=None, log=log,
                                            offset_name="PageNumber",
                                            offset_type="page")
+
+        # Some Members have a ;-delimited list of email addresses.
+        # Separate these into a Python list.
+        key = 'emailAddress'
+        key2 = f'py {key}es'
+        for element in elements:
+            value = element[key]
+            if value:
+                element[key] = element[key].lower()
+                element[key2] = [x.strip() for x in element[key].split(';')]
+
         log.debug(f"Got {len(elements)} members of Member WorkGroup DUID {duid}: {wg['name']}")
         results[duid] = {
             'duid' : duid,
