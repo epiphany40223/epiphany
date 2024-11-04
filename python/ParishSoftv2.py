@@ -424,14 +424,12 @@ def _load_families(session, org_id, cache_dir, log):
 
     # A bunch of families have multiple email addresses separated by
     # ";".  Split these into a Python list.
+    # NOTE: Family is "eMailAddress" while the Member is "emailAddress".  Sigh.
     key = 'py eMailAddresses'
     for family in families.values():
-        family[key] = list()
-
         value = family['eMailAddress']
         if value:
-            for address in value.split(';'):
-                family[key].append(address.strip().lower())
+            family[key] = [x.strip().lower() for x in value.split(';')]
 
     return families
 
@@ -511,6 +509,15 @@ def _load_members(session, org_id, cache_dir, log):
     _normalize_dates(elements, ['birthdate', 'dateModified', 'dateOfDeath'])
 
     members = { int(element['memberDUID']) : element for element in elements }
+
+    # Some members have multiple email addresses separated by ";".
+    # Split these into a Python list.
+    # NOTE: Family is "eMailAddress" while the Member is "emailAddress".  Sigh.
+    key = 'py emailAddresses'
+    for member in members.values():
+        value = member['emailAddress']
+        if value:
+            member[key] = [x.strip().lower() for x in value.split(';')]
 
     return members
 
@@ -1056,7 +1063,7 @@ def get_member_public_email(member):
     if not member['family_PublishEMail']:
         return None
 
-    key = 'emailAddress'
+    key = 'py emailAddresses'
     if key in member:
-        return member[key]
+        return member[key][0]
     return None
