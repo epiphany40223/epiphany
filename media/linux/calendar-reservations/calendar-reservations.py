@@ -90,8 +90,13 @@ calendars = [
         "check_conflicts" : True,
     },
     {
-        "name" : "Kitchen (CC)",
+        "name" : "Commercial Kitchen (CC)",
         "id" : "churchofepiphany.com_34383131343230342d333531@resource.calendar.google.com",
+        "check_conflicts" : True,
+    },
+    {
+        "name" : "Service Kitchen (CC)",
+        "id" : "c_18867q9j680j6iodj5ne2gjk6mdc0@resource.calendar.google.com",
         "check_conflicts" : True,
     },
     {
