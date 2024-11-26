@@ -79,7 +79,8 @@ def send_email(body, bodytype, attachments, smtp_auth_file, recipient, subject, 
         msg['Subject'] = subject
         msg.replace_header('Content-Type', Google.mime_types[bodytype])
 
-        msg = set_attachments(attachments, msg, log)
+        if attachments and len(attachments) > 0:
+            msg = set_attachments(attachments, msg, log)
 
         smtp.send_message(msg)
 
