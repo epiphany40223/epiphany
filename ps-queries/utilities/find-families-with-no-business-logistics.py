@@ -5,6 +5,7 @@
 # demand just as a help for writing / debugging the other scripts.
 
 import os
+import csv
 import sys
 import argparse
 
@@ -57,22 +58,47 @@ def main():
     log = ECC.setup_logging(debug=args.debug)
 
     log.info("Loading ParishSoft data...")
-    families, members, family_workgroups, member_worksgroups, ministries = \
+    families, members, family_workgroups, member_workgroups, ministries = \
         ParishSoft.load_families_and_members(api_key=args.api_key,
                                              cache_dir=args.ps_cache_dir,
-                                             active_only=False,
-                                             parishioners_only=False,
+                                             active_only=True,
+                                             parishioners_only=True,
                                              log=log)
 
-    # Get a de-duplicated list of names (it should be de-duplicated
-    # already, but we can do it too, just to be sure).  Then sort them
-    # so that they're easy to find / read.
-    names = dict()
-    for duid, ministry in ministries.items():
-        names[ministry['name']] = True
+    num_fam = len(families)
+    num_mem = len(members)
+    log.info(f"There are {num_fam} families and {num_mem} members")
 
-    n = sorted(names.keys())
-    for name in n:
-        print(name)
+    found = {}
+    for fduid, family in families.items():
+        emails = ParishSoft.family_business_logistics_emails(family, member_workgroups, log)
+        if len(emails) > 0:
+            continue
+
+        key = family['lastName'] + str(fduid)
+        found[key] = family
+
+    filename = 'families-with-no-business-logitics-emails.csv'
+    with open(filename, 'w') as fp:
+        fields = ['Family name', 'Family DUID', 'Envelope ID']
+        writer = csv.DictWriter(fp, fieldnames=fields)
+        writer.writeheader()
+
+        for key in sorted(found.keys()):
+            family = found[key]
+
+            env = ''
+            key = 'envelopeNumber'
+            if family[key]:
+                env = family[key]
+
+            item = {
+                'Family name' : f'{family["lastName"]}, {family["firstName"]}',
+                'Family DUID' : family['familyDUID'],
+                'Envelope ID' : env,
+            }
+            writer.writerow(item)
+
+    print(f'Wrote {filename}')
 
 main()

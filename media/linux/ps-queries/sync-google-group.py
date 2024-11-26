@@ -63,6 +63,12 @@ if not os.path.exists(moddir):
     print("ERROR: Could not find the ecc-python-modules directory.")
     print("ERROR: Please make a ecc-python-modules sym link and run again.")
     exit(1)
+# On MS Windows, git checks out sym links as a file with a single-line
+# string containing the name of the file that the sym link points to.
+if os.path.isfile(moddir):
+    with open(moddir) as fp:
+        dir = fp.readlines()
+    moddir = os.path.join(os.getcwd(), dir[0])
 
 sys.path.insert(0, moddir)
 
