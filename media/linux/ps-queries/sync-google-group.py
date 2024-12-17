@@ -1030,14 +1030,16 @@ def _sync_add(args, sync, group_permissions, service, action, name, log=None):
 
         j = json.loads(e.content)
         for err in j['error']['errors']:
-            if err['reason'] == 'duplicate':
+            if err['reason'] == 'duplicate' or \
+               err['message'] == 'duplicate':
                 # This is not worth trying again.
                 if log:
                     log.warning(f"Google says a duplicate of {email} "
                               "already in the group -- ignoring")
                 return None
 
-            elif 'Resource Not Found' in err['reason']:
+            elif 'Resource Not Found' in err['reason'] or \
+                 'Resource Not Found' in err['message']:
                 # If this is an invalid Gmail address (i.e., Google
                 # says this email address does not exist), then just
                 # log the error and keep going.
