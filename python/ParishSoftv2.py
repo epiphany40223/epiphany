@@ -535,6 +535,9 @@ def _load_members(session, org_id, cache_dir, log):
         if value:
             member[key] = member[key].lower()
             member[key2] = [x.strip() for x in member[key].split(';')]
+        else:
+            # Make sure that every Member has this field, even if it's None
+            member[key2] = None
 
     return members
 
