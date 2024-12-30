@@ -5,124 +5,117 @@
 
 import re
 import os
+import sys
 import pytz
+import tzlocal
 import sqlite3
 import argparse
 import datetime
 
-from oauth2client import tools
+# We assume that there is a "ecc-python-modules" sym link in this
+# directory that points to the directory with ECC.py and friends.
+moddir = os.path.join(os.getcwd(), 'ecc-python-modules')
+if not os.path.exists(moddir):
+    print("ERROR: Could not find the ecc-python-modules directory.")
+    print("ERROR: Please make a ecc-python-modules sym link and run again.")
+    exit(1)
+# On MS Windows, git checks out sym links as a file with a single-line
+# string containing the name of the file that the sym link points to.
+if os.path.isfile(moddir):
+    with open(moddir) as fp:
+        dir = fp.readlines()
+    moddir = os.path.join(os.getcwd(), dir[0])
+
+sys.path.insert(0, moddir)
+
+import ECC
+import Google
+
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
 
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 
-# Find the path to the ECC module (by finding the root of the git
-# tree).  This is robust, but it's a little clunky. :-\
-try:
-    import sys
-    import subprocess
-    out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
-                         capture_output=True)
-    dirname = out.stdout.decode('utf-8').strip()
-    if not dirname:
-        raise Exception("Could not find git root.  Are you outside the git tree?")
-
-    moddir  = os.path.join(dirname, 'python')
-    sys.path.insert(0, moddir)
-    import ECC
-except Exception as e:
-    sys.stderr.write("=== ERROR: Could not find common ECC Python module directory\n")
-    sys.stderr.write(f"{e}\n")
-    exit(1)
-
-import ECCUploader
-
-default_app_json                    = 'client_id.json'
-default_user_json                   = 'user_credentials.json'
-default_google_team_drive_folder_id = '1SYDgNiGgRGTZ8EsmRxsg3PE6sL4GzJTE'
-default_smtp_auth                   = 'smtp_auth.txt'
-default_recipient                   = 'harrison@epiphanycatholicchurch.org'
-default_client                      = 'no-reply@epiphanycatholicchurch.org'
-
 ###########################################################
 
-def find_relevant_datetimes(args_date):
-    if not isinstance(args_date, datetime.datetime):
-        end_date = datetime.datetime.fromisoformat(args_date)
-    else: end_date = args_date
-    month_start = end_date.replace(day=1)                                           # Monthly defaults to 1st of current month
-    quarter_start = month_start                                                     # Quarter and Fiscal default to monthly (so they won't run)
-    fiscal_start = month_start                                
-    if end_date.day == 1:
-        month_start = end_date.replace(month=end_date.month-1)                      # On the 1st, Monthly starts at 1st of previous month
-        if end_date.month in [1,4,7,10]:
-            quarter_start = month_start.replace(month=month_start.month-3)          # Quarterly reports generated on Oct/Jan/Apr/Jul 1st
-            fiscal_start = month_start.replace(month = 7)
-            if end_date.month in [1,4,7]:
-                fiscal_start = fiscal_start.replace(year=fiscal_start.year-1)       # Jan/April/July FY reports start in previous calendar year
-                if end_date.month == 1:
-                    quarter_start = quarter_start.replace(year=quarter_start.year-1)# Jan quarterly report needs data from previous Oct
-
-    return end_date, month_start, quarter_start, fiscal_start
-
 def setup_cli_args():
-    tools.argparser.add_argument('--xlsx',
+    parser = argparse.ArgumentParser(description='Ricoh reporting')
+    parser.add_argument('--xlsx',
                         default='printlog.xlsx',
                         help='XLSX file to write')
-    tools.argparser.add_argument('--db',
+    parser.add_argument('--db',
                         required=True,
                         help='SQLite3 database from which to read values')
-    tools.argparser.add_argument('--first',
+    parser.add_argument('--first',
                         help='First local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
-    tools.argparser.add_argument('--last',
+    parser.add_argument('--last',
                         help='Last local timestamp "yyyy-mm-dd[ hh:mm:ss]"')
-    tools.argparser.add_argument('--end-date',
-                        default=datetime.datetime.today(),
-                        help='Date of generated report')
 
-    tools.argparser.add_argument('--logfile',
+    parser.add_argument('--logfile',
                         default=None,
                         help='Optional output logfile')
 
-    tools.argparser.add_argument('--slack-token-filename',
-                        required=False,
+    parser.add_argument('--smtp-recipient',
+                        help='Who the email should be sent to')
+    parser.add_argument('--smtp-auth-file',
+                        help='File containing SMTP AUTH username:password')
+
+    parser.add_argument('--slack-token-filename',
                         help='File containing the Slack bot authorization token')
 
-    tools.argparser.add_argument('--verbose',
+    parser.add_argument('--google-parent-folder-id',
+                        help='If provided, ID of Google Drive folder where to upload the files')
+    parser.add_argument('--app-id',
+                        default='client_id.json',
+                        help='Filename containing Google application ID')
+    parser.add_argument('--user-creds',
+                        default='user-credentials.json',
+                        help='Filename containing Google user credentials')
+
+    parser.add_argument('--verbose',
                         default=False,
                         action='store_true',
                         help='Enable verbose output')
-    tools.argparser.add_argument('--debug',
+    parser.add_argument('--debug',
                         default=False,
                         action='store_true',
                         help='Enable extra debugging')
-    tools.argparser.add_argument(f'--app-id',
-                        default=default_app_json,
-                        help='Filename containing Google application credentials')
-    tools.argparser.add_argument(f'--user_credentials',
-                        default=default_user_json,
-                        help='Filename containing Google user credentials')
-    tools.argparser.add_argument(f'--drive_folder',
-                        default=default_google_team_drive_folder_id,
-                        help='Destination Google Drive folder for uploads')
-    tools.argparser.add_argument(f'--smtp-auth-file',
-                        default=default_smtp_auth,
-                        help='File containing SMTP AUTH username:password for {smtp_server}')
-    tools.argparser.add_argument(f'--recipient',
-                        default=default_recipient,
-                        help='Valid email address of recipient')
-    tools.argparser.add_argument(f'--client',
-                        help='Sender address',
-                        default=default_client)
-    args = tools.argparser.parse_args()
+
+    args = parser.parse_args()
 
     # Sanity check
     if not os.path.exists(args.db):
         print(f"ERROR: SQLite3 database does not exist {args.db}")
         exit(1)
 
-    # Convert the string timestamp to a Python datetime in GMT
+    # It makes no sense to supply some bu not all of the 2 SMTP args
+    smtp = 0
+    if args.smtp_recipient:
+        smtp += 1
+    if args.smtp_auth_file:
+        smtp += 1
+    if not (smtp == 0 or smtp == 2):
+        print("ERROR: Must specify either none or all of --smtp-recipient, --smtp-auth-file")
+        exit(1)
+
+    # It makes no sense to supply some but not all of the 3 google
+    # args
+    google = 0
+    if args.app_id:
+        google += 1
+    if args.user_creds:
+        google += 1
+    if args.google_parent_folder_id:
+        google += 1
+    if not (google == 0 or google == 3):
+        print("ERROR: Must specify either none or all of --app-id, --user-creds, and --google-parent-folder-id")
+        exit(1)
+
+    # Convert the string timestamp to a Python datetime in the local
+    # timezone
     def _convert_timestamp(timestamp):
         # The timestamp must be of one of the following forms:
         # yyyy-mm-dd
@@ -139,11 +132,11 @@ def setup_cli_args():
             print(f"ERROR: Timestamp is not in expected format: {timestamp}")
             exit(1)
 
-        # Convert to GMT
-        return ts.astimezone(gmt)
+        # Assume that the time was specified in the local timezone
+        local_tz = tzlocal.get_localzone()
+        return ts.astimezone(local_tz)
 
     # Normalize the two timestamps
-    gmt = pytz.timezone("GMT")
     if args.first:
         args.first = _convert_timestamp(args.first)
     if args.last:
@@ -153,18 +146,47 @@ def setup_cli_args():
 
 ###########################################################
 
+# Find the first and last timestamps in the database
+def find_first_last_timestamp(log, conn):
+    def _doit(direction):
+        c    = conn.cursor()
+        sql  = f'SELECT timestamp FROM printlog GROUP BY timestamp ORDER BY datetime(timestamp) {direction} LIMIT 1'
+        log.debug(f"SQL: {sql}")
+        c.execute(sql)
+        rows = c.fetchall()
+
+        return rows
+
+    log.debug(f"Looking for first and last timestamps")
+    rows = _doit("ASC")
+    if len(rows) < 1:
+        log.verbose("Database is empty: there is no first and last timestamp")
+        return None, None
+
+    first = datetime.datetime.fromisoformat(rows[0]['timestamp'])
+    log.debug(f"Found first timestamp: {first}")
+
+    rows = _doit("DESC")
+    last = datetime.datetime.fromisoformat(rows[0]['timestamp'])
+    log.debug(f"Found last timestamp: {last}")
+
+    return first, last
+
 # Find the first timestamp in the database that is >= the requested
 # timestamp. Remember that the timestamp parameter is in local time, but
 # timestamps in the database are in GMT.
 def find_timestamp(log, conn, target_timestamp):
-    c    = conn.cursor()
-    log.debug(f"Looking for timestamp: {target_timestamp}")
+    c = conn.cursor()
+    gmt = pytz.timezone("GMT")
+    gmt_ts = target_timestamp.astimezone(gmt)
+
+    log.debug(f"Looking for timestamp: {gmt_ts}")
     sql  = f'SELECT timestamp FROM printlog WHERE datetime(timestamp)>=datetime(?) GROUP BY timestamp ORDER BY datetime(timestamp) LIMIT 1'
     log.debug(f"SQL: {sql}")
-    c.execute(sql, [target_timestamp])
+    c.execute(sql, [gmt_ts])
     rows = c.fetchall()
 
-    log.debug(f"Found {len(rows)} rows greater than {target_timestamp}")
+    log.debug(f"Found {len(rows)} rows greater than {gmt_ts}")
     if len(rows) < 1:
         return None
     return datetime.datetime.fromisoformat(rows[0]['timestamp'])
@@ -401,34 +423,6 @@ def write_to_xlsx(log, fields, depts, filename, timestamp_first, timestamp_last)
 
     wb.save(filename)
     log.info(f"Wrote {filename}")
-    return filename
-
-###########################################################
-
-def generate_report(log, conn, timestamp_first, timestamp_last, depts_last, fields, xlsx):
-    # Fetch all the departments that are available at those two timestamps.
-    depts_first = fetch_depts_at_timestamp(log, conn, timestamp_first)
-
-    # We may have found a different set of departments at the first and last
-    # timestamps (e.g., if a department was added or deleted between the two
-    # timestamps).  Compute the union of departments that we found.
-    depts = compute_depts_union(log, depts_first, depts_last)
-
-    # Go fetch any missing data (i.e., a department for which we have only a
-    # first or last set of data).
-    fetch_missing_timestamps(log, conn, timestamp_first, timestamp_last, depts)
-
-    # Now that we have all the timestamps, fetch all the data
-    fetch_data(log, conn, depts)
-
-    # Now that we have first and last data for every single department, compute
-    # the deltas for all of them.
-    compute_deltas(log, depts)
-
-    report = write_to_xlsx(log, fields, depts, xlsx, timestamp_first, timestamp_last)
-
-    return report
-
 
 ###########################################################
 
@@ -452,6 +446,113 @@ def open_db(log, filename):
 
 ###########################################################
 
+def google_login(args, log):
+    log.debug("Logging in to Google...")
+    settings = {
+        'client_config_backend' : 'file',
+        'client_config_file'    : args.app_id,
+
+        'save_credentials'         : True,
+        'save_credentials_backend' : 'file',
+        'save_credentials_file'    : args.user_creds,
+
+        'get_refresh_token' : True,
+    }
+
+    gauth = GoogleAuth(settings=settings)
+    gauth.LocalWebserverAuth()
+
+    log.debug("Successfully logged in to Google")
+
+    drive = GoogleDrive(gauth)
+    return drive
+
+# Find a folder identified by this name/parent.  If it doesn't
+# exist, create it.
+def google_find_or_create_folder(drive, folder_name, parent_id, log):
+    q = f"'{parent_id}' in parents"
+    q += f" and title='{folder_name}'"
+    q += f" and mimeType='{Google.mime_types['folder']}'"
+    q += " and trashed=false"
+    log.debug(f"Query: {q}")
+    query = {
+        'q': q,
+        'corpora': 'allDrives',
+    }
+    file_list = drive.ListFile(query).GetList()
+    for folder in file_list:
+        if folder['title'] == folder_name:
+            log.debug(f'Found Google Drive target folder: "{folder_name}" (ID: {folder["id"]})')
+            return folder
+
+    # If we didn't find it, then go create that folder
+    log.debug(f"Google Drive target folder \"{folder_name}\" not found in parent {parent_id} -- need to create it")
+    data = {
+        'title'    : folder_name,
+        'parents'  : [ { 'id': parent_id } ],
+        'mimeType' : Google.mime_types['folder'],
+    }
+    folder = drive.CreateFile(data)
+    folder.Upload()
+    log.debug(f"Created Google Drive target folder '{folder_name}' (ID: {folder['id']})")
+    return folder
+
+def upload_to_google(drive, timestamp, args, log):
+    log.info(f'Uploading file "{args.xlsx}" to Google Drive (parent: {args.google_parent_folder_id}')
+
+    # Look for the year folder where we'll upload this file
+    year = timestamp.year
+    year_folder = google_find_or_create_folder(drive, str(year),
+                                               args.google_parent_folder_id,
+                                               log)
+
+    # Upload the file into this folder
+    basename = os.path.basename(args.xlsx)
+    if basename.endswith('.xlsx'):
+        basename = basename[:-5]
+    metadata = {
+        'title'    : basename,
+        'mimeType' : Google.mime_types['xlsx'],
+        'parents'  : [ {'id': year_folder['id'] } ],
+    }
+
+    file = drive.CreateFile(metadata)
+    file.SetContentFile(args.xlsx)
+    file.Upload({'convert' : True})
+
+    log.info(f'Successfully uploaded Google file: "{basename}" (ID: {file["id"]})')
+
+    return file
+
+###########################################################
+
+def email_results(ts_start, ts_end, args, gfile, log):
+    def _ts(ts):
+        local_tz = tzlocal.get_localzone()
+        local_ts = ts.astimezone(local_tz)
+        return local_ts.strftime('%Y-%m-%d %H:%M:%S')
+
+    ts_start = _ts(ts_start)
+    ts_end   = _ts(ts_end)
+
+    subject = f'Ricoh data: {ts_start} - {ts_end}'
+    url = f'https://docs.google.com/spreadsheets/d/{gfile["id"]}'
+    body = f'''<p>The Ricoh Report for {ts_start} - {ts_end} has been generated and uploaded:</p>
+
+<p><a href="{url}">Ricoh data {ts_start} - {ts_end}</a></p>
+
+<p>Your friendly server,<br />
+Ronald</p>'''
+
+    ECC.send_email(to_addr=args.smtp_recipient,
+                   subject=subject,
+                   body=body,
+                   log=log,
+                   content_type='text/html',
+                   from_addr='no-reply@epiphanycatholicchurch.org')
+
+###########################################################
+
 def main():
     args = setup_cli_args()
     log  = ECC.setup_logging(info=args.verbose,
@@ -462,7 +563,13 @@ def main():
 
     conn, fields = open_db(log, args.db)
 
-    last, first_month, first_quarter, first_year = find_relevant_datetimes(args.end_date)
+    # If the first and last timestamps were not specified, use the first and
+    # last timestamps in the database.
+    first, last = find_first_last_timestamp(log, conn)
+    if args.first == None:
+        args.first = first
+    if args.last == None:
+        args.last = last
 
     # Find the earliest timestamp in the database that is greater than or equal
     # to the timestamps that were specified on the command line.
@@ -473,68 +580,41 @@ def main():
             exit(1)
         return ts
 
-    timestamp_month   = _check('month', first_month)
-    timestamp_last    = _check('last', last)
+    timestamp_first = _check('first', args.first)
+    timestamp_last  = _check('last', args.last)
 
-    reports={}
-
+    # Fetch all the departments that are available at those two timestamps.
+    depts_first = fetch_depts_at_timestamp(log, conn, timestamp_first)
     depts_last  = fetch_depts_at_timestamp(log, conn, timestamp_last)
 
-    reports['month'] = {
-        'filename': generate_report(log, conn, timestamp_month, timestamp_last, depts_last, fields, args.end_date + ' monthly.xlsx'),
-        'type': 'xlsx',
-    }
+    # We may have found a different set of departments at the first and last
+    # timestamps (e.g., if a department was added or deleted between the two
+    # timestamps).  Compute the union of departments that we found.
+    depts = compute_depts_union(log, depts_first, depts_last)
 
-    if first_quarter != first_month:
-        timestamp_quarter = _check('quarter', first_quarter)
-        quarterly_label = args.date + ' quarterly report.xlsx'
-        reports['quarter'] = {
-            'filename': generate_report(log, conn, timestamp_quarter, timestamp_last, depts_last, fields, args.end_date + ' quarterly.xlsx'),
-            'type': 'xlsx',
-        }
+    # Go fetch any missing data (i.e., a department for which we have only a
+    # first or last set of data).
+    fetch_missing_timestamps(log, conn, timestamp_first, timestamp_last, depts)
 
-    if first_year != first_month:
-        timestamp_year = _check('year', first_year)
-        reports['year'] = {
-            'filename': generate_report(log, conn, timestamp_year, timestamp_last, depts_last, fields, args.end_date + ' yearly.xlsx'),
-            'type': 'xlsx',
-        }
-        
+    # Now that we have all the timestamps, fetch all the data
+    fetch_data(log, conn, depts)
+
+    # Now that we have first and last data for every single department, compute
+    # the deltas for all of them.
+    compute_deltas(log, depts)
+
+    write_to_xlsx(log, fields, depts, args.xlsx, timestamp_first, timestamp_last)
+
+    # If a Google Drive folder ID was provided, then we need to upload
+    # the result
+    gfile = None
+    if args.google_parent_folder_id:
+        drive = google_login(args, log)
+        gfile = upload_to_google(drive, timestamp_first, args, log)
+
+    if args.smtp_auth_file:
+        email_results(timestamp_first, timestamp_last, args, gfile, log)
 
     conn.close()
-    body = f'''<h1>Ricoh Reports</h1>
-
-<p>The monthly Ricoh report from {args.end_date} is attached'''
-
-    if first_quarter != first_month:
-        body = body + ''', along with the quarterly report'''
-    if first_year != first_month:
-        body = body + ''' and the yearly report'''
-
-    body = body + '''.</p>
-
-<p>Your friendly server,<br />
-Myrador</p>'''
-
-    service_drive = ECCUploader.setup_services(args.app_id, args.user_credentials, log)
-
-    ECCUploader.verify_target_google_folder(service_drive, args.drive_folder, log)
-
-    # Upload the report files to the target ID folder
-    # This script creates an xlsx, but we want a Google sheet on Drive, so pass
-    # 'sheet' subtype rather than 'xlsx' so Google converts it.
-    for report in reports.values():
-        log.info(f"Uploading file {report}")
-        ECCUploader.upload_to_google(service_drive, report['filename'], 'sheet',
-                         args.drive_folder, log)
-
-    subject = f'{args.end_date} Ricoh Reports'
-    log.debug(f'Reports is: {reports.values()}')
-    ECC.send_email(to_addr=args.recipient,
-                   subject=subject,
-                   body=body,
-                   log=log,
-                   content_type='text/html',
-                   from_addr='no-reply@epiphanycatholicchurch.org'):
 
 main()

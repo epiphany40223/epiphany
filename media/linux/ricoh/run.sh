@@ -5,8 +5,10 @@ set -xeuo pipefail
 base=$HOME/git/epiphany/media/linux
 prog_dir=$base/ricoh
 logfile=$HOME/logfiles/linux/ricoh/logfile.txt
-slack_token=$HOME/credentials/slack-token.txt
-ricoh_password=$HOME/credentials/ricoh-password.txt
+credential_dir=/home/coeadmin/credentials
+slack_token=$credential_dir/slack-token.txt
+ricoh_password=$credential_dir/ricoh-password.txt
+smtp_creds=$credential_dir/smtp-auth.txt
 sqlite3_file=$prog_dir/ricoh.sqlite3
 
 cd $prog_dir
@@ -37,6 +39,35 @@ if test $t -le 14; then
         --verbose \
         --csv $file \
         --timestamp "$gmt_timestamp"
+fi
+
+# Run once a month, on the 9th
+day=`date '+%d'`
+if test $day -eq 9 && test $t -le 14; then
+    # This folder is in the ECC Tech Committee Google Shared Drive,
+    # under "Data/Ricoh".
+    google_folder=1zPjpPSFiNttptZ_TEi6FCVOzaBi7O5dD
+    email_to=ricoh-reporting@epiphanycatholicchurch.org
+
+    name=upload-ricoh-to-google-drive
+    cred_dir=$cred_base/$name
+    client_id=$cred_dir/$name-client-id.json
+    user_creds=$cred_dir/$name-user-credentials.json
+
+    first=`date +%Y-%m-%d "1 month ago"`
+    last=`date +%Y-%m-%d yesterday`
+    ./report.py \
+        --debug \
+        --smtp-recipient $email_to \
+        --smtp-auth-file $smtp_creds \
+        --db ricoh.sqlite3 \
+        --first $first \
+        --last $last \
+        --xlsx "$first to $last ricoh data.xlsx" \
+        --app-id $client_id \
+        --user-creds $user_creds \
+        --google-parent-folder-id $google_folder \
+        --slack-token-filename $slack_token
 fi
 
 exit 0
