@@ -50,12 +50,13 @@ if test $day -eq 9 && test $t -le 14; then
     email_to=ricoh-reporting@epiphanycatholicchurch.org
 
     name=upload-ricoh-to-google-drive
+    cred_base=$HOME/credentials
     cred_dir=$cred_base/$name
     client_id=$cred_dir/$name-client-id.json
     user_creds=$cred_dir/$name-user-credentials.json
 
-    first=`date +%Y-%m-%d "1 month ago"`
-    last=`date +%Y-%m-%d yesterday`
+    first=`date +%Y-%m-%d -d "1 month ago"`
+    last=`date +%Y-%m-%d -d yesterday`
     ./report.py \
         --debug \
         --smtp-recipient $email_to \
