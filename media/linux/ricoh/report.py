@@ -36,7 +36,6 @@ except Exception as e:
     sys.stderr.write(f"{e}\n")
     exit(1)
 
-import ECCEmailer
 import ECCUploader
 
 default_app_json                    = 'client_id.json'
@@ -459,6 +458,7 @@ def main():
                              debug=args.debug,
                              logfile=args.logfile, rotate=True,
                              slack_token_filename=args.slack_token_filename)
+    ECC.setup_email(args.smtp_auth_file, log=log)
 
     conn, fields = open_db(log, args.db)
 
@@ -515,7 +515,6 @@ def main():
 
 <p>Your friendly server,<br />
 Myrador</p>'''
-    bodytype = 'html'
 
     service_drive = ECCUploader.setup_services(args.app_id, args.user_credentials, log)
 
@@ -531,7 +530,11 @@ Myrador</p>'''
 
     subject = f'{args.end_date} Ricoh Reports'
     log.debug(f'Reports is: {reports.values()}')
-    ECCEmailer.send_email(body, bodytype, reports, args.smtp_auth_file, args.recipient,
-                          subject, args.client, log)
+    ECC.send_email(to_addr=args.recipient,
+                   subject=subject,
+                   body=body,
+                   log=log,
+                   content_type='text/html',
+                   from_addr='no-reply@epiphanycatholicchurch.org'):
 
 main()
