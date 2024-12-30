@@ -177,7 +177,7 @@ def google_find_or_create_folder(drive, folder_name, parent_id):
     log.debug("GTD target folder not found -- need to create it")
     data = {
         'title'    : folder_name,
-        'parents'  : [ parent_id ],
+        'parents'  : [ { "id" : parent_id } ],
         'mimeType' : Google.mime_types['folder'],
     }
     folder = drive.CreateFile(data)

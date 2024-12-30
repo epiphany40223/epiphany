@@ -1,3 +1,5 @@
 bs4
 pytz
+tzlocal
 openpyxl
+pydrive2
