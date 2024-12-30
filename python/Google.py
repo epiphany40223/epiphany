@@ -12,6 +12,7 @@ import time
 
 import httplib2
 import requests
+import mimetypes
 
 from pprint import pprint
 from pprint import pformat
@@ -27,20 +28,23 @@ mime_types = {
     'sheet'      : 'application/vnd.google-apps.spreadsheet',
     'folder'     : 'application/vnd.google-apps.folder',
 
-    'json'       : 'application/json',
-
-    'mp3'        : 'audio/mpeg',
-
-    'csv'        : 'text/csv',
-
-    'pdf'        : 'application/pdf',
-
-    'xlsx'       : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-
     # JMS this is probably a lie, but it's useful for comparisons
-    'team_drive' : 'application/vnd.google-apps.team_drive',
+    'team_drive'   : 'application/vnd.google-apps.team_drive',
+    'shared_drive' : 'application/vnd.google-apps.team_drive',
 
-    'html'       : 'text/html',
+    # Use the mime types as defined by a publicly-maintained python
+    # module (vs. hard-coding our own values).
+    'json'       : mimetypes.guess_type('file:///foo.json')[0],
+
+    'mp3'        : mimetypes.guess_type('file:///foo.mp3')[0],
+
+    'csv'        : mimetypes.guess_type('file:///foo.csv')[0],
+
+    'pdf'        : mimetypes.guess_type('file:///foo.pdf')[0],
+
+    'html'       : mimetypes.guess_type('file:///foo.html')[0],
+
+    'xlsx'       : mimetypes.guess_type('file:///foo.xlsx')[0],
 }
 
 # Scopes documented here:

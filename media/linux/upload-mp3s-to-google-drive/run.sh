@@ -11,6 +11,8 @@ cred_base=$HOME/credentials
 cred_dir=$cred_base/$name
 client_id=$cred_dir/$name-client-id.json
 user_creds=$cred_dir/$name-user-credentials.json
+# This is the ID for the "ECC Recordings" Google Shared Drive
+shared_drive_id=0AJQlNh2zkxqWUk9PVA
 
 data_dir=$HOME/wc-mp3-recordings
 incoming_ftp_dir=/mnt/c/ftp/ECC-recordings
@@ -30,5 +32,6 @@ set -u
     --logfile $logfile \
     --app-id $client_id \
     --user-creds $user_creds \
+    --google-shared-drive-id $shared_drive_id \
     --data-dir $data_dir \
     --incoming-ftp-dir $incoming_ftp_dir

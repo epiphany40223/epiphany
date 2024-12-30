@@ -2,6 +2,14 @@
 #
 # Various Google authentication utility functions.
 #
+# NOTE: if you are just doing Google Drive, YOU SHOULD PROBABLY NOT BE
+# USING THIS TO LOGIN!
+#
+# INSTEAD: you should use the significantly-simpler PyDrive2 Python
+# module: https://docs.iterative.ai/PyDrive2/.  See
+# media/linux/upload-mp3s-to-google-drive and
+# media/linux/google-drive-uploader for some examples.
+#
 # Needs:
 #
 # pip3 install --upgrade httplib2 google-api-python-client oauth2client

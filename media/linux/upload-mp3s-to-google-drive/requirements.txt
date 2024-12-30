@@ -1,2 +1,2 @@
-google-api-python-client
-oauth2client
+-r ecc-python-modules/requirements.txt
+pydrive2
