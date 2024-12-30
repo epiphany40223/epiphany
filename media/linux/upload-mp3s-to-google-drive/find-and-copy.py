@@ -20,7 +20,6 @@ if os.path.isfile(moddir):
 sys.path.insert(0, moddir)
 
 import ECC
-import ECCEmailer
 import Google
 
 import re
@@ -266,13 +265,12 @@ Greg</p>'''
 
     smtp_to   = args.smtp[1]
     smtp_from = args.smtp[2]
-    ECCEmailer.send_email(body=message, bodytype='html',
-                          attachments=None,
-                          recipient=smtp_to,
-                          subject=f"Google Shared Drive upload results ({subject})",
-                          smtp_from=smtp_from,
-                          smtp_auth_file=args.smtp_auth_file,
-                          log=log)
+    ECC.send_email(to_addr=smtp_to,
+                   subject=f"Google Shared Drive upload results ({subject})",
+                   body=message,
+                   log=log,
+                   content_type='text/html',
+                   from_addr=smtp_from)
 
 #-------------------------------------------------------------------
 
@@ -458,6 +456,9 @@ def add_cli_args():
     if l > 0 and l != 3:
         log.error("Need exactly 3 arguments to --smtp: server to from")
         exit(1)
+
+    smtp_server = args.smtp[0]
+    ECC.setup_email(args.smtp_auth_file, smtp_server=smtp_server, log=log)
 
     if not os.path.isdir(args.data_dir):
         log.error('Data directory "{0}" does not exist or is not accessible'
