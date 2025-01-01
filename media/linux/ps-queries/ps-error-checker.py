@@ -32,10 +32,32 @@ from datetime import datetime
 
 ##############################################################################
 
-def send_families_email(to, subject, description, families, args, log):
+def get_initial_style_html():
+    line = r'''
+<head>
+<style>
+table { border-collapse: collapse; }
+th, td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+tr:nth-child(even) { background-color: #f2f2f2; }
+</style>
+</head>
+<body>
+<html>
+'''
 
+    lines = [ line ]
+    return lines
+
+
+##############################################################################
+
+def send_families_email(to, subject, description, families, args, log):
     if len(families) == 0:
-        log.debug(f"Found NO matching families - no need to send an email")
+        log.debug(f"Found no matching families - no need to send an email")
         return
 
     columns = [('familyDUID', 'Family DUID'),
@@ -44,7 +66,7 @@ def send_families_email(to, subject, description, families, args, log):
 
     families = sorted(families, key=lambda family: (family["lastName"], family["firstName"]))
 
-    bodylist = []
+    bodylist = get_initial_style_html()
     bodylist.append(f'<p>{description}</p>')
     bodylist.append('<p><table border=0>\n<tr>')
     bodylist.append('<tr>')
@@ -65,17 +87,13 @@ def send_families_email(to, subject, description, families, args, log):
     bodylist.append('</html>')
 
     body = "\n".join(bodylist)
-    # JMS Convert to ECC.send_email()
-    ECCEmailer.send_email(body, 'html', None,
-                          args.smtp_auth_file,
-                          to, subject, args.smtp_client,
-                          log)
+    ECC.send_email(to_addr=to, subject=subject, body=body,
+                       log=log, content_type='text/html')
 
 ##############################################################################
 
 def send_groups_email(to, subject, columns, description, items, args, log, group_column = None):
-
-    bodylist = []
+    bodylist = get_initial_style_html()
     bodylist.append(f'<p>{description}</p>')
     bodylist.append('<p><table border=0>\n<tr>')
     bodylist.append('<tr>')
@@ -106,11 +124,8 @@ def send_groups_email(to, subject, columns, description, items, args, log, group
     bodylist.append('</html>')
 
     body = "\n".join(bodylist)
-    # JMS Convert to ECC.send_email()
-    ECCEmailer.send_email(body, 'html', None,
-                          args.smtp_auth_file,
-                          to, subject, args.smtp_client,
-                          log)
+    ECC.send_email(to_addr=to, subject=subject, body=body,
+                   log=log, content_type='text/html')
 
 ##############################################################################
 
@@ -193,12 +208,15 @@ def check_for_inactive_families_with_active_members(families, log, args):
 
 ##############################################################################
 
-def check_for_whitespace_data(members, families, log, args):
+def check_for_whitespace_data(members, families, ecc_registered_org_id, log, args):
     log.debug('Checking for Members or Families with Whitespace in their field names')
     whitespace_data = []
     def _check(category, name, item):
         for key, value in item.items():
             if type(value) is not str:
+                continue
+            # Ignore the fields that we created in ParishSoftv2.py
+            if key.startswith('py '):
                 continue
 
             svalue = value.strip()
@@ -216,6 +234,13 @@ def check_for_whitespace_data(members, families, log, args):
 
     key = 'py members'
     for duid, family in families.items():
+        # Only check Families that are registered at ECC.  We can't
+        # edit Families that are not registered to Epiphany, so
+        # there's no point checking Families that are not registered
+        # to us.
+        if family['registeredOrganizationID'] != ecc_registered_org_id:
+            continue
+
         name = f'{family["firstName"]} {family["lastName"]} (DUID: {duid})'
         _check("Family", name, family)
 
@@ -228,7 +253,7 @@ def check_for_whitespace_data(members, families, log, args):
     log.debug(f'Found {len(whitespace_data)} results')
 
     if len(whitespace_data) != 0:
-        bodylist = []
+        bodylist = get_initial_style_html()
         bodylist.append('<p>We have identified the following DUIDs in ParishSoft that have whitespace in thier fields:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
@@ -239,10 +264,12 @@ def check_for_whitespace_data(members, families, log, args):
         bodylist.append('</body></html>')
 
         body = "\n".join(bodylist)
-        # JMS Convert to ECC.send_email()
-        ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
+
+        subject = 'ParishSoft Families and Members with whitespace'
+        ECC.send_email(to_addr=args.whitespace, subject=subject, body=body,
+                       log=log, content_type='text/html')
     else:
-        log.debug('Found NO matching members or families - no need to send an email')
+        log.debug('Found no matching members or families - no need to send an email')
 
 ##############################################################################
 
@@ -254,7 +281,7 @@ def check_for_ministries_with_inactive_members(families, members, log, args):
         if ParishSoft.member_is_active(member):
             continue
         for name, ministry in member['py ministries'].items():
-            results.append({'ministryName': ministry['name'], 
+            results.append({'ministryName': ministry['name'],
                            'memberDUID': member['memberDUID'],
                            'lastName': member['lastName'],
                            'firstName': member['firstName']}),
@@ -290,7 +317,7 @@ def check_for_member_workgroups_with_inactive_members(members, log, args):
         if ParishSoft.member_is_active(member):
             continue
         for name, workgroup in member['py workgroups'].items():
-            results.append({'workgroupName': workgroup['name'], 
+            results.append({'workgroupName': workgroup['name'],
                            'memberDUID': member['memberDUID'],
                            'lastName': member['lastName'],
                            'firstName': member['firstName']}),
@@ -325,7 +352,7 @@ def check_for_family_workgroups_with_inactive_families(families, log, args):
         if ParishSoft.family_is_active(family):
             continue
         for name, workgroup in family['py workgroups'].items():
-            results.append({'workgroupName': workgroup['name'], 
+            results.append({'workgroupName': workgroup['name'],
                            'familyDUID': family['familyDUID'],
                            'lastName': family['lastName'],
                            'firstName': family['firstName']}),
@@ -357,9 +384,7 @@ def check_for_ministries_with_no_staff_or_chair(ministries, log, args):
     results = []
 
     for ministry_id, ministry in ministries.items():
-        #log.debug(ministry['name'])
-        #exit(0)
-        log.debug(f'Checking ministry: {ministry['name']}')
+        log.debug(f"Checking ministry: {ministry['name']}")
         found_chair = False
         found_staff = False
         reasons = []
@@ -367,16 +392,16 @@ def check_for_ministries_with_no_staff_or_chair(ministries, log, args):
         for member in ministry['membership']:
             if member["ministryRoleName"] == "Chairperson":
                 found_chair = True
-                log.debug(f'({ministry['name']}) Found Chairperson: {member['firstName']} {member['lastName']}')
+                log.debug(f"({ministry['name']}) Found Chairperson: {member['firstName']} {member['lastName']}")
             if member["ministryRoleName"] == "Staff":
                 found_staff = True
-                log.debug(f'({ministry['name']}) Found Staff member: {member['firstName']} {member['lastName']}')
+                log.debug(f"({ministry['name']}) Found Staff member: {member['firstName']} {member['lastName']}")
 
         if not found_chair:
-            log.debug(f'({ministry['name']}) No Chairperson found')
+            log.debug(f"({ministry['name']}) No Chairperson found")
             reasons.append('No chairperson found')
         if not found_staff:
-            log.debug(f'({ministry['name']}) No Staff Member found')
+            log.debug(f"({ministry['name']}) No Staff Member found")
             reasons.append('No staff member found')
 
         if len(reasons) > 0:
@@ -405,7 +430,8 @@ def check_for_ministries_with_no_staff_or_chair(ministries, log, args):
 ##############################################################################
 
 def check_for_workgroups_with_members_without_emails(member_workgroups, members, families, log, args):
-    #We assume we care about having emails for any given workgroup unless specifically told otherwise
+    # We assume we care about having emails for any given workgroup
+    # unless specifically told otherwise
     log.debug('Checking for Workgroups with Members without Emails')
     results = []
 
@@ -425,13 +451,13 @@ def check_for_workgroups_with_members_without_emails(member_workgroups, members,
         'Homebound & 90 yrs',
         'Default',
         ]
-                                
+
     for wg in member_workgroups.values():
         if wg['name'] in dont_care_workgroups_list:
-            log.debug(f'Workgroup {wg['name']} was skipped due to dont_care_workgroups_list')
+            log.debug(f"Workgroup {wg['name']} was skipped due to dont_care_workgroups_list")
             continue
 
-        log.debug(f'Checking workgroup: {wg['name']}')
+        log.debug(f"Checking workgroup: {wg['name']}")
 
         for entry in wg['membership']:
             reasons = []
@@ -439,7 +465,8 @@ def check_for_workgroups_with_members_without_emails(member_workgroups, members,
             member_duid = entry['py member duid']
             member = members[member_duid]
             if not ParishSoft.member_is_active(member):
-                #We already handle inactive or deceased members in check_for_member_workgroups_with_inactive_members()
+                # We already handle inactive or deceased members in
+                # check_for_member_workgroups_with_inactive_members()
                 continue
 
             if entry['emailAddress'] == None:
@@ -451,7 +478,7 @@ def check_for_workgroups_with_members_without_emails(member_workgroups, members,
                 reasons.append('Family "Send Mail" is not checked')
 
             if len(reasons) > 0:
-                results.append({'workgroupName': wg['name'], 
+                results.append({'workgroupName': wg['name'],
                        'memberDUID': entry['py member duid'],
                        'lastName': entry['lastName'],
                        'firstName': entry['firstName'],
@@ -482,7 +509,7 @@ def check_for_workgroups_with_members_without_emails(member_workgroups, members,
 
 ##############################################################################
 
-def check_for_associated_nonparishionar_families_with_do_not_communicate(families, log, args):
+def check_for_associated_nonparishioner_families_with_do_not_communicate(families, log, args):
     #HCJTODO: Look at removing "columns" in favor of just having good results names
     #ANP is specifically for families that want to receive communications, so if "do not commuicate" is set, that's a contradiction
     log.debug('Checking for Associated Non-Parishioner Families with Do Not Communicate')
@@ -534,8 +561,9 @@ def check_for_associated_nonparishionar_families_with_do_not_communicate(familie
 ##############################################################################
 
 def setup_cli():
-    default_from = 'no-reply@epiphanycatholicchurch.org'
+    # JMS Change this
     default_to   = 'jeff@squyres.com'
+
     parser = argparse.ArgumentParser(description='Do some ParishSoft data consistency checks')
 
     parser.add_argument('--smtp-auth-file',
@@ -553,10 +581,6 @@ def setup_cli():
                         action='store_true',
                         default=False,
                         help='If enabled, emit even more extra status messages during run')
-
-    parser.add_argument('--smtp-from',
-                        default=default_from,
-                        help='Email address to be used as sender')
 
     # JMS Let's make these CLI options a bit nicer
     parser.add_argument('--famnomemrecip',
@@ -615,6 +639,7 @@ def main():
                                              active_only=False,
                                              parishioners_only=False,
                                              log=log)
+    ecc_registered_org_id = ParishSoft.get_org_id()
 
     check_for_families_without_members(families, log, args)
 
@@ -622,7 +647,7 @@ def main():
 
     check_for_inactive_families_with_active_members(families, log, args)
 
-    check_for_whitespace_data(members, families, log, args)
+    check_for_whitespace_data(members, families, ecc_registered_org_id, log, args)
 
     check_for_ministries_with_inactive_members(families, members, log, args)
 
@@ -632,8 +657,10 @@ def main():
 
     check_for_ministries_with_no_staff_or_chair(ministries, log, args)
 
-    check_for_workgroups_with_members_without_emails(member_workgroups, members, families, log, args)
+    check_for_workgroups_with_members_without_emails(member_workgroups,
+                                                     members, families, log, args)
 
-    check_for_associated_nonparishionar_families_with_do_not_communicate(families, log, args)
+    check_for_associated_nonparishioner_families_with_do_not_communicate(families,
+                                                                         log, args)
 
 main()
