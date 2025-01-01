@@ -25,9 +25,9 @@ import Google
 import re
 import time
 import calendar
-import smtplib
 import shutil
 import argparse
+import humanize
 
 from pprint import pprint
 
@@ -47,9 +47,6 @@ to_gtd_dir = None
 archive_dir = None
 
 # Default for CLI arguments
-smtp = ["smtp-relay.gmail.com",
-        "jsquyres@epiphanycatholicchurch.org",
-        "no-reply@epiphanycatholicchurch.org"]
 incoming_ftp_dir = '/mnt/c/ftp/ECC-recordings'
 data_dir = 'data'
 app_id='client_id.json'
@@ -201,7 +198,8 @@ def google_create_dest_folder(drive, shared_drive, year, month):
 def google_email_results(shared_drive, gtded_files):
     # Send an email with all the results.
     subject = "all succeeded"
-    message = '''<p>Uploaded files to the Google Shared Drive:</p>
+    url = "https://drive.google.com/drive/u/0/folders/" + shared_drive['id']
+    message = f'''<p>Uploaded files to the Google Shared Drive:</p>
 
 <p>
 <table border="0">
@@ -211,13 +209,12 @@ def google_email_results(shared_drive, gtded_files):
 
 <tr>
 <td>Shared Drive:</td>
-<td><a href="{0}">{1}</a></td>
+<td><a href="{url}">{shared_drive["name"]}</a></td>
 </tr>
 
 <tr>
 <td colspan="2"><hr></td>
-</tr>\n\n'''.format("https://drive.google.com/drive/u/0/folders/" + shared_drive['id'],
-                    shared_drive['name'])
+</tr>\n\n'''
 
     count_failed = 0
     for file in gtded_files:
@@ -228,29 +225,28 @@ def google_email_results(shared_drive, gtded_files):
             count_failed = count_failed + 1
             subject = 'some failed'
 
-        msg = '''<tr>
-<td>Folder:</td>
-<td><a href="{0}">{1}/{2}</a></td>
+        # If the file is over 100MB in size, emit a warning
+        if file.scannedfile.size > 100 * (2 ** 20):
+            status += f'<br /><font color="red"><strong>WARNING: This file is unexpectedly large ({humanize.naturalsize(file.scannedfile.size, binary=True)})</strong></font>'
+
+        msg = f'''<tr>
+<td valign=top>Folder:</td>
+<td><a href="{file.folder_webviewlink}">{file.scannedfile.year}/{file.scannedfile.month}</a></td>
 </tr>
 
 <tr>
-<td>File:</td>
-<td><a href="{3}">{4}</a></td>
+<td valign=top>File:</td>
+<td><a href="{file.file_webviewlink}">{file.scannedfile.filename}</a></td>
 </tr>
 
 <tr>
-<td>Upload status:</td>
-<td>{5}</td>
+<td valign=top>Upload status:</td>
+<td>{status}</td>
 </tr>
 
 <tr>
 <td colspan="2"><hr></td>
-</tr>\n\n'''.format(file.folder_webviewlink,
-                   file.scannedfile.year,
-                   file.scannedfile.month,
-                   file.file_webviewlink,
-                   file.scannedfile.filename,
-                   status)
+</tr>\n\n'''
 
         message = message + msg
 
