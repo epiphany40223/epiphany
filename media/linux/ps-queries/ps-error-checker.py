@@ -23,26 +23,12 @@ if os.path.isfile(moddir):
 sys.path.insert(0, moddir)
 
 import ECC
-import ECCEmailer
 import ParishSoftv2 as ParishSoft
 
 from pprint import pprint
 from pprint import pformat
 
 from datetime import datetime
-
-#HJCTODO: Make pretty
-emailhead = '''
-<html>
-<head>
-<style>
-    table {
-        border-collapse: collapse;}
-    th, td {
-        text-align: left;
-        padding: 8px;
-        border-bottom: 1px solid #ddd;}\ntr:nth-child(even) {background-color: #f2f2f2; }</style></head><body>
-        '''
 
 ##############################################################################
 
@@ -59,7 +45,6 @@ def send_families_email(to, subject, description, families, args, log):
     families = sorted(families, key=lambda family: (family["lastName"], family["firstName"]))
 
     bodylist = []
-    bodylist.append(emailhead)
     bodylist.append(f'<p>{description}</p>')
     bodylist.append('<p><table border=0>\n<tr>')
     bodylist.append('<tr>')
@@ -80,6 +65,7 @@ def send_families_email(to, subject, description, families, args, log):
     bodylist.append('</html>')
 
     body = "\n".join(bodylist)
+    # JMS Convert to ECC.send_email()
     ECCEmailer.send_email(body, 'html', None,
                           args.smtp_auth_file,
                           to, subject, args.smtp_client,
@@ -90,7 +76,6 @@ def send_families_email(to, subject, description, families, args, log):
 def send_groups_email(to, subject, columns, description, items, args, log, group_column = None):
 
     bodylist = []
-    bodylist.append(emailhead)
     bodylist.append(f'<p>{description}</p>')
     bodylist.append('<p><table border=0>\n<tr>')
     bodylist.append('<tr>')
@@ -121,6 +106,7 @@ def send_groups_email(to, subject, columns, description, items, args, log, group
     bodylist.append('</html>')
 
     body = "\n".join(bodylist)
+    # JMS Convert to ECC.send_email()
     ECCEmailer.send_email(body, 'html', None,
                           args.smtp_auth_file,
                           to, subject, args.smtp_client,
@@ -243,7 +229,6 @@ def check_for_whitespace_data(members, families, log, args):
 
     if len(whitespace_data) != 0:
         bodylist = []
-        bodylist.append(emailhead)
         bodylist.append('<p>We have identified the following DUIDs in ParishSoft that have whitespace in thier fields:</p>')
 
         bodylist.append('<p><table border=0>\n<tr>')
@@ -254,6 +239,7 @@ def check_for_whitespace_data(members, families, log, args):
         bodylist.append('</body></html>')
 
         body = "\n".join(bodylist)
+        # JMS Convert to ECC.send_email()
         ECCEmailer.send_email(body, 'html', None, args.smtp_auth_file, args.whitespace, 'ParishSoft Families and Members with Whitespace', args.smtp_client, log)
     else:
         log.debug('Found NO matching members or families - no need to send an email')
@@ -548,8 +534,8 @@ def check_for_associated_nonparishionar_families_with_do_not_communicate(familie
 ##############################################################################
 
 def setup_cli():
-    default_client = 'no-reply@epiphanycatholicchurch.org'
-    default_email = "harrison@cabral.org"
+    default_from = 'no-reply@epiphanycatholicchurch.org'
+    default_to   = 'jeff@squyres.com'
     parser = argparse.ArgumentParser(description='Do some ParishSoft data consistency checks')
 
     parser.add_argument('--smtp-auth-file',
@@ -568,40 +554,40 @@ def setup_cli():
                         default=False,
                         help='If enabled, emit even more extra status messages during run')
 
-    parser.add_argument('--smtp-client',
-                        default= default_client,
-                        help= 'Email address to be used as sender client')
+    parser.add_argument('--smtp-from',
+                        default=default_from,
+                        help='Email address to be used as sender')
 
     # JMS Let's make these CLI options a bit nicer
     parser.add_argument('--famnomemrecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Families with No Members email')
     parser.add_argument('--afamimemrecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Active Families with Inactive Members email')
     parser.add_argument('--ifamamemrecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Inactive Families with Active Members email')
     parser.add_argument('--whitespace',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Whitespace Data email')
     parser.add_argument('--ministryrecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Ministries with Inactive Members email')
     parser.add_argument('--familyworkgrouprecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Family Workgroups with Inactive Families email')
     parser.add_argument('--memberworkgrouprecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Member Workgroups with Inactive Members email')
     parser.add_argument('--nochairrecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Ministries without a Staff Member or Chairperson email')
     parser.add_argument('--workgroupnoemailrecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Workgroups with Members without Email email')
     parser.add_argument('--nonparishionerrecip',
-                        default= default_email,
+                        default=default_to,
                         help= 'Recipient for the Associated Non-Parishioner Families without Email email')
 
     args = parser.parse_args()
@@ -620,6 +606,7 @@ def setup_cli():
 def main():
     args = setup_cli()
     log = ECC.setup_logging(debug=args.debug)
+    ECC.setup_email(args.smtp_auth_file, smtp_debug=args.debug, log=log)
 
     log.info("Loading ParishSoft data...")
     families, members, family_workgroups, member_workgroups, ministries = \
