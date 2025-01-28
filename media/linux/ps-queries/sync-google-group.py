@@ -47,14 +47,8 @@ Make sure you install the PIP modules in requirements.txt:
 """
 
 import os
-import re
 import sys
-import csv
 import json
-import time
-import logging
-import httplib2
-import logging.handlers
 
 # We assume that there is a "ecc-python-modules" sym link in this
 # directory that points to the directory with ECC.py and friends.
@@ -1217,14 +1211,25 @@ def _member_in_any_workgroup(member, workgroups):
 
 # Returns two values:
 # Boolean (member): if the Member is a chair of any ministry
-# Boolean (leader): False
+# Boolean (leader): if the Member is a staff member
 def find_ministry_chairs(member, **kwargs):
     if 'py ministries' not in member:
         return False, False
 
     for ministry in member['py ministries'].values():
-        if _is_ministry_leader( ministry):
-            return True, False
+        if _is_ministry_leader(ministry):
+            key = 'emailAddress'
+            if key not in member:
+                continue
+
+            owner = False
+            e = member[key]
+            if e.endswith('@epiphanycatholicchurch.org') or \
+               e.endswith('@ecclou.org') or \
+               e.endswith('@archlou.org'):
+                owner = True
+
+            return True, owner
 
     return False, False
 
