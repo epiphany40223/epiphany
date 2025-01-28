@@ -47,14 +47,8 @@ Make sure you install the PIP modules in requirements.txt:
 """
 
 import os
-import re
 import sys
-import csv
 import json
-import time
-import logging
-import httplib2
-import logging.handlers
 
 # We assume that there is a "ecc-python-modules" sym link in this
 # directory that points to the directory with ECC.py and friends.
