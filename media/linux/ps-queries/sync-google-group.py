@@ -129,12 +129,17 @@ def get_synchronizations():
         {
             "ministries" : [ '110-Ten Percent Committee' ],
             'ggroup'     : f'ten-percent-committee{ecc}',
-            'notify'     : f'pastoral-associate-social-resp{ecc},ps-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},ten-percent-chair{ecc},ps-google-sync{ecc}',
         },
         {
             "workgroups" : [ 'Ten Percent Treasurer' ],
             'ggroup'     : f'ten-percent-treasurer{ecc}',
-            'notify'     : f'pastoral-associate-social-resp{ecc},ps-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},ten-percent-chair{ecc},ps-google-sync{ecc}',
+        },
+        {
+            "workgroups" : [ 'Ten Percent ad hoc committee' ],
+            'ggroup'     : f'ten-percent-ad-hoc-committee{ecc}',
+            'notify'     : f'pastoral-associate-social-resp{ecc},ten-percent-chair{ecc},ps-google-sync{ecc}',
         },
         {
             "ministries" : [ '111-Hispanic Ministry Team' ],
