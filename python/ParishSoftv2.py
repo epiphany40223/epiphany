@@ -405,6 +405,10 @@ def _get_org(session, cache_dir, log):
 
     return _org_id
 
+# Public function to get Epiphany's ParishSoft org ID
+def get_org_id():
+    return _org_id
+
 ##############################################################################
 
 # Indexed by Family DUID
