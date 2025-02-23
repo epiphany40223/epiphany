@@ -743,6 +743,9 @@ def _link_member_workgroups(members, member_workgroup_memberships, log):
             continue
         for element in wg[key]:
             mem_duid = element['memberId']
+            # It is possible that a Member was added to a WG while at
+            # ECC, but then subsequently left ECC and is therefore no
+            # longer in our list of Members.
             if mem_duid in members:
                 member = members[mem_duid]
                 family = member['py family']
@@ -1046,6 +1049,7 @@ def _filter(families, members,
     # hell.  But there's only a few thousand families, so it's not
     # inefficient enough to matter (it still runs in less than a
     # second).
+    key = 'py member duid'
     for mem_duid in members_to_delete:
         member = members[mem_duid]
 
@@ -1053,13 +1057,13 @@ def _filter(families, members,
         for id in member_workgroup_memberships.keys():
             member_workgroup_memberships[id]['membership'][:] = \
                 [ element for element in member_workgroup_memberships[id]['membership']
-                  if element['py member duid'] != mem_duid ]
+                  if key in element and element[key] != mem_duid ]
 
         # Delete from Ministries
         for id in ministry_type_memberships.keys():
             ministry_type_memberships[id]['membership'][:] = \
                 [ element for element in ministry_type_memberships[id]['membership']
-                  if element['py member duid'] != mem_duid ]
+                  if key in element and element[key] != mem_duid ]
 
         # Delete this Member from their Family
         family = member['py family']
@@ -1071,6 +1075,7 @@ def _filter(families, members,
         # Delete from Members
         del members[mem_duid]
 
+    key = 'py family duid'
     for fam_duid in families_to_delete:
         family = families[fam_duid]
 
@@ -1078,13 +1083,13 @@ def _filter(families, members,
         for id in family_workgroup_memberships.keys():
             family_workgroup_memberships[id]['membership'][:] = \
                 [ element for element in family_workgroup_memberships[id]['membership']
-                  if element['py family duid'] != fam_duid ]
+                  if key in element and element[key] != fam_duid ]
 
         # Delete from Ministries
         for id in ministry_type_memberships.keys():
             ministry_type_memberships[id]['membership'][:] = \
                 [ element for element in ministry_type_memberships[id]['membership']
-                  if element['py family duid'] != fam_duid ]
+                  if key in element and element[key] != fam_duid ]
 
         # Delete from Members
         for member in family['py members']:
