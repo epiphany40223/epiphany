@@ -63,3 +63,20 @@ if test $h -eq 2 -a $m -lt 15; then
 	--app-id $goog_cred_dir/client-id-gsheet-driven-google-group.json \
 	--user-credentials $goog_cred_dir/user-credentials-gsheet-driven-google-group.json
 fi
+
+################################################################################
+# Do other things once a week, on Monday mornings
+#
+# NOTE: These scripts require Google credentials.
+################################################################################
+
+day=`date '+%a'`
+time=`date '+%H%M'`
+if test $day == 'Mon' -a -lt 14; then
+    ./ps-error-checker.py \
+        --debug \
+        --ps-api-keyfile $credential_dir/parishsoft-api-key.txt \
+        --ps-cache-dir=$git_base/ps-data \
+        --smtp-auth-file $credential_dir/smtp-auth.txt \
+	--logfile=$roster_logfile
+fi
