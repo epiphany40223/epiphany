@@ -234,6 +234,11 @@ def get_synchronizations():
             'ggroup'     : f'prayer-chain-ministry{ecc}',
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
+        {
+            'workgroups' : [ 'Worship Music Assistant' ],
+            'ggroup'     : f'worship-music-assistant{ecc}',
+            'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
+        },
 
         #############################
 
