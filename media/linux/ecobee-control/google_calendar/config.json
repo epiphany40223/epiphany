@@ -1,0 +1,85 @@
+{
+    "modes": {
+        "Occupied": {
+            "min temperature": 74,
+            "max temperature": 76
+        },
+        "Unoccupied": {
+            "min temperature": 70,
+            "max temperature": 78
+        },
+        "Overnight": {
+            "min temperature": 66,
+            "max temperature": 80
+        }
+    },
+
+    "Overnight start": "21:00",
+    "Overnight end": "06:00",
+
+    "timezone": "US/Eastern",
+    "calendars": [
+        "Epiphany Events",
+        "Areas F-H (CC)",
+        "Areas I-K (CC)",
+        "Chapel (WC)",
+        "Coffee Bar Room (CC)",
+        "Connector table 1",
+        "Connector table 2",
+        "Dining Room (EH)",
+        "Epiphany House-1-Polycom",
+        "Commercial Kitchen (CC)",
+        "Service Kitchen (CC)",
+        "Kitchen (EH)",
+        "Library (CC)",
+        "Lighthouse",
+        "Living Room (EH)",
+        "Media cart and projector",
+        "Narthex Gathering Area (WC)",
+        "Nursery (CC)",
+        "Projector screen (large)",
+        "Projector screen (small)",
+        "Quiet Room (WC)",
+        "Worship Space",
+        "Ecobee Test1 Modes",
+        "Ecobee Test2 Modes"
+    ],
+
+    "ecobees": [
+        "Test1",
+        "Test2"
+    ],
+    "zones": [
+        {
+            "name": "Zone A",
+            "calendars": [
+                "Areas I-K (CC)",
+                "Library (CC)"
+            ],
+            "ecobees": [
+                "Test1"
+            ]
+        },
+        {
+            "name": "Zone B",
+            "calendars": [
+                "Commercial Kitchen (CC)",
+                "Service Kitchen (CC)"
+            ],
+            "ecobees": [
+                "Test2"
+            ]
+        },
+        {
+            "name": "Zone C",
+            "calendars": [
+                "Coffee Bar Room (CC)",
+                "Narthex Gathering Area (WC)"
+            ],
+            "ecobees": [
+                "Test1",
+                "Test2"
+            ]
+        }
+    ]
+}
