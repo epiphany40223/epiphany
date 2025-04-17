@@ -5,9 +5,11 @@ on:
   # Ecobee schedule code
   pull_request:
   schedule:
-    - cron: "25,55 9-23 * * *"  # 5:25 AM to 9:55 PM EST
+    # We really only need to run between 5:25am and 9:55pm
+    # JMS: Is this UTC or US Eastern?
+    - cron: "25,55 9-23 * * *"
 
-  # Allow manual runs
+  # Allows manual runs
   workflow_dispatch:
 
 permissions:
@@ -28,12 +30,26 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          echo Hello, world!
+          python -m pip install --upgrade pip
+          python -m pip install -r media/linux/ecobee-control/requirements.txt
 
       - name: Save secrets to files
         run: |
-          echo Hello, world!
+          echo '${{ secrets.GOOGLE_CREDENTIALS }}' > ${GITHUB_WORKSPACE}/google-credentials.json
+          echo '${{ secrets.TOKEN_JSON }}' > ${GITHUB_WORKSPACE}/token.json
+          echo '${{ secrets.ECOBEE_CREDENTIALS }}' > ${GITHUB_WORKSPACE}/ecobee-credentials.json
+          echo '${{ secrets.ECOBEE_ACCESS_TOKEN }}' > ${GITHUB_WORKSPACE}/ecobee-access-token.json
+          echo '${{ secrets.ECOBEE_REFRESH_TOKEN }}' > ${GITHUB_WORKSPACE}/ecobee-refresh-token.json
 
       - name: Run the main.py script
+        env:
+          # JMS Looks like the code refers to these as env variables
+          # JMS Need to consolidate: all env variables or all files
+          ECOBEE_ACCESS_TOKEN: ${{ secrets.ECOBEE_ACCESS_TOKEN }}
+          ECOBEE_REFRESH_TOKEN: ${{ secrets.ECOBEE_REFRESH_TOKEN }}
         run: |
-          echo Hello, world!
+          cd media/linux/ecobee-control
+          python3 ./main.py \
+              --config google_calendar/config.json \
+              --google-credentials ${GITHUB_WORKSPACE}/google-credentials.json \
+              --token-json ${GITHUB_WORKSPACE}/token.json
