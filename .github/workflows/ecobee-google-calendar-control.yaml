@@ -1,0 +1,19 @@
+name: Set Ecobee schedules
+
+on:
+  schedule:
+    - cron: "25,55 9-23 * * *"  # 5:25 AM to 9:55 PM EST
+
+  # Allow manual runs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-main-script:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Just put something here
+        run: echo Hello, world!
