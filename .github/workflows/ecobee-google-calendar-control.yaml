@@ -5,7 +5,9 @@ on:
   # Ecobee schedule code
   pull_request:
   schedule:
-    - cron: "25,55 9-23,0-1 * * *"  # 5:25 AM to 9:55 PM EST
+    # We really only need to run between 5:25am and 9:55pm
+    # JMS: Is this UTC or US Eastern?
+    - cron: "25,55 9-23 * * *"
 
   # Allows manual runs
   workflow_dispatch:
@@ -14,106 +16,40 @@ permissions:
   contents: read
 
 jobs:
-  run-main-script:
-    runs-on: ubuntu-22.04
+  set-ecobee-schedules:
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.13
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
-
-      - name: Verify GOOGLE_CREDENTIALS
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: |
-          if [ -z "$GOOGLE_CREDENTIALS" ]; then
-            echo "GOOGLE_CREDENTIALS is NOT set."
-            exit 1
-          else
-            echo "GOOGLE_CREDENTIALS is set."
-            echo "$GOOGLE_CREDENTIALS" | jq '.' > /dev/null 2>&1
-            if [ $? -ne 0 ]; then
-              echo "Invalid JSON format in GOOGLE_CREDENTIALS!"
-              echo "Raw content: '$GOOGLE_CREDENTIALS'"
-              exit 1
-            fi
-            echo "GOOGLE_CREDENTIALS is valid."
-          fi
-
-      - name: Load GOOGLE_CREDENTIALS into credentials.json
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: |
-          printf '%s' "$GOOGLE_CREDENTIALS" > credentials.json
-          echo "Contents of credentials.json:"
-          cat credentials.json
-
-      - name: Load token.json from GitHub Secrets
-        run: |
-          if [ ! -f "token.json" ] || [ ! -s "token.json" ]; then
-            echo '${{ secrets.TOKEN_JSON }}' > token.json
-            if [ ! -s "token.json" ]; then
-              echo "TOKEN_JSON is empty or invalid!"
-              cat token.json
-              exit 1
-            fi
-          fi
-          echo "Contents of token.json:"
-          cat token.json
-
-      # Load Ecobee credentials into a file for ecobee_client.py
-      - name: Load ECOBEE_CREDENTIALS into ecobee_credentials.json
-        env:
-          ECOBEE_CREDENTIALS: ${{ secrets.ECOBEE_CREDENTIALS }}
-        run: |
-          if [ -z "$ECOBEE_CREDENTIALS" ]; then
-            echo "ECOBEE_CREDENTIALS is NOT set."
-            exit 1
-          else
-            echo "ECOBEE_CREDENTIALS is set."
-            echo "$ECOBEE_CREDENTIALS" | jq '.' > /dev/null 2>&1
-            if [ $? -ne 0 ]; then
-              echo "Invalid JSON format in ECOBEE_CREDENTIALS!"
-              echo "Raw content: '$ECOBEE_CREDENTIALS'"
-              exit 1
-            fi
-            echo "ECOBEE_CREDENTIALS is valid."
-          fi
-          FILE=media/linux/ecobee-control/credentials.json
-          printf '%s' "$ECOBEE_CREDENTIALS" > $FILE
-          echo "Contents of $FILE:"
-          cat $FILE | jq
-
-      - name: Load ECOBEE_ACCESS_TOKEN and ECOBEE_REFRESH_TOKEN into environment variables
-        env:
-          ECOBEE_ACCESS_TOKEN: ${{ secrets.ECOBEE_ACCESS_TOKEN }}
-          ECOBEE_REFRESH_TOKEN: ${{ secrets.ECOBEE_REFRESH_TOKEN }}
-        run: |
-          if [ -z "$ECOBEE_ACCESS_TOKEN" ] || [ -z "$ECOBEE_REFRESH_TOKEN" ]; then
-            echo "Ecobee tokens are NOT set."
-            exit 1
-          else
-            echo "Ecobee tokens are set."
-          fi
+          python-version: "3.13"
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r media/linux/ecobee-control/requirements.txt
+          python -m pip install -r media/linux/ecobee-control/requirements.txt
+
+      - name: Save secrets to files
+        run: |
+          echo '${{ secrets.GOOGLE_CREDENTIALS }}' > ${GITHUB_WORKSPACE}/google-credentials.json
+          echo '${{ secrets.TOKEN_JSON }}' > ${GITHUB_WORKSPACE}/token.json
+          echo '${{ secrets.ECOBEE_CREDENTIALS }}' > ${GITHUB_WORKSPACE}/ecobee-credentials.json
+          echo '${{ secrets.ECOBEE_ACCESS_TOKEN }}' > ${GITHUB_WORKSPACE}/ecobee-access-token.json
+          echo '${{ secrets.ECOBEE_REFRESH_TOKEN }}' > ${GITHUB_WORKSPACE}/ecobee-refresh-token.json
 
       - name: Run the main.py script
         env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          # JMS Looks like the code refers to these as env variables
+          # JMS Need to consolidate: all env variables or all files
           ECOBEE_ACCESS_TOKEN: ${{ secrets.ECOBEE_ACCESS_TOKEN }}
           ECOBEE_REFRESH_TOKEN: ${{ secrets.ECOBEE_REFRESH_TOKEN }}
         run: |
-          export TOP=$(pwd)
           cd media/linux/ecobee-control
           python3 ./main.py \
               --config google_calendar/config.json \
-              --google-credentials $(TOP)/credentials.json \
-              --token-json $(TOP)/token.json
+              --google-credentials ${GITHUB_WORKSPACE}/google-credentials.json \
+              --token-json ${GITHUB_WORKSPACE}/token.json
