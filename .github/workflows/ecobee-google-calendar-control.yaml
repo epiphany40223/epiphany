@@ -1,6 +1,9 @@
 name: Set Ecobee schedules
 
 on:
+  # This is just for debugging on the PR where we first commit the
+  # Ecobee schedule code
+  pull_request_target:
   schedule:
     - cron: "25,55 9-23 * * *"  # 5:25 AM to 9:55 PM EST
 
@@ -11,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  run-main-script:
+  set-ecobee-schedules:
     runs-on: ubuntu-24.04
 
     steps:
