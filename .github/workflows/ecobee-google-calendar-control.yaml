@@ -18,5 +18,22 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Just put something here
-        run: echo Hello, world!
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        run: |
+          echo Hello, world!
+
+      - name: Save secrets to files
+        run: |
+          echo Hello, world!
+
+      - name: Run the main.py script
+        run: |
+          echo Hello, world!
