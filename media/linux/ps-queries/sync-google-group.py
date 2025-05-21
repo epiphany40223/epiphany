@@ -336,6 +336,11 @@ def get_synchronizations():
             'ggroup'     : f'rcia-team{ecc}',
             'notify'     : f'formation{ecc},ps-google-sync{ecc}',
         },
+        {
+            'ministries' : [ '808-BibleTimes Core Team' ],
+            'ggroup'     : f'bibletimes-core-team{ecc}',
+            'notify'     : f'bibletimes-chair{ecc},ps-google-sync{ecc}',
+        },
 
         #############################
 
@@ -645,6 +650,13 @@ def get_synchronizations():
                                'purpose' : "SEL ministry chair" }, ],
             'ggroup'     : f'sel-chair{ecc}',
             'notify'     : f'ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : '808' },
+                               'purpose' : "Bibletimes chair" }, ],
+            'ggroup'     : f'bibletimes-chair{ecc}',
+            'notify'     : f'formation{ecc},ps-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
