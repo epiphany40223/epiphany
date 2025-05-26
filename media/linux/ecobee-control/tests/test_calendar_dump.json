@@ -1,0 +1,3113 @@
+{
+  "created_at": "2025-04-04T02:59:54.041565-04:00",
+  "events": [
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495526454046\"",
+      "id": "5o56v86th2idhaa8dq8ts7ia0b_20250402T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NW81NnY4NnRoMmlkaGFhOGRxOHRzN2lhMGJfMjAyNTA0MDJUMTAwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-03-13T18:14:20.000Z",
+      "updated": "2025-04-04T06:22:43.227Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5o56v86th2idhaa8dq8ts7ia0b_R20250402T100000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5o56v86th2idhaa8dq8ts7ia0b_R20250402T100000@google.com",
+      "sequence": 11,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495513858430\"",
+      "id": "78jom956a2aqehed7j2inrhm5r_20250402T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Nzhqb205NTZhMmFxZWhlZDdqMmlucmhtNXJfMjAyNTA0MDJUMTAwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-03-13T18:15:27.000Z",
+      "updated": "2025-04-04T06:22:36.929Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "78jom956a2aqehed7j2inrhm5r_R20250402T100000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "78jom956a2aqehed7j2inrhm5r_R20250402T100000@google.com",
+      "sequence": 6,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487373521103470\"",
+      "id": "69hhfidplrshk1k5gf4jmegpdl_20250402T150000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NjloaGZpZHBscnNoazFrNWdmNGptZWdwZGxfMjAyNTA0MDJUMTUwMDAwWiA5NzMwOTQ3M2RmODM0MWFkOGNiMzdmZmFhYjcwZWYyNTEyY2Q0MDcxZjBmMjc2Njk5YWQ2M2ViZGJjNmVjY2MwQGc",
+      "created": "2025-03-06T11:28:27.000Z",
+      "updated": "2025-04-04T06:09:42.467Z",
+      "summary": "Zone A Test Case 1: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "97309473df8341ad8cb37ffaab70ef2512cd4071f0f276699ad63ebdbc6eccc0@group.calendar.google.com",
+        "displayName": "Areas I-K (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "69hhfidplrshk1k5gf4jmegpdl",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "69hhfidplrshk1k5gf4jmegpdl@google.com",
+      "sequence": 14,
+      "reminders": {
+        "useDefault": false
+      },
+      "eventType": "default",
+      "calendar_name": "Areas I-K (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495529701374\"",
+      "id": "2s77ijf8m9im89kajls781db96_20250402T150000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnM3N2lqZjhtOWltODlrYWpsczc4MWRiOTZfMjAyNTA0MDJUMTUwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-03-13T18:15:58.000Z",
+      "updated": "2025-04-04T06:22:44.850Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2s77ijf8m9im89kajls781db96",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2s77ijf8m9im89kajls781db96@google.com",
+      "sequence": 6,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487373527657246\"",
+      "id": "9o9voub460835r6ogojm4ublbp_20250402T160000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=OW85dm91YjQ2MDgzNXI2b2dvam00dWJsYnBfMjAyNTA0MDJUMTYwMDAwWiA5MTZjY2NhMTExMWJmNzk5NzFkZTYxN2VmYjc2MDUzZGJjODVkNDJhYzMyNzRlODcxODhhY2JmYzQ3NDNjMTNkQGc",
+      "created": "2025-02-14T22:27:59.000Z",
+      "updated": "2025-04-04T06:09:44.362Z",
+      "summary": "Zone A Test Case 2: Library",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "916ccca1111bf79971de617efb76053dbc85d42ac3274e87188acbfc4743c13d@group.calendar.google.com",
+        "displayName": "Library (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "9o9voub460835r6ogojm4ublbp",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "9o9voub460835r6ogojm4ublbp@google.com",
+      "sequence": 14,
+      "reminders": {
+        "useDefault": false
+      },
+      "eventType": "default",
+      "calendar_name": "Library (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495531927998\"",
+      "id": "6p1ka07ba94sv2dlbtfrlt51pt_20250402T160000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NnAxa2EwN2JhOTRzdjJkbGJ0ZnJsdDUxcHRfMjAyNTA0MDJUMTYwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-03-13T18:16:31.000Z",
+      "updated": "2025-04-04T06:22:45.963Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "6p1ka07ba94sv2dlbtfrlt51pt_R20250402T160000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6p1ka07ba94sv2dlbtfrlt51pt_R20250402T160000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495534521950\"",
+      "id": "5affsh40he1rd7dc5g423s28lt_20250402T170000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWFmZnNoNDBoZTFyZDdkYzVnNDIzczI4bHRfMjAyNTA0MDJUMTcwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-03-13T18:17:47.000Z",
+      "updated": "2025-04-04T06:22:47.260Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5affsh40he1rd7dc5g423s28lt_R20250402T170000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5affsh40he1rd7dc5g423s28lt_R20250402T170000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487493971700062\"",
+      "id": "mn8un906jipp6efs5md8lc1n8h_20250402T180000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=bW44dW45MDZqaXBwNmVmczVtZDhsYzFuOGhfMjAyNTA0MDJUMTgwMDAwWiBhNGYwNWYxNWZhMDE4Y2I1OWFmNGFlMjdiODMzNDliN2Q1ZDNkZDQwNmJhOWRlYzk3ODI4ZjU1MWNjNWYzNjk0QGc",
+      "created": "2025-02-14T22:28:23.000Z",
+      "updated": "2025-04-04T06:09:45.850Z",
+      "summary": "Zone B Test Case 1: Commercial Kitchen",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "a4f05f15fa018cb59af4ae27b83349b7d5d3dd406ba9dec97828f551cc5f3694@group.calendar.google.com",
+        "displayName": "Commercial Kitchen (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "mn8un906jipp6efs5md8lc1n8h",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "mn8un906jipp6efs5md8lc1n8h@google.com",
+      "sequence": 13,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Commercial Kitchen (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495540881886\"",
+      "id": "51s9mr9jlg32so61ologd69p6c_20250402T180000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NTFzOW1yOWpsZzMyc282MW9sb2dkNjlwNmNfMjAyNTA0MDJUMTgwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-03-13T18:18:09.000Z",
+      "updated": "2025-04-04T06:22:50.440Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "51s9mr9jlg32so61ologd69p6c_R20250402T180000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "51s9mr9jlg32so61ologd69p6c_R20250402T180000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487493975023102\"",
+      "id": "7s6gmk9t091n4rmk25qmpvetdv_20250402T190000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=N3M2Z21rOXQwOTFuNHJtazI1cW1wdmV0ZHZfMjAyNTA0MDJUMTkwMDAwWiAxZjNkMzZjN2M2ZmIxNWNmM2Q1ZjZjMmI5MDU0ZDZjYzJmZGZjYmUxYjI3OTc1N2VhN2M1NjhjMWJmZDU1YTk1QGc",
+      "created": "2025-02-14T22:28:50.000Z",
+      "updated": "2025-04-04T06:09:47.511Z",
+      "summary": "Zone B Test Case 2: Service Kitchen",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "1f3d36c7c6fb15cf3d5f6c2b9054d6cc2fdfcbe1b279757ea7c568c1bfd55a95@group.calendar.google.com",
+        "displayName": "Service Kitchen (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "7s6gmk9t091n4rmk25qmpvetdv",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "7s6gmk9t091n4rmk25qmpvetdv@google.com",
+      "sequence": 15,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Service Kitchen (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495538829854\"",
+      "id": "3l99g3n496fv0b149hjeeqg48n_20250402T190000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2w5OWczbjQ5NmZ2MGIxNDloamVlcWc0OG5fMjAyNTA0MDJUMTkwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-03-13T18:18:23.000Z",
+      "updated": "2025-04-04T06:22:49.414Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "3l99g3n496fv0b149hjeeqg48n_R20250402T190000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3l99g3n496fv0b149hjeeqg48n_R20250402T190000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495543214110\"",
+      "id": "55mgq9ebmlr8j60ia6cauplu5p_20250402T200000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NTVtZ3E5ZWJtbHI4ajYwaWE2Y2F1cGx1NXBfMjAyNTA0MDJUMjAwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-03-13T18:19:29.000Z",
+      "updated": "2025-04-04T06:22:51.607Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "55mgq9ebmlr8j60ia6cauplu5p_R20250402T200000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "55mgq9ebmlr8j60ia6cauplu5p_R20250402T200000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487493991934206\"",
+      "id": "2o6raeq2npcsnnuhg97sl2sh7q_20250402T210000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mm82cmFlcTJucGNzbm51aGc5N3NsMnNoN3FfMjAyNTA0MDJUMjEwMDAwWiBlMmEzNDc4YTM4YzMxMWZiNDc0ZmEwMGQ2M2M0MTAzZTNiYzE1ZmQwZWFmYjQyMzI2YjRmYjYxYzM1OTA5NDZlQGc",
+      "created": "2025-02-14T22:29:24.000Z",
+      "updated": "2025-04-04T06:09:55.967Z",
+      "summary": "Zone C Test Case 1: Coffee Room",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "e2a3478a38c311fb474fa00d63c4103e3bc15fd0eafb42326b4fb61c3590946e@group.calendar.google.com",
+        "displayName": "Coffee Bar Room (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2o6raeq2npcsnnuhg97sl2sh7q",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2o6raeq2npcsnnuhg97sl2sh7q@google.com",
+      "sequence": 14,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Coffee Bar Room (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495546290302\"",
+      "id": "3em318s1rkd8p7p6tri1gdqo51_20250402T210000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2VtMzE4czFya2Q4cDdwNnRyaTFnZHFvNTFfMjAyNTA0MDJUMjEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-03-13T18:18:51.000Z",
+      "updated": "2025-04-04T06:22:53.145Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "3em318s1rkd8p7p6tri1gdqo51_R20250402T210000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3em318s1rkd8p7p6tri1gdqo51_R20250402T210000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495548087454\"",
+      "id": "5751rtt0etrjpfk4c1husse3tc_20250402T210000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NTc1MXJ0dDBldHJqcGZrNGMxaHVzc2UzdGNfMjAyNTA0MDJUMjEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-03-13T18:18:36.000Z",
+      "updated": "2025-04-04T06:22:54.043Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5751rtt0etrjpfk4c1husse3tc_R20250402T210000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5751rtt0etrjpfk4c1husse3tc_R20250402T210000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487494002462366\"",
+      "id": "6f35l7pdp97h3fkf1b0nt1qha8_20250402T220000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NmYzNWw3cGRwOTdoM2ZrZjFiMG50MXFoYThfMjAyNTA0MDJUMjIwMDAwWiAxMWQ1OGJlOGU1NDE5ODM3Y2ZiYmJlMTMwNDNhZjBlY2UyNmY5MjYxYmNiYTg2MTI0MzI0MDIwZGYxMDZhNzhhQGc",
+      "created": "2025-02-14T22:29:43.000Z",
+      "updated": "2025-04-04T06:10:01.231Z",
+      "summary": "Zone C Test Case 2: Gathering Area",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "11d58be8e5419837cfbbbe13043af0ece26f9261bcba86124324020df106a78a@group.calendar.google.com",
+        "displayName": "Narthex Gathering Area (WC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "6f35l7pdp97h3fkf1b0nt1qha8",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6f35l7pdp97h3fkf1b0nt1qha8@google.com",
+      "sequence": 14,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Narthex Gathering Area (WC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495550940510\"",
+      "id": "1ita8j5hpkd6h6nm8hrg0j65ef_20250402T220000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MWl0YThqNWhwa2Q2aDZubThocmcwajY1ZWZfMjAyNTA0MDJUMjIwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-03-13T18:18:59.000Z",
+      "updated": "2025-04-04T06:22:55.470Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "1ita8j5hpkd6h6nm8hrg0j65ef_R20250402T220000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "1ita8j5hpkd6h6nm8hrg0j65ef_R20250402T220000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495552837822\"",
+      "id": "0k89camr1pag24j3rttpkbe6qo_20250402T220000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MGs4OWNhbXIxcGFnMjRqM3J0dHBrYmU2cW9fMjAyNTA0MDJUMjIwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-03-13T18:18:42.000Z",
+      "updated": "2025-04-04T06:22:56.418Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "0k89camr1pag24j3rttpkbe6qo_R20250402T220000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "0k89camr1pag24j3rttpkbe6qo_R20250402T220000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495556678942\"",
+      "id": "6arr696131rlori0srdeovcrrr_20250402T230000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NmFycjY5NjEzMXJsb3JpMHNyZGVvdmNycnJfMjAyNTA0MDJUMjMwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-03-13T18:20:37.000Z",
+      "updated": "2025-04-04T06:22:58.339Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "6arr696131rlori0srdeovcrrr_R20250402T230000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6arr696131rlori0srdeovcrrr_R20250402T230000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487495559040606\"",
+      "id": "6q6de9krshd3m0h5lrkgs6abg7_20250402T230000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NnE2ZGU5a3JzaGQzbTBoNWxya2dzNmFiZzdfMjAyNTA0MDJUMjMwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-03-13T18:20:26.000Z",
+      "updated": "2025-04-04T06:22:59.520Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-04T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "6q6de9krshd3m0h5lrkgs6abg7_R20250402T230000",
+      "originalStartTime": {
+        "dateTime": "2025-04-02T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6q6de9krshd3m0h5lrkgs6abg7_R20250402T230000@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499384489054\"",
+      "id": "4t6t1riohab10f3up037hd6s0g_20250405T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NHQ2dDFyaW9oYWIxMGYzdXAwMzdoZDZzMGdfMjAyNTA0MDVUMDEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:26:48.000Z",
+      "updated": "2025-04-04T06:54:52.244Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4t6t1riohab10f3up037hd6s0g",
+      "originalStartTime": {
+        "dateTime": "2025-04-04T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4t6t1riohab10f3up037hd6s0g@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499259661374\"",
+      "id": "2vbviml3rff5vv8vbhpji3ihg5_20250405T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnZidmltbDNyZmY1dnY4dmJocGppM2loZzVfMjAyNTA0MDVUMDEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:04.000Z",
+      "updated": "2025-04-04T06:53:49.830Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-04T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2vbviml3rff5vv8vbhpji3ihg5",
+      "originalStartTime": {
+        "dateTime": "2025-04-04T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2vbviml3rff5vv8vbhpji3ihg5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487433925701886\"",
+      "id": "7gng4gc41t2tmi05n5vecq35sr",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=N2duZzRnYzQxdDJ0bWkwNW41dmVjcTM1c3IgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:26:55.000Z",
+      "updated": "2025-04-03T21:49:22.850Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "7gng4gc41t2tmi05n5vecq35sr@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487433944749694\"",
+      "id": "1s8c673225n51uasqokrr4i9cf",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MXM4YzY3MzIyNW41MXVhc3Fva3JyNGk5Y2YgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:29:30.000Z",
+      "updated": "2025-04-03T21:49:32.374Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "1s8c673225n51uasqokrr4i9cf@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429874927550\"",
+      "id": "2ne9tg84qkl8uhts4tsa5jr2k7",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mm5lOXRnODRxa2w4dWh0czR0c2E1anIyazcgYTRmMDVmMTVmYTAxOGNiNTlhZjRhZTI3YjgzMzQ5YjdkNWQzZGQ0MDZiYTlkZWM5NzgyOGY1NTFjYzVmMzY5NEBn",
+      "created": "2025-04-02T20:44:23.000Z",
+      "updated": "2025-04-03T21:15:37.463Z",
+      "summary": "Overlap Test Case 1: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "a4f05f15fa018cb59af4ae27b83349b7d5d3dd406ba9dec97828f551cc5f3694@group.calendar.google.com",
+        "displayName": "Commercial Kitchen (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2ne9tg84qkl8uhts4tsa5jr2k7@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Commercial Kitchen (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429878552286\"",
+      "id": "0rnv4od3u0poqds0el421qus4f",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MHJudjRvZDN1MHBvcWRzMGVsNDIxcXVzNGYgOTczMDk0NzNkZjgzNDFhZDhjYjM3ZmZhYWI3MGVmMjUxMmNkNDA3MWYwZjI3NjY5OWFkNjNlYmRiYzZlY2NjMEBn",
+      "created": "2025-04-02T20:44:37.000Z",
+      "updated": "2025-04-03T21:15:39.276Z",
+      "summary": "Overlap Test Case 1: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "97309473df8341ad8cb37ffaab70ef2512cd4071f0f276699ad63ebdbc6eccc0@group.calendar.google.com",
+        "displayName": "Areas I-K (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "0rnv4od3u0poqds0el421qus4f@google.com",
+      "sequence": 4,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Areas I-K (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487433956824798\"",
+      "id": "15t83c1defv04nooqn83m8cug5",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MTV0ODNjMWRlZnYwNG5vb3FuODNtOGN1ZzUgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:27:20.000Z",
+      "updated": "2025-04-03T21:49:38.412Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "15t83c1defv04nooqn83m8cug5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487432783434142\"",
+      "id": "46skp9pgj4j8c80scrr3u3p64v",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NDZza3A5cGdqNGo4Yzgwc2NycjN1M3A2NHYgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:29:38.000Z",
+      "updated": "2025-04-03T21:49:43.412Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T11:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "46skp9pgj4j8c80scrr3u3p64v@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": false
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487433979749886\"",
+      "id": "3hd1gdbkq2e0kuq6dhcbhlhjth",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2hkMWdkYmtxMmUwa3VxNmRoY2JobGhqdGggYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:27:29.000Z",
+      "updated": "2025-04-03T21:49:49.874Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3hd1gdbkq2e0kuq6dhcbhlhjth@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487433990363614\"",
+      "id": "43usovt27vgktin3287vdrlko1",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NDN1c292dDI3dmdrdGluMzI4N3ZkcmxrbzEgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:30:31.000Z",
+      "updated": "2025-04-03T21:49:55.181Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T12:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "43usovt27vgktin3287vdrlko1@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429868106526\"",
+      "id": "6g84anem9dm7cvuh3106t0ldsb",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Nmc4NGFuZW05ZG03Y3Z1aDMxMDZ0MGxkc2IgYTRmMDVmMTVmYTAxOGNiNTlhZjRhZTI3YjgzMzQ5YjdkNWQzZGQ0MDZiYTlkZWM5NzgyOGY1NTFjYzVmMzY5NEBn",
+      "created": "2025-04-02T20:45:00.000Z",
+      "updated": "2025-04-03T21:15:34.053Z",
+      "summary": "Overlap Test Case 2: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "a4f05f15fa018cb59af4ae27b83349b7d5d3dd406ba9dec97828f551cc5f3694@group.calendar.google.com",
+        "displayName": "Commercial Kitchen (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T13:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6g84anem9dm7cvuh3106t0ldsb@google.com",
+      "sequence": 8,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Commercial Kitchen (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429871516926\"",
+      "id": "08cenbkobnnut9jpmnb9u6gdgq",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MDhjZW5ia29ibm51dDlqcG1uYjl1NmdkZ3EgOTczMDk0NzNkZjgzNDFhZDhjYjM3ZmZhYWI3MGVmMjUxMmNkNDA3MWYwZjI3NjY5OWFkNjNlYmRiYzZlY2NjMEBn",
+      "created": "2025-04-02T20:44:52.000Z",
+      "updated": "2025-04-03T21:15:35.758Z",
+      "summary": "Overlap Test Case 2: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "97309473df8341ad8cb37ffaab70ef2512cd4071f0f276699ad63ebdbc6eccc0@group.calendar.google.com",
+        "displayName": "Areas I-K (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "08cenbkobnnut9jpmnb9u6gdgq@google.com",
+      "sequence": 8,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Areas I-K (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434005446622\"",
+      "id": "4gf6h1868nsqtc0s498bekhpfq",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NGdmNmgxODY4bnNxdGMwczQ5OGJla2hwZnEgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:27:41.000Z",
+      "updated": "2025-04-03T21:50:02.723Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4gf6h1868nsqtc0s498bekhpfq@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434020805726\"",
+      "id": "3hhqm3qcabpt4cg2h1g878smn4",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2hocW0zcWNhYnB0NGNnMmgxZzg3OHNtbjQgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:31:12.000Z",
+      "updated": "2025-04-03T21:50:10.402Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T13:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T13:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3hhqm3qcabpt4cg2h1g878smn4@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434050864190\"",
+      "id": "38cqg4t3ef7kp5npkrv2dl2s28",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MzhjcWc0dDNlZjdrcDVucGtydjJkbDJzMjggODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:31:25.000Z",
+      "updated": "2025-04-03T21:50:25.432Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T13:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T15:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "38cqg4t3ef7kp5npkrv2dl2s28@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434040386526\"",
+      "id": "6n4dmfhp0bvqjvkc44bsc73n3s",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Nm40ZG1maHAwYnZxanZrYzQ0YnNjNzNuM3MgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:27:49.000Z",
+      "updated": "2025-04-03T21:50:20.193Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T14:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6n4dmfhp0bvqjvkc44bsc73n3s@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429861407134\"",
+      "id": "525s2ckilu1rh688gf79u1gn2p",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NTI1czJja2lsdTFyaDY4OGdmNzl1MWduMnAgOTczMDk0NzNkZjgzNDFhZDhjYjM3ZmZhYWI3MGVmMjUxMmNkNDA3MWYwZjI3NjY5OWFkNjNlYmRiYzZlY2NjMEBn",
+      "created": "2025-04-02T20:45:21.000Z",
+      "updated": "2025-04-03T21:15:30.703Z",
+      "summary": "Overlap Test Case 3: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "97309473df8341ad8cb37ffaab70ef2512cd4071f0f276699ad63ebdbc6eccc0@group.calendar.google.com",
+        "displayName": "Areas I-K (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "525s2ckilu1rh688gf79u1gn2p@google.com",
+      "sequence": 9,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Areas I-K (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434066364158\"",
+      "id": "3rahpibjm3d4hgl29hgagl6dcs",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M3JhaHBpYmptM2Q0aGdsMjloZ2FnbDZkY3MgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:27:58.000Z",
+      "updated": "2025-04-03T21:50:33.182Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T15:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3rahpibjm3d4hgl29hgagl6dcs@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429858163934\"",
+      "id": "5c583th2m7t6u2i036u04buvft",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWM1ODN0aDJtN3Q2dTJpMDM2dTA0YnV2ZnQgYTRmMDVmMTVmYTAxOGNiNTlhZjRhZTI3YjgzMzQ5YjdkNWQzZGQ0MDZiYTlkZWM5NzgyOGY1NTFjYzVmMzY5NEBn",
+      "created": "2025-04-02T20:45:31.000Z",
+      "updated": "2025-04-03T21:15:29.081Z",
+      "summary": "Overlap Test Case 3: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "a4f05f15fa018cb59af4ae27b83349b7d5d3dd406ba9dec97828f551cc5f3694@group.calendar.google.com",
+        "displayName": "Commercial Kitchen (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T15:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5c583th2m7t6u2i036u04buvft@google.com",
+      "sequence": 12,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Commercial Kitchen (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434080920798\"",
+      "id": "4ql04mekoglg8t4no726ijh8q9",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NHFsMDRtZWtvZ2xnOHQ0bm83MjZpamg4cTkgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:31:36.000Z",
+      "updated": "2025-04-03T21:50:40.460Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T15:30:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4ql04mekoglg8t4no726ijh8q9@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434090976638\"",
+      "id": "2is7jnvdug6g373935f0iu78qf",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MmlzN2pudmR1ZzZnMzczOTM1ZjBpdTc4cWYgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:28:06.000Z",
+      "updated": "2025-04-03T21:50:45.488Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2is7jnvdug6g373935f0iu78qf@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499856108958\"",
+      "id": "02i9pqr25s3eu0cmqhr9q9l5ft",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MDJpOXBxcjI1czNldTBjbXFocjlxOWw1ZnQgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:31:43.000Z",
+      "updated": "2025-04-04T06:58:48.054Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T16:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "02i9pqr25s3eu0cmqhr9q9l5ft@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429852939166\"",
+      "id": "7ntdfrr5j6shp9mvaocqkh44uc",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=N250ZGZycjVqNnNocDltdmFvY3FraDQ0dWMgOTczMDk0NzNkZjgzNDFhZDhjYjM3ZmZhYWI3MGVmMjUxMmNkNDA3MWYwZjI3NjY5OWFkNjNlYmRiYzZlY2NjMEBn",
+      "created": "2025-04-02T20:45:53.000Z",
+      "updated": "2025-04-03T21:15:26.469Z",
+      "summary": "Overlap Test Case 4: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "97309473df8341ad8cb37ffaab70ef2512cd4071f0f276699ad63ebdbc6eccc0@group.calendar.google.com",
+        "displayName": "Areas I-K (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T17:45:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "7ntdfrr5j6shp9mvaocqkh44uc@google.com",
+      "sequence": 7,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Areas I-K (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499790391422\"",
+      "id": "6tbfs5c4ca3pu4b21f9uesec4p",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NnRiZnM1YzRjYTNwdTRiMjFmOXVlc2VjNHAgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:28:15.000Z",
+      "updated": "2025-04-04T06:58:15.195Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6tbfs5c4ca3pu4b21f9uesec4p@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499872073502\"",
+      "id": "5h78mgnoq7h824onlkulc7gsjd",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWg3OG1nbm9xN2g4MjRvbmxrdWxjN2dzamQgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:32:27.000Z",
+      "updated": "2025-04-04T06:58:56.036Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T17:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5h78mgnoq7h824onlkulc7gsjd@google.com",
+      "sequence": 1,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429847817886\"",
+      "id": "37lsddspkq8u5rqj4cadkf35d1",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mzdsc2Rkc3BrcTh1NXJxajRjYWRrZjM1ZDEgYTRmMDVmMTVmYTAxOGNiNTlhZjRhZTI3YjgzMzQ5YjdkNWQzZGQ0MDZiYTlkZWM5NzgyOGY1NTFjYzVmMzY5NEBn",
+      "created": "2025-04-02T20:45:46.000Z",
+      "updated": "2025-04-03T21:15:23.908Z",
+      "summary": "Overlap Test Case 4: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "a4f05f15fa018cb59af4ae27b83349b7d5d3dd406ba9dec97828f551cc5f3694@group.calendar.google.com",
+        "displayName": "Commercial Kitchen (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T17:15:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "37lsddspkq8u5rqj4cadkf35d1@google.com",
+      "sequence": 6,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Commercial Kitchen (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499819590846\"",
+      "id": "52shbmntah7jcctj8kcon3acn1",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NTJzaGJtbnRhaDdqY2N0ajhrY29uM2FjbjEgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:28:28.000Z",
+      "updated": "2025-04-04T06:58:29.795Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "52shbmntah7jcctj8kcon3acn1@google.com",
+      "sequence": 1,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499923922526\"",
+      "id": "53hkr96habtmmefc63909od57c",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NTNoa3I5NmhhYnRtbWVmYzYzOTA5b2Q1N2MgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:32:48.000Z",
+      "updated": "2025-04-04T06:59:21.961Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T18:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "53hkr96habtmmefc63909od57c@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429844148350\"",
+      "id": "12am5bjp2hepesf28tj0pesn0t",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MTJhbTVianAyaGVwZXNmMjh0ajBwZXNuMHQgOTczMDk0NzNkZjgzNDFhZDhjYjM3ZmZhYWI3MGVmMjUxMmNkNDA3MWYwZjI3NjY5OWFkNjNlYmRiYzZlY2NjMEBn",
+      "created": "2025-04-02T20:48:02.000Z",
+      "updated": "2025-04-03T21:15:22.074Z",
+      "summary": "Overlap Test Case 5: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "97309473df8341ad8cb37ffaab70ef2512cd4071f0f276699ad63ebdbc6eccc0@group.calendar.google.com",
+        "displayName": "Areas I-K (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T20:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "12am5bjp2hepesf28tj0pesn0t@google.com",
+      "sequence": 3,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Areas I-K (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434154332798\"",
+      "id": "6a3pjj358cfj3jg1mpe13tf9ou",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NmEzcGpqMzU4Y2ZqM2pnMW1wZTEzdGY5b3UgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:28:40.000Z",
+      "updated": "2025-04-03T21:51:17.166Z",
+      "summary": "Ecobee Test1 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T20:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6a3pjj358cfj3jg1mpe13tf9ou@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499918890142\"",
+      "id": "4j25elrh8smvro5n8v4urr4vju",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NGoyNWVscmg4c212cm81bjh2NHVycjR2anUgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:33:13.000Z",
+      "updated": "2025-04-04T06:59:19.445Z",
+      "summary": "Ecobee Test2 = home",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T19:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T20:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4j25elrh8smvro5n8v4urr4vju@google.com",
+      "sequence": 1,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487429838343870\"",
+      "id": "5nbbum54p1185njctuu3bamkut",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NW5iYnVtNTRwMTE4NW5qY3R1dTNiYW1rdXQgYTRmMDVmMTVmYTAxOGNiNTlhZjRhZTI3YjgzMzQ5YjdkNWQzZGQ0MDZiYTlkZWM5NzgyOGY1NTFjYzVmMzY5NEBn",
+      "created": "2025-04-02T20:48:11.000Z",
+      "updated": "2025-04-03T21:15:19.171Z",
+      "summary": "Overlap Test Case 5: Area I-K",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "a4f05f15fa018cb59af4ae27b83349b7d5d3dd406ba9dec97828f551cc5f3694@group.calendar.google.com",
+        "displayName": "Commercial Kitchen (CC)",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T19:15:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T19:45:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5nbbum54p1185njctuu3bamkut@google.com",
+      "sequence": 5,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Commercial Kitchen (CC)"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487434175398206\"",
+      "id": "503567et8httmehc4sedffhfjl",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NTAzNTY3ZXQ4aHR0bWVoYzRzZWRmZmhmamwgYmFlODU5OTE5MmY1NGJmNDVhMDUyM2Y0YTNkOWEwNmQ3M2EzZTk2YWE2MGRhNzcwZTZkZmE3ZDMxMDE0YjNkY0Bn",
+      "created": "2025-04-03T21:28:50.000Z",
+      "updated": "2025-04-03T21:51:27.699Z",
+      "summary": "Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T20:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "503567et8httmehc4sedffhfjl@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499905219774\"",
+      "id": "6csi3uedfl5mm3oo759o6uev92",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NmNzaTN1ZWRmbDVtbTNvbzc1OW82dWV2OTIgODViOWJlZmQ5YTVmZDQ4MDM0ZmJjMTkyOWI0NzA4ZDMyNGM1ZWQyOTdiNjQyYjEzODM5NTUyOWZmZDgyYTdhMUBn",
+      "created": "2025-04-03T21:33:23.000Z",
+      "updated": "2025-04-04T06:59:12.609Z",
+      "summary": "Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T20:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-05T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "6csi3uedfl5mm3oo759o6uev92@google.com",
+      "sequence": 1,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499384489054\"",
+      "id": "4t6t1riohab10f3up037hd6s0g_20250406T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NHQ2dDFyaW9oYWIxMGYzdXAwMzdoZDZzMGdfMjAyNTA0MDZUMDEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:26:48.000Z",
+      "updated": "2025-04-04T06:54:52.244Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-06T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4t6t1riohab10f3up037hd6s0g",
+      "originalStartTime": {
+        "dateTime": "2025-04-05T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4t6t1riohab10f3up037hd6s0g@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499259661374\"",
+      "id": "2vbviml3rff5vv8vbhpji3ihg5_20250406T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnZidmltbDNyZmY1dnY4dmJocGppM2loZzVfMjAyNTA0MDZUMDEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:04.000Z",
+      "updated": "2025-04-04T06:53:49.830Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-05T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-06T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2vbviml3rff5vv8vbhpji3ihg5",
+      "originalStartTime": {
+        "dateTime": "2025-04-05T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2vbviml3rff5vv8vbhpji3ihg5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499503791230\"",
+      "id": "288bhan1trepntok3q47t0rka2_20250406T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mjg4YmhhbjF0cmVwbnRvazNxNDd0MHJrYTJfMjAyNTA0MDZUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:38.000Z",
+      "updated": "2025-04-04T06:55:51.895Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-06T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-06T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "288bhan1trepntok3q47t0rka2",
+      "originalStartTime": {
+        "dateTime": "2025-04-06T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "288bhan1trepntok3q47t0rka2@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499507481374\"",
+      "id": "5frtsugrv1hfq2u1ukvog9p347_20250406T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWZydHN1Z3J2MWhmcTJ1MXVrdm9nOXAzNDdfMjAyNTA0MDZUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:23.000Z",
+      "updated": "2025-04-04T06:55:53.740Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-06T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-06T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5frtsugrv1hfq2u1ukvog9p347",
+      "originalStartTime": {
+        "dateTime": "2025-04-06T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5frtsugrv1hfq2u1ukvog9p347@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496290568702\"",
+      "id": "4agu2dv5c7d1irtvn9oatfmtmi_20250406T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NGFndTJkdjVjN2QxaXJ0dm45b2F0Zm10bWlfMjAyNTA0MDZUMTAwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:28:00.000Z",
+      "updated": "2025-04-04T06:29:05.284Z",
+      "summary": " Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-06T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-06T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4agu2dv5c7d1irtvn9oatfmtmi",
+      "originalStartTime": {
+        "dateTime": "2025-04-06T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4agu2dv5c7d1irtvn9oatfmtmi@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496295933470\"",
+      "id": "3aenqiq3d0tch30j4bsfau6s54_20250406T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2FlbnFpcTNkMHRjaDMwajRic2ZhdTZzNTRfMjAyNTA0MDZUMTAwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:28:48.000Z",
+      "updated": "2025-04-04T06:29:07.966Z",
+      "summary": " Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-06T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-06T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "3aenqiq3d0tch30j4bsfau6s54",
+      "originalStartTime": {
+        "dateTime": "2025-04-06T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3aenqiq3d0tch30j4bsfau6s54@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499384489054\"",
+      "id": "4t6t1riohab10f3up037hd6s0g_20250407T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NHQ2dDFyaW9oYWIxMGYzdXAwMzdoZDZzMGdfMjAyNTA0MDdUMDEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:26:48.000Z",
+      "updated": "2025-04-04T06:54:52.244Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-06T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-07T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4t6t1riohab10f3up037hd6s0g",
+      "originalStartTime": {
+        "dateTime": "2025-04-06T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4t6t1riohab10f3up037hd6s0g@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499259661374\"",
+      "id": "2vbviml3rff5vv8vbhpji3ihg5_20250407T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnZidmltbDNyZmY1dnY4dmJocGppM2loZzVfMjAyNTA0MDdUMDEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:04.000Z",
+      "updated": "2025-04-04T06:53:49.830Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-06T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-07T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2vbviml3rff5vv8vbhpji3ihg5",
+      "originalStartTime": {
+        "dateTime": "2025-04-06T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2vbviml3rff5vv8vbhpji3ihg5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499503791230\"",
+      "id": "288bhan1trepntok3q47t0rka2_20250407T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mjg4YmhhbjF0cmVwbnRvazNxNDd0MHJrYTJfMjAyNTA0MDdUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:38.000Z",
+      "updated": "2025-04-04T06:55:51.895Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-07T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-07T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "288bhan1trepntok3q47t0rka2",
+      "originalStartTime": {
+        "dateTime": "2025-04-07T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "288bhan1trepntok3q47t0rka2@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499507481374\"",
+      "id": "5frtsugrv1hfq2u1ukvog9p347_20250407T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWZydHN1Z3J2MWhmcTJ1MXVrdm9nOXAzNDdfMjAyNTA0MDdUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:23.000Z",
+      "updated": "2025-04-04T06:55:53.740Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-07T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-07T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5frtsugrv1hfq2u1ukvog9p347",
+      "originalStartTime": {
+        "dateTime": "2025-04-07T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5frtsugrv1hfq2u1ukvog9p347@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496290568702\"",
+      "id": "4agu2dv5c7d1irtvn9oatfmtmi_20250407T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NGFndTJkdjVjN2QxaXJ0dm45b2F0Zm10bWlfMjAyNTA0MDdUMTAwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:28:00.000Z",
+      "updated": "2025-04-04T06:29:05.284Z",
+      "summary": " Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-07T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-07T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4agu2dv5c7d1irtvn9oatfmtmi",
+      "originalStartTime": {
+        "dateTime": "2025-04-07T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4agu2dv5c7d1irtvn9oatfmtmi@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496295933470\"",
+      "id": "3aenqiq3d0tch30j4bsfau6s54_20250407T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2FlbnFpcTNkMHRjaDMwajRic2ZhdTZzNTRfMjAyNTA0MDdUMTAwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:28:48.000Z",
+      "updated": "2025-04-04T06:29:07.966Z",
+      "summary": " Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-07T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-07T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "3aenqiq3d0tch30j4bsfau6s54",
+      "originalStartTime": {
+        "dateTime": "2025-04-07T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3aenqiq3d0tch30j4bsfau6s54@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499384489054\"",
+      "id": "4t6t1riohab10f3up037hd6s0g_20250408T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NHQ2dDFyaW9oYWIxMGYzdXAwMzdoZDZzMGdfMjAyNTA0MDhUMDEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:26:48.000Z",
+      "updated": "2025-04-04T06:54:52.244Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-07T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-08T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4t6t1riohab10f3up037hd6s0g",
+      "originalStartTime": {
+        "dateTime": "2025-04-07T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4t6t1riohab10f3up037hd6s0g@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499259661374\"",
+      "id": "2vbviml3rff5vv8vbhpji3ihg5_20250408T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnZidmltbDNyZmY1dnY4dmJocGppM2loZzVfMjAyNTA0MDhUMDEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:04.000Z",
+      "updated": "2025-04-04T06:53:49.830Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-07T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-08T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2vbviml3rff5vv8vbhpji3ihg5",
+      "originalStartTime": {
+        "dateTime": "2025-04-07T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2vbviml3rff5vv8vbhpji3ihg5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499503791230\"",
+      "id": "288bhan1trepntok3q47t0rka2_20250408T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mjg4YmhhbjF0cmVwbnRvazNxNDd0MHJrYTJfMjAyNTA0MDhUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:38.000Z",
+      "updated": "2025-04-04T06:55:51.895Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-08T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-08T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "288bhan1trepntok3q47t0rka2",
+      "originalStartTime": {
+        "dateTime": "2025-04-08T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "288bhan1trepntok3q47t0rka2@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499507481374\"",
+      "id": "5frtsugrv1hfq2u1ukvog9p347_20250408T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWZydHN1Z3J2MWhmcTJ1MXVrdm9nOXAzNDdfMjAyNTA0MDhUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:23.000Z",
+      "updated": "2025-04-04T06:55:53.740Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-08T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-08T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5frtsugrv1hfq2u1ukvog9p347",
+      "originalStartTime": {
+        "dateTime": "2025-04-08T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5frtsugrv1hfq2u1ukvog9p347@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496290568702\"",
+      "id": "4agu2dv5c7d1irtvn9oatfmtmi_20250408T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NGFndTJkdjVjN2QxaXJ0dm45b2F0Zm10bWlfMjAyNTA0MDhUMTAwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:28:00.000Z",
+      "updated": "2025-04-04T06:29:05.284Z",
+      "summary": " Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-08T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-08T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4agu2dv5c7d1irtvn9oatfmtmi",
+      "originalStartTime": {
+        "dateTime": "2025-04-08T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4agu2dv5c7d1irtvn9oatfmtmi@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496295933470\"",
+      "id": "3aenqiq3d0tch30j4bsfau6s54_20250408T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2FlbnFpcTNkMHRjaDMwajRic2ZhdTZzNTRfMjAyNTA0MDhUMTAwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:28:48.000Z",
+      "updated": "2025-04-04T06:29:07.966Z",
+      "summary": " Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-08T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-08T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "3aenqiq3d0tch30j4bsfau6s54",
+      "originalStartTime": {
+        "dateTime": "2025-04-08T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3aenqiq3d0tch30j4bsfau6s54@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499384489054\"",
+      "id": "4t6t1riohab10f3up037hd6s0g_20250409T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NHQ2dDFyaW9oYWIxMGYzdXAwMzdoZDZzMGdfMjAyNTA0MDlUMDEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:26:48.000Z",
+      "updated": "2025-04-04T06:54:52.244Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-08T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-09T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4t6t1riohab10f3up037hd6s0g",
+      "originalStartTime": {
+        "dateTime": "2025-04-08T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4t6t1riohab10f3up037hd6s0g@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499259661374\"",
+      "id": "2vbviml3rff5vv8vbhpji3ihg5_20250409T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnZidmltbDNyZmY1dnY4dmJocGppM2loZzVfMjAyNTA0MDlUMDEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:04.000Z",
+      "updated": "2025-04-04T06:53:49.830Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-08T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-09T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2vbviml3rff5vv8vbhpji3ihg5",
+      "originalStartTime": {
+        "dateTime": "2025-04-08T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2vbviml3rff5vv8vbhpji3ihg5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499503791230\"",
+      "id": "288bhan1trepntok3q47t0rka2_20250409T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mjg4YmhhbjF0cmVwbnRvazNxNDd0MHJrYTJfMjAyNTA0MDlUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:38.000Z",
+      "updated": "2025-04-04T06:55:51.895Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-09T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-09T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "288bhan1trepntok3q47t0rka2",
+      "originalStartTime": {
+        "dateTime": "2025-04-09T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "288bhan1trepntok3q47t0rka2@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499507481374\"",
+      "id": "5frtsugrv1hfq2u1ukvog9p347_20250409T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWZydHN1Z3J2MWhmcTJ1MXVrdm9nOXAzNDdfMjAyNTA0MDlUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:23.000Z",
+      "updated": "2025-04-04T06:55:53.740Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-09T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-09T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5frtsugrv1hfq2u1ukvog9p347",
+      "originalStartTime": {
+        "dateTime": "2025-04-09T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5frtsugrv1hfq2u1ukvog9p347@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496290568702\"",
+      "id": "4agu2dv5c7d1irtvn9oatfmtmi_20250409T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NGFndTJkdjVjN2QxaXJ0dm45b2F0Zm10bWlfMjAyNTA0MDlUMTAwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:28:00.000Z",
+      "updated": "2025-04-04T06:29:05.284Z",
+      "summary": " Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-09T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-09T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4agu2dv5c7d1irtvn9oatfmtmi",
+      "originalStartTime": {
+        "dateTime": "2025-04-09T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4agu2dv5c7d1irtvn9oatfmtmi@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496295933470\"",
+      "id": "3aenqiq3d0tch30j4bsfau6s54_20250409T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2FlbnFpcTNkMHRjaDMwajRic2ZhdTZzNTRfMjAyNTA0MDlUMTAwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:28:48.000Z",
+      "updated": "2025-04-04T06:29:07.966Z",
+      "summary": " Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-09T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-09T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "3aenqiq3d0tch30j4bsfau6s54",
+      "originalStartTime": {
+        "dateTime": "2025-04-09T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3aenqiq3d0tch30j4bsfau6s54@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499384489054\"",
+      "id": "4t6t1riohab10f3up037hd6s0g_20250410T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NHQ2dDFyaW9oYWIxMGYzdXAwMzdoZDZzMGdfMjAyNTA0MTBUMDEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:26:48.000Z",
+      "updated": "2025-04-04T06:54:52.244Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-09T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-10T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4t6t1riohab10f3up037hd6s0g",
+      "originalStartTime": {
+        "dateTime": "2025-04-09T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4t6t1riohab10f3up037hd6s0g@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499259661374\"",
+      "id": "2vbviml3rff5vv8vbhpji3ihg5_20250410T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnZidmltbDNyZmY1dnY4dmJocGppM2loZzVfMjAyNTA0MTBUMDEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:04.000Z",
+      "updated": "2025-04-04T06:53:49.830Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-09T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-10T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2vbviml3rff5vv8vbhpji3ihg5",
+      "originalStartTime": {
+        "dateTime": "2025-04-09T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2vbviml3rff5vv8vbhpji3ihg5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499503791230\"",
+      "id": "288bhan1trepntok3q47t0rka2_20250410T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=Mjg4YmhhbjF0cmVwbnRvazNxNDd0MHJrYTJfMjAyNTA0MTBUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:38.000Z",
+      "updated": "2025-04-04T06:55:51.895Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-10T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-10T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "288bhan1trepntok3q47t0rka2",
+      "originalStartTime": {
+        "dateTime": "2025-04-10T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "288bhan1trepntok3q47t0rka2@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499507481374\"",
+      "id": "5frtsugrv1hfq2u1ukvog9p347_20250410T040000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NWZydHN1Z3J2MWhmcTJ1MXVrdm9nOXAzNDdfMjAyNTA0MTBUMDQwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:23.000Z",
+      "updated": "2025-04-04T06:55:53.740Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-10T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-10T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "5frtsugrv1hfq2u1ukvog9p347",
+      "originalStartTime": {
+        "dateTime": "2025-04-10T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "5frtsugrv1hfq2u1ukvog9p347@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496290568702\"",
+      "id": "4agu2dv5c7d1irtvn9oatfmtmi_20250410T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=NGFndTJkdjVjN2QxaXJ0dm45b2F0Zm10bWlfMjAyNTA0MTBUMTAwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:28:00.000Z",
+      "updated": "2025-04-04T06:29:05.284Z",
+      "summary": " Ecobee Test1 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-10T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-10T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "4agu2dv5c7d1irtvn9oatfmtmi",
+      "originalStartTime": {
+        "dateTime": "2025-04-10T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "4agu2dv5c7d1irtvn9oatfmtmi@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487496295933470\"",
+      "id": "3aenqiq3d0tch30j4bsfau6s54_20250410T100000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=M2FlbnFpcTNkMHRjaDMwajRic2ZhdTZzNTRfMjAyNTA0MTBUMTAwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:28:48.000Z",
+      "updated": "2025-04-04T06:29:07.966Z",
+      "summary": " Ecobee Test2 = away",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-10T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-10T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "3aenqiq3d0tch30j4bsfau6s54",
+      "originalStartTime": {
+        "dateTime": "2025-04-10T06:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "3aenqiq3d0tch30j4bsfau6s54@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499411404430\"",
+      "id": "8gvvl4upu4r35bo5g846j073cn_20250411T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=OGd2dmw0dXB1NHIzNWJvNWc4NDZqMDczY25fMjAyNTA0MTFUMDEwMDAwWiBiYWU4NTk5MTkyZjU0YmY0NWEwNTIzZjRhM2Q5YTA2ZDczYTNlOTZhYTYwZGE3NzBlNmRmYTdkMzEwMTRiM2RjQGc",
+      "created": "2025-04-04T06:26:48.000Z",
+      "updated": "2025-04-04T06:55:08.110Z",
+      "summary": " Ecobee Test1 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "bae8599192f54bf45a0523f4a3d9a06d73a3e96aa60da770e6dfa7d31014b3dc@group.calendar.google.com",
+        "displayName": "Ecobee Test1 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-10T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-11T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "8gvvl4upu4r35bo5g846j073cn",
+      "originalStartTime": {
+        "dateTime": "2025-04-10T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "8gvvl4upu4r35bo5g846j073cn@google.com",
+      "sequence": 3,
+      "reminders": {
+        "useDefault": false
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test1 Modes"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"3487499259661374\"",
+      "id": "2vbviml3rff5vv8vbhpji3ihg5_20250411T010000Z",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=MnZidmltbDNyZmY1dnY4dmJocGppM2loZzVfMjAyNTA0MTFUMDEwMDAwWiA4NWI5YmVmZDlhNWZkNDgwMzRmYmMxOTI5YjQ3MDhkMzI0YzVlZDI5N2I2NDJiMTM4Mzk1NTI5ZmZkODJhN2ExQGc",
+      "created": "2025-04-04T06:27:04.000Z",
+      "updated": "2025-04-04T06:53:49.830Z",
+      "summary": " Ecobee Test2 = sleep",
+      "creator": {
+        "email": "cse496zact@gmail.com"
+      },
+      "organizer": {
+        "email": "85b9befd9a5fd48034fbc1929b4708d324c5ed297b642b138395529ffd82a7a1@group.calendar.google.com",
+        "displayName": "Ecobee Test2 Modes",
+        "self": true
+      },
+      "start": {
+        "dateTime": "2025-04-10T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2025-04-11T00:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "recurringEventId": "2vbviml3rff5vv8vbhpji3ihg5",
+      "originalStartTime": {
+        "dateTime": "2025-04-10T21:00:00-04:00",
+        "timeZone": "America/New_York"
+      },
+      "iCalUID": "2vbviml3rff5vv8vbhpji3ihg5@google.com",
+      "sequence": 0,
+      "reminders": {
+        "useDefault": true
+      },
+      "eventType": "default",
+      "calendar_name": "Ecobee Test2 Modes"
+    }
+  ]
+}

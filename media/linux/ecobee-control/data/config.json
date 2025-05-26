@@ -1,0 +1,99 @@
+{
+    "modes": {
+        "Overnight": {
+            "min temperature": 66,
+            "max temperature": 80
+        },
+        "Unoccupied": {
+            "min temperature": 70,
+            "max temperature": 78
+        },
+        "Occupied": {
+            "min temperature": 74,
+            "max temperature": 76
+        }
+    },
+
+    "Overnight start": "21:00",
+    "Overnight end": "06:00",
+    "timezone": "US/Eastern",
+    "calendars": [
+	"Community Center-1-Areas F-H (CC) (150)",
+	"Community Center-1-Areas I-K (CC) (150)",
+	"Community Center-1-Commercial Kitchen (CC) (10)",
+	"Community Center-1-Library (CC) (25)",
+	"Community Center-1-Nursery (CC) (50)",
+	"Community Center-1-Service Kitchen (CC) (10)",
+
+	"Epiphany House-1-Dining Room (EH) (20)",
+	"Epiphany House-1-Kitchen (EH) (10)",
+	"Epiphany House-1-Living Room (EH) (20)",
+
+	"Lighthouse-1-Lighthouse (75)",
+
+	"Worship Center-1-Chapel (WC) (50)",
+	"Worship Center-1-Narthex Gathering Area (WC) (25)",
+	"Worship Center-1-Quiet Room (WC) (20)",
+	"Worship Center-1-Worship Space (500)"
+    ],
+
+    "ecobees": [
+	"Hall",
+	"Library",
+	"Nursery",
+	"SERVICE KITCHEN",
+	"CC F",
+	"CC H",
+	"CC J",
+	"CC L",
+        "Test1",
+        "Test2"
+    ],
+    "zones": [
+        {
+            "name": "Zone: Both kitchens",
+            "calendars": [
+		"Community Center-1-Commercial Kitchen (CC) (10)",
+		"Community Center-1-Service Kitchen (CC) (10)"
+            ],
+            "ecobees": [
+		"Hall",
+		"SERVICE KITCHEN"
+            ]
+        },
+        {
+            "name": "Zone: Library",
+            "calendars": [
+		"Community Center-1-Library (CC) (25)"
+            ],
+            "ecobees": [
+		"Hall",
+		"Library"
+            ]
+        },
+        {
+            "name": "Zone: Nursery",
+            "calendars": [
+		"Community Center-1-Nursery (CC) (50)"
+            ],
+            "ecobees": [
+		"Hall",
+		"Nursery"
+            ]
+        },
+        {
+            "name": "Zone: Main community area",
+            "calendars": [
+		"Community Center-1-Areas F-H (CC) (150)",
+		"Community Center-1-Areas I-K (CC) (150)"
+            ],
+            "ecobees": [
+		"Hall",
+		"CC F",
+		"CC H",
+		"CC J",
+		"CC L"
+            ]
+        }
+    ]
+}
