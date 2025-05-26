@@ -111,6 +111,7 @@ def main():
                 'ps-queries',
                 'calendar-audit',
                 'calendar-reservations',
+                'ecobee-control',
             ]:
             os.chdir(os.path.join(git_top, 'media', 'linux', subdir))
             subprocess.run(["./run.sh"], env=os.environ, check=True)
