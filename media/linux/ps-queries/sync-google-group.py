@@ -353,32 +353,6 @@ def get_synchronizations():
         #############################
 
         {
-            # Director of worship ministry search committee
-            'workgroups' : [ 'DWM Search' ],
-            'ggroup'     : f'dwm-search{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dwm-search-chair{ecc}',
-        },
-        {
-            'workgroups' : [ 'DWM Search chair' ],
-            'ggroup'     : f'dwm-search-chair{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dwm-search-chair{ecc}',
-        },
-
-        {
-            # Director of youth ministry search committee
-            'workgroups' : [ 'DYM Search' ],
-            'ggroup'     : f'dym-search{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dym-search-chair{ecc}',
-        },
-        {
-            'workgroups' : [ 'DYM Search chair' ],
-            'ggroup'     : f'dym-search-chair{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dym-search-chair{ecc}',
-        },
-
-        #############################
-
-        {
             'workgroups' : [ 'Livestream Team' ],
             'ggroup'     : f'livestream-team{ecc}',
             'notify'     : f'director-communications{ecc},ps-google-sync{ecc}',
