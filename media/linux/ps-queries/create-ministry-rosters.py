@@ -283,12 +283,12 @@ ministry_sheets = [
         'role sheets' : [
             {
                 'name' : '500-Bereavement Receptions: Team 1',
-                'roles' : [ 'Staff', 'Chairperson', 'Team 1 Leader', 'Team 1 Member' ],
+                'roles' : [ 'Staff', 'Chairperson', 'Team 1 Leader', 'Team 1 Member', 'Team Member: Both' ],
                 'gsheet_id' : '1UKk8-zsi4m1i271-SbM4UhkREs0dYcZSpmwGsV7m9rQ',
             },
             {
                 'name' : '500-Bereavement Receptions: Team 2',
-                'roles' : [ 'Staff', 'Chairperson', 'Team 2 Leader', 'Team 2 Member' ],
+                'roles' : [ 'Staff', 'Chairperson', 'Team 2 Leader', 'Team 2 Member', 'Team Member: Both' ],
                 'gsheet_id' : '1XGvOa98piwKa05yYUIWXIXGXyMHNYSYPMAyvwwSl28A',
             },
         ],
