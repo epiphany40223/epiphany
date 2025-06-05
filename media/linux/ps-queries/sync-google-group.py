@@ -254,6 +254,7 @@ def get_synchronizations():
         },
 
         {
+            # The misspelling of "access" in the workgroup name is intentional
             "workgroups"   : [ 'Name Badges Google Drive acces' ],
             'ggroup'     : f'stewardship-name-badges-google-drive-access{ecc}',
             'notify'     : f'director-parish-engagement{ecc},ps-google-sync{ecc}',
@@ -261,6 +262,11 @@ def get_synchronizations():
 
         #############################
 
+        {
+            'ministries' : [ '500-Bereavement Receptions' ],
+            'ggroup'     : f'bereavement-receptions{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},bereavement-receptions-chair{ecc},ps-google-sync{ecc}',
+        },
         {
             'ministries' : [ '501-Eucharist to Sick&Homebnd' ],
             'ggroup'     : f'care-for-the-sick{ecc}',
@@ -348,32 +354,6 @@ def get_synchronizations():
             'ministries' : [ '903-Confirmation Core Team' ],
             'ggroup'     : f'confirmation-core{ecc}',
             'notify'     : f'youth-minister{ecc},ps-google-sync{ecc}',
-        },
-
-        #############################
-
-        {
-            # Director of worship ministry search committee
-            'workgroups' : [ 'DWM Search' ],
-            'ggroup'     : f'dwm-search{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dwm-search-chair{ecc}',
-        },
-        {
-            'workgroups' : [ 'DWM Search chair' ],
-            'ggroup'     : f'dwm-search-chair{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dwm-search-chair{ecc}',
-        },
-
-        {
-            # Director of youth ministry search committee
-            'workgroups' : [ 'DYM Search' ],
-            'ggroup'     : f'dym-search{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dym-search-chair{ecc}',
-        },
-        {
-            'workgroups' : [ 'DYM Search chair' ],
-            'ggroup'     : f'dym-search-chair{ecc}',
-            'notify'     : f'ps-google-sync{ecc},dym-search-chair{ecc}',
         },
 
         #############################
@@ -622,6 +602,53 @@ def get_synchronizations():
                                'purpose' : "Sunday morning coffee chair" }, ],
             'ggroup'     : f'sunday-morning-coffee-chair{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_chair,
+                               'kwargs' : { "ministry_prefix" : "500"},
+                               'purpose' : "Bereavement receptions: Eucharist ministry chair" }, ],
+            'ggroup'     : f'bereavement-receptions-chair{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_role,
+                               'kwargs' : { "ministry_prefix" : "500",
+                                            "member roles" : ["Team 1 Member", "Team Member: Both"],
+                                            "leader roles" : ["Staff", "Chairperson", "Team 1 Leader"]},
+                               'purpose' : "Bereavement receptions: team 1" }, ],
+            'ggroup'     : f'bereavement-receptions-team-1{ecc}',
+            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
+            'notify'     : f'ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_role,
+                               'kwargs' : { "ministry_prefix" : "500",
+                                            "member roles" : [],
+                                            "leader roles" : ["Team 1 Leader"]},
+                               'purpose' : "Bereavement receptions: team 1 leader" }, ],
+            'ggroup'     : f'bereavement-receptions-team-1-leader{ecc}',
+            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
+            'notify'     : f'ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_role,
+                               'kwargs' : { "ministry_prefix" : "500",
+                                            "member roles" : ["Team 2 Member", "Team Member: Both"],
+                                            "leader roles" : ["Staff", "Chairperson", "Team 2 Leader"]},
+                               'purpose' : "Bereavement receptions: team 2" }, ],
+            'ggroup'     : f'bereavement-receptions-team-2{ecc}',
+            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
+            'notify'     : f'ps-google-sync{ecc}',
+        },
+        {
+            'functions'  : [ { 'func' : find_ministry_role,
+                               'kwargs' : { "ministry_prefix" : "500",
+                                            "member roles" : [],
+                                            "leader roles" : ["Team 2 Leader"]},
+                               'purpose' : "Bereavement receptions: team 2 leader" }, ],
+            'ggroup'     : f'bereavement-receptions-team-2-leader{ecc}',
+            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
+            'notify'     : f'ps-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
@@ -1273,6 +1300,42 @@ def find_ministry_chair(member, **kwargs):
             return True, True
 
     return False, False
+
+# Returns two values:
+# Boolean (member): if the Member is the chair of the target committee and has one of the specified roles
+# Boolean (leader): same as the first value
+def find_ministry_role(member, **kwargs):
+    if 'py ministries' not in member:
+        return False, False
+
+    key = 'ministry_prefix'
+    if key not in kwargs:
+        return False, False
+    ministry_prefix = kwargs[key]
+
+    key = 'member roles'
+    if key not in kwargs:
+        return False, False
+    member_roles = kwargs[key]
+
+    leader_roles = []
+    key = 'leader roles'
+    if key in kwargs:
+        leader_roles = kwargs[key]
+
+    is_leader = False
+    is_member = False
+
+    for ministry in member['py ministries'].values():
+        if ministry['name'].startswith(ministry_prefix):
+            role = ministry['role']
+            if role in member_roles or role in leader_roles:
+                is_member = True
+                if _is_ministry_leader(ministry) or role in leader_roles:
+                    is_leader = True
+            break
+
+    return is_member, is_leader
 
 # Find a list of Members that match the criteria of the sync group
 # we're looking for.
