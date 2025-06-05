@@ -617,8 +617,7 @@ def get_synchronizations():
                                             "leader roles" : ["Staff", "Chairperson", "Team 1 Leader"]},
                                'purpose' : "Bereavement receptions: team 1" }, ],
             'ggroup'     : f'bereavement-receptions-team-1{ecc}',
-            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
-            'notify'     : f'ps-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_role,
@@ -627,8 +626,7 @@ def get_synchronizations():
                                             "leader roles" : ["Team 1 Leader"]},
                                'purpose' : "Bereavement receptions: team 1 leader" }, ],
             'ggroup'     : f'bereavement-receptions-team-1-leader{ecc}',
-            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
-            'notify'     : f'ps-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_role,
@@ -637,8 +635,7 @@ def get_synchronizations():
                                             "leader roles" : ["Staff", "Chairperson", "Team 2 Leader"]},
                                'purpose' : "Bereavement receptions: team 2" }, ],
             'ggroup'     : f'bereavement-receptions-team-2{ecc}',
-            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
-            'notify'     : f'ps-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_role,
@@ -647,8 +644,7 @@ def get_synchronizations():
                                             "leader roles" : ["Team 2 Leader"]},
                                'purpose' : "Bereavement receptions: team 2 leader" }, ],
             'ggroup'     : f'bereavement-receptions-team-2-leader{ecc}',
-            'notify-bogus'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
-            'notify'     : f'ps-google-sync{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
