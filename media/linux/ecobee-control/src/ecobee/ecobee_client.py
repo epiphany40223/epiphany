@@ -30,55 +30,56 @@ _base_climate_settings = {
 }
 
 _schedule_payload = {
-  "selection": {
-    "selectionType":"thermostats",
-    "selectionMatch":""
-  },
-  "thermostat": {
-      "program": {
-        "schedule": [
-            # Create 7 distinct copies of the daily pattern for the
-            # schedule
-            list(_daily_schedule_pattern) for _ in range(7)
-       ],
-       "climates": [
-          {
-              # Unpack the common climate settings
-              **_base_climate_settings,
-              "name": "Unoccupied",
-              "climateRef": "away",
-              "isOccupied": False,
-              "isOptimized": True,
-              "colour": 9021815,
-              "coolTemp": 821,
-              "heatTemp": 601,
-          },
-          {
-              # Unpack the common climate settings
-              **_base_climate_settings,
-              "name": "Occupied",
-              "climateRef": "home",
-              "isOccupied": True,
-              "isOptimized": False,
-              "colour": 13560055,
-              "coolTemp": 720,
-              "heatTemp": 700,
-          },
-          {
-              # Unpack the common climate settings
-              **_base_climate_settings,
-              "name": "Overnight",
-              "climateRef": "sleep",
-              "isOccupied": True,
-              "isOptimized": False,
-              "colour": 2179683,
-              "coolTemp": 781,
-              "heatTemp": 661,
-          },
-        ]
-     }
-  }
+    "selection": {
+        "selectionType": "thermostats",
+        "selectionMatch": ""
+    },
+    "thermostat": {
+        "program": {
+            "schedule": [
+                # Create 7 distinct copies of the daily pattern for the
+                # schedule
+                list(_daily_schedule_pattern) for _ in range(7)
+            ],
+            "climates": [
+                {
+                    # Unpack the common climate settings
+                    **_base_climate_settings,
+                    "name": "Unoccupied",
+                    "climateRef": "away",
+                    "isOccupied": False,
+                    "isOptimized": True,
+                    "colour": 9021815,
+                    "coolTemp": 821,
+                    "heatTemp": 601,
+                },
+                {
+                    # Unpack the common climate settings
+                    **_base_climate_settings,
+                    "name": "Occupied",
+                    "climateRef": "home",
+                    "isOccupied": True,
+                    "isOptimized": False,
+                    "colour": 13560055,
+                    "coolTemp": 720,
+                    "heatTemp": 700,
+                },
+                {
+                    # Unpack the common climate settings
+                    **_base_climate_settings,
+                    "name": "Overnight",
+                    "climateRef": "sleep",
+                    "isOccupied": True,
+                    "isOptimized": False,
+                    "colour": 2179683,
+                    "coolTemp": 781,
+                    "heatTemp": 661,
+                },
+            ]
+        }
+    }
 }
+
 
 class EcobeeClient:
     def __init__(self, thermostat_name="Test1", credentials_file=None, config=None):
@@ -117,13 +118,7 @@ class EcobeeClient:
             refresh_token=refresh_token
         )
 
-        try:
-            self.refresh_tokens()
-            logging.info("Initial token refresh successful.")
-        except EcobeeApiException as e:
-            logging.warning(f"Refresh failed: {e}. Attempting to reauthorize...")
-            self.authorize()
-            self.request_tokens()
+        self.refresh_tokens_if_needed()
 
     def authorize(self):
         """Perform interactive authorization by generating a PIN."""
@@ -171,10 +166,19 @@ After completing this step, press Enter to continue."""
     def refresh_tokens_if_needed(self):
         """Refresh tokens if the access token has expired."""
         now_utc = datetime.now(pytz.utc)
-        logging.debug(f"Checking token expiration: now={now_utc}, expires_on={self.ecobee_service.access_token_expires_on}")
-        if (self.ecobee_service.access_token_expires_on is not None and
-            now_utc > self.ecobee_service.access_token_expires_on):
+        logging.debug(
+            f"Checking token expiration: now={now_utc}, access token expires_on={self.ecobee_service.access_token_expires_on}, "
+            f"refresh token expires_on={self.ecobee_service.refresh_token_expires_on}")
+        if now_utc > self.ecobee_service.refresh_token_expires_on:
+            logging.info(f"Refresh token has expired...reauthorization required.")
+            self.authorize()
+            self.request_tokens()
+        elif (self.ecobee_service.access_token_expires_on is not None and
+              now_utc > self.ecobee_service.access_token_expires_on):
+            logging.info(f"Access token has expired...requesting token refresh.")
             self.refresh_tokens()
+        else:
+            logging.debug(f"Tokens still valid; no refresh required.")
 
     def schedule_mode_change(self, dataframe, target_ecobee):
         """
