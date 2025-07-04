@@ -105,9 +105,17 @@ class EcobeeClient:
             application_key = creds_data.get('application_key')
             access_token = creds_data.get('access_token')
             refresh_token = creds_data.get('refresh_token')
+            at_expires_on = creds_data.get('access_token_expires_on')
+            rt_expires_on = creds_data.get('refresh_token_expires_on')
 
-            if not all([application_key, access_token, refresh_token]):
-                error_msg = "Missing required fields in credentials.json: 'application_key', 'access_token', 'refresh_token'"
+            if at_expires_on:
+                at_expires_on = datetime.fromisoformat(at_expires_on)
+            if rt_expires_on:
+                rt_expires_on = datetime.fromisoformat(rt_expires_on)
+
+            if not all([application_key, access_token, refresh_token,
+                        at_expires_on, rt_expires_on]):
+                error_msg = "Missing required fields in credentials.json: 'application_key', 'access_token', 'refresh_token', 'access_token_expires_on', 'refresh_token_expires_on'"
                 logging.error(error_msg)
                 exit(1)
 
@@ -115,10 +123,25 @@ class EcobeeClient:
             thermostat_name=self.thermostat_name,
             application_key=application_key,
             access_token=access_token,
-            refresh_token=refresh_token
+            access_token_expires_on=at_expires_on,
+            refresh_token=refresh_token,
+            refresh_token_expires_on=rt_expires_on
         )
 
         self.refresh_tokens_if_needed()
+
+    def write_credentials_file(self):
+        e = self.ecobee_service
+        data = {
+            'application_key': e.application_key,
+            'access_token': e.access_token,
+            'access_token_expires_on': e.access_token_expires_on.isoformat(),
+            'refresh_token': e.refresh_token,
+            'refresh_token_expires_on': e.refresh_token_expires_on.isoformat(),
+        }
+        with open(self.credentials_file, 'w') as fp:
+            json.dump(data, fp)
+            logging.debug("Wrote ecobee credentials file: {self.credentials_file}")
 
     def authorize(self):
         """Perform interactive authorization by generating a PIN."""
@@ -157,8 +180,11 @@ After completing this step, press Enter to continue."""
         logging.info("Refreshing tokens...")
         try:
             token_response = self.ecobee_service.refresh_tokens()
-            logging.debug("TokenResponse received.")
+            logging.debug(f"TokenResponse: {token_response.pretty_format()}")
             logging.info("Tokens refreshed successfully.")
+
+            self.write_credentials_file()
+
         except EcobeeApiException as e:
             logging.error(f"Error refreshing tokens: {e}")
             raise
@@ -169,7 +195,8 @@ After completing this step, press Enter to continue."""
         logging.debug(
             f"Checking token expiration: now={now_utc}, access token expires_on={self.ecobee_service.access_token_expires_on}, "
             f"refresh token expires_on={self.ecobee_service.refresh_token_expires_on}")
-        if now_utc > self.ecobee_service.refresh_token_expires_on:
+        if (self.ecobee_service.refresh_token_expires_on is not None and
+            now_utc > self.ecobee_service.refresh_token_expires_on):
             logging.info(f"Refresh token has expired...reauthorization required.")
             self.authorize()
             self.request_tokens()
