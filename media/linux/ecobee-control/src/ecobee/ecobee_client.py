@@ -15,6 +15,7 @@ import requests
 from datetime import datetime
 from six.moves import input
 from pyecobee import *
+from google.api_core import retry
 
 # This is one day of the schedule
 _daily_schedule_pattern = ["sleep"] * 12 + ["home"] * 24 + ["sleep"] * 6
@@ -80,8 +81,11 @@ _schedule_payload = {
     }
 }
 
-
 class EcobeeClient:
+    # Raise this error if we need to refresh the Ecobee auth token
+    class EcobeeNeedRefresh(Exception):
+        pass
+
     def __init__(self, thermostat_name="Test1", credentials_file=None, config=None):
         """
         Initializes the EcobeeClient, sets up the file paths and starts authentication.
@@ -215,8 +219,6 @@ After completing this step, press Enter to continue."""
         target_ecobee (str): Thermostat name to update.
 
         """
-        self.refresh_tokens_if_needed()
-
         ordered_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         masked_schedule = [dataframe[day].tolist() for day in ordered_days]
         self.schedule_payload["thermostat"]["program"]["schedule"] = masked_schedule
@@ -245,27 +247,37 @@ After completing this step, press Enter to continue."""
 
         self.schedule_payload['selection']['selectionMatch'] = thermostat_id
 
-        response = requests.post(
-            self.ECOBEE_THERMOSTAT_URL,
-            data=json.dumps(self.schedule_payload, default=str),
-            headers={'Authorization': 'Bearer ' + self.ecobee_service.access_token}
-        )
+        # Use a private function with a @retry decorator so that it'll retry
+        # if we need to refresh our tokens
+        @retry.Retry(predicate=retry.if_exception_type(self.EcobeeNeedRefresh))
+        def _set_schedule():
+            response = requests.post(
+                self.ECOBEE_THERMOSTAT_URL,
+                data=json.dumps(self.schedule_payload, default=str),
+                headers={'Authorization': 'Bearer ' + self.ecobee_service.access_token}
+            )
 
-        if response.ok:
-            logging.info(f'Thermostat {target_ecobee} updated successfully.')
-            print(f'Thermostat {target_ecobee} updated.')
-            print(response.text)
-        else:
-            logging.error(f'Failed to update thermostat {target_ecobee}: {response.status_code}')
-            print('Failure sending request to thermostat')
-            print(response.text)
-            raise Exception(f"Thermostat update failed: {response.text}")
+            if response.ok:
+                logging.info(f'Thermostat {target_ecobee} updated successfully.')
+                logging.info(response.text)
+            elif response.status_code == 14:
+                logging.info(f'Access token expired while attempting to set schedule mode change...refreshing.')
+                self.refresh_tokens_if_needed()
+                # This will invoke the retry
+                raise(self.EcobeeNeedRefresh())
+            else:
+                logging.error(f'Failed to update thermostat {target_ecobee}: {response.status_code}')
+                logging.error(response.text)
+                raise Exception(f"Thermostat update failed: {response.text}")
 
+        _set_schedule()
+
+    # If this function needs to refresh tokens, it'll automatically retry
+    @retry.Retry(predicate=retry.if_exception_type(EcobeeNeedRefresh))
     def get_thermostat_id_by_name(self, ecobee_name):
         """
         Given a thermostat name, return its identifier.
         """
-        self.refresh_tokens_if_needed()
         selection = Selection(selection_type=SelectionType.REGISTERED.value, selection_match='')
 
         try:
@@ -277,8 +289,14 @@ After completing this step, press Enter to continue."""
             logging.warning(f"Thermostat {ecobee_name} not found in registered thermostats.")
             return None
         except EcobeeApiException as e:
-            logging.error(f"Failed to fetch thermostats: {e}")
-            raise
+            if e.status_code == 14:
+                logging.info(f'Access token expired while attempting to get thermostat ID...refreshing.')
+                self.refresh_tokens_if_needed()
+                # Now retry this function
+                raise(EcobeeNeedRefresh())
+            else:
+                logging.error(f"Failed to fetch thermostats: {e}")
+                raise
 
     def format_dt_str(self, dt_val):
         """
