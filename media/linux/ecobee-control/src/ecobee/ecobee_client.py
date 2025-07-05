@@ -255,6 +255,10 @@ After completing this step, press Enter to continue."""
             logging.info(f'Thermostat {target_ecobee} updated successfully.')
             print(f'Thermostat {target_ecobee} updated.')
             print(response.text)
+        elif response.status_code == 14:
+            logging.info(f'Access token expired while attempting to set schedule mode change...refreshing.')
+            print(f'Access code expired while attempting to set schedule mode change...refreshing.')
+            self.refresh_tokens_if_needed()
         else:
             logging.error(f'Failed to update thermostat {target_ecobee}: {response.status_code}')
             print('Failure sending request to thermostat')
@@ -277,8 +281,13 @@ After completing this step, press Enter to continue."""
             logging.warning(f"Thermostat {ecobee_name} not found in registered thermostats.")
             return None
         except EcobeeApiException as e:
-            logging.error(f"Failed to fetch thermostats: {e}")
-            raise
+            if e.status_code == 14:
+                logging.info(f'Access token expired while attempting to get thermostat ID...refreshing.')
+                print(f'Access token expired while attempting to get thermostat ID...refreshing.')
+                self.refresh_tokens_if_needed()
+            else:
+                logging.error(f"Failed to fetch thermostats: {e}")
+                raise
 
     def format_dt_str(self, dt_val):
         """
