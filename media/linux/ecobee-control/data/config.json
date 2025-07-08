@@ -46,10 +46,20 @@
 	"CC H",
 	"CC J",
 	"CC L",
-        "Test1",
-        "Test2"
+        "LH MAIN ROOM",
+	"LH ENTRANCE"
     ],
     "zones": [
+	{
+            "name": "Zone: Lighthouse",
+            "calendars": [
+		"Lighthouse-1-Lighthouse (75)"
+            ],
+            "ecobees": [
+		"LH MAIN ROOM",
+		"LH ENTRANCE"
+            ]
+        },
         {
             "name": "Zone: Both kitchens",
             "calendars": [
