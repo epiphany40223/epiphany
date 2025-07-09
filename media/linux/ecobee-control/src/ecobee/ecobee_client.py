@@ -259,16 +259,18 @@ After completing this step, press Enter to continue."""
 
             if response.ok:
                 logging.info(f'Thermostat {target_ecobee} updated successfully.')
-                logging.info(response.text)
-            elif response.status_code == 14:
-                logging.info(f'Access token expired while attempting to set schedule mode change...refreshing.')
-                self.refresh_tokens_if_needed()
-                # This will invoke the retry
-                raise(self.EcobeeNeedRefresh())
             else:
-                logging.error(f'Failed to update thermostat {target_ecobee}: {response.status_code}')
-                logging.error(response.text)
-                raise Exception(f"Thermostat update failed: {response.text}")
+                result = json.loads(response.text)
+                code = result.get('status', {}).get('code', 0)
+                if code == 14:
+                    logging.info(f'Access token expired while attempting to set schedule mode change...refreshing.')
+                    self.refresh_tokens_if_needed()
+                    # This will invoke the retry
+                    raise(self.EcobeeNeedRefresh())
+                else:
+                    logging.error(f'Failed to update thermostat {target_ecobee}: {response.status_code}')
+                    logging.error(response.text)
+                    raise Exception(f"Thermostat update failed: {response.text}")
 
         _set_schedule()
 
@@ -293,7 +295,7 @@ After completing this step, press Enter to continue."""
                 logging.info(f'Access token expired while attempting to get thermostat ID...refreshing.')
                 self.refresh_tokens_if_needed()
                 # Now retry this function
-                raise(EcobeeNeedRefresh())
+                raise(self.EcobeeNeedRefresh())
             else:
                 logging.error(f"Failed to fetch thermostats: {e}")
                 raise
