@@ -157,11 +157,6 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '305-Movers Ministry',
-        'gsheet_id' : '1q0rNZQ0Od3cCoFG2qLgKZep10GzQ3nmvVIIJuUOWBgY',
-        'birthday' : False,
-    },
-    {
         'ministry' : '306-Music Support for Children',
         'gsheet_id' : '1ODBCOAUY5g93-ZDrgAx9-Fv5wT4VSeMYxHgpFeb2F4s',
         'birthday' : False,
@@ -237,18 +232,8 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '406-Evangelization Team',
-        'gsheet_id' : '1YLK4dsW2-whQeKPR0g4F8q3ZuximhwLiN1gS_ps4JgQ',
-        'birthday' : False,
-    },
-    {
         'ministry' : '407-Stewardship Team',
         'gsheet_id' : '1T2FCBImLj4akVnX1hpfymi-JKV5jPf3G0ucknzQz8Io',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '408-Engagement Team',
-        'gsheet_id' : '1vGOdc2YtiNj1VnzUMy0ftrjuwVxqSJz_8XFeTxnQ8l8',
         'birthday' : False,
     },
     {
@@ -304,12 +289,12 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '508-Messages of Hope Ministry',
+        'ministry' : '508-Grief Support Group',
         'gsheet_id' : '1NOijo2AHwftLBGDyCiyGMEIp4Qmfw-0jVjHG9Ygz3S8',
         'birthday' : False,
     },
     {
-        'ministry' : '509-HOPE Support Groups',
+        'ministry' : '509- Women of HOPE Support Groups',
         'gsheet_id' : '1Ua7pm-4Av7vPhU8quL5sAEKfowo8O_jfEF34vD1s3Wg',
         'birthday' : False,
     },
