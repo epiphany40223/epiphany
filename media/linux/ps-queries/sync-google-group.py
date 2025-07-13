@@ -376,6 +376,11 @@ def get_synchronizations():
             'ggroup'     : f'soullife{ecc}',
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
+        {
+            'workgroups' : [ 'Zoom license' ],
+            'ggroup'     : f'zoom{ecc}',
+            'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
+        },
 
         #############################
 
