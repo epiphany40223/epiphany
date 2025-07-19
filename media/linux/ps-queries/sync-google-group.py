@@ -183,11 +183,6 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '305-Movers Ministry' ],
-            'ggroup'     : f'movers{ecc}',
-            'notify'     : f'director-worship{ecc},awsimpson57@gmail.com,ps-google-sync{ecc}',
-        },
-        {
             'ministries' : [ '309-Acolytes', ],
             'ggroup'     : f'acolytes{ecc}',
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
@@ -278,18 +273,18 @@ def get_synchronizations():
             'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '508-Messages of Hope Ministry' ],
-            'ggroup'     : f'messages-of-hope{ecc}',
+            'ministries' : [ '508-Grief Support Group' ],
+            'ggroup'     : f'grief-support-group{ecc}',
+            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
+        },
+        {
+            'ministries' : [ '509-Women of HOPE Support Groups' ],
+            'ggroup'     : f'women-of-hope-support-groups{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
 
         #############################
 
-        {
-            'ministries' : [ '411-Men of Epiphany' ],
-            'ggroup'     : f'moe{ecc}',
-            'notify'     : f'pastoral-associate-parish-life{ecc},moe-chair{ecc},ps-google-sync{ecc}',
-        },
         {
             'ministries' : [ '412-Sages (for 50 yrs. +)' ],
             'ggroup'     : f'sages{ecc}',
@@ -667,13 +662,6 @@ def get_synchronizations():
         },
         {
             'functions'  : [ { 'func' : find_ministry_chair,
-                               'kwargs' : { "ministry_prefix" : '411' },
-                               'purpose' : "MOE ministry chair" }, ],
-            'ggroup'     : f'moe-chair{ecc}',
-            'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
-        },
-        {
-            'functions'  : [ { 'func' : find_ministry_chair,
                                'kwargs' : { "ministry_prefix" : '413-Singles Explore Life (SEL)' },
                                'purpose' : "SEL ministry chair" }, ],
             'ggroup'     : f'sel-chair{ecc}',
@@ -853,12 +841,7 @@ def compute_sync(sync, ps_members, group_members, log=None):
 #-------------------------------------------------------------------
 
 def do_sync(args, sync, group_permissions, service, actions, log=None):
-    ministries = sync['ministries'] if 'ministries' in sync else 'None'
-    workgroups = sync['workgroups'] if 'workgroups' in sync else 'None'
-
     type_str   = 'Broadcast' if group_permissions == BROADCAST else 'Discussion'
-
-    log.info(f"Synchronizing ministries: {ministries}, workgroups: {workgroups}, group: {sync['ggroup']}, type {type_str}")
 
     # Process each of the actions
     changes     = list()
@@ -1548,6 +1531,11 @@ def main():
 
     synchronizations = get_synchronizations()
     for sync in synchronizations:
+        # Announce what we're doing
+        ministries = sync['ministries'] if 'ministries' in sync else 'None'
+        workgroups = sync['workgroups'] if 'workgroups' in sync else 'None'
+        log.info(f"Synchronizing ministries: {ministries}, workgroups: {workgroups}, group: {sync['ggroup']}")
+
         group_permissions = google_group_get_permissions(service_group,
                                                          sync['ggroup'],
                                                          log)

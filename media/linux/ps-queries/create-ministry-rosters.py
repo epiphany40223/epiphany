@@ -242,11 +242,6 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '411-Men of Epiphany',
-        'gsheet_id' : '1Fq11QLU7OQ_yHYPeDPXT8JaA31ackl3eJ2xOvecG_go',
-        'birthday' : False,
-    },
-    {
         'ministry' : '412-Sages (for 50 yrs. +)',
         'gsheet_id' : '11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs',
         'birthday' : False,
@@ -294,7 +289,7 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '509- Women of HOPE Support Groups',
+        'ministry' : '509-Women of HOPE Support Groups',
         'gsheet_id' : '1Ua7pm-4Av7vPhU8quL5sAEKfowo8O_jfEF34vD1s3Wg',
         'birthday' : False,
     },
