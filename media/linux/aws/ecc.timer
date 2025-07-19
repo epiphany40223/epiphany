@@ -1,0 +1,26 @@
+# This file runs the ecc systemd service every 15 minutes.  The ecc
+# systemd service's sole purpose in life is to launch the run-aws.sh
+# script, which then runs all the Epiphany periodic automation.
+#
+# Put this file in $HOME/.config/systemd/user/ecc.timer
+#
+# Then run:
+# systemctl --user daemon-reload
+# systemctl --user start ecc.timer
+#
+# Can check it via:
+#
+# systemctl --user status ecc.timer
+# systemctl --user status ecc.service
+
+[Unit]
+Description=Run AWS script every 15 minutes
+
+[Timer]
+# Run 15 minutes after boot, then every 15 minutes thereafter
+OnBootSec=15min
+OnUnitActiveSec=15min
+Unit=ecc.service
+
+[Install]
+WantedBy=timers.target
