@@ -500,6 +500,11 @@ def get_synchronizations():
             'ggroup'     : f'youth-ministry-parents-sr-high{ecc}',
             'notify'     : f'pastoral-associate-youth{ecc},ps-google-sync{ecc}',
         },
+        {
+            'workgroups' : [ 'Spectrum@ECC email list' ],
+            'ggroup'     : f'spectrum{ecc}',
+            'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
+        },
 
         #############################
 
