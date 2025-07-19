@@ -6,10 +6,10 @@
 
 set -xeuo pipefail
 
-logfile_dir=/home/coeadmin/logfiles
-credential_dir=/home/coeadmin/credentials
+logfile_dir=$HOME/logfiles
+credential_dir=$HOME/credentials
 
-git_base=/home/coeadmin/git/epiphany/media/linux
+git_base=$HOME/git/epiphany/media/linux
 prog_dir=$git_base/ps-queries
 sqlite_dir=$git_base/ps-data
 
