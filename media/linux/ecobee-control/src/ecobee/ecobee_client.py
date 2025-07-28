@@ -5,6 +5,10 @@
 #
 # Description: This file contains functions to authenticate with Ecobee
 # and schedule mode changes
+# 
+# Modified 7/28/2025...DK Fowler
+#   Increased timeout values on Ecobee service calls to 30 seconds due to notoriously slow response
+#   from the Ecobee API at times.
 
 import os
 import pytz
@@ -151,7 +155,7 @@ class EcobeeClient:
         """Perform interactive authorization by generating a PIN."""
         logging.info("Starting authorization process...")
         print("Starting authorization process...")
-        authorize_response = self.ecobee_service.authorize()
+        authorize_response = self.ecobee_service.authorize(timeout=30)
         logging.debug(f"AuthorizeResponse: {authorize_response.pretty_format()}")
         pin = authorize_response.ecobee_pin
         logging.info(
@@ -171,7 +175,7 @@ After completing this step, press Enter to continue."""
         """Request initial tokens after authorization (if you're interactive)."""
         logging.info("Requesting tokens...")
         try:
-            token_response = self.ecobee_service.request_tokens()
+            token_response = self.ecobee_service.request_tokens(timeout=30)
             logging.debug(f"TokenResponse: {token_response.pretty_format()}")
             print(f"New Access Token: {self.ecobee_service.access_token}")
             print(f"New Refresh Token: {self.ecobee_service.refresh_token}")
@@ -183,7 +187,7 @@ After completing this step, press Enter to continue."""
         """Refresh the access and refresh tokens."""
         logging.info("Refreshing tokens...")
         try:
-            token_response = self.ecobee_service.refresh_tokens()
+            token_response = self.ecobee_service.refresh_tokens(timeout=30)
             logging.debug(f"TokenResponse: {token_response.pretty_format()}")
             logging.info("Tokens refreshed successfully.")
 
@@ -254,7 +258,8 @@ After completing this step, press Enter to continue."""
             response = requests.post(
                 self.ECOBEE_THERMOSTAT_URL,
                 data=json.dumps(self.schedule_payload, default=str),
-                headers={'Authorization': 'Bearer ' + self.ecobee_service.access_token}
+                headers={'Authorization': 'Bearer ' + self.ecobee_service.access_token},
+                timeout=30
             )
 
             if response.ok:
@@ -285,7 +290,7 @@ dule mode change...refreshing.')
         selection = Selection(selection_type=SelectionType.REGISTERED.value, selection_match='')
 
         try:
-            thermostat_response = self.ecobee_service.request_thermostats(selection)
+            thermostat_response = self.ecobee_service.request_thermostats(selection, timeout=30)
             for tstat in thermostat_response.thermostat_list:
                 if tstat.name.lower() == ecobee_name.lower():
                     logging.debug(f"Found thermostat {ecobee_name} with ID {tstat.identifier}")
