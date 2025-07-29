@@ -266,6 +266,12 @@ After completing this step, press Enter to continue."""
                 logging.info(f'Thermostat {target_ecobee} updated successfully.')
                 logging.info(response.text)
             else:
+                logging.debug(f'Error occurred during schedule mode change, request response:')
+                if response.headers.get('Content-Type') == 'application/json; charset=utf-8':
+                    pretty_response = json.dumps(response.json(), indent=4)
+                    logging.debug(pretty_response)
+                else:
+                    logging.debug(response.text)
                 result = json.loads(response.text)
                 code = result.get('status', {}).get('code', 0)
                 if code == 14:
