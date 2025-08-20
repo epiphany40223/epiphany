@@ -7,11 +7,13 @@
 # Then run:
 # systemctl --user daemon-reload
 # systemctl --user start ecc.timer
+# loginctl enable-linger
 #
 # Can check it via:
 #
 # systemctl --user status ecc.timer
 # systemctl --user status ecc.service
+# loginctl show-user
 
 [Unit]
 Description=Run AWS script every 15 minutes
