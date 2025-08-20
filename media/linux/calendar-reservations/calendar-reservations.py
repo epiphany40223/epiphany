@@ -277,13 +277,16 @@ def check_for_conflicts(events_to_check, events, calendar, service, log):
         for event_to_check in orderable_events[created_dt]:
             conflicting = False
             for event in events:
-                if event_to_check['dtr'].is_intersection(event['dtr']):
-                    log.debug(f"Found a conflicting event: {event['id']}")
-                    conflicting_events.append({
-                        'event':event_to_check,
-                        'reason':f"conflicts with existing event '{event['summary']}' (ID: {event['id']})"
-                    })
-                    conflicting = True
+                try:
+                    if event_to_check['dtr'].is_intersection(event['dtr']):
+                        log.debug(f"Found a conflicting event: {event['id']}")
+                        conflicting_events.append({
+                            'event':event_to_check,
+                           'reason':f"conflicts with existing event '{event['summary']}' (ID: {event['id']})"
+                        })
+                        conflicting = True
+                except (KeyError, AttributeError, TypeError) as e:
+                    log.info(f"Event intersection check failed: {e}")
             if not conflicting:
                 log.debug(f"Found an event to accept!  Huzzah! {event['id']}")
                 accepted_events.append({
@@ -350,10 +353,11 @@ def process_events(service, calendar, log):
     # testing; checking from 31 days ago to 18 months ahead makes for "short"
     # processing/download times in the Google query API.  Checking for *all*
     # events is prohibitively long).
-    start = datetime.datetime.utcnow() - datetime.timedelta(days=31)
-    startString = start.isoformat() + 'Z' # 'Z' indicates UTC time
-    end = datetime.datetime.utcnow() + datetime.timedelta(days=547) # 547 days is 18 months
-    endString = end.isoformat() + 'Z'
+    utc = datetime.timezone.utc
+    start = datetime.datetime.now(tz=utc) - datetime.timedelta(days=31)
+    startString = start.isoformat()
+    end = datetime.datetime.now(tz=utc) + datetime.timedelta(days=547) # 547 days is 18 months
+    endString = end.isoformat()
 
     # Make this a subroutine so that we can wrap it in retry.Retry()
     @retry.Retry(predicate=Google.retry_errors)
