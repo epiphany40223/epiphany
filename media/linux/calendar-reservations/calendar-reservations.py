@@ -285,7 +285,7 @@ def check_for_conflicts(events_to_check, events, calendar, service, log):
                            'reason':f"conflicts with existing event '{event['summary']}' (ID: {event['id']})"
                         })
                         conflicting = True
-                except (KeyError, AttributeError, TypeError) as e:
+                except Exception as e:
                     log.info(f"Event intersection check failed: {e}")
             if not conflicting:
                 log.debug(f"Found an event to accept!  Huzzah! {event['id']}")
