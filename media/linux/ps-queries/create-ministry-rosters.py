@@ -404,6 +404,16 @@ ministry_sheets = [
         'gsheet_id' : '1Ay9Zp3HnHmINygZWIilVWMvlbD4IfKygyOoa9wU4FK8',
         'birthday' : False,
     },
+    {
+        'ministry' : 'E-Taize Prayer',
+        'gsheet_id' : '1Sz6tRzQ7q8sqN9tjaq3wX2lpE7aWi9-bNyyooDebmt4',
+        'birthday' : False,
+    },
+    {
+        'ministry' : 'E-Soul Life',
+        'gsheet_id' : '14txmxfY_gacwdusNQJMM8SwNiHnshCxPJZc7leD4X2Q',
+        'birthday' : False,
+    },
 ]
 
 workgroups = [
