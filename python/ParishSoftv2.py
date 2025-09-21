@@ -208,6 +208,9 @@ def _get_paginated_endpoint(session, endpoint, params, cache_dir, log,
     # elements at a time
     base_url = f'{_ps_api_base_url}/{endpoint}?{limit_name}={limit}'
 
+    time_network = datetime.timedelta(seconds=0)
+    time_python = datetime.timedelta(seconds=0)
+
     # Loop to get all the elements
     page_num = 1
     while True:
@@ -219,6 +222,13 @@ def _get_paginated_endpoint(session, endpoint, params, cache_dir, log,
         if params and len(params) > 0:
             url += f'&{params}'
 
+        # We have seen that as the page number gets higher, the PS servers
+        # get noticeably slower to respond.  For example, when downloading
+        # contribution data, by the time we get to the end of hundreds of
+        # 500-element pages, the PS servers are taking multiple seconds to
+        # reply.  The cost of storing all those pages in Python memory (e.g.,
+        # storing every 500 new records in a giant list or dictionary) is
+        # negligible compared to the network latency.
         log.debug(f"Getting URL: {url}")
         response = session.get(url, headers=headers)
         data = response.json()
@@ -820,7 +830,7 @@ def _link_family_contributions(families, contributions, log):
         family['py contributions'] = []
         return
 
-    for contribution in contributions.values():
+    for id, contribution in contributions.items():
         fduid = contribution['familyId']
         family = families.get(fduid, None)
         if not family:
@@ -1234,13 +1244,20 @@ def load_families_and_members(api_key=None,
     # Load the funds
     funds = {}
     pledges = {}
-    contributions = []
+    contributions = {}
     if load_contributions:
+        start_date = None
+        if type(load_contributions) == str:
+            start_date = load_contributions
+        elif load_contributions:
+            # If we just said "True", then load the last year's worth
+            start_date = datetime.date.today().replace(year=datetime.date.today().year - 1).isoformat()
         funds = _load_funds(session, org_id, cache_dir, log)
         pledges = _load_pledges(session, org_id, funds, cache_dir, log)
         contributions = _load_contributions(session, org_id,
                                             funds, pledges,
-                                            cache_dir, log)
+                                            cache_dir, log,
+                                            start_date=start_date)
 
     # Load all the Family data
     families = _load_families(session, org_id, cache_dir, log)

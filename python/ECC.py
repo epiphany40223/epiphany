@@ -12,6 +12,8 @@ import smtplib
 import platform
 import logging.handlers
 
+from email.message import EmailMessage
+
 local_tz_name = 'America/Louisville'
 local_tz = pytz.timezone(local_tz_name)
 

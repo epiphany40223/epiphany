@@ -62,6 +62,7 @@ def main():
                                              cache_dir=args.ps_cache_dir,
                                              active_only=False,
                                              parishioners_only=False,
+                                             load_contributions="1971-01-01",
                                              log=log)
 
     num_fam = len(families)
