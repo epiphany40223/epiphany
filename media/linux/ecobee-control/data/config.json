@@ -1,16 +1,16 @@
 {
     "modes": {
         "Overnight": {
-            "min temperature": 66,
-            "max temperature": 80
+            "min temperature": 62,
+            "max temperature": 76
         },
         "Unoccupied": {
-            "min temperature": 70,
-            "max temperature": 78
+            "min temperature": 66,
+            "max temperature": 73
         },
         "Occupied": {
-            "min temperature": 74,
-            "max temperature": 76
+            "min temperature": 69,
+            "max temperature": 71
         }
     },
 
