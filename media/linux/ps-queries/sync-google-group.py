@@ -458,7 +458,12 @@ def get_synchronizations():
         {
             'workgroups' : [ 'PPC Executive Committee' ],
             'ggroup'     : f'ppc-exec{ecc}',
-            'notify'     : f'administative-assistant{ecc},ps-google-sync{ecc}',
+            'notify'     : f'pastor{ecc},ps-google-sync{ecc}',
+        },
+        {
+            "workgroups" : [ 'PPC Assistant' ],
+            'ggroup'     : f'ppc-assistant{ecc}',
+            'notify'     : f'pastor{ecc},ps-google-sync{ecc}',
         },
         {
             'workgroups' : [ 'Recordings access' ],
