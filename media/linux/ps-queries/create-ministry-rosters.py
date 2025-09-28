@@ -57,7 +57,7 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '104-Stewardship & E Committee',
+        'ministry' : '104-Stewardship Team',
         'gsheet_id' : '1avaHrl-sHOWOc541GclHZL3ajG30HozISR0HDoswKnM',
         'birthday' : False,
     },
@@ -104,11 +104,6 @@ ministry_sheets = [
     {
         'ministry' : '201-Collection Counter',
         'gsheet_id' : '1w-PQ-_jnzWWRB3id-Mh4pNHTHJzf9Al1gc_p7cS0koM',
-        'birthday' : False,
-    },
-    {
-        'ministry' : '202-Facility Mgmt & Planning',
-        'gsheet_id' : '1kcna05U9Oiy0dyvinjOjLi8tXSwQ3sHBC8N8LqjDsjU',
         'birthday' : False,
     },
     {
@@ -232,11 +227,6 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '407-Stewardship Team',
-        'gsheet_id' : '1T2FCBImLj4akVnX1hpfymi-JKV5jPf3G0ucknzQz8Io',
-        'birthday' : False,
-    },
-    {
         'ministry' : '409-Sunday Morning Coffee',
         'gsheet_id' : '1zaVGPdnHp5zZu3zbWfGckIaxbCeCSSTYyoe4pCIlQjs',
         'birthday' : False,
@@ -252,8 +242,8 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
-        'ministry' : '452-Media Communications',
-        'gsheet_id' : '1QLcjLidJppCfhqaNBn10h1Toe81DEy48PwwJAhwDNUs',
+        'ministry' : '414-Hospitality Linen Ministry',
+        'gsheet_id' : '1speD5aJbcLc0hugyfhP8J1vhrFeHYO3-Zpuc77GQBjM',
         'birthday' : False,
     },
     {
@@ -284,12 +274,17 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
+        'ministry' : '507-Flower Angels',
+        'gsheet_id' : '1GslfFYPsXPGk16N9Oq6wx8l2HeZNryIBu29lFuLITck',
+        'birthday' : False,
+    },
+    {
         'ministry' : '508-Grief Support Group',
         'gsheet_id' : '1NOijo2AHwftLBGDyCiyGMEIp4Qmfw-0jVjHG9Ygz3S8',
         'birthday' : False,
     },
     {
-        'ministry' : '509-Women of HOPE Support Groups',
+        'ministry' : '509-HOPE for the Widowed Support Groups',
         'gsheet_id' : '1Ua7pm-4Av7vPhU8quL5sAEKfowo8O_jfEF34vD1s3Wg',
         'birthday' : False,
     },
@@ -334,6 +329,11 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
+        'ministry' : '708-Social Concerns Forum',
+        'gsheet_id' : '1rT8JyEELbazL2scZZP4glt-ZVyK2v3Nn-Rr9rtuhmhU',
+        'birthday' : False,
+    },
+    {
         'ministry' : '709-Twinning Committee:Chiapas',
         'gsheet_id' : '1lXkeHsyHNqHYH4zs_HiQdaq8PK8vh5W2koQE5sCq_7U',
         'birthday' : False,
@@ -344,27 +344,32 @@ ministry_sheets = [
         'birthday' : False,
     },
     {
+        'ministry' : '711-Women\'s Concerns Committee',
+        'gsheet_id' : '1t-pu0efeZbLgnLiRQXgIf_MPZA06-CXiY5k9h0qkXI8',
+        'birthday' : False,
+    },
+    {
         'ministry' : '800-Catechists for Children',
         'gsheet_id' : '1jsoRxugVwXi_T2IDq9J-mEVdzS8xaOk9kuXGAef-YaQ',
         'birthday' : False,
     },
     {
-        'ministry' : '802-Gather the Children',
+        'ministry' : '802-Gather the Children Prayer Leaders',
         'gsheet_id' : '1SqqnAFEZlUdCAxp6NYKqpqGFy13L_aheVEGzHLLzOuk',
         'birthday' : False,
     },
     {
-        'ministry' : '805-Monday Adult Bible Study',
+        'ministry' : '805-Monday Adult Bible Study Catechists',
         'gsheet_id' : '1rBKiweOBT-JZFbfv5Sf4_vjjOlAYnOGaZIhadtBPxSE',
         'birthday' : False,
     },
     {
-        'ministry' : '807-Catechumenate/InitiationTm',
+        'ministry' : '807-Catechumenate / Initiation Team Members',
         'gsheet_id' : '1lI9eO0bryD6GFIsgJ5FipGePK4FaJ7v8eIp71DFz_6A',
         'birthday' : False,
     },
     {
-        'ministry' : '808-BibleTimes Core Team',
+        'ministry' : '808-BibleTimes Volunteers',
         'gsheet_id' : '1gANQt7PBc8erErQRHrRLtkdmOF3Y7DbuLC3J6aRLu4U',
         'birthday' : False,
     },
