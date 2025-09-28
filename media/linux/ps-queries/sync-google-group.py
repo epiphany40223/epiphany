@@ -117,7 +117,7 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '104-Stewardship & E Committee' ],
+            'ministries' : [ '104-Stewardship Team' ],
             'ggroup'     : f'stewardship{ecc}',
             'notify'     : f'director-parish-engagement{ecc},ps-google-sync{ecc}',
         },
@@ -242,11 +242,6 @@ def get_synchronizations():
             'ggroup'     : f'welcome-desk{ecc}',
             'notify'     : f'director-parish-engagement{ecc},ps-google-sync{ecc}',
         },
-        {
-            'ministries' : [ '407-Stewardship Team' ],
-            'ggroup'     : f'stewardship-team{ecc}',
-            'notify'     : f'director-parish-engagement{ecc},ps-google-sync{ecc}',
-        },
 
         {
             # The misspelling of "access" in the workgroup name is intentional
@@ -278,7 +273,7 @@ def get_synchronizations():
             'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '509-Women of HOPE Support Groups' ],
+            'ministries' : [ '509-HOPE for the Widowed Support Groups' ],
             'ggroup'     : f'women-of-hope-support-groups{ecc}',
             'notify'     : f'pastoral-associate-parish-life{ecc},ps-google-sync{ecc}',
         },
@@ -328,17 +323,17 @@ def get_synchronizations():
             'notify'     : f'formation{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '802-Gather the Children' ],
+            'ministries' : [ '802-Gather the Children Prayer Leaders' ],
             'ggroup'     : f'gather-the-children{ecc}',
             'notify'     : f'formation{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '807-Catechumenate/InitiationTm' ],
+            'ministries' : [ '807-Catechumenate / Initiation Team Members' ],
             'ggroup'     : f'rcia-team{ecc}',
             'notify'     : f'formation{ecc},ps-google-sync{ecc}',
         },
         {
-            'ministries' : [ '808-BibleTimes Core Team' ],
+            'ministries' : [ '808-BibleTimes Volunteers' ],
             'ggroup'     : f'bibletimes-core-team{ecc}',
             'notify'     : f'bibletimes-chair{ecc},ps-google-sync{ecc}',
         },
