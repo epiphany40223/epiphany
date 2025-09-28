@@ -29,6 +29,7 @@ import ECC
 #
 # Global (but private) values
 
+# API Docs: https://ps-fs-external-api-prod.azurewebsites.net/index.html
 _ps_api_base_url = 'https://ps-fs-external-api-prod.azurewebsites.net/api/v2'
 
 _ct_text = 'text/plain'
@@ -226,19 +227,18 @@ def _get_paginated_endpoint(session, endpoint, params, cache_dir, log,
         # 1. a simple (Python) list
         # 2. a dictionary with 'pagingInfo' and 'data' keys
         if type(data) is list:
-            log.debug(f"Got {len(data)} elements back")
-            for element in data:
-                elements.append(element)
+            log.debug(f"Got {len(data)} elements back (list)")
 
             # If there's no more, we're done.
             if len(data) == 0:
                 log.debug("Got empty elements array back -- we're done")
                 break
 
+            elements.extend(data)
+
         elif type(data) is dict:
-            log.debug(f"Got {len(data['data'])} elements back")
-            for element in data['data']:
-                elements.append(element)
+            log.debug(f"Got {len(data['data'])} elements back (dict)")
+            elements.extend(data['data'])
             pi = data['pagingInfo']
 
             # If there's no more, we're done
@@ -406,6 +406,78 @@ def _get_org(session, cache_dir, log):
     return _org_id
 
 ##############################################################################
+
+def _load_funds(session, org_id, cache_dir, log):
+    elements = _get_endpoint(session,
+                             endpoint=f'offering/{org_id}/funds',
+                             params=None,
+                             cache_dir=cache_dir,
+                             log=log)
+
+    funds = { element['fundId'] : element for element in elements }
+    return funds
+
+def _load_pledges(session, org_id, funds, cache_dir, log):
+    elements = _get_paginated_endpoint(session,
+                                       endpoint='offering/pledge/list',
+                                       params=None,
+                                       cache_dir=cache_dir,
+                                       log=log,
+                                       offset_name="PageNumber",
+                                       offset_type="page",
+                                       # This API allows a page size
+                                       # of 500
+                                       limit=500,
+                                       limit_name='PageSize')
+
+    _normalize_dates(elements, ['pledgeDate', 'pledgeStartDate'])
+
+    for element in elements:
+        fund = funds.get(element['fundID'], None)
+        element['py fund'] = fund
+
+    pledges = { element['pledgeID'] : element for element in elements }
+    return pledges
+
+# Loading the contributions can take a while.
+#
+# ECC, for example, has upwards of 600K contributions.  Pulling these
+# 500 at a time just takes a long while (and it slows down as it goes
+# on -- starting at the usual few-hundred-miliseconds per API call and
+# ending at ~3 seconds per API call.  I'm not sure if the slowdown is
+# on the ParishSoft side or here in the Python side (it's making a
+# giant list of all the results).
+def _load_contributions(session, org_id, funds, pledges,
+                        cache_dir, log,
+                        start_date=None):
+    params = None
+    if start_date:
+        params = f'startDate={start_date}'
+
+    elements = _get_paginated_endpoint(session,
+                                       endpoint='offering/contributiondetail/list',
+                                       params=params,
+                                       cache_dir=cache_dir,
+                                       log=log,
+                                       offset_name="PageNumber",
+                                       offset_type="page",
+                                       # This API allows a page size
+                                       # of 500
+                                       limit=500,
+                                       limit_name='PageSize')
+
+    _normalize_dates(elements, ['contributionDate'])
+
+    for element in elements:
+        fund = funds.get(element['fundId'], None)
+        element['py fund'] = fund
+        pledge = pledges.get(element['pledgeId'], None)
+        element['py pledge'] = pledge
+
+    contributions = { element['contributionID'] : element for element in elements }
+    return contributions
+
+#-----------------------------------------------------------------------------
 
 # Indexed by Family DUID
 def _load_families(session, org_id, cache_dir, log):
@@ -725,6 +797,40 @@ def _link_family_workgroups(families, family_workgroup_memberships, log):
                     'name' : wg['name'],
                     'family duid' : family['familyDUID'],
                 }
+
+def _link_family_pledges(families, pledges, log):
+    if pledges is None:
+        family['py pledges'] = []
+        return
+
+    for pledge in pledges.values():
+        fduid = pledge['familyID']
+        family = families.get(fduid, None)
+        if not family:
+            continue
+
+        family_pledges = family.get('py pledges', None)
+        if family_pledges:
+            family_pledges.append(pledge)
+        else:
+            family['py pledges'] = [ pledge ]
+
+def _link_family_contributions(families, contributions, log):
+    if contributions is None:
+        family['py contributions'] = []
+        return
+
+    for contribution in contributions.values():
+        fduid = contribution['familyId']
+        family = families.get(fduid, None)
+        if not family:
+            continue
+
+        family_contributions = family.get('py contributions', None)
+        if family_contributions:
+            family_contributions.append(contribution)
+        else:
+            family['py contributions'] = [ contribution ]
 
 def _link_member_contactinfos(members, member_contactinfos, log):
     for mem_duid, member in members.items():
@@ -1107,6 +1213,7 @@ def _filter(families, members,
 # appropriately cross-linked to each other.
 def load_families_and_members(api_key=None,
                               active_only=True, parishioners_only=True,
+                              load_contributions=False,
                               log=None, cache_dir=None):
     if not api_key:
         raise Exception("ERROR: Must specify ParishSoft API key to login to the PS cloud")
@@ -1123,6 +1230,17 @@ def load_families_and_members(api_key=None,
 
     # Get the organization ID
     org_id = _get_org(session, cache_dir, log)
+
+    # Load the funds
+    funds = {}
+    pledges = {}
+    contributions = []
+    if load_contributions:
+        funds = _load_funds(session, org_id, cache_dir, log)
+        pledges = _load_pledges(session, org_id, funds, cache_dir, log)
+        contributions = _load_contributions(session, org_id,
+                                            funds, pledges,
+                                            cache_dir, log)
 
     # Load all the Family data
     families = _load_families(session, org_id, cache_dir, log)
@@ -1159,6 +1277,8 @@ def load_families_and_members(api_key=None,
     _link_families_and_members(families, members, log)
     _link_family_groups(families, family_groups, log)
     _link_family_workgroups(families, family_workgroup_memberships, log)
+    _link_family_pledges(families, pledges, log)
+    _link_family_contributions(families, contributions, log)
     _link_member_contactinfos(members, member_contactinfos, log)
     _link_member_workgroups(members, member_workgroup_memberships, log)
     _link_member_ministries(members, ministry_type_memberships, log)
