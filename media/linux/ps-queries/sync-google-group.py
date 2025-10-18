@@ -491,6 +491,11 @@ def get_synchronizations():
             'notify'     : f'director-worship{ecc},ps-google-sync{ecc}',
         },
         {
+            'workgroups' : [ 'Healing Blanket requests' ],
+            'ggroup'     : f'healing-blanket-requests{ecc}',
+            'notify'     : f'associate-pastor{ecc},ps-google-sync{ecc}',
+        },
+        {
             'workgroups' : [ 'YouthMin parent: Jr high' ],
             'ggroup'     : f'youth-ministry-parents-jr-high{ecc}',
             'notify'     : f'pastoral-associate-youth{ecc},ps-google-sync{ecc}',
