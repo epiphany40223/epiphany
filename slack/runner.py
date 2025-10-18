@@ -22,8 +22,8 @@ import slack_sdk
 # tree).  This is robust, but it's a little clunky. :-\
 try:
     out = subprocess.run(['git', 'rev-parse', '--show-toplevel'],
-                         capture_output=True)
-    dirname = out.stdout.decode('utf-8').strip()
+                         capture_output=True, text=True)
+    dirname = out.stdout.strip()
     if not dirname:
         raise Exception("Could not find git root.  Are you outside the git tree?")
     moddir  = os.path.join(dirname, 'python')
@@ -91,8 +91,7 @@ def runner(args, log):
         # (i.e., vs implementing a timeout with Popen()/communicate() ourselves)
         # and the likelihood of a timeout actually occurring.
         result = subprocess.run(args.prog,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
+                                capture_output=True, text=True,
                                 timeout=args.child_timeout,
                                 check=False)
         log.debug(result)
@@ -109,9 +108,9 @@ def runner(args, log):
         _add_text_block(blocks, f"Running command \"{args.prog}\" experienced an unknown error: {e}")
     else:
         if result.stdout:
-            print(result.stdout.decode('utf-8').strip())
+            print(result.stdout.strip())
         if result.stderr:
-            print(result.stderr.decode('utf-8').strip())
+            print(result.stderr.strip())
         if result and result.returncode != 0:
             log.info(f"Execution returned {result.returncode} exit status")
             _add_text_block(blocks, f"Running command \"{args.prog}\" returned exit status {result.returncode}")
