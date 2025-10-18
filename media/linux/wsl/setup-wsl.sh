@@ -70,6 +70,7 @@ sudo apt install -y \
 
 cd $LINUX_TOP/wsl
 sudo cp wsl.conf /etc
+sudo cp sudoers.d/coeadmin /etc/sudoers.d
 sudo cp logrotate.d/epiphany /etc/logrotate.d
 sudo sed -ie 's/#Port 22/Port 2222/' /etc/ssh/sshd_config
 
@@ -140,20 +141,6 @@ sudo ln -s $p/ecc-internet-connectivity-checker.service
 popd
 # JMS This will not work until we restart WSL with systemd
 #sudo systemctl enable ecc-internet-connectivity-checker.service
-
-#########################################
-
-# Install pxview so that we can export the PDS database to SQL.
-
-cd $HOME/git
-git clone https://github.com/jsquyres/pxlib-and-pxview.git
-cd pxlib-and-pxview
-./autogen.sh
-# Use --disable-shared --enable-static just so that we don't have to
-# set LD_LIBRARY_PATH to find libpx.so at run time.
-./configure --disable-shared --enable-static
-make -j 8
-sudo make install
 
 #########################################
 

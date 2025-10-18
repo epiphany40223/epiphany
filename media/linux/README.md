@@ -1,20 +1,6 @@
 # Overview
 
-These scripts run in a Linux environment to run Epiphany's automation.
-
-## July, 2025: AWS (free) EC2 instance
-
-The infrastructure has been updated to run on an AWS (free) EC2
-instance, and is therefore pure Linux (without WSL weirdness).
-
-There's now `*-aws.*` scripts (e.g., `run-all-aws.py` and
-`run-aws.sh`) that do the same thing as the older WSL-based scripts,
-but slightly updated for the AWS environment.
-
-If this AWS test works out, we'll probably just remove all the WSL
-stuff and consolidate down to the pure Linux environment.
-
-## Original: WSL on Windows
+## WSL on Windows
 
 This infrastructure runs on Epiphany's \\media-o3020 server.
 
