@@ -25,3 +25,16 @@ will take a few minutes to run).
 Once it has finished, the WSL instance will be terminated and you'll
 need to re-start it.  Then there's a few more manual steps to run,
 which are shown at the bottom of the execution output of this script.
+
+Finally, you need to also enable the Windows Scheduler to start the
+cron daemon in Linux upon system startup.  In Windows Server 2019:
+
+* Make a task that is set to "Run whether user is logged on or not"
+* The trigger should be "At startup"
+* There should be multiple actions, all with a Program/script of
+  `C:\Windows/System32/wsl.exe`:
+  1. `sudo service cron start`
+  1. `rm -f /home/coeadmin/git/epiphany/media/linux/pds-run-all.lock`
+* Make sure that you are prompted to enter the `coeadmin` Windows user
+  credentials when saving the task so that it will run upon system
+  startup.
