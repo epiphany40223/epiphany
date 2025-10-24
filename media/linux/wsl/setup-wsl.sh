@@ -102,9 +102,9 @@ setup_venv() {
 
 cd $LINUX_TOP
 # Make one venv that is the union of a bunch of apps
-setup_venv py310 calendar-audit calendar-reservations ricoh pds-sqlite3-queries
+setup_venv py312 calendar-audit calendar-reservations ricoh pds-sqlite3-queries
 # Make another venv just for this one app
-setup_venv py310 upload-mp3s-to-google-drive
+setup_venv py312 upload-mp3s-to-google-drive
 
 #########################################
 
