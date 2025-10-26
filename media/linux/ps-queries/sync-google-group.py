@@ -353,6 +353,11 @@ def get_synchronizations():
             'ggroup'     : f'livestream-team{ecc}',
             'notify'     : f'director-communications{ecc},ps-google-sync{ecc}',
         },
+        {
+            'workgroups' : [ 'Movers' ],
+            'ggroup'     : f'movers{ecc}',
+            'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
+        },
 
         #############################
 
