@@ -417,6 +417,11 @@ workgroups = [
         'gsheet_id' : '1B_2LeR0EbG3oDUqifvB51YhCuj30lhaYHfUb9bmCj5A',
         'birthday'  : False,
     },
+    {
+        'workgroup' : 'Movers',
+        'gsheet_id' : '1q0rNZQ0Od3cCoFG2qLgKZep10GzQ3nmvVIIJuUOWBgY',
+        'birthday'  : False,
+    },
 ]
 
 ####################################################################
