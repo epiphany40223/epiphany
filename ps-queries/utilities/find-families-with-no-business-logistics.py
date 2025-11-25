@@ -80,7 +80,8 @@ def main():
 
     filename = 'families-with-no-business-logitics-emails.csv'
     with open(filename, 'w') as fp:
-        fields = ['Family name', 'Family DUID', 'Envelope ID']
+        fields = ['Family name', 'Family DUID', 'Envelope ID',
+                  'Street 1', 'Street 2', 'City', 'State', 'Zip']
         writer = csv.DictWriter(fp, fieldnames=fields)
         writer.writeheader()
 
@@ -92,10 +93,20 @@ def main():
             if family[key]:
                 env = family[key]
 
+            zip = family['primaryPostalCode']
+            plus = family['primaryZipPlus']
+            if plus:
+                zip += '-' + plus
+
             item = {
                 'Family name' : f'{family["lastName"]}, {family["firstName"]}',
                 'Family DUID' : family['familyDUID'],
                 'Envelope ID' : env,
+                'Street 1'    : family['primaryAddress1'],
+                'Street 2'    : family['primaryAddress2'],
+                'City'        : family['primaryCity'],
+                'State'       : family['primaryState'],
+                'Zip'         : zip,
             }
             writer.writerow(item)
 

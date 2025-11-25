@@ -6,10 +6,13 @@
 import os
 import sys
 import pytz
+import Google
 import logging
 import smtplib
 import platform
 import logging.handlers
+
+from email.message import EmailMessage
 
 local_tz_name = 'America/Louisville'
 local_tz = pytz.timezone(local_tz_name)
@@ -134,10 +137,6 @@ _smtp_debug          = False
 
 def setup_email(smtp_auth_file, smtp_server=_smtp_server, smtp_local_hostname=_smtp_local_hostname,
                 smtp_debug=_smtp_debug, log=None):
-    # Do an import here to test whether it's available, even though it's not
-    # used in this function
-    from email.message import EmailMessage
-
     global _smtp_server, _smtp_debug, _smtp_local_hostname
     _smtp_server         = smtp_server
     _smtp_local_hostname = smtp_local_hostname
@@ -154,9 +153,69 @@ def setup_email(smtp_auth_file, smtp_server=_smtp_server, smtp_local_hostname=_s
 
 #-------------------------------------------------------------------
 
-def send_email(to_addr, subject, body, log, content_type='text/plain', from_addr='no-reply@epiphanycatholicchurch.org'):
-    from email.message import EmailMessage
+def send_email_existing_smtp(message_body, content_type, smtp_to, smtp_subject,
+                             smtp_from, smtp, log, attachments=None):
+    msg = EmailMessage()
 
+    # Set basic headers
+    msg['Subject'] = smtp_subject
+    msg['From'] = smtp_from
+    msg['To'] = smtp_to
+
+    # Set the main content first
+    msg.set_content(message_body, subtype=content_type.split('/')[-1] if '/' in content_type else 'plain')
+
+    # Add attachments if they exist
+    if attachments:
+        for id in sorted(attachments.keys()):
+            attachment = attachments[id]
+            fname = attachment['filename']
+            ftype = attachment['type']
+            log.debug(f"Attachment is: {fname}")
+            log.debug(f'Ftype is: {ftype}')
+            log.debug(f'mime types are {Google.mime_types[ftype]}')
+            mime_type, mime_subtype = Google.mime_types[ftype].split('/')
+
+            with open(fname, 'rb') as ap:
+                msg.add_attachment(ap.read(),
+                                 maintype=mime_type,
+                                 subtype=mime_subtype,
+                                 filename=os.path.basename(fname))
+
+    smtp.send_message(msg)
+    log.debug(f'Mail sent to {smtp_to}, subject "{smtp_subject}"')
+
+#-------------------------------------------------------------------
+
+def open_smtp_connection(log=None):
+    global _smtp_server, _smtp_debug, _smtp_local_hostname
+    global _smtp_auth_username, _smtp_auth_password
+
+    if log:
+        log.debug(f'Connecting to SMTP server {_smtp_server} as {_smtp_local_hostname}...')
+    smtp = smtplib.SMTP_SSL(host=_smtp_server,
+                          local_hostname=_smtp_local_hostname)
+    if _smtp_debug:
+        smtp.set_debuglevel(2)
+
+    # Login; we can't rely on being IP allowlisted.
+    try:
+        smtp.login(_smtp_auth_username, _smtp_auth_password)
+    except Exception as e:
+        import traceback
+        if log:
+            log.critical(f'Error: failed to SMTP login: {e}')
+        else:
+            print(f'Critical error: failed to SMTP login: {e}')
+        exit(1)
+
+    return smtp
+
+#-------------------------------------------------------------------
+
+def send_email(to_addr, subject, body, log, content_type='text/plain',
+               from_addr='no-reply@epiphanycatholicchurch.org',
+               attachments=None):
     global _smtp_server, _smtp_debug, _smtp_local_hostname
     global _smtp_auth_username, _smtp_auth_password
 
@@ -173,25 +232,9 @@ Cannot continue.  Aborting."""
         log.critical(str)
         exit(1)
 
-    with smtplib.SMTP_SSL(host=_smtp_server,
-                          local_hostname=_smtp_local_hostname) as smtp:
-        if _smtp_debug:
-            smtp.set_debuglevel(2)
-
-        # Login; we can't rely on being IP whitelisted.
-        try:
-            smtp.login(_smtp_auth_username, _smtp_auth_password)
-        except Exception as e:
-            import traceback
-            log.critical(f'Error: failed to SMTP login: {e}')
-            exit(1)
-
-        msg = EmailMessage()
-        msg.set_content(body)
-        msg['Subject'] = subject
-        msg['From'] = from_addr
-        msg['To'] = to_addr
-        msg.replace_header('Content-Type', content_type)
-        smtp.send_message(msg)
-
-    log.debug(f'Mail sent to {to_addr}, subject "{subject}"')
+    with open_smtp_connection() as smtp:
+        send_email_existing_smtp(body, content_type,
+                                 smtp_to=to_addr, smtp_subject=subject,
+                                 smtp_from=from_addr,
+                                 smtp=smtp, log=log,
+                                 attachments=attachments)
