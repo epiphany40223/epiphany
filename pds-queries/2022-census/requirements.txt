@@ -1,2 +1,0 @@
--r ecc-python-modules/requirements.txt
-openpyxl
