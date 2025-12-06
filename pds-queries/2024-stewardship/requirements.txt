@@ -1,8 +1,0 @@
-pytz
-httplib2
-apiclient
-google-api-python-client
-oauth2client
-openpyxl
-matplotlib
--r ecc-python-modules/requirements.txt
