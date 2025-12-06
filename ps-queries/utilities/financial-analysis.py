@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+print("""=== ATTENTION
+
+This script was written for PDS.  It has NOT been updated for ParishSoft.
+To make this script be useful, someone needs to update it.
+
+This script is only still in Git to be an inspiration in case someone
+wants to use the methodlogy here for a ParishSoft-based upgrade.""")
+exit(1)
+
+##############################################################################
+
 import os
 import sys
 import csv
