@@ -1,4 +1,15 @@
 #!/usr/bin/env perl
+#
+# Script to brute-force login to the Canon copier in the Worship
+# Center in order to recover the lost admin password.
+#
+# We ran this (literally) years ago at this point, an this script is
+# no longer useful.  But let's put a comment at the top of this file
+# so that it's obvious what this script was for.
+#
+# See
+# https://docs.google.com/presentation/d/1G7MgPvJVO4GLSZEcoH0KiB7vExtvgBdALleuHmQRH9U/edit
+# for a presentation about why / how this script was written.
 
 use strict;
 use warnings;
