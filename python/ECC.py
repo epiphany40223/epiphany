@@ -191,6 +191,19 @@ def open_smtp_connection(log=None):
     global _smtp_server, _smtp_debug, _smtp_local_hostname
     global _smtp_auth_username, _smtp_auth_password
 
+    if not _smtp_auth_username or not _smtp_auth_password:
+        import traceback
+        lines = ''.join(traceback.format_stack()[:-1])
+        str = f"""Called ECC::open_smtp_connection() without calling ECC:setup_email() first.
+Call stack:
+{lines}
+Cannot continue.  Aborting."""
+        if log:
+            log.critical(str)
+        else:
+            print(str)
+        exit(1)
+
     if log:
         log.debug(f'Connecting to SMTP server {_smtp_server} as {_smtp_local_hostname}...')
     smtp = smtplib.SMTP_SSL(host=_smtp_server,

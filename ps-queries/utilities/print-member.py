@@ -38,6 +38,12 @@ def setup_cli():
     parser.add_argument('--ps-cache-dir',
                         default='.',
                         help='Directory to cache the ParishSoft data')
+    parser.add_argument('--load-contributions',
+                        default=None,
+                        help='If specified, load contributions since this date (YYYY-MM-DD)')
+    parser.add_argument('--cache-limit',
+                        default="1d",
+                        help='If specified, limit cache age to this value (e.g., 24s, 15m, 7h, 2d)')
 
     args = parser.parse_args()
 
@@ -56,13 +62,19 @@ def main():
     args = setup_cli()
     log = ECC.setup_logging(debug=args.debug)
 
+    if args.load_contributions:
+        load_contributions = args.load_contributions
+    else:
+        load_contributions = False
+
     log.info("Loading ParishSoft data...")
     families, members, family_workgroups, member_workgroups, ministries = \
         ParishSoft.load_families_and_members(api_key=args.api_key,
                                              cache_dir=args.ps_cache_dir,
                                              active_only=False,
                                              parishioners_only=False,
-                                             load_contributions="1971-01-01",
+                                             load_contributions=load_contributions,
+                                             cache_limit=args.cache_limit,
                                              log=log)
 
     num_fam = len(families)
