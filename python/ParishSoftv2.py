@@ -43,7 +43,42 @@ _org_id = None
 _cache_limit = time.time() - (60 * 14)
 
 # DEBUGGING: A day ago
-#_cache_limit = time.time() - (24 * 60 * 60)
+_cache_limit = time.time() - (24 * 60 * 60)
+
+##############################################################################
+
+def _parse_cache_limit(cache_limit_str):
+    """
+    Parse a humanized time string into seconds.
+    Supports: 's' (seconds), 'm' (minutes), 'h' (hours), 'd' (days)
+    Examples: '24s', '15m', '7h', '2d'
+    """
+    if not cache_limit_str:
+        return None
+
+    cache_limit_str = cache_limit_str.strip()
+    if not cache_limit_str:
+        return None
+
+    # Extract the numeric part and the unit
+    import re
+    match = re.match(r'^(\d+)([smhd])$', cache_limit_str)
+    if not match:
+        raise ValueError(f"Invalid cache_limit format: '{cache_limit_str}'. Expected format like '24s', '15m', '7h', or '2d'")
+
+    value = int(match.group(1))
+    unit = match.group(2)
+
+    if unit == 's':
+        return value
+    elif unit == 'm':
+        return value * 60
+    elif unit == 'h':
+        return value * 60 * 60
+    elif unit == 'd':
+        return value * 24 * 60 * 60
+    else:
+        raise ValueError(f"Invalid time unit: '{unit}'. Use 's', 'm', 'h', or 'd'")
 
 ##############################################################################
 
@@ -385,7 +420,7 @@ def _normalize_dates(elements, fields):
 
 ##############################################################################
 
-def _get_org(session, cache_dir, log):
+def _get_org(session, cache_dir, log, expected_org):
     elements = _post_endpoint(session,
                               endpoint='organizations/search',
                               params={}, cache_dir=cache_dir, log=log)
@@ -404,7 +439,6 @@ def _get_org(session, cache_dir, log):
     log.debug(f"Got org: {elements[0]['organizationID']} / {elements[0]['organizationReportName']}")
 
     org = elements[0]['organizationReportName']
-    expected_org = 'Epiphany Catholic Church'
     if org != expected_org:
         log.error(f"Got unexpected ParishSoft organization name: {org} (expected {expected_org})")
         exit(1)
@@ -1224,12 +1258,20 @@ def _filter(families, members,
 def load_families_and_members(api_key=None,
                               active_only=True, parishioners_only=True,
                               load_contributions=False,
-                              log=None, cache_dir=None):
+                              log=None, cache_dir="ps-data",
+                              expected_org='Epiphany Catholic Church',
+                              cache_limit="14m"):
     if not api_key:
         raise Exception("ERROR: Must specify ParishSoft API key to login to the PS cloud")
 
+    # Set the global cache limit if provided
+    if cache_limit:
+        global _cache_limit
+        seconds = _parse_cache_limit(cache_limit)
+        _cache_limit = time.time() - seconds
+
     # If the cache directory does not exist, make it
-    if cache_dir is None:
+    if not cache_dir:
         cache_dir = '.'
 
     if not os.path.exists(cache_dir):
@@ -1239,7 +1281,7 @@ def load_families_and_members(api_key=None,
     session = _setup_session(api_key)
 
     # Get the organization ID
-    org_id = _get_org(session, cache_dir, log)
+    org_id = _get_org(session, cache_dir, log, expected_org)
 
     # Load the funds
     funds = {}
