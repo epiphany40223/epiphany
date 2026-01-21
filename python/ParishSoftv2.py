@@ -449,6 +449,10 @@ def _get_org(session, cache_dir, log, expected_org):
 
     return _org_id
 
+# Public function to get Epiphany's ParishSoft org ID
+def get_org_id():
+    return _org_id
+
 ##############################################################################
 
 def _load_funds(session, org_id, cache_dir, log):
