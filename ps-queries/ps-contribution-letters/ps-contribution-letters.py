@@ -9,8 +9,11 @@ import argparse
 import shutil
 import glob
 from pathlib import Path
+from email.utils import parseaddr, formataddr
 from pypdf import PdfReader, PdfWriter
 import pdfplumber
+
+import gmail_oauth_smtp
 
 # We assume that there is a "ecc-python-modules" sym link in this
 # directory that points to the directory with ECC.py and friends.
@@ -258,13 +261,44 @@ def enrich_family_mapping(family_mapping, families, member_workgroups, log):
         family_data = {
             'filename': filename,
             'salutation': salutation,
-            'emails': []
+            'emails': [],
+            'email_display_names': {},
+            'to_display_name': salutation,
         }
 
         if env_num in families_by_envelope:
             family = families_by_envelope[env_num]
+
             emails = ParishSoft.family_business_logistics_emails(family, member_workgroups, log)
             family_data['emails'] = emails
+
+            # Try to map each email address to a specific member's friendly name.
+            # This enables a nicer To: header like "Jane Doe <jane@example.com>".
+            email_display_names = {}
+            members = ParishSoft.family_business_logistics_emails_members(family, member_workgroups, log)
+            for member in members:
+                email = member.get('emailAddress')
+                if not email:
+                    continue
+
+                if email in email_display_names:
+                    continue
+
+                display = member.get('py friendly name FL')
+                if not display:
+                    display = f"{member.get('firstName', '')} {member.get('lastName', '')}".strip()
+
+                if display:
+                    email_display_names[email] = display
+
+            family_data['email_display_names'] = email_display_names
+
+            # Pick a default display name for situations where we're not sending
+            # to the real recipient (e.g., --test-run override).
+            if members:
+                first = members[0].get('py friendly name FL')
+                if first:
+                    family_data['to_display_name'] = first
         else:
             log.warning(f"Could not find family with envelope number {env_num} in ParishSoft data")
 
@@ -285,14 +319,21 @@ def send_contribution_letters(enriched_mapping, families_by_envelope, args,
         filename = data['filename']
         salutation = data['salutation']
         emails = data['emails']
+        email_display_names = data.get('email_display_names', {})
+        to_display_name = data.get('to_display_name', salutation)
         pdf_path = Path(output_folder) / filename
 
+        fduid = ''
+        if env_num in families_by_envelope:
+            fduid = families_by_envelope[env_num].get('familyDUID', '')
+        who = f"[env={env_num} fduid={fduid}]"
+
         if not pdf_path.exists():
-            log.warning(f"PDF file not found: {pdf_path}")
+            log.warning(f"{who} PDF file not found: {pdf_path}")
             continue
 
         if len(emails) == 0:
-            log.info(f"No email addresses for {salutation} (envelope {env_num}) - will need snail mail")
+            log.info(f"{who} No email addresses for {salutation} - will need snail mail")
 
             # Collect family data for CSV
             family_info = {
@@ -343,43 +384,53 @@ def send_contribution_letters(enriched_mapping, families_by_envelope, args,
             continue
 
         # Prepare email
-        smtp_to = ', '.join(emails)
+        target_emails = list(emails)
+        actual_recipients = ', '.join(target_emails)
         smtp_subject = f'{args.year} Contribution Letter from Epiphany Catholic Church'
 
         # Build email body
+        # JMS This is a hard-coded message.
+        # Perhaps it should be read from a template file instead?
         body_parts = [
             f"Dear {salutation},",
             "",
-            f"Attached is your {args.year} contribution letter from Epiphany Catholic Church.",
+            "Father Toan and the Epiphany Ministerial team thank you for your support of the Epiphany Community during 2025.  Our parish had a very successful year in 2025.  We supported many needy causes through our parish stewardship 10% committee and St. Vincent DePaul Society in addition to upgrading the Worship Center HVAC and many other upgrades and improvements across the parish campus.  We could not have accomplished these tasks without the support of our members.  Attached is your individual family contribution record for the year January 1, 2025 thru December 31, 2025.  Thank you once again for your support.",
             "",
-            "Thank you for your generous support of our parish.",
-            "",
-            "Sincerely,",
-            "Epiphany Catholic Church"
+            "Gratefully,",
+            "Doug Wolz",
+            "Parish Business Manager",
         ]
 
         # Handle test run mode
-        actual_recipients = smtp_to
-        skip_sending = False
-
         if args.test_run:
             # Check if we've reached the test run limit
             if test_run_sent_count >= args.test_run_count:
-                log.debug(f"TEST RUN: Skipping email to {actual_recipients} (already sent {test_run_sent_count} emails)")
-                skip_sending = True
-                # Move to emailed folder even though we're skipping
-                dest_path = emailed_folder / filename
-                shutil.move(str(pdf_path), str(dest_path))
-                continue
+                log.info(f"TEST RUN: Reached limit ({args.test_run_count}); stopping early")
+                break
 
             body_parts.insert(0, "*** THIS EMAIL WAS SENT TO A TEST RUN OVERRIDE ADDRESS ***")
             body_parts.insert(1, f"*** Intended recipients: {actual_recipients} ***")
             body_parts.insert(2, "")
-            smtp_to = args.test_run_email
-            log.info(f"TEST RUN: Sending to override address: {smtp_to} (intended: {actual_recipients})")
+            target_emails = [args.test_run_email]
+            log.info(f"{who} TEST RUN: Sending to override address: {args.test_run_email} (intended: {actual_recipients})")
             test_run_sent_count += 1
-        else:
-            log.info(f"Sending to {smtp_to}")
+
+        smtp_to_formatted = []
+        for email in target_emails:
+            display = email_display_names.get(email)
+
+            # If this is a test-run override email, we'll likely have no direct
+            # match in email_display_names. Use a sensible default derived from
+            # member records.
+            if not display:
+                display = to_display_name or salutation
+
+            smtp_to_formatted.append(formataddr((display, email)))
+
+        smtp_to = ', '.join(smtp_to_formatted)
+
+        if not args.test_run:
+            log.info(f"{who} Sending to {smtp_to}")
 
         body = '\n'.join(body_parts)
 
@@ -393,13 +444,13 @@ def send_contribution_letters(enriched_mapping, families_by_envelope, args,
 
         # Send email (unless do-not-send)
         if args.do_not_send:
-            log.info(f"NOT SENDING: Would send email to {smtp_to}")
+            log.info(f"{who} NOT SENDING: Would send email to {smtp_to}")
             # Move to emailed folder even though we didn't send
             dest_path = emailed_folder / filename
             shutil.move(str(pdf_path), str(dest_path))
         else:
             try:
-                ECC.send_email_existing_smtp(
+                gmail_oauth_smtp.send_email_existing_smtp(
                     body, 'text/plain',
                     smtp_to, smtp_subject, args.smtp_from,
                     smtp, log,
@@ -410,9 +461,9 @@ def send_contribution_letters(enriched_mapping, families_by_envelope, args,
                 # Move to emailed folder
                 dest_path = emailed_folder / filename
                 shutil.move(str(pdf_path), str(dest_path))
-                log.info(f"Successfully sent and moved to {dest_path}")
+                log.info(f"{who} Successfully sent and moved to {dest_path}")
             except Exception as e:
-                log.error(f"Failed to send email to {smtp_to}: {e}")
+                log.error(f"{who} Failed to send email to {smtp_to}: {e}")
 
     return emails_sent, no_email_count, snail_mail_families
 
@@ -463,6 +514,14 @@ def print_summary(enriched_mapping, emails_sent, no_email_count, args, log):
         log.info(f"Letters moved to '{args.snail_mail_dir}': {no_email_count}")
 
 def setup_cli():
+    def _parse_name_addr(value: str, flag_name: str) -> tuple[str, str, str]:
+        """Return (display_name, email, formatted) for a name-addr string."""
+        display_name, email = parseaddr(value or "")
+        if not email:
+            raise ValueError(f"{flag_name} must be an email address or 'Name <email>', got: {value!r}")
+        formatted = formataddr((display_name, email)) if display_name else email
+        return display_name, email, formatted
+
     parser = argparse.ArgumentParser(description='Split contribution letters and map to families')
     parser.add_argument('--debug',
                         action='store_true',
@@ -483,14 +542,28 @@ def setup_cli():
     parser.add_argument('--tmpdir',
                         default='individual-letters',
                         help='Temporary directory for individual letters')
-    parser.add_argument('--smtp-auth-file',
-                        help='File containing SMTP authentication credentials (username:password)')
+    parser.add_argument('--gmail-service-account-keyfile',
+                        help='Path to a Google service account JSON keyfile (domain-wide delegation required)')
+    parser.add_argument('--gmail-impersonate-user',
+                        help='Workspace user email to impersonate for SMTP sending (defaults to --smtp-from)')
     parser.add_argument('--smtp-server',
-                        default='smtp-relay.gmail.com',
+                        default='smtp.gmail.com',
                         help='SMTP server hostname')
+    parser.add_argument('--smtp-port',
+                        type=int,
+                        default=465,
+                        help='SMTP server port (default: 465)')
+    parser.add_argument('--smtp-starttls',
+                        action='store_true',
+                        default=False,
+                        help='Use STARTTLS (typically port 587) instead of implicit SSL')
+    parser.add_argument('--smtp-debug',
+                        action='store_true',
+                        default=False,
+                        help='Enable SMTP debug output (shows protocol conversation)')
     parser.add_argument('--smtp-from',
                         default='no-reply@epiphanycatholicchurch.org',
-                        help='From email address')
+                        help='From address. May be an email or "Name <email>" (could be an alias of the impersonated mailbox)')
     parser.add_argument('--do-not-send',
                         action='store_true',
                         default=False,
@@ -501,7 +574,7 @@ def setup_cli():
                         help='Test mode: override email address and max number of emails to send')
     parser.add_argument('--year',
                         required=True,
-                        help='Tax year for the contribution letters (e.g., 2024)')
+                        help='Tax year for the contribution letters (e.g., 2025)')
     parser.add_argument('--emailed-dir',
                         default='letters-emailed',
                         help='Directory for successfully emailed letters')
@@ -510,6 +583,16 @@ def setup_cli():
                         help='Directory for letters requiring snail mail')
 
     args = parser.parse_args()
+
+    try:
+        _, smtp_from_email, smtp_from_formatted = _parse_name_addr(args.smtp_from, '--smtp-from')
+    except ValueError as e:
+        parser.error(str(e))
+
+    # Normalize smtp-from so downstream code always gets a valid From header,
+    # and also keep the raw email portion around for OAuth2 impersonation.
+    args.smtp_from = smtp_from_formatted
+    args.smtp_from_email = smtp_from_email
 
     # Check for mutually exclusive options
     if args.do_not_send and args.test_run:
@@ -529,8 +612,19 @@ def setup_cli():
         args.test_run_count = None
 
     # SMTP auth file is only required if we're actually sending emails
-    if not args.do_not_send and not args.smtp_auth_file:
-        parser.error('--smtp-auth-file is required unless --do-not-send is specified')
+    if not args.do_not_send:
+        if not args.gmail_service_account_keyfile:
+            parser.error('--gmail-service-account-keyfile is required unless --do-not-send is specified')
+
+        # Default impersonation to the same address as the email portion of
+        # --smtp-from. This allows a simple CLI for the common case where the
+        # mailbox address and From address are the same.
+        if not args.gmail_impersonate_user:
+            args.gmail_impersonate_user = args.smtp_from_email
+        else:
+            # If the user passed "Name <email>" here by mistake, be forgiving.
+            _, imp_email, _ = _parse_name_addr(args.gmail_impersonate_user, '--gmail-impersonate-user')
+            args.gmail_impersonate_user = imp_email
 
     # Read the PS API key
     if not os.path.exists(args.ps_api_keyfile):
@@ -539,10 +633,10 @@ def setup_cli():
     with open(args.ps_api_keyfile) as fp:
         args.api_key = fp.read().strip()
 
-    # Check SMTP auth file only if we're sending emails
+    # Check Gmail auth files only if we're sending emails
     if not args.do_not_send:
-        if not os.path.exists(args.smtp_auth_file):
-            print(f"ERROR: SMTP auth file does not exist: {args.smtp_auth_file}")
+        if not os.path.exists(args.gmail_service_account_keyfile):
+            print(f"ERROR: Gmail service account keyfile does not exist: {args.gmail_service_account_keyfile}")
             exit(1)
 
     # Check if input file exists
@@ -559,13 +653,6 @@ def main():
 
     # Clean up temporary directory at start
     cleanup_tmpdir(args.tmpdir, log)
-
-    # Setup SMTP only if we're actually sending emails
-    if args.smtp_auth_file:
-        log.info("Setting up SMTP...")
-        ECC.setup_email(smtp_auth_file=args.smtp_auth_file,
-                       smtp_server=args.smtp_server,
-                       log=log)
 
     log.info("Loading ParishSoft data...")
     families, members, family_workgroups, member_workgroups, ministries = \
@@ -606,18 +693,42 @@ def main():
     # Send emails
     log.info("Sending contribution letters via email...")
 
-    # If we were not given SMTP auth file, we cannot proceed
-    if not args.smtp_auth_file:
-        log.info("Cannot proceed with sending emails without SMTP auth file.")
-        return
-
-    log.debug("Opening SMTP connection from main...")
-    with ECC.open_smtp_connection(log=log) as smtp:
-        log.debug("SMTP connection established")
+    if args.do_not_send:
+        log.info("--do-not-send specified; will not open SMTP connection.")
+        smtp = None
         emails_sent, no_email_count, snail_mail_families = send_contribution_letters(
             enriched_mapping, families_by_envelope, args,
             output_folder, emailed_folder, snail_mail_folder,
             smtp, log)
+    else:
+        log.info("Setting up Gmail OAuth2 access token...")
+        auth = gmail_oauth_smtp.GmailServiceAccountAuth(
+            service_account_keyfile=args.gmail_service_account_keyfile,
+            impersonate_user=args.gmail_impersonate_user,
+        )
+        token = gmail_oauth_smtp.get_access_token_via_service_account(auth)
+
+        use_ssl = not args.smtp_starttls
+        use_starttls = args.smtp_starttls
+        debuglevel = 2 if args.smtp_debug else 0
+
+        log.debug("Opening SMTP connection from main (OAuth2)...")
+        with gmail_oauth_smtp.open_gmail_smtp_connection_oauth2(
+            smtp_server=args.smtp_server,
+            smtp_port=args.smtp_port,
+            smtp_user=args.gmail_impersonate_user,
+            access_token=token,
+            use_ssl=use_ssl,
+            use_starttls=use_starttls,
+            local_hostname=None,
+            debuglevel=debuglevel,
+            log=log,
+        ) as smtp:
+            log.debug("SMTP connection established")
+            emails_sent, no_email_count, snail_mail_families = send_contribution_letters(
+                enriched_mapping, families_by_envelope, args,
+                output_folder, emailed_folder, snail_mail_folder,
+                smtp, log)
 
     # Write CSV file for snail mail families
     write_snail_mail_csv(snail_mail_families, snail_mail_folder, log)
