@@ -88,6 +88,17 @@ Adds `valid from` (a `datetime.datetime`) and `valid to` (computed as `start + e
 
 ### 2.2 Generic API Operations
 
+#### `CCAPIError` (Exception Class)
+
+Custom exception raised by API functions on non-2xx HTTP responses (after retry exhaustion).
+
+**Attributes**:
+- `status_code`: The HTTP status code
+- `response_text`: The response body text
+- `endpoint`: The API endpoint that failed
+
+Consumers should catch this exception to handle individual API failures gracefully (e.g., log and continue processing remaining contacts).
+
 #### `api_headers(client_id, access_token, include=None, limit=None, status=None) -> tuple[dict, dict]`
 
 Builds HTTP headers and query parameters for CC API calls.
@@ -107,19 +118,19 @@ Fetches all items from a paginated CC V3 endpoint.
 - `include`: Comma-separated subresources (e.g., `"custom_fields,list_memberships,street_addresses"`)
 - `status`: Contact status filter (e.g., `"all"` to include deleted/unsubscribed)
 
-**Error handling**: Exits with code 1 on non-2xx responses.
+**Error handling**: Raises `CCAPIError` on non-2xx responses after retry exhaustion.
 
 #### `api_put(client_id, access_token, api_endpoint, body, log) -> dict`
 
 PUTs a JSON body to a CC V3 endpoint. Used for updating existing contacts.
 
-**Error handling**: Exits with code 1 on non-2xx responses.
+**Error handling**: Raises `CCAPIError` on non-2xx responses after retry exhaustion.
 
 #### `api_post(client_id, access_token, api_endpoint, body, log) -> dict`
 
 POSTs a JSON body to a CC V3 endpoint. Used for creating/updating contacts via sign-up form.
 
-**Error handling**: Exits with code 1 on non-2xx responses.
+**Error handling**: Raises `CCAPIError` on non-2xx responses after retry exhaustion.
 
 ### 2.3 Contact Management
 
@@ -319,7 +330,7 @@ The CC V3 API enforces:
 - **10,000 requests per day** per API key (resets at UTC 00:00:00)
 - HTTP 429 "Too Many Requests" when exceeded
 
-See Section 6.2 for the known gap regarding rate limit handling in the code.
+See Section 6.2 for rate limit handling.
 
 ---
 
@@ -344,23 +355,35 @@ The module uses the CC OAuth2 **Device Flow** (flow #3 of 4 available):
 
 ---
 
-## 6. Error Handling and Known Gaps
+## 6. Error Handling
 
-All API operations (`api_get_all`, `api_put`, `api_post`) exit with code 1 on any non-2xx HTTP response. There is no retry logic for transient failures.
+All API operations (`api_get_all`, `api_put`, `api_post`) raise `CCAPIError` on non-2xx HTTP responses after retry exhaustion. Consumers are responsible for catching these exceptions and deciding how to handle them (e.g., abort, log and continue, etc.).
 
-### 6.1 Known Gap: No Retry Logic
+### 6.1 Retry Logic
 
-The code has no retry/backoff for transient HTTP errors or CC rate limit (429) responses. Code comments (`# JMS Need to surround this in a retry`) confirm this is a known gap. Compare with `ParishSoftv2.py`, which uses `urllib3.util.Retry` with 3 retries and 0.2s backoff.
+API calls use `requests.Session` with an `HTTPAdapter` configured with `urllib3.util.Retry`:
+- **Retries**: 3
+- **Backoff factor**: 0.2 seconds
+- **Retry on**: Connection errors, transient HTTP errors, and 429 (Too Many Requests) responses
 
-### 6.2 Known Gap: No Rate Limiting
+This matches the retry strategy used by `ParishSoftv2.py`.
 
-The CC V3 API enforces 4 requests/second and 10,000 requests/day. The code does not throttle requests. For the current cron-based use case this has not been a problem, but could become one as the contact list grows or if the sync runs more frequently.
+### 6.2 Rate Limit Handling
+
+The CC V3 API enforces 4 requests/second and 10,000 requests/day (see Section 4.4). The module handles rate limiting reactively:
+
+- HTTP 429 responses are retried automatically by the retry adapter
+- The `Retry-After` header from 429 responses is respected for backoff timing
+- There is no proactive request throttling; rate limiting is purely reactive
+
+Note: For the current cron-based use case (running every 15 minutes with a moderate number of contacts), proactive throttling is not necessary.
 
 ---
 
 ## 7. Dependencies
 
-- `requests` — HTTP client (no retry adapter, unlike ParishSoftv2)
+- `requests` — HTTP client with `HTTPAdapter` configured with `urllib3.util.Retry` for automatic retry/backoff
+- `urllib3` — Provides `Retry` and backoff functionality (included as a dependency of `requests`)
 - `ParishSoftv2` (imported as `ParishSoft`) — used only for `salutation_for_members()` in `create_contact_dict()`
 - Standard library: `os`, `json`, `copy`, `random`, `datetime`
 - `pprint` — for debug logging
@@ -368,35 +391,49 @@ The CC V3 API enforces 4 requests/second and 10,000 requests/day. The code does 
 
 ---
 
-## 8. Consumer Usage Pattern
+## 8. Consumer Usage Patterns
 
-The sole consumer is `media/linux/ps-queries/sync-constant-contact.py`, which:
+### 8.1 sync-constant-contact.py (legacy)
+
+The original consumer script. See its source for details.
+
+### 8.2 sync-ps-to-cc.py
+
+The replacement consumer script (see `specs/sync-ps-to-cc/spec.md`). Usage pattern:
 
 1. **Authenticates**: `load_client_id()` + `get_access_token()`
-2. **Downloads all CC data**: Three `api_get_all()` calls for custom fields, lists, contacts
-3. **Links CC data**: `link_cc_data()` to cross-reference contacts/lists/custom fields
+2. **Downloads CC data**: Two `api_get_all()` calls for lists and contacts (no custom fields)
+3. **Links CC data**: `link_cc_data()` with empty custom fields to cross-reference contacts/lists
 4. **Links to ParishSoft**: `link_contacts_to_ps_members()` to match by email
-5. **Computes sync actions**: Determines which contacts need creating, updating, or unsubscribing
+5. **Computes sync actions**: Determines which contacts need creating, subscribing, or unsubscribing
 6. **Creates missing contacts**: `create_contact_dict()` for contacts that exist in PS but not CC
-7. **Executes changes**:
+7. **Executes changes** (catching `CCAPIError` per-contact to log and continue):
    - `create_or_update_contact()` for new contacts and list subscriptions
-   - `update_contact_full()` for list unsubscriptions
+   - `update_contact_full()` for list unsubscriptions and name updates
 
 ---
 
 ## 9. Pending Code Cleanup
 
-The following items should be addressed:
+The following item should be addressed:
 
 1. **Consolidate `update_contact_full` and `create_or_update_contact`** — currently two separate functions as a workaround for CC API behavior; intended to be merged into a single function
-2. **Add retry logic** — `api_get_all` (and other API functions) lack retry/backoff; see Section 6.1
 
 ---
 
 ## 10. Reconciliation Summary
 
 **Reconciled**: 2026-03-01
+**Updated**: 2026-03-01 (planned changes for retry logic, rate limiting, exception-based error handling)
 **API docs cross-referenced**: 2026-03-01 (CC V3 API guide at developer.constantcontact.com)
 
-This document was created to reflect the actual implementation of `python/ConstantContact.py`.
-The specification was derived from reading the source code, analyzing usage by its single consumer script (`sync-constant-contact.py`), and cross-referencing against the Constant Contact V3 API documentation.
+This document was originally created to reflect the actual implementation of `python/ConstantContact.py`.
+The specification was derived from reading the source code, analyzing usage by its consumer scripts, and cross-referencing against the Constant Contact V3 API documentation.
+
+Sections 2.2, 6, and 7 were updated on 2026-03-01 to specify planned changes:
+- `CCAPIError` exception class (replacing `exit(1)` calls)
+- Retry logic via `urllib3.util.Retry`
+- Reactive rate limit handling (429 + Retry-After)
+- Updated consumer usage patterns for `sync-ps-to-cc.py`
+
+These changes have not yet been implemented in code.
