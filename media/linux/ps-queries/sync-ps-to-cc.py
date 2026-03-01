@@ -116,6 +116,88 @@ def setup_cli_args():
 
 ####################################################################
 
+def resolve_desired_state(member_workgroups, members, cc_lists, log):
+    desired_emails = []
+
+    for i, sync in enumerate(SYNCHRONIZATIONS):
+        # Resolve PS Member Workgroup
+        wg_name = sync['source ps member wg']
+        found_wg = False
+        for wg in member_workgroups.values():
+            if wg['name'] != wg_name:
+                continue
+
+            found_wg = True
+            emails = set()
+            for item in wg['membership']:
+                if 'py member duid' not in item:
+                    continue
+
+                duid = item['py member duid']
+                member = members[duid]
+                if member['emailAddress']:
+                    emails.add(member['py emailAddresses'][0].lower())
+                else:
+                    log.warning(f"PS Member {member['py friendly name FL']} "
+                                f"(DUID: {member['memberDUID']}) is in WG "
+                                f'"{wg_name}" but has no email address')
+
+            log.info(f'Resolved PS Member Workgroup "{wg_name}": '
+                     f'{len(emails)} members with email')
+            desired_emails.append(emails)
+            break
+
+        if not found_wg:
+            log.error(f'PS Member Workgroup not found: "{wg_name}"')
+            exit(1)
+
+        # Resolve CC List
+        list_name = sync['target cc list']
+        found_list = False
+        for cc_list in cc_lists:
+            if cc_list['name'] == list_name:
+                sync['TARGET CC LIST'] = cc_list
+                log.info(f'Resolved CC List: "{list_name}"')
+                found_list = True
+                break
+
+        if not found_list:
+            log.error(f'CC List not found: "{list_name}"')
+            exit(1)
+
+    return desired_emails
+
+####################################################################
+
+def filter_unsubscribed(cc_contacts, desired_emails, ps_members_by_email,
+                        log):
+    unsubscribed_per_sync = [[] for _ in SYNCHRONIZATIONS]
+
+    for contact in cc_contacts:
+        if contact['email_address'].get('permission_to_send') != 'unsubscribed':
+            continue
+
+        email = contact['email_address']['address']
+        for i in range(len(SYNCHRONIZATIONS)):
+            if email not in desired_emails[i]:
+                continue
+
+            desired_emails[i].discard(email)
+
+            # Collect PS member info for reporting
+            ps_members = ps_members_by_email.get(email, [])
+            names = ', '.join(m['py friendly name FL'] for m in ps_members)
+            duids = ', '.join(str(m['memberDUID']) for m in ps_members)
+
+            unsubscribed_per_sync[i].append((email, names, duids))
+            log.info(f'Filtered unsubscribed contact {email} '
+                     f'from desired set for '
+                     f'"{SYNCHRONIZATIONS[i]["target cc list"]}"')
+
+    return unsubscribed_per_sync
+
+####################################################################
+
 def main():
     args = setup_cli_args()
 
@@ -191,7 +273,15 @@ def main():
         email = member['py emailAddresses'][0].lower()
         ps_members_by_email[email].append(member)
 
-    # Phases 3-7 will be implemented in subsequent tasks
+    # Resolve desired state per sync entry
+    desired_emails = resolve_desired_state(member_workgroups, members,
+                                           cc_lists, log)
+
+    # Filter out CC-unsubscribed emails
+    unsubscribed_per_sync = filter_unsubscribed(cc_contacts, desired_emails,
+                                                ps_members_by_email, log)
+
+    # Phases 4-7 will be implemented in subsequent tasks
 
 if __name__ == '__main__':
     main()

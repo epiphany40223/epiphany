@@ -102,7 +102,7 @@
 
 ## Phase 3: Desired State and Filtering
 
-- [ ] **3.1** Resolve synchronization config to desired email sets
+- [x] **3.1** Resolve synchronization config to desired email sets
   - Create a `resolve_desired_state()` function (or similar).
   - For each entry `i` in `SYNCHRONIZATIONS`:
     1. **Resolve PS Member Workgroup**: search `member_workgroups` (dict of dicts) by `wg['name'] == sync['source ps member wg']`. For each workgroup membership entry with a `'py member duid'` key, look up the full member from `members[duid]`. If `member['emailAddress']` is truthy, add `member['py emailAddresses'][0].lower()` to `desired_emails[i]` (a set). Log a warning for members in the workgroup with no email. Log info with member count on success.
@@ -111,7 +111,7 @@
   - Return `desired_emails` (a list of sets, one per sync entry) and the resolved synchronizations.
   - _Spec: section 3.3.4, 6.3_
 
-- [ ] **3.2** Filter out CC-unsubscribed emails from desired state
+- [x] **3.2** Filter out CC-unsubscribed emails from desired state
   - Create a `filter_unsubscribed()` function.
   - Initialize `unsubscribed_per_sync`: a list of lists (one per sync entry), each holding `(email, member_names_str, member_duids_str)` tuples for notification email reporting.
   - Iterate all `cc_contacts`. For each contact where `contact['email_address']['permission_to_send'] == 'unsubscribed'`:
