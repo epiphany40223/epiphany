@@ -175,7 +175,7 @@
 
 ## Phase 5: Execute Action List
 
-- [ ] **5.1** Group actions by email and build contact dicts for CC API calls
+- [x] **5.1** Group actions by email and build contact dicts for CC API calls
   - Create an `execute_actions()` function that takes the action list, `cc_contacts_by_email`, `ps_members_by_email`, CC credentials, and `log`.
   - Group actions by email: `actions_by_email = defaultdict(list); for a in actions: actions_by_email[a['email']].append(a)`.
   - For each email:
@@ -190,7 +190,7 @@
   - _Depends: 4.1, 4.2, 4.3_
   - _Spec: section 3.3.7_
 
-- [ ] **5.2** Execute API calls with error handling and dry-run support
+- [x] **5.2** Execute API calls with error handling and dry-run support
   - For each email's POST dict (if built): call `CC.create_or_update_contact(post_dict, cc_client_id, cc_access_token, log)`.
   - For each email's PUT dict (if built): call `CC.update_contact_full(put_dict, cc_client_id, cc_access_token, log)`.
   - Wrap each CC API call in `try/except CCAPIError`. On failure:

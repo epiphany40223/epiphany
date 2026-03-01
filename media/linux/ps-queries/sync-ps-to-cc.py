@@ -327,6 +327,108 @@ def log_deletion_candidates(cc_contacts_by_email, actions, log):
 
 ####################################################################
 
+def execute_actions(actions, cc_contacts_by_email, ps_members_by_email,
+                    cc_client_id, cc_access_token, dry_run, no_sync, log):
+    failures = []
+
+    # Group actions by email
+    actions_by_email = defaultdict(list)
+    for action in actions:
+        actions_by_email[action['email']].append(action)
+
+    for email in sorted(actions_by_email.keys()):
+        email_actions = actions_by_email[email]
+
+        creates = [a for a in email_actions if a['type'] == 'create']
+        subscribes = [a for a in email_actions if a['type'] == 'subscribe']
+        unsubscribes = [a for a in email_actions if a['type'] == 'unsubscribe']
+        name_updates = [a for a in email_actions if a['type'] == 'update_name']
+
+        # Build POST dict (create or subscribe via sign_up_form endpoint)
+        post_dict = None
+        if creates or subscribes:
+            if creates:
+                post_dict = CC.create_contact_dict(
+                    email, ps_members_by_email[email], log)
+                post_dict['list_memberships'] = [
+                    a['list_uuid'] for a in subscribes
+                ]
+            else:
+                existing = cc_contacts_by_email[email]
+                post_dict = {
+                    'email_address': {'address': email},
+                    'first_name': existing.get('first_name', ''),
+                    'last_name': existing.get('last_name', ''),
+                    'list_memberships': [
+                        a['list_uuid'] for a in subscribes
+                    ],
+                }
+
+        # Build PUT dict (unsubscribe or name update)
+        put_dict = None
+        if unsubscribes or name_updates:
+            existing = cc_contacts_by_email[email]
+            put_dict = {
+                'contact_id': existing['contact_id'],
+                'email_address': existing['email_address'],
+                'first_name': existing.get('first_name', ''),
+                'last_name': existing.get('last_name', ''),
+                'list_memberships': list(existing.get('list_memberships', [])),
+            }
+
+            for a in unsubscribes:
+                if a['list_uuid'] in put_dict['list_memberships']:
+                    put_dict['list_memberships'].remove(a['list_uuid'])
+
+            if name_updates:
+                nu = name_updates[-1]
+                put_dict['first_name'] = nu['new_first']
+                put_dict['last_name'] = nu['new_last']
+
+        # If both POST and PUT exist, merge newly subscribed lists into
+        # the PUT payload so the PUT (which replaces full memberships)
+        # does not clobber what the POST just added.
+        if post_dict and put_dict:
+            for uuid in post_dict.get('list_memberships', []):
+                if uuid not in put_dict['list_memberships']:
+                    put_dict['list_memberships'].append(uuid)
+
+        # Execute or log
+        if dry_run or no_sync:
+            for a in email_actions:
+                log.info(f"Dry-run/no-sync: {a['detail']}")
+            continue
+
+        if post_dict:
+            try:
+                CC.create_or_update_contact(post_dict, cc_client_id,
+                                            cc_access_token, log)
+            except CCAPIError as e:
+                log.error(f"POST failed for {email}: "
+                          f"HTTP {e.status_code}: {e.response_text}")
+                failures.append({
+                    'email': email,
+                    'action': 'POST',
+                    'error': str(e),
+                })
+
+        if put_dict:
+            try:
+                CC.update_contact_full(put_dict, cc_client_id,
+                                       cc_access_token, log)
+            except CCAPIError as e:
+                log.error(f"PUT failed for {email}: "
+                          f"HTTP {e.status_code}: {e.response_text}")
+                failures.append({
+                    'email': email,
+                    'action': 'PUT',
+                    'error': str(e),
+                })
+
+    return failures
+
+####################################################################
+
 def main():
     args = setup_cli_args()
 
@@ -421,7 +523,13 @@ def main():
     # Log deletion candidates (not added to action list)
     log_deletion_candidates(cc_contacts_by_email, actions, log)
 
-    # Phases 5-7 will be implemented in subsequent tasks
+    # Execute action list
+    failures = execute_actions(actions, cc_contacts_by_email,
+                               ps_members_by_email,
+                               cc_client_id, cc_access_token,
+                               args.dry_run, args.no_sync, log)
+
+    # Phases 6-7 will be implemented in subsequent tasks
 
 if __name__ == '__main__':
     main()
