@@ -110,7 +110,7 @@ def _api_put_or_post(action_name,
     headers['Content-Type'] = 'application/json'
 
     url = f"{client_id['endpoints']['api']}/v3/{api_endpoint}"
-    log.info(f"Putting a single Constant Contact item to endpoint {api_endpoint}")
+    log.info(f"{action_name} a single Constant Contact item to endpoint {api_endpoint}")
 
     log.debug(pformat(body))
     with _create_session(allowed_methods=[action_name]) as session:
