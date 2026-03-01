@@ -6,11 +6,24 @@ import copy
 import random
 import datetime
 import requests
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 
 from pprint import pprint
 from pprint import pformat
 
 import ParishSoftv2 as ParishSoft
+
+####################################################################
+
+class CCAPIError(Exception):
+    """Raised by API functions on non-2xx HTTP responses after retry exhaustion."""
+
+    def __init__(self, status_code, response_text, endpoint):
+        self.status_code = status_code
+        self.response_text = response_text
+        self.endpoint = endpoint
+        super().__init__(f"CC API error on {endpoint}: HTTP {status_code}")
 
 ####################################################################
 #
