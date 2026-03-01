@@ -6,6 +6,7 @@ import argparse
 import logging
 import datetime
 
+from collections import defaultdict
 from pprint import pformat
 
 # We assume that there is a "ecc-python-modules" sym link in this
@@ -149,7 +150,48 @@ def main():
                     impersonated_user=args.impersonated_user,
                     log=log)
 
-    # Phases 2-7 will be implemented in subsequent tasks
+    # Load PS data
+    log.info("Loading ParishSoft data...")
+    families, members, family_workgroups, member_workgroups, ministries = \
+        ParishSoft.load_families_and_members(api_key=args.api_key,
+                                             active_only=True,
+                                             parishioners_only=False,
+                                             cache_dir=args.ps_cache_dir,
+                                             log=log)
+
+    # Download CC data (let CCAPIError propagate on failure)
+    log.info("Downloading Constant Contact lists...")
+    cc_lists = CC.api_get_all(cc_client_id, cc_access_token,
+                              'contact_lists', 'lists', log)
+    log.info("Downloading Constant Contact contacts...")
+    cc_contacts = CC.api_get_all(cc_client_id, cc_access_token,
+                                 'contacts', 'contacts', log,
+                                 include='list_memberships',
+                                 status='all')
+
+    # Normalize CC contact emails to lowercase
+    for contact in cc_contacts:
+        contact['email_address']['address'] = \
+            contact['email_address']['address'].lower()
+
+    # Link CC data structures and correlate with PS Members
+    CC.link_cc_data(cc_contacts, [], cc_lists, log)
+    CC.link_contacts_to_ps_members(cc_contacts, members, log)
+
+    # Build read-only indexes
+    cc_contacts_by_email = {
+        contact['email_address']['address']: contact
+        for contact in cc_contacts
+    }
+
+    ps_members_by_email = defaultdict(list)
+    for member in members.values():
+        if not member['emailAddress']:
+            continue
+        email = member['py emailAddresses'][0].lower()
+        ps_members_by_email[email].append(member)
+
+    # Phases 3-7 will be implemented in subsequent tasks
 
 if __name__ == '__main__':
     main()

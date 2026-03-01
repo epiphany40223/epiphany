@@ -58,7 +58,7 @@
 
 ## Phase 2: Data Loading and Indexing
 
-- [ ] **2.1** Implement PS data loading
+- [x] **2.1** Implement PS data loading
   - Create a function (or inline in `main()`) that calls `ParishSoft.load_families_and_members()` with:
     - `api_key=args.api_key`
     - `active_only=True`
@@ -69,7 +69,7 @@
   - Log that PS data is being loaded (info level).
   - _Spec: section 3.3.1_
 
-- [ ] **2.2** Implement CC authentication and data loading
+- [x] **2.2** Implement CC authentication and data loading
   - **Authentication** (runs early in `main()`, before PS data loading):
     - Call `CC.load_client_id(args.cc_client_id, log)` and `CC.get_access_token(args.cc_access_token, cc_client_id, log)`.
     - If `args.cc_auth_only` is set, log a message and `exit(0)`.
@@ -79,19 +79,19 @@
     - Contacts: `CC.api_get_all(cc_client_id, cc_access_token, 'contacts', 'contacts', log, include='list_memberships', status='all')`
   - _Spec: section 3.3.2, 6.1_
 
-- [ ] **2.3** Normalize CC contact emails to lowercase
+- [x] **2.3** Normalize CC contact emails to lowercase
   - After downloading contacts, iterate all contacts and lowercase `contact['email_address']['address']`.
   - _Depends: 2.2_
   - _Spec: section 3.3.2_
 
-- [ ] **2.4** Link CC data and correlate with PS Members
+- [x] **2.4** Link CC data and correlate with PS Members
   - Call `CC.link_cc_data(cc_contacts, [], cc_lists, log)`. This populates `contact['LIST MEMBERSHIPS']` and `list['CONTACTS']`.
   - Call `CC.link_contacts_to_ps_members(cc_contacts, members, log)`. This populates `contact['PS MEMBERS']` and `member['CONTACT']`.
   - These calls mutate the downloaded data to add cross-references, but the cross-referenced data is treated as **read-only** from this point forward.
   - _Depends: 2.1, 2.2, 2.3_
   - _Spec: section 3.3.3_
 
-- [ ] **2.5** Build script-level read-only indexes
+- [x] **2.5** Build script-level read-only indexes
   - Build `cc_contacts_by_email`: `{email: contact}` dict for quick contact lookup by email address.
   - Build `ps_members_by_email`: `{email: [member, ...]}` dict collecting ALL PS members sharing each email. Iterate `members.values()`, skip members with no `emailAddress`, use `member['py emailAddresses'][0].lower()` as the key (lowercase to match CC email normalization).
   - These indexes are **not modified** by any subsequent step.
