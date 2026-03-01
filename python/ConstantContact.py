@@ -4,7 +4,6 @@ import os
 import json
 import copy
 import random
-import inspect
 import datetime
 import requests
 
@@ -72,25 +71,6 @@ def api_get_all(client_id, access_token,
     log.info(f"Loaded {len(items)} total items")
 
     return items
-
-def api_get(client_id, access_token, uuid,
-               api_endpoint, log, include=None):
-    headers, params = api_headers(client_id, access_token,
-                                     include=include)
-
-    url = f"{client_id['endpoints']['api']}/v3/{api_endpoint}/{uuid}"
-    log.info(f"Loading a single Constant Contact item from endpoint {api_endpoint}")
-
-    log.debug(f"Getting URL: {url}")
-    # JMS Need to surround this in a retry
-    r = requests.get(url, headers=headers, params=params)
-    if r.status_code < 200 or r.status_code > 299:
-        log.error(f"Got a non-2xx GET status: {r.status_code}")
-        log.error(r.text)
-        exit(1)
-
-    response = json.loads(r.text)
-    return response
 
 def _api_put_or_post(action_fn, action_name,
                      client_id, access_token,
@@ -208,7 +188,7 @@ def oauth2_device_flow(client_id, log):
     _ = input("Hit enter when you have successfully completed that authorization: ")
 
     # Record the timestamp before we request the access token
-    start = datetime.datetime.utcnow()
+    start = datetime.datetime.now(datetime.timezone.utc)
 
     # Now get an access token
     device_code = response['device_code']
@@ -235,7 +215,7 @@ def oauth2_device_flow(client_id, log):
 # to a the token URL requesting a refresh.
 def oauth2_device_flow_refresh(client_id, access_token, log):
     # Record the timestamp before we request the access token
-    start = datetime.datetime.utcnow()
+    start = datetime.datetime.now(datetime.timezone.utc)
 
     post_data = {
         "client_id" : client_id['client id'],
@@ -284,6 +264,16 @@ def load_access_token(filename, log):
     vfrom = datetime.datetime.fromisoformat(access_token['valid from'])
     vto = datetime.datetime.fromisoformat(access_token['valid to'])
 
+    # The "valid from" and "valid to" fields are computed by our code
+    # (in set_valid_from_to()) from local UTC timestamps.  Older token
+    # files were saved with naive datetimes (via utcnow()); ensure they
+    # are tagged as UTC so that comparisons with timezone-aware
+    # datetimes don't raise TypeError.
+    if vfrom.tzinfo is None:
+        vfrom = vfrom.replace(tzinfo=datetime.timezone.utc)
+    if vto.tzinfo is None:
+        vto = vto.replace(tzinfo=datetime.timezone.utc)
+
     access_token['valid from'] = vfrom
     access_token['valid to'] = vto
     log.debug(f"Read: {access_token}")
@@ -314,7 +304,7 @@ def get_access_token(access_token_filename, client_id, log):
         exit(1)
 
     # Check to ensure that the access token is still valid.
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     log.debug(f"Valid from: {access_token['valid from']}")
     log.debug(f"Now:        {now}")
     log.debug(f"Valid to:   {access_token['valid to']}")
