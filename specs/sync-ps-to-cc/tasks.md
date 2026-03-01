@@ -206,7 +206,7 @@
 
 ## Phase 6: HTML Notification Emails
 
-- [ ] **6.1** Implement HTML email builder function
+- [x] **6.1** Implement HTML email builder function
   - Create a `build_notification_email()` function that takes:
     - CC List name
     - List of actions for this list (each with type, email, detail)
@@ -229,7 +229,7 @@
   - Return the (subject, html_body) tuple.
   - _Spec: sections 5.1, 5.2, 5.3_
 
-- [ ] **6.2** Implement per-list notification email sending
+- [x] **6.2** Implement per-list notification email sending
   - Create a `send_notification_emails()` function that takes the action list, failures list, `unsubscribed_per_sync`, syncs, and `log`.
   - For each synchronization entry `i`:
     - Filter the action list by `sync_index == i` to get actions for this CC list.
@@ -241,7 +241,7 @@
   - _Depends: 6.1, 5.2_
   - _Spec: section 3.3.8_
 
-- [ ] **6.3** Implement unsubscribed-contacts report email builder
+- [x] **6.3** Implement unsubscribed-contacts report email builder
   - Create a `build_unsubscribed_report_email()` function that takes:
     - CC List name
     - PS Member Workgroup name (from `SYNCHRONIZATIONS[i]['source ps member wg']`)
@@ -256,7 +256,7 @@
   - Return the `(subject, html_body)` tuple.
   - _Spec: sections 3.3.9, 5.4_
 
-- [ ] **6.4** Implement unsubscribed-contacts report sending
+- [x] **6.4** Implement unsubscribed-contacts report sending
   - Create a `send_unsubscribed_report()` function that takes `unsubscribed_per_sync`, syncs, and `log`.
   - Only runs if `args.unsubscribed_report` is `True`.
   - For each synchronization entry `i` where `unsubscribed_per_sync[i]` is non-empty:

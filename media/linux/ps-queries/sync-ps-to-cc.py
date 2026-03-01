@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import html
 import os
 import sys
 import argparse
@@ -429,6 +430,214 @@ def execute_actions(actions, cc_contacts_by_email, ps_members_by_email,
 
 ####################################################################
 
+def build_notification_email(list_name, list_actions, list_failures,
+                             unsubscribed, cc_contacts_by_email):
+    esc = html.escape
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    subject = f'Constant Contact sync update: {list_name}'
+
+    creates = [a for a in list_actions if a['type'] == 'create']
+    subscribes = [a for a in list_actions if a['type'] == 'subscribe']
+    unsubscribes = [a for a in list_actions if a['type'] == 'unsubscribe']
+    name_updates = [a for a in list_actions if a['type'] == 'update_name']
+
+    tbl = 'border-collapse: collapse; width: 100%; margin-bottom: 20px;'
+    th = ('border: 1px solid #dddddd; padding: 8px; text-align: left; '
+          'background-color: #4472C4; color: white;')
+
+    def td(row):
+        bg = '#f2f2f2' if row % 2 == 0 else '#ffffff'
+        return f'border: 1px solid #dddddd; padding: 8px; background-color: {bg};'
+
+    body = (f'<html><body style="font-family: Arial, sans-serif; font-size: 14px;">'
+            f'<h2 style="color: #333333;">Constant Contact Sync Update: '
+            f'{esc(list_name)}</h2>'
+            f'<p style="color: #666666;">Generated: {now}</p>'
+            f'<h3>Summary</h3><ul>'
+            f'<li>Contacts created: {len(creates)}</li>'
+            f'<li>Contacts subscribed: {len(subscribes)}</li>'
+            f'<li>Contacts unsubscribed: {len(unsubscribes)}</li>'
+            f'<li>Name updates: {len(name_updates)}</li>'
+            f'<li>Failures: {len(list_failures)}</li>'
+            f'</ul>')
+
+    # Actions table
+    if list_actions:
+        body += (f'<h3>Actions Performed</h3>'
+                 f'<table style="{tbl}"><tr>'
+                 f'<th style="{th}">Action</th>'
+                 f'<th style="{th}">Email</th>'
+                 f'<th style="{th}">Contact Name</th></tr>')
+        for idx, action in enumerate(list_actions):
+            contact = cc_contacts_by_email.get(action['email'], {})
+            first = contact.get('first_name', '')
+            last = contact.get('last_name', '')
+            name = f'{first} {last}'.strip()
+            body += (f'<tr><td style="{td(idx)}">{esc(action["type"])}</td>'
+                     f'<td style="{td(idx)}">{esc(action["email"])}</td>'
+                     f'<td style="{td(idx)}">{esc(name)}</td></tr>')
+        body += '</table>'
+
+    # Manually unsubscribed contacts
+    if unsubscribed:
+        body += (f'<h3>Manually Unsubscribed Contacts</h3>'
+                 f'<p>These contacts have globally unsubscribed from '
+                 f'Constant Contact but are still in the corresponding '
+                 f'ParishSoft workgroup.</p>'
+                 f'<table style="{tbl}"><tr>'
+                 f'<th style="{th}">Email</th>'
+                 f'<th style="{th}">PS Member Name(s)</th>'
+                 f'<th style="{th}">PS Member DUID(s)</th></tr>')
+        for idx, (email, names, duids) in enumerate(unsubscribed):
+            body += (f'<tr><td style="{td(idx)}">{esc(email)}</td>'
+                     f'<td style="{td(idx)}">{esc(names)}</td>'
+                     f'<td style="{td(idx)}">{esc(duids)}</td></tr>')
+        body += '</table>'
+
+    # Contacts removed from list
+    if unsubscribes:
+        body += (f'<h3>Contacts Removed from List (in ParishSoft)</h3>'
+                 f'<table style="{tbl}"><tr>'
+                 f'<th style="{th}">Email</th>'
+                 f'<th style="{th}">Contact Name</th>'
+                 f'<th style="{th}">Reason</th></tr>')
+        for idx, action in enumerate(unsubscribes):
+            contact = cc_contacts_by_email.get(action['email'], {})
+            first = contact.get('first_name', '')
+            last = contact.get('last_name', '')
+            name = f'{first} {last}'.strip()
+            body += (f'<tr><td style="{td(idx)}">{esc(action["email"])}</td>'
+                     f'<td style="{td(idx)}">{esc(name)}</td>'
+                     f'<td style="{td(idx)}">Not in PS workgroup</td></tr>')
+        body += '</table>'
+
+    # Failed actions
+    if list_failures:
+        body += (f'<h3 style="color: #cc0000;">Failed Actions</h3>'
+                 f'<table style="{tbl}"><tr>'
+                 f'<th style="{th}">Email</th>'
+                 f'<th style="{th}">Action</th>'
+                 f'<th style="{th}">Error</th></tr>')
+        for idx, failure in enumerate(list_failures):
+            body += (f'<tr><td style="{td(idx)}">{esc(failure["email"])}</td>'
+                     f'<td style="{td(idx)}">{esc(failure["action"])}</td>'
+                     f'<td style="{td(idx)}">{esc(failure["error"])}</td></tr>')
+        body += '</table>'
+
+    body += ('<hr style="border: 1px solid #dddddd; margin-top: 30px;">'
+             '<p style="color: #999999; font-size: 12px;">'
+             'This is an automated message from the ParishSoft to '
+             'Constant Contact synchronization script.</p>'
+             '</body></html>')
+
+    return subject, body
+
+####################################################################
+
+def send_notification_emails(actions, failures, unsubscribed_per_sync,
+                             cc_contacts_by_email, dry_run, no_sync, log):
+    if dry_run or no_sync:
+        return
+
+    for i, sync in enumerate(SYNCHRONIZATIONS):
+        list_actions = [a for a in actions if a['sync_index'] == i]
+        if not list_actions:
+            continue
+
+        action_emails = {a['email'] for a in list_actions}
+        list_failures = [f for f in failures if f['email'] in action_emails]
+
+        subject, body = build_notification_email(
+            sync['target cc list'], list_actions, list_failures,
+            unsubscribed_per_sync[i], cc_contacts_by_email)
+
+        for addr_string in sync['notifications']:
+            for addr in addr_string.split(','):
+                addr = addr.strip()
+                if addr:
+                    ECC.send_email(to_addr=addr, subject=subject,
+                                   body=body, content_type='text/html',
+                                   log=log)
+
+####################################################################
+
+def build_unsubscribed_report_email(list_name, wg_name, unsubscribed):
+    esc = html.escape
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    subject = f'Constant Contact unsubscribed contacts report: {list_name}'
+
+    tbl = 'border-collapse: collapse; width: 100%; margin-bottom: 20px;'
+    th = ('border: 1px solid #dddddd; padding: 8px; text-align: left; '
+          'background-color: #4472C4; color: white;')
+
+    def td(row):
+        bg = '#f2f2f2' if row % 2 == 0 else '#ffffff'
+        return f'border: 1px solid #dddddd; padding: 8px; background-color: {bg};'
+
+    body = (f'<html><body style="font-family: Arial, sans-serif; font-size: 14px;">'
+            f'<h2 style="color: #333333;">Constant Contact Unsubscribed '
+            f'Contacts Report: {esc(list_name)}</h2>'
+            f'<p style="color: #666666;">Generated: {now}</p>'
+            f'<p>The following ParishSoft Members are in the '
+            f"'{esc(wg_name)}' workgroup but have manually unsubscribed "
+            f'from Constant Contact. They should be removed from the '
+            f"'{esc(wg_name)}' workgroup in ParishSoft.</p>"
+            f'<table style="{tbl}"><tr>'
+            f'<th style="{th}">PS Member Name(s)</th>'
+            f'<th style="{th}">PS Member DUID(s)</th>'
+            f'<th style="{th}">Email</th></tr>')
+
+    for idx, (email, names, duids) in enumerate(unsubscribed):
+        body += (f'<tr><td style="{td(idx)}">{esc(names)}</td>'
+                 f'<td style="{td(idx)}">{esc(duids)}</td>'
+                 f'<td style="{td(idx)}">{esc(email)}</td></tr>')
+
+    body += ('</table>'
+             '<hr style="border: 1px solid #dddddd; margin-top: 30px;">'
+             '<p style="color: #999999; font-size: 12px;">'
+             'This is an automated message from the ParishSoft to '
+             'Constant Contact synchronization script.</p>'
+             '</body></html>')
+
+    return subject, body
+
+####################################################################
+
+def send_unsubscribed_report(unsubscribed_per_sync, dry_run,
+                             unsubscribed_report, log):
+    if not unsubscribed_report:
+        return
+
+    for i, sync in enumerate(SYNCHRONIZATIONS):
+        if not unsubscribed_per_sync[i]:
+            continue
+
+        subject, body = build_unsubscribed_report_email(
+            sync['target cc list'],
+            sync['source ps member wg'],
+            unsubscribed_per_sync[i])
+
+        if dry_run:
+            log.warning(f'--unsubscribed-report requested but --dry-run '
+                        f'is active; not sending email for '
+                        f'"{sync["target cc list"]}"')
+            log.info(f'Unsubscribed report subject: {subject}')
+            log.info(f'CC List: {sync["target cc list"]}')
+            log.info(f'PS Workgroup: {sync["source ps member wg"]}')
+            for email, names, duids in unsubscribed_per_sync[i]:
+                log.info(f'  {names} (DUID: {duids}): {email}')
+            continue
+
+        for addr_string in sync['notifications']:
+            for addr in addr_string.split(','):
+                addr = addr.strip()
+                if addr:
+                    ECC.send_email(to_addr=addr, subject=subject,
+                                   body=body, content_type='text/html',
+                                   log=log)
+
+####################################################################
+
 def main():
     args = setup_cli_args()
 
@@ -529,7 +738,14 @@ def main():
                                cc_client_id, cc_access_token,
                                args.dry_run, args.no_sync, log)
 
-    # Phases 6-7 will be implemented in subsequent tasks
+    # Send notification emails
+    send_notification_emails(actions, failures, unsubscribed_per_sync,
+                             cc_contacts_by_email,
+                             args.dry_run, args.no_sync, log)
+
+    # Send unsubscribed-contacts report
+    send_unsubscribed_report(unsubscribed_per_sync,
+                             args.dry_run, args.unsubscribed_report, log)
 
 if __name__ == '__main__':
     main()
