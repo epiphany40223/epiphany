@@ -79,31 +79,31 @@ def api_get_all(client_id, access_token,
 
     items = list()
     url = base_url
-    while url:
-        log.debug(f"Getting URL: {url}")
-        # JMS Need to surround this in a retry
-        r = requests.get(url, headers=headers, params=params)
-        if r.status_code < 200 or r.status_code > 299:
-            log.error(f"Got a non-2xx GET (all) status: {r.status_code}")
-            log.error(r.text)
-            exit(1)
+    with _create_session(allowed_methods=["GET"]) as session:
+        while url:
+            log.debug(f"Getting URL: {url}")
+            r = session.get(url, headers=headers, params=params)
+            if r.status_code < 200 or r.status_code > 299:
+                log.error(f"Got a non-2xx GET (all) status: {r.status_code}")
+                log.error(r.text)
+                raise CCAPIError(r.status_code, r.text, api_endpoint)
 
-        response = json.loads(r.text)
-        for item in response[json_response_field]:
-            items.append(item)
-        log.debug(f"Loaded {len(response[json_response_field])} items")
+            response = json.loads(r.text)
+            for item in response[json_response_field]:
+                items.append(item)
+            log.debug(f"Loaded {len(response[json_response_field])} items")
 
-        url = None
-        key = '_links'
-        key2 = 'next'
-        if key in response and key2 in response[key]:
-            url = f"{client_id['endpoints']['api']}{response[key][key2]['href']}"
+            url = None
+            key = '_links'
+            key2 = 'next'
+            if key in response and key2 in response[key]:
+                url = f"{client_id['endpoints']['api']}{response[key][key2]['href']}"
 
     log.info(f"Loaded {len(items)} total items")
 
     return items
 
-def _api_put_or_post(action_fn, action_name,
+def _api_put_or_post(action_name,
                      client_id, access_token,
                      api_endpoint, body, log):
     headers, params = api_headers(client_id, access_token)
@@ -113,25 +113,27 @@ def _api_put_or_post(action_fn, action_name,
     log.info(f"Putting a single Constant Contact item to endpoint {api_endpoint}")
 
     log.debug(pformat(body))
-    r = action_fn(url, headers=headers,
-                  data=json.dumps(body))
+    with _create_session(allowed_methods=[action_name]) as session:
+        action_fn = getattr(session, action_name.lower())
+        r = action_fn(url, headers=headers,
+                      data=json.dumps(body))
     if r.status_code < 200 or r.status_code > 299:
         log.error(f"Got a non-2xx {action_name} status: {r.status_code}")
         log.error(r.text)
-        exit(1)
+        raise CCAPIError(r.status_code, r.text, api_endpoint)
 
     response = json.loads(r.text)
     return response
 
 def api_put(client_id, access_token,
             api_endpoint, body, log):
-    return _api_put_or_post(requests.put, "PUT",
+    return _api_put_or_post("PUT",
                             client_id, access_token, api_endpoint,
                             body, log)
 
 def api_post(client_id, access_token,
              api_endpoint, body, log):
-    return _api_put_or_post(requests.post, "POST",
+    return _api_put_or_post("POST",
                             client_id, access_token, api_endpoint,
                             body, log)
 
