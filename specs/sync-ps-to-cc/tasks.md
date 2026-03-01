@@ -298,32 +298,32 @@
 
 ## Phase 8: Edge Cases and Error Handling
 
-- [ ] **8.1** Verify shared-email handling throughout the pipeline
+- [x] **8.1** Verify shared-email handling throughout the pipeline
   - The `ps_members_by_email` index (task 2.5) naturally collects all PS members sharing an email. Verify:
     - `execute_actions()` passes the full list from `ps_members_by_email[email]` to `CC.create_contact_dict()` so the contact name is derived from ALL members.
     - Set-diff in task 4.2: if ANY member sharing an email is in a workgroup, that email is in `desired_emails[i]`, so the contact is subscribed. This works because `desired_emails` is built from workgroup membership, not from individual members.
     - `detect_name_mismatches()` uses `contact['PS MEMBERS']` (populated by `link_contacts_to_ps_members`), which already contains all members for that email.
   - _Spec: section 7.1_
 
-- [ ] **8.2** Verify email-change scenarios are handled by the diff
+- [x] **8.2** Verify email-change scenarios are handled by the diff
   - Confirm that the set-diff architecture handles these without special code:
     - **Members split emails**: old contact retains some members; new email appears in `emails_needing_contacts` → gets a `create` action. Old contact may get `update_name` action.
     - **Members merge emails**: one contact now maps to multiple members; the other contact loses its PS members → logged as deletion candidate.
   - If any scenario is not handled, add corrective logic. Otherwise, add a comment in the code documenting why it works.
   - _Spec: section 7.2_
 
-- [ ] **8.3** Handle contacts with missing name fields
+- [x] **8.3** Handle contacts with missing name fields
   - Ensure `detect_name_mismatches()` (task 4.3) and any name-display code use `contact.get('first_name', '')` and `contact.get('last_name', '')` since CC contacts can lack these fields.
   - Ensure the `detail` string in actions handles missing names gracefully.
   - _Depends: 4.3_
   - _Spec: section 3.3.6 (step 3)_
 
-- [ ] **8.4** Ensure bulk data loading failures terminate the script
+- [x] **8.4** Ensure bulk data loading failures terminate the script
   - Verify that `CCAPIError` from `CC.api_get_all()` calls (contacts and lists) is NOT caught — it should propagate and terminate the script. Only the `execute_actions()` function catches `CCAPIError` (for individual contact updates).
   - _Depends: 2.2, 5.2_
   - _Spec: section 6.1_
 
-- [ ] **8.5** Ensure config resolution failures terminate the script
+- [x] **8.5** Ensure config resolution failures terminate the script
   - Verify that if a PS Member Workgroup name or CC List name from `SYNCHRONIZATIONS` is not found, the script logs an error and calls `exit(1)`.
   - _Depends: 3.1_
   - _Spec: section 6.3_

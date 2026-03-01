@@ -721,7 +721,15 @@ def main():
     unsubscribed_per_sync = filter_unsubscribed(cc_contacts, desired_emails,
                                                 ps_members_by_email, log)
 
-    # Compute action list
+    # Compute action list.
+    #
+    # Email-change scenarios (members splitting or merging emails) are
+    # handled naturally by the set-diff architecture:
+    # - Split: the new email appears in emails_needing_contacts and gets
+    #   a create action; the old contact may get an update_name action.
+    # - Merge: one contact now maps to multiple members (name may update);
+    #   the other contact loses its PS members and is logged as a
+    #   deletion candidate.
     actions = []
     actions.extend(compute_create_actions(desired_emails,
                                           cc_contacts_by_email))
