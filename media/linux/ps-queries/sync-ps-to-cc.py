@@ -198,6 +198,135 @@ def filter_unsubscribed(cc_contacts, desired_emails, ps_members_by_email,
 
 ####################################################################
 
+def compute_create_actions(desired_emails, cc_contacts_by_email):
+    actions = []
+
+    all_desired = set()
+    for emails in desired_emails:
+        all_desired |= emails
+
+    emails_needing_contacts = all_desired - set(cc_contacts_by_email.keys())
+
+    for email in sorted(emails_needing_contacts):
+        # Find the first sync entry that wants this email
+        sync_index = next(i for i, emails in enumerate(desired_emails)
+                         if email in emails)
+        actions.append({
+            'type':       'create',
+            'email':      email,
+            'list_name':  None,
+            'list_uuid':  None,
+            'detail':     f'Create contact for {email}',
+            'sync_index': sync_index,
+        })
+
+    return actions
+
+####################################################################
+
+def compute_subscribe_unsubscribe_actions(desired_emails):
+    actions = []
+
+    for i, sync in enumerate(SYNCHRONIZATIONS):
+        cc_list = sync['TARGET CC LIST']
+        list_uuid = cc_list['list_id']
+        list_name = sync['target cc list']
+
+        current_emails = set(cc_list['CONTACTS'].keys())
+        to_subscribe = desired_emails[i] - current_emails
+        to_unsubscribe = current_emails - desired_emails[i]
+
+        for email in sorted(to_subscribe):
+            actions.append({
+                'type':       'subscribe',
+                'email':      email,
+                'list_name':  list_name,
+                'list_uuid':  list_uuid,
+                'detail':     f'Subscribe {email} to {list_name}',
+                'sync_index': i,
+            })
+
+        for email in sorted(to_unsubscribe):
+            actions.append({
+                'type':       'unsubscribe',
+                'email':      email,
+                'list_name':  list_name,
+                'list_uuid':  list_uuid,
+                'detail':     f'Unsubscribe {email} from {list_name}',
+                'sync_index': i,
+            })
+
+    return actions
+
+####################################################################
+
+def detect_name_mismatches(cc_contacts_by_email, update_names, log):
+    actions = []
+
+    for email, contact in cc_contacts_by_email.items():
+        if not contact.get('PS MEMBERS'):
+            continue
+
+        expected_first, expected_last = \
+            ParishSoft.salutation_for_members(contact['PS MEMBERS'])
+        # CC rejects periods in names
+        expected_first = expected_first.replace('.', '')
+
+        old_first = contact.get('first_name', '')
+        old_last = contact.get('last_name', '')
+
+        if expected_first == old_first and expected_last == old_last:
+            continue
+
+        log.info(f'Name mismatch for {email}: '
+                 f'CC has "{old_first} {old_last}", '
+                 f'PS expects "{expected_first} {expected_last}"')
+
+        if update_names:
+            actions.append({
+                'type':       'update_name',
+                'email':      email,
+                'list_name':  None,
+                'list_uuid':  None,
+                'detail':     f'Update name for {email}: '
+                              f'"{old_first} {old_last}" -> '
+                              f'"{expected_first} {expected_last}"',
+                'sync_index': None,
+                'new_first':  expected_first,
+                'new_last':   expected_last,
+                'old_first':  old_first,
+                'old_last':   old_last,
+            })
+
+    return actions
+
+####################################################################
+
+def log_deletion_candidates(cc_contacts_by_email, actions, log):
+    # Count unsubscribe actions per email
+    unsub_counts = defaultdict(int)
+    for action in actions:
+        if action['type'] == 'unsubscribe':
+            unsub_counts[action['email']] += 1
+
+    for email, contact in cc_contacts_by_email.items():
+        first = contact.get('first_name', '')
+        last = contact.get('last_name', '')
+
+        # No PS Members linked
+        if not contact.get('PS MEMBERS'):
+            log.info(f'Deletion candidate (no PS Members): '
+                     f'{email} ({first} {last})')
+
+        # Would have zero list memberships after sync
+        current_count = len(contact.get('list_memberships', []))
+        post_sync_count = current_count - unsub_counts.get(email, 0)
+        if post_sync_count == 0:
+            log.info(f'Deletion candidate (no lists after sync): '
+                     f'{email} ({first} {last})')
+
+####################################################################
+
 def main():
     args = setup_cli_args()
 
@@ -281,7 +410,18 @@ def main():
     unsubscribed_per_sync = filter_unsubscribed(cc_contacts, desired_emails,
                                                 ps_members_by_email, log)
 
-    # Phases 4-7 will be implemented in subsequent tasks
+    # Compute action list
+    actions = []
+    actions.extend(compute_create_actions(desired_emails,
+                                          cc_contacts_by_email))
+    actions.extend(compute_subscribe_unsubscribe_actions(desired_emails))
+    actions.extend(detect_name_mismatches(cc_contacts_by_email,
+                                          args.update_names, log))
+
+    # Log deletion candidates (not added to action list)
+    log_deletion_candidates(cc_contacts_by_email, actions, log)
+
+    # Phases 5-7 will be implemented in subsequent tasks
 
 if __name__ == '__main__':
     main()

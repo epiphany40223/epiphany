@@ -129,7 +129,7 @@
 
 ## Phase 4: Compute Action List
 
-- [ ] **4.1** Identify emails needing new contacts and add `create` actions
+- [x] **4.1** Identify emails needing new contacts and add `create` actions
   - Compute `all_desired_emails = union(desired_emails[0], desired_emails[1], ...)`.
   - Compute `emails_needing_contacts = all_desired_emails - set(cc_contacts_by_email.keys())`.
   - For each email in `emails_needing_contacts`:
@@ -139,7 +139,7 @@
   - _Depends: 2.5, 3.2_
   - _Spec: section 3.3.6 (step 1)_
 
-- [ ] **4.2** Compute per-list subscribe and unsubscribe actions
+- [x] **4.2** Compute per-list subscribe and unsubscribe actions
   - For each synchronization entry `i`:
     - Get the CC list object from `sync['TARGET CC LIST']`, its UUID from `list['list_id']`, and its name from `sync['target cc list']`.
     - `current_emails = set(sync['TARGET CC LIST']['CONTACTS'].keys())`
@@ -151,7 +151,7 @@
   - _Depends: 3.1, 4.1_
   - _Spec: section 3.3.6 (step 2)_
 
-- [ ] **4.3** Detect name mismatches and add optional `update_name` actions
+- [x] **4.3** Detect name mismatches and add optional `update_name` actions
   - For each email in `cc_contacts_by_email` where the contact has `'PS MEMBERS'`:
     1. Call `ParishSoft.salutation_for_members(contact['PS MEMBERS'])` to get `(expected_first, expected_last)`.
     2. Strip periods from `expected_first` (e.g., `"T.J."` → `"TJ"`).
@@ -162,7 +162,7 @@
   - _Depends: 2.5_
   - _Spec: section 3.3.6 (step 3), 7.4_
 
-- [ ] **4.4** Log deletion candidates
+- [x] **4.4** Log deletion candidates
   - For each CC Contact in `cc_contacts_by_email.values()`:
     - Check if `'PS MEMBERS'` is absent or empty → log as deletion candidate.
     - Compute the contact's post-sync list count: `len(contact['list_memberships'])` minus the number of `unsubscribe` actions in the action list for this email. If zero → log as deletion candidate.
