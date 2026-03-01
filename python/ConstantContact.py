@@ -31,6 +31,24 @@ class CCAPIError(Exception):
 #
 ####################################################################
 
+def _create_session(allowed_methods=None):
+    if allowed_methods is None:
+        allowed_methods = ["GET", "PUT", "POST"]
+
+    retry = Retry(
+        total=3,
+        backoff_factor=0.2,
+        status_forcelist=[429],
+        allowed_methods=allowed_methods,
+        respect_retry_after_header=True,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+
+    session = requests.Session()
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
 def api_headers(client_id, access_token, include=None, limit=None, status=None):
     headers = {
         'Authorization' : f'Bearer {access_token["access_token"]}',
