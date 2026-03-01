@@ -7,7 +7,7 @@
 
 ## Phase 1: Configuration Module and Script Scaffolding
 
-- [ ] **1.1** Create `cc_sync_config.py` with `SYNCHRONIZATIONS` list
+- [x] **1.1** Create `cc_sync_config.py` with `SYNCHRONIZATIONS` list
   - Create file at `media/linux/ps-queries/cc_sync_config.py`.
   - Define a module-level `SYNCHRONIZATIONS` list of dicts. Each dict has three keys:
     - `'source ps member wg'`: string — PS Member Workgroup name (e.g., `'Daily Gospel Reflections'`, `'Parish-wide Email'`)
@@ -17,7 +17,7 @@
   - No imports needed; this is a pure-data module.
   - _Spec: section 2.1_
 
-- [ ] **1.2** Create `sync-ps-to-cc.py` with module path handling and imports
+- [x] **1.2** Create `sync-ps-to-cc.py` with module path handling and imports
   - Create file at `media/linux/ps-queries/sync-ps-to-cc.py`.
   - Add shebang `#!/usr/bin/env python3`.
   - Replicate the `moddir` pattern from `sync-constant-contact.py` (lines 20-32): resolve `'../../../python'`, handle the MS Windows symlink-as-file quirk (read the file contents as the path), insert into `sys.path`.
@@ -32,7 +32,7 @@
   - Add `if __name__ == '__main__': main()` at the bottom.
   - _Spec: sections 8.1, 8.2, 8.3_
 
-- [ ] **1.3** Implement CLI argument parsing with `argparse`
+- [x] **1.3** Implement CLI argument parsing with `argparse`
   - Create a `setup_cli_args()` function that uses standard `argparse.ArgumentParser` (NOT `oauth2client.tools.argparser`).
   - Define arguments:
     - `--ps-api-keyfile` (required): ParishSoft API key file
