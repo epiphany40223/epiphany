@@ -7,12 +7,12 @@ in `specs/constantcontact/spec.md` (sections 2.2, 6, 7, 10).
 
 These must be completed first; all other tasks depend on them.
 
-- [ ] **1.1 Add imports for retry/adapter**
+- [x] **1.1 Add imports for retry/adapter**
   Add `from urllib3.util.retry import Retry` and
   `from requests.adapters import HTTPAdapter` to the imports section
   (after `import requests`).
 
-- [ ] **1.2 Define CCAPIError exception class**
+- [x] **1.2 Define CCAPIError exception class**
   Add a `CCAPIError` exception class after the imports (before the
   first `####` section divider). Per the spec (Section 2.2):
   - Attributes: `status_code` (int), `response_text` (str),
@@ -25,7 +25,7 @@ These must be completed first; all other tasks depend on them.
 
 Depends on: Phase 1
 
-- [ ] **2.1 Create a module-level session factory**
+- [x] **2.1 Create a module-level session factory**
   Add a helper function (e.g., `_create_session()`) that creates a
   `requests.Session` with an `HTTPAdapter` configured with
   `urllib3.util.Retry`:
@@ -44,7 +44,7 @@ Depends on: Phase 1
 
 Depends on: Phase 2
 
-- [ ] **3.1 Update `api_get_all()` to use session and raise CCAPIError**
+- [x] **3.1 Update `api_get_all()` to use session and raise CCAPIError**
   - Replace `requests.get(url, ...)` with `session.get(url, ...)`
     using a session from `_create_session()`
   - Replace `exit(1)` (lines 56-58) with
@@ -52,7 +52,7 @@ Depends on: Phase 2
   - Remove the `# JMS Need to surround this in a retry` comment
     (the retry is now implemented)
 
-- [ ] **3.2 Update `_api_put_or_post()` to use session and raise CCAPIError**
+- [x] **3.2 Update `_api_put_or_post()` to use session and raise CCAPIError**
   - The current design passes `requests.put` or `requests.post` as
     `action_fn`. This won't work with a session object. Refactor to
     use `action_name` (the string "PUT" or "POST") to select
@@ -67,7 +67,7 @@ Depends on: Phase 2
 
 Depends on: Phase 3
 
-- [ ] **4.1 Update `sync-constant-contact.py` for CCAPIError**
+- [x] **4.1 Update `sync-constant-contact.py` for CCAPIError**
   Add `try`/`except CCAPIError` around all CC API calls in
   `media/linux/ps-queries/sync-constant-contact.py` to preserve its
   current behavior:
@@ -83,13 +83,13 @@ Depends on: Phase 3
 
 Depends on: Phase 4
 
-- [ ] **5.1 Verify no remaining `exit(1)` in API functions**
+- [x] **5.1 Verify no remaining `exit(1)` in API functions**
   Confirm that `api_get_all`, `_api_put_or_post`, `api_put`, and
   `api_post` no longer call `exit(1)`. The only `exit(1)` calls
   remaining in ConstantContact.py should be in `get_access_token()`
   (for authentication failures, which are not API operation errors).
 
-- [ ] **5.2 Verify old script still functions**
+- [x] **5.2 Verify old script still functions**
   Confirm that `sync-constant-contact.py` handles `CCAPIError` in
   all code paths that previously relied on `exit(1)`.
 
