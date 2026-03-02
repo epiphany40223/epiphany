@@ -4,9 +4,10 @@ import os
 import json
 import copy
 import random
-import inspect
 import datetime
 import requests
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 
 from pprint import pprint
 from pprint import pformat
@@ -14,10 +15,39 @@ from pprint import pformat
 import ParishSoftv2 as ParishSoft
 
 ####################################################################
+
+class CCAPIError(Exception):
+    """Raised by API functions on non-2xx HTTP responses after retry exhaustion."""
+
+    def __init__(self, status_code, response_text, endpoint):
+        self.status_code = status_code
+        self.response_text = response_text
+        self.endpoint = endpoint
+        super().__init__(f"CC API error on {endpoint}: HTTP {status_code}")
+
+####################################################################
 #
 # Constant Contact general API
 #
 ####################################################################
+
+def _create_session(allowed_methods=None):
+    if allowed_methods is None:
+        allowed_methods = ["GET", "PUT", "POST"]
+
+    retry = Retry(
+        total=3,
+        backoff_factor=0.2,
+        status_forcelist=[429],
+        allowed_methods=allowed_methods,
+        respect_retry_after_header=True,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+
+    session = requests.Session()
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
 
 def api_headers(client_id, access_token, include=None, limit=None, status=None):
     headers = {
@@ -49,78 +79,61 @@ def api_get_all(client_id, access_token,
 
     items = list()
     url = base_url
-    while url:
-        log.debug(f"Getting URL: {url}")
-        # JMS Need to surround this in a retry
-        r = requests.get(url, headers=headers, params=params)
-        if r.status_code < 200 or r.status_code > 299:
-            log.error(f"Got a non-2xx GET (all) status: {r.status_code}")
-            log.error(r.text)
-            exit(1)
+    with _create_session(allowed_methods=["GET"]) as session:
+        while url:
+            log.debug(f"Getting URL: {url}")
+            r = session.get(url, headers=headers, params=params)
+            if r.status_code < 200 or r.status_code > 299:
+                log.error(f"Got a non-2xx GET (all) status: {r.status_code}")
+                log.error(r.text)
+                raise CCAPIError(r.status_code, r.text, api_endpoint)
 
-        response = json.loads(r.text)
-        for item in response[json_response_field]:
-            items.append(item)
-        log.debug(f"Loaded {len(response[json_response_field])} items")
+            response = json.loads(r.text)
+            for item in response[json_response_field]:
+                items.append(item)
+            log.debug(f"Loaded {len(response[json_response_field])} items")
 
-        url = None
-        key = '_links'
-        key2 = 'next'
-        if key in response and key2 in response[key]:
-            url = f"{client_id['endpoints']['api']}{response[key][key2]['href']}"
+            url = None
+            key = '_links'
+            key2 = 'next'
+            if key in response and key2 in response[key]:
+                url = f"{client_id['endpoints']['api']}{response[key][key2]['href']}"
 
     log.info(f"Loaded {len(items)} total items")
 
     return items
 
-def api_get(client_id, access_token, uuid,
-               api_endpoint, log, include=None):
-    headers, params = api_headers(client_id, access_token,
-                                     include=include)
-
-    url = f"{client_id['endpoints']['api']}/v3/{api_endpoint}/{uuid}"
-    log.info(f"Loading a single Constant Contact item from endpoint {api_endpoint}")
-
-    log.debug(f"Getting URL: {url}")
-    # JMS Need to surround this in a retry
-    r = requests.get(url, headers=headers, params=params)
-    if r.status_code < 200 or r.status_code > 299:
-        log.error(f"Got a non-2xx GET status: {r.status_code}")
-        log.error(r.text)
-        exit(1)
-
-    response = json.loads(r.text)
-    return response
-
-def _api_put_or_post(action_fn, action_name,
+def _api_put_or_post(action_name,
                      client_id, access_token,
                      api_endpoint, body, log):
     headers, params = api_headers(client_id, access_token)
     headers['Content-Type'] = 'application/json'
 
     url = f"{client_id['endpoints']['api']}/v3/{api_endpoint}"
-    log.info(f"Putting a single Constant Contact item to endpoint {api_endpoint}")
+    log.info(f"{action_name} a single Constant Contact item to endpoint {api_endpoint}")
 
     log.debug(pformat(body))
-    r = action_fn(url, headers=headers,
-                  data=json.dumps(body))
+    with _create_session(allowed_methods=[action_name]) as session:
+        action_fn = getattr(session, action_name.lower())
+        r = action_fn(url, headers=headers,
+                      data=json.dumps(body))
     if r.status_code < 200 or r.status_code > 299:
         log.error(f"Got a non-2xx {action_name} status: {r.status_code}")
         log.error(r.text)
-        exit(1)
+        raise CCAPIError(r.status_code, r.text, api_endpoint)
 
     response = json.loads(r.text)
     return response
 
 def api_put(client_id, access_token,
             api_endpoint, body, log):
-    return _api_put_or_post(requests.put, "PUT",
+    return _api_put_or_post("PUT",
                             client_id, access_token, api_endpoint,
                             body, log)
 
 def api_post(client_id, access_token,
              api_endpoint, body, log):
-    return _api_put_or_post(requests.post, "POST",
+    return _api_put_or_post("POST",
                             client_id, access_token, api_endpoint,
                             body, log)
 
@@ -208,7 +221,7 @@ def oauth2_device_flow(client_id, log):
     _ = input("Hit enter when you have successfully completed that authorization: ")
 
     # Record the timestamp before we request the access token
-    start = datetime.datetime.utcnow()
+    start = datetime.datetime.now(datetime.timezone.utc)
 
     # Now get an access token
     device_code = response['device_code']
@@ -235,7 +248,7 @@ def oauth2_device_flow(client_id, log):
 # to a the token URL requesting a refresh.
 def oauth2_device_flow_refresh(client_id, access_token, log):
     # Record the timestamp before we request the access token
-    start = datetime.datetime.utcnow()
+    start = datetime.datetime.now(datetime.timezone.utc)
 
     post_data = {
         "client_id" : client_id['client id'],
@@ -284,6 +297,16 @@ def load_access_token(filename, log):
     vfrom = datetime.datetime.fromisoformat(access_token['valid from'])
     vto = datetime.datetime.fromisoformat(access_token['valid to'])
 
+    # The "valid from" and "valid to" fields are computed by our code
+    # (in set_valid_from_to()) from local UTC timestamps.  Older token
+    # files were saved with naive datetimes (via utcnow()); ensure they
+    # are tagged as UTC so that comparisons with timezone-aware
+    # datetimes don't raise TypeError.
+    if vfrom.tzinfo is None:
+        vfrom = vfrom.replace(tzinfo=datetime.timezone.utc)
+    if vto.tzinfo is None:
+        vto = vto.replace(tzinfo=datetime.timezone.utc)
+
     access_token['valid from'] = vfrom
     access_token['valid to'] = vto
     log.debug(f"Read: {access_token}")
@@ -314,7 +337,7 @@ def get_access_token(access_token_filename, client_id, log):
         exit(1)
 
     # Check to ensure that the access token is still valid.
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     log.debug(f"Valid from: {access_token['valid from']}")
     log.debug(f"Now:        {now}")
     log.debug(f"Valid to:   {access_token['valid to']}")

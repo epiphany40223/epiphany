@@ -34,6 +34,7 @@ sys.path.insert(0, moddir)
 import ECC
 import ParishSoftv2 as ParishSoft
 import ConstantContact as CC
+from ConstantContact import CCAPIError
 
 from oauth2client import tools
 
@@ -738,7 +739,11 @@ def perform_cc_actions(cc_contacts, client_id, access_token,
                 if 'create' in to_do or 'update' in to_do:
                     # We need to update this contact at CC
                     log.info(f"CC action: create or update: {contact[to_do_key]['notifications']}")
-                    CC.create_or_update_contact(contact, client_id, access_token, log)
+                    try:
+                        CC.create_or_update_contact(contact, client_id, access_token, log)
+                    except CCAPIError as e:
+                        log.error(f"Failed to create/update contact: {e}")
+                        exit(1)
 
                 if 'update unsub' in to_do:
                     # The CC.create_contact() function will update a
@@ -756,7 +761,11 @@ def perform_cc_actions(cc_contacts, client_id, access_token,
                     # just created at CC won't fall down into this
                     # block.
                     log.info(f"CC action: update unsub: {contact[to_do_key]['notifications']}")
-                    CC.update_contact_full(contact, client_id, access_token, log)
+                    try:
+                        CC.update_contact_full(contact, client_id, access_token, log)
+                    except CCAPIError as e:
+                        log.error(f"Failed to update contact (unsub): {e}")
+                        exit(1)
 
     # If we did something, send an email about it
     subject = 'Constant Contact synchronization from ParishSoft update'
@@ -1020,28 +1029,40 @@ def main():
         exit(0)
 
     # Download all data from Constant Contact
-    cc_contact_custom_fields = \
-        CC.api_get_all(cc_client_id, cc_access_token,
-                       'contact_custom_fields', 'custom_fields',
-                       log)
+    try:
+        cc_contact_custom_fields = \
+            CC.api_get_all(cc_client_id, cc_access_token,
+                           'contact_custom_fields', 'custom_fields',
+                           log)
+    except CCAPIError as e:
+        log.error(f"Failed to download CC contact custom fields: {e}")
+        exit(1)
     log.debug("Downloaded CC contact custom fields")
     log.debug(pformat(cc_contact_custom_fields))
 
-    cc_lists = \
-        CC.api_get_all(cc_client_id, cc_access_token,
-                       'contact_lists', 'lists',
-                       log)
+    try:
+        cc_lists = \
+            CC.api_get_all(cc_client_id, cc_access_token,
+                           'contact_lists', 'lists',
+                           log)
+    except CCAPIError as e:
+        log.error(f"Failed to download CC lists: {e}")
+        exit(1)
     log.debug("Downloaded CC lists")
     log.debug(pformat(cc_lists))
 
-    cc_contacts = \
-        CC.api_get_all(cc_client_id, cc_access_token,
-                       'contacts', 'contacts',
-                       log,
-                       include='custom_fields,list_memberships,street_addresses',
-                       # Get all contacts -- even those who have been
-                       # deleted.
-                       status='all')
+    try:
+        cc_contacts = \
+            CC.api_get_all(cc_client_id, cc_access_token,
+                           'contacts', 'contacts',
+                           log,
+                           include='custom_fields,list_memberships,street_addresses',
+                           # Get all contacts -- even those who have been
+                           # deleted.
+                           status='all')
+    except CCAPIError as e:
+        log.error(f"Failed to download CC contacts: {e}")
+        exit(1)
     log.debug(f"Downloaded {len(cc_contacts)} CC contacts")
     log.debug(pformat(cc_contacts))
 

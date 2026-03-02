@@ -349,7 +349,7 @@ def _post_paginated_endpoint(session, endpoint, params, cache_dir, log,
                              offset_name='Offset', offset_type='index',
                              kwargs=None):
     if kwargs:
-        elements = _load_keyed_cache(endpoint, cache_dir, log_kwargs)
+        elements = _load_keyed_cache(endpoint, cache_dir, log, kwargs)
     else:
         elements = _load_cache(endpoint, cache_dir, log)
     if elements is not None:
@@ -615,11 +615,6 @@ def _load_family_workgroup_memberships(session, family_workgroups,
             'membership' : elements,
         }
 
-        first = True
-        if first:
-            log.debug(pformat(wg))
-            first = False
-
     return results
 
 #-----------------------------------------------------------------------------
@@ -844,7 +839,8 @@ def _link_family_workgroups(families, family_workgroup_memberships, log):
 
 def _link_family_pledges(families, pledges, log):
     if pledges is None:
-        family['py pledges'] = []
+        for family in families.values():
+            family['py pledges'] = []
         return
 
     for pledge in pledges.values():
@@ -861,7 +857,8 @@ def _link_family_pledges(families, pledges, log):
 
 def _link_family_contributions(families, contributions, log):
     if contributions is None:
-        family['py contributions'] = []
+        for family in families.values():
+            family['py contributions'] = []
         return
 
     for id, contribution in contributions.items():
@@ -1082,7 +1079,7 @@ def _family_wg_emails_internal(family, member_workgroups, name, log):
     # any Members in the Family with Head, Husband, or Wife as their
     # Role.
     heads = get_family_heads(family)
-    for memember in heads.values():
+    for member in heads.values():
         e = member['emailAddress']
         if not e:
             continue

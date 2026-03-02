@@ -38,16 +38,27 @@ goog_cred_dir=$credential_dir/ps-queries
 
 cc_logfile=$logfile_dir/linux/sync-constant-contact/sync-cc-logfile.txt
 cc_cred_dir=$goog_cred_dir
-./sync-constant-contact.py \
+
+# Run the unsubscribed report once a week on Mondays between 2:00-2:15am
+cc_extra_args=""
+dow=`date '+%u'`
+hour=`date '+%H'`
+minute=`date '+%M'`
+if test $dow -eq 1 -a $hour -eq 2 -a $minute -lt 15; then
+    cc_extra_args="--unsubscribed-report"
+fi
+
+./sync-ps-to-cc.py \
     --ps-api-keyfile $credential_dir/parishsoft-api-key.txt \
     --ps-cache-dir=$git_base/ps-data \
     --cc-client-id $cc_cred_dir/constant-contact-client-id.json \
     --cc-access-token $cc_cred_dir/constant-contact-access-token.json \
     --service-account-json $credential_dir/ecc-emailer-service-account.json \
     --impersonated-user no-reply@epiphanycatholicchurch.org \
-    --notify-email ps-constantcontact-sync@epiphanycatholicchurch.org \
+    --update-names \
     --logfile=$cc_logfile \
-    --debug
+    --debug \
+    $cc_extra_args
 
 ################################################################################
 # Do other things in Google, once a day
@@ -57,9 +68,7 @@ cc_cred_dir=$goog_cred_dir
 
 # We only need to do this once a day, around 2am or so.
 
-h=`date '+%H'`
-m=`date '+%M'`
-if test $h -eq 2 -a $m -lt 15; then
+if test $hour -eq 2 -a $minute -lt 15; then
     roster_logfile=$logfile_dir/linux/ministry-roster/ministry-roster-logfile.txt
     goog_cred_dir=$credential_dir/google-drive-uploader
     ./create-ministry-rosters.py \
