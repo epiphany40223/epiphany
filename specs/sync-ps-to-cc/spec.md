@@ -303,15 +303,19 @@ Subject: Constant Contact sync update: {CC List Name}
 
 Body:
   1. Header with CC List name and timestamp
-  2. Summary counts (contacts created, subscribed, unsubscribed, failures)
-  3. Table of actions performed (action type, contact email, contact name)
-  4. Section: "Manually Unsubscribed Contacts"
-     - Contacts globally unsubscribed from CC (permission_to_send = 'unsubscribed')
-       who have PS Members in this sync's workgroup
-     - Table: email, PS Member name(s), PS Member DUID(s)
-  5. Section: "Contacts Removed from List (in ParishSoft)"
-     - Contacts removed from this specific CC List by this sync run
-     - Table: email, contact name, reason
+  2. ParishSoft Member Workgroup name and Constant Contact List name
+  3. Summary counts (contacts subscribed, contacts unsubscribed, update failures)
+  4. "Actions Performed" table grouped by action type (subscribe, unsubscribe)
+     with blue separator rows between groups; sorted by last name then first
+     name within each group
+     - Columns: Action, Contact Name(s), ParishSoft Member DUID(s), Email
+     - "create" and "update_name" actions are suppressed from this table
+       (create actions always have a corresponding subscribe action;
+       name updates are logged but not emailed)
+  5. "Failed Actions" section (only if failures occurred)
+     - Columns: Contact Name(s), ParishSoft Member DUID(s), Email, Action,
+       Update error
+     - Sorted by last name then first name
   6. Footer noting this is an automated message
 ```
 
@@ -319,13 +323,15 @@ Body:
 
 - Clean, professional HTML suitable for email clients
 - Use inline CSS (email clients strip `<style>` blocks)
-- Tables with borders, alternating row colors for readability
+- Tables: auto-width (sized to content), left-justified, bordered, alternating row colors for readability
+- Table column headings: centered, blue background (`#4472C4`) with white text
+- Table cells: `white-space: nowrap` to prevent wrapping
 - Clear section headings
 - No images or external resources (for email deliverability)
 
 ### 5.3 Failed Actions
 
-If any individual contact updates failed during execution, include a "Failed Actions" section in the email listing the contact email, intended action, and error message.
+If any individual contact updates failed during execution, include a "Failed Actions" section (with red heading) listing: Contact Name(s), ParishSoft Member DUID(s), Email, Action, and Update error. Sorted by last name then first name.
 
 ### 5.4 Unsubscribed-Contacts Report Email
 
@@ -338,14 +344,16 @@ Body:
   1. Header with CC List name and timestamp
   2. Explanation paragraph:
      "The following ParishSoft Members are in the '{PS Workgroup Name}'
-     workgroup but have manually unsubscribed from Constant Contact.
-     They should be removed from the '{PS Workgroup Name}' workgroup
-     in ParishSoft."
-  3. Table: PS Member name(s), PS Member DUID(s), email address
-  4. Footer noting this is an automated message
+     workgroup but have manually unsubscribed from Constant Contact."
+  3. Bold red warning paragraph (16px):
+     "These ParishSoft Members should be removed from the
+     '{PS Workgroup Name}' workgroup in ParishSoft."
+  4. Table: PS Member name(s), PS Member DUID(s), email address
+     - Sorted by last name then first name
+  5. Footer noting this is an automated message
 ```
 
-Follows the same styling guidelines as Section 5.2 (inline CSS, bordered tables with alternating row colors, no images).
+Follows the same styling guidelines as Section 5.2 (inline CSS, bordered tables with alternating row colors, auto-width, no images).
 
 ---
 

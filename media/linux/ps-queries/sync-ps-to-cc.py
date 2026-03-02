@@ -430,96 +430,108 @@ def execute_actions(actions, cc_contacts_by_email, ps_members_by_email,
 
 ####################################################################
 
-def build_notification_email(list_name, list_actions, list_failures,
-                             unsubscribed, cc_contacts_by_email):
+def build_notification_email(list_name, wg_name, list_actions, list_failures,
+                             cc_contacts_by_email, ps_members_by_email):
     esc = html.escape
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     subject = f'Constant Contact sync update: {list_name}'
 
-    creates = [a for a in list_actions if a['type'] == 'create']
-    subscribes = [a for a in list_actions if a['type'] == 'subscribe']
-    unsubscribes = [a for a in list_actions if a['type'] == 'unsubscribe']
-    name_updates = [a for a in list_actions if a['type'] == 'update_name']
+    email_actions = [a for a in list_actions
+                     if a['type'] not in ('update_name', 'create')]
+    subscribes = [a for a in email_actions if a['type'] == 'subscribe']
+    unsubscribes = [a for a in email_actions if a['type'] == 'unsubscribe']
 
-    tbl = 'border-collapse: collapse; width: 100%; margin-bottom: 20px;'
-    th = ('border: 1px solid #dddddd; padding: 8px; text-align: left; '
-          'background-color: #4472C4; color: white;')
+    tbl = 'border-collapse: collapse; margin-bottom: 20px; width: auto;'
+    th = ('border: 1px solid #dddddd; padding: 8px; text-align: center; '
+          'background-color: #4472C4; color: white; white-space: nowrap;')
 
     def td(row):
         bg = '#f2f2f2' if row % 2 == 0 else '#ffffff'
-        return f'border: 1px solid #dddddd; padding: 8px; background-color: {bg};'
+        return f'border: 1px solid #dddddd; padding: 8px; background-color: {bg}; white-space: nowrap;'
 
     body = (f'<html><body style="font-family: Arial, sans-serif; font-size: 14px;">'
             f'<h2 style="color: #333333;">Constant Contact Sync Update: '
             f'{esc(list_name)}</h2>'
             f'<p style="color: #666666;">Generated: {now}</p>'
+            f'<p><strong>ParishSoft Member Workgroup:</strong> {esc(wg_name)}<br>'
+            f'<strong>Constant Contact List:</strong> {esc(list_name)}</p>'
             f'<h3>Summary</h3><ul>'
-            f'<li>Contacts created: {len(creates)}</li>'
             f'<li>Contacts subscribed: {len(subscribes)}</li>'
             f'<li>Contacts unsubscribed: {len(unsubscribes)}</li>'
-            f'<li>Name updates: {len(name_updates)}</li>'
-            f'<li>Failures: {len(list_failures)}</li>'
+            f'<li>Update failures: {len(list_failures)}</li>'
             f'</ul>')
 
-    # Actions table
-    if list_actions:
+    # Actions table — grouped by action type, sorted by last name
+    if email_actions:
+        def action_sort_key(a):
+            contact = cc_contacts_by_email.get(a['email'], {})
+            return (contact.get('last_name', '').lower(),
+                    contact.get('first_name', '').lower())
+
+        action_order = ['subscribe', 'unsubscribe']
+        grouped = {t: sorted([a for a in email_actions if a['type'] == t],
+                              key=action_sort_key)
+                   for t in action_order}
+
+        ncols = 4
+        sep = (f'<tr><td colspan="{ncols}" style="border: 1px solid #dddddd; '
+               f'padding: 0; height: 6px; background-color: #4472C4;">'
+               f'</td></tr>')
+
         body += (f'<h3>Actions Performed</h3>'
                  f'<table style="{tbl}"><tr>'
                  f'<th style="{th}">Action</th>'
-                 f'<th style="{th}">Email</th>'
-                 f'<th style="{th}">Contact Name</th></tr>')
-        for idx, action in enumerate(list_actions):
-            contact = cc_contacts_by_email.get(action['email'], {})
-            first = contact.get('first_name', '')
-            last = contact.get('last_name', '')
-            name = f'{first} {last}'.strip()
-            body += (f'<tr><td style="{td(idx)}">{esc(action["type"])}</td>'
-                     f'<td style="{td(idx)}">{esc(action["email"])}</td>'
-                     f'<td style="{td(idx)}">{esc(name)}</td></tr>')
+                 f'<th style="{th}">Contact Name(s)</th>'
+                 f'<th style="{th}">ParishSoft Member DUID(s)</th>'
+                 f'<th style="{th}">Email</th></tr>')
+        first_group = True
+        for atype in action_order:
+            if not grouped[atype]:
+                continue
+            if not first_group:
+                body += sep
+            first_group = False
+            for idx, action in enumerate(grouped[atype]):
+                contact = cc_contacts_by_email.get(action['email'], {})
+                first = contact.get('first_name', '')
+                last = contact.get('last_name', '')
+                name = f'{first} {last}'.strip()
+                ps_members = (contact.get('PS MEMBERS')
+                              or ps_members_by_email.get(action['email'], []))
+                duids = ', '.join(str(m['memberDUID']) for m in ps_members)
+                body += (f'<tr><td style="{td(idx)}">{esc(action["type"])}</td>'
+                         f'<td style="{td(idx)}">{esc(name)}</td>'
+                         f'<td style="{td(idx)}">{esc(duids)}</td>'
+                         f'<td style="{td(idx)}">{esc(action["email"])}</td></tr>')
         body += '</table>'
 
-    # Manually unsubscribed contacts
-    if unsubscribed:
-        body += (f'<h3>Manually Unsubscribed Contacts</h3>'
-                 f'<p>These contacts have globally unsubscribed from '
-                 f'Constant Contact but are still in the corresponding '
-                 f'ParishSoft workgroup.</p>'
-                 f'<table style="{tbl}"><tr>'
-                 f'<th style="{th}">Email</th>'
-                 f'<th style="{th}">PS Member Name(s)</th>'
-                 f'<th style="{th}">PS Member DUID(s)</th></tr>')
-        for idx, (email, names, duids) in enumerate(unsubscribed):
-            body += (f'<tr><td style="{td(idx)}">{esc(email)}</td>'
-                     f'<td style="{td(idx)}">{esc(names)}</td>'
-                     f'<td style="{td(idx)}">{esc(duids)}</td></tr>')
-        body += '</table>'
-
-    # Contacts removed from list
-    if unsubscribes:
-        body += (f'<h3>Contacts Removed from List (in ParishSoft)</h3>'
-                 f'<table style="{tbl}"><tr>'
-                 f'<th style="{th}">Email</th>'
-                 f'<th style="{th}">Contact Name</th>'
-                 f'<th style="{th}">Reason</th></tr>')
-        for idx, action in enumerate(unsubscribes):
-            contact = cc_contacts_by_email.get(action['email'], {})
-            first = contact.get('first_name', '')
-            last = contact.get('last_name', '')
-            name = f'{first} {last}'.strip()
-            body += (f'<tr><td style="{td(idx)}">{esc(action["email"])}</td>'
-                     f'<td style="{td(idx)}">{esc(name)}</td>'
-                     f'<td style="{td(idx)}">Not in PS workgroup</td></tr>')
-        body += '</table>'
-
-    # Failed actions
+    # Failed actions — sorted by last name, first name
     if list_failures:
+        def failure_sort_key(f):
+            contact = cc_contacts_by_email.get(f['email'], {})
+            return (contact.get('last_name', '').lower(),
+                    contact.get('first_name', '').lower())
+
+        sorted_failures = sorted(list_failures, key=failure_sort_key)
+
         body += (f'<h3 style="color: #cc0000;">Failed Actions</h3>'
                  f'<table style="{tbl}"><tr>'
+                 f'<th style="{th}">Contact Name(s)</th>'
+                 f'<th style="{th}">ParishSoft Member DUID(s)</th>'
                  f'<th style="{th}">Email</th>'
                  f'<th style="{th}">Action</th>'
-                 f'<th style="{th}">Error</th></tr>')
-        for idx, failure in enumerate(list_failures):
-            body += (f'<tr><td style="{td(idx)}">{esc(failure["email"])}</td>'
+                 f'<th style="{th}">Update error</th></tr>')
+        for idx, failure in enumerate(sorted_failures):
+            contact = cc_contacts_by_email.get(failure['email'], {})
+            first = contact.get('first_name', '')
+            last = contact.get('last_name', '')
+            name = f'{first} {last}'.strip()
+            ps_members = (contact.get('PS MEMBERS')
+                          or ps_members_by_email.get(failure['email'], []))
+            duids = ', '.join(str(m['memberDUID']) for m in ps_members)
+            body += (f'<tr><td style="{td(idx)}">{esc(name)}</td>'
+                     f'<td style="{td(idx)}">{esc(duids)}</td>'
+                     f'<td style="{td(idx)}">{esc(failure["email"])}</td>'
                      f'<td style="{td(idx)}">{esc(failure["action"])}</td>'
                      f'<td style="{td(idx)}">{esc(failure["error"])}</td></tr>')
         body += '</table>'
@@ -535,7 +547,8 @@ def build_notification_email(list_name, list_actions, list_failures,
 ####################################################################
 
 def send_notification_emails(actions, failures, unsubscribed_per_sync,
-                             cc_contacts_by_email, dry_run, no_sync, log):
+                             cc_contacts_by_email, ps_members_by_email,
+                             dry_run, no_sync, log):
     if dry_run or no_sync:
         return
 
@@ -548,8 +561,9 @@ def send_notification_emails(actions, failures, unsubscribed_per_sync,
         list_failures = [f for f in failures if f['email'] in action_emails]
 
         subject, body = build_notification_email(
-            sync['target cc list'], list_actions, list_failures,
-            unsubscribed_per_sync[i], cc_contacts_by_email)
+            sync['target cc list'], sync['source ps member wg'],
+            list_actions, list_failures,
+            cc_contacts_by_email, ps_members_by_email)
 
         for addr_string in sync['notifications']:
             for addr in addr_string.split(','):
@@ -566,13 +580,13 @@ def build_unsubscribed_report_email(list_name, wg_name, unsubscribed):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     subject = f'Constant Contact unsubscribed contacts report: {list_name}'
 
-    tbl = 'border-collapse: collapse; width: 100%; margin-bottom: 20px;'
-    th = ('border: 1px solid #dddddd; padding: 8px; text-align: left; '
-          'background-color: #4472C4; color: white;')
+    tbl = 'border-collapse: collapse; margin-bottom: 20px; width: auto;'
+    th = ('border: 1px solid #dddddd; padding: 8px; text-align: center; '
+          'background-color: #4472C4; color: white; white-space: nowrap;')
 
     def td(row):
         bg = '#f2f2f2' if row % 2 == 0 else '#ffffff'
-        return f'border: 1px solid #dddddd; padding: 8px; background-color: {bg};'
+        return f'border: 1px solid #dddddd; padding: 8px; background-color: {bg}; white-space: nowrap;'
 
     body = (f'<html><body style="font-family: Arial, sans-serif; font-size: 14px;">'
             f'<h2 style="color: #333333;">Constant Contact Unsubscribed '
@@ -580,14 +594,24 @@ def build_unsubscribed_report_email(list_name, wg_name, unsubscribed):
             f'<p style="color: #666666;">Generated: {now}</p>'
             f'<p>The following ParishSoft Members are in the '
             f"'{esc(wg_name)}' workgroup but have manually unsubscribed "
-            f'from Constant Contact. They should be removed from the '
+            f'from Constant Contact.</p>'
+            f'<p style="color: #cc0000; font-weight: bold; font-size: 16px;">'
+            f'These ParishSoft Members should be removed from the '
             f"'{esc(wg_name)}' workgroup in ParishSoft.</p>"
             f'<table style="{tbl}"><tr>'
             f'<th style="{th}">PS Member Name(s)</th>'
             f'<th style="{th}">PS Member DUID(s)</th>'
             f'<th style="{th}">Email</th></tr>')
 
-    for idx, (email, names, duids) in enumerate(unsubscribed):
+    def unsub_sort_key(row):
+        parts = row[1].split(',')[0].strip().split()
+        last = parts[-1].lower() if parts else ''
+        first = parts[0].lower() if parts else ''
+        return (last, first)
+
+    sorted_unsub = sorted(unsubscribed, key=unsub_sort_key)
+
+    for idx, (email, names, duids) in enumerate(sorted_unsub):
         body += (f'<tr><td style="{td(idx)}">{esc(names)}</td>'
                  f'<td style="{td(idx)}">{esc(duids)}</td>'
                  f'<td style="{td(idx)}">{esc(email)}</td></tr>')
@@ -748,7 +772,7 @@ def main():
 
     # Send notification emails
     send_notification_emails(actions, failures, unsubscribed_per_sync,
-                             cc_contacts_by_email,
+                             cc_contacts_by_email, ps_members_by_email,
                              args.dry_run, args.no_sync, log)
 
     # Send unsubscribed-contacts report

@@ -209,33 +209,32 @@
 - [x] **6.1** Implement HTML email builder function
   - Create a `build_notification_email()` function that takes:
     - CC List name
+    - PS Member Workgroup name
     - List of actions for this list (each with type, email, detail)
     - List of failed actions for this list (each with email, action, error)
-    - List of manually unsubscribed contacts (each with email, PS Member names, PS Member DUIDs) — from `unsubscribed_per_sync[i]`
-    - List of contacts removed from this list — `unsubscribe` actions filtered for this list
+    - `cc_contacts_by_email` dict (for contact name and PS MEMBERS lookup)
+    - `ps_members_by_email` dict (fallback for DUID lookup on newly-created contacts)
   - Build a complete HTML email with:
     - **Subject**: `Constant Contact sync update: {CC List Name}`
     - **Header**: CC List name and current timestamp
-    - **Summary counts**: contacts created, subscribed, unsubscribed, failures
-    - **Actions table**: columns: action type, contact email, contact name
-    - **"Manually Unsubscribed Contacts" section**: table with columns: email, PS Member name(s), PS Member DUID(s)
-    - **"Contacts Removed from List (in ParishSoft)" section**: table with columns: email, contact name, reason
-    - **"Failed Actions" section** (only if failures occurred): table with columns: contact email, intended action, error message
+    - **ParishSoft Member Workgroup** and **Constant Contact List** names
+    - **Summary counts**: contacts subscribed, contacts unsubscribed, update failures
+    - **"Actions Performed" table**: grouped by action type (subscribe, unsubscribe) with blue separator rows between groups; sorted by (last_name, first_name) within each group. Columns: Action, Contact Name(s), ParishSoft Member DUID(s), Email. "create" and "update_name" actions are filtered out before rendering.
+    - **"Failed Actions" section** (only if failures occurred): table with columns: Contact Name(s), ParishSoft Member DUID(s), Email, Action, Update error. Sorted by (last_name, first_name).
     - **Footer**: "This is an automated message" note
   - Use inline CSS only (email clients strip `<style>` blocks).
-  - Tables with borders, alternating row colors (`#f2f2f2` / `#ffffff` or similar).
-  - Clear section headings with appropriate font sizes.
+  - Tables: auto-width, left-justified, bordered, alternating row colors (`#f2f2f2` / `#ffffff`). Column headings centered with blue background (`#4472C4`), white text. Cells use `white-space: nowrap`.
   - No images or external resources.
   - Return the (subject, html_body) tuple.
   - _Spec: sections 5.1, 5.2, 5.3_
 
 - [x] **6.2** Implement per-list notification email sending
-  - Create a `send_notification_emails()` function that takes the action list, failures list, `unsubscribed_per_sync`, syncs, and `log`.
+  - Create a `send_notification_emails()` function that takes the action list, failures list, `unsubscribed_per_sync`, `cc_contacts_by_email`, `ps_members_by_email`, syncs, and `log`.
   - For each synchronization entry `i`:
     - Filter the action list by `sync_index == i` to get actions for this CC list.
     - If no actions exist for this list, skip it.
     - Filter the failures list for emails that have actions in this sync.
-    - Call `build_notification_email()` with the filtered data.
+    - Call `build_notification_email()` with the CC list name, PS workgroup name, filtered actions, filtered failures, `cc_contacts_by_email`, and `ps_members_by_email`.
     - For each comma-delimited address string in `sync['notifications']`, split by comma and send to each address using `ECC.send_email(to_addr=addr.strip(), subject=subject, body=html, content_type='text/html', log=log)`.
   - Skip entirely if `args.dry_run` is `True` or `args.no_sync` is `True`.
   - _Depends: 6.1, 5.2_
@@ -249,10 +248,11 @@
   - Build a complete HTML email with:
     - **Subject**: `Constant Contact unsubscribed contacts report: {CC List Name}`
     - **Header**: CC List name and current timestamp
-    - **Explanation paragraph**: "The following ParishSoft Members are in the '{PS Workgroup Name}' workgroup but have manually unsubscribed from Constant Contact. They should be removed from the '{PS Workgroup Name}' workgroup in ParishSoft."
-    - **Table**: columns: PS Member name(s), PS Member DUID(s), email address
+    - **Explanation paragraph**: "The following ParishSoft Members are in the '{PS Workgroup Name}' workgroup but have manually unsubscribed from Constant Contact."
+    - **Bold red warning paragraph** (16px): "These ParishSoft Members should be removed from the '{PS Workgroup Name}' workgroup in ParishSoft."
+    - **Table**: columns: PS Member name(s), PS Member DUID(s), email address. Sorted by last name then first name.
     - **Footer**: "This is an automated message" note
-  - Use the same inline CSS styling as `build_notification_email()` (bordered tables, alternating row colors, clear headings, no images).
+  - Use the same inline CSS styling as `build_notification_email()` (auto-width tables, bordered, alternating row colors, centered column headings, `white-space: nowrap`, no images).
   - Return the `(subject, html_body)` tuple.
   - _Spec: sections 3.3.9, 5.4_
 
