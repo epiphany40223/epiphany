@@ -6,16 +6,33 @@
 
 SYNCHRONIZATIONS = [
     {
-        'source ps member wg': 'Daily Gospel Reflections',
-        'target cc list':      'SYNC Daily Gospel Reflections',
+        'source ps member wg': 'CC SYNC Daily Gospel Reflections',
+        'target cc list':      'PS SYNC Daily Gospel Reflections',
+        'notifications':       [
+            'ps-constantcontact-sync@epiphanycatholicchurch.org,'
+            'director-communications@epiphanycatholicchurch.org',
+            'business-manager@epiphanycatholicchurch.org',
+        ],
+    },
+    {
+        'source ps member wg': 'CC SYNC Epiphany Happenings',
+        'target cc list':      'PS SYNC Epiphany Happenings',
         'notifications':       [
             'ps-constantcontact-sync@epiphanycatholicchurch.org,'
             'director-communications@epiphanycatholicchurch.org',
         ],
     },
     {
-        'source ps member wg': 'Parish-wide Email',
-        'target cc list':      'SYNC Parish-wide Email',
+        'source ps member wg': 'CC SYNC Obituaries',
+        'target cc list':      'PS SYNC Obituaries',
+        'notifications':       [
+            'ps-constantcontact-sync@epiphanycatholicchurch.org,'
+            'director-communications@epiphanycatholicchurch.org',
+        ],
+    },
+    {
+        'source ps member wg': 'CC SYNC Weekday Mass',
+        'target cc list':      'PS SYNC Weekday Mass',
         'notifications':       [
             'ps-constantcontact-sync@epiphanycatholicchurch.org,'
             'director-communications@epiphanycatholicchurch.org',
