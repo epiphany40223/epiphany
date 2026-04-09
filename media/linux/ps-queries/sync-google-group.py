@@ -354,6 +354,11 @@ def get_synchronizations():
             'notify'     : f'director-communications{ecc},ps-google-sync{ecc}',
         },
         {
+            'workgroups' : [ 'Livestream Video Upload' ],
+            'ggroup'     : f'livestream-video-upload{ecc}',
+            'notify'     : f'director-communications{ecc},ps-google-sync{ecc}',
+        },
+        {
             'workgroups' : [ 'Movers' ],
             'ggroup'     : f'movers{ecc}',
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
