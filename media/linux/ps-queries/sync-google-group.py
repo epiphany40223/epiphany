@@ -520,6 +520,14 @@ def get_synchronizations():
             'ggroup'     : f'spectrum{ecc}',
             'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
         },
+        {
+            'workgroups' : [ 'Google Drive Incoming Photos' ],
+            'ggroup'     : f'incoming-photos{ecc}',
+            'notify'     : f'business-manager{ecc},ps-google-sync{ecc}',
+            'static_members' : [
+                { 'email' : f'staff{ecc}',  'member' : True },
+            ],
+        },
 
         #############################
 
@@ -875,11 +883,14 @@ def do_sync(args, sync, group_permissions, service, actions, log=None):
         mem_names = None
         key = 'ps_ministry_member'
         if key in action and action[key]:
-            for mem in action[key]['ps_members']:
-                if mem_names is None:
-                    mem_names = mem['py friendly name FL']
-                else:
-                    mem_names += f', {mem["py friendly name FL"]}'
+            if action[key]['ps_members']:
+                for mem in action[key]['ps_members']:
+                    if mem_names is None:
+                        mem_names = mem['py friendly name FL']
+                    else:
+                        mem_names += f', {mem["py friendly name FL"]}'
+            else:
+                mem_names = '[Static member]'
 
         log.debug("Processing action: {action} / {email} / {role}".
                   format(action=action['action'],
@@ -941,6 +952,9 @@ def do_sync(args, sync, group_permissions, service, actions, log=None):
             for f in sync['functions']:
                 rationale.append(f'<li> Members that satisfied the "{f["purpose"]}" function</li>')
                 subject_add.append(f['purpose'])
+
+        if 'static_members' in sync:
+            rationale.append('<li> Hard-coded members</li>')
 
         # Assemble the final subject line
         subject = subject + ', '.join(subject_add)
@@ -1429,14 +1443,34 @@ def find_matching_members(members, sync, log=None):
             ministry_members.append(new_entry)
             found_emails[e] = len(ministry_members) - 1
 
+    # Add static members
+    if 'static_members' in sync:
+        for sm in sync['static_members']:
+            e = sm['email'].lower()
+            leader = sm.get('leader', False)
+            if e in found_emails:
+                index = found_emails[e]
+                # If already found in PS, just make sure leader bit is set if static says so
+                ministry_members[index]['leader'] = ministry_members[index]['leader'] or leader
+            else:
+                ministry_members.append({
+                    'ps_members' : [],
+                    'email'      : e,
+                    'leader'     : leader,
+                })
+                found_emails[e] = len(ministry_members) - 1
+
     if log:
-        log.debug(f"PS members for ministries {ministries} and workgroups {workgroups} and functions {functions}:")
+        log.debug(f"PS members for ministries {ministries} and workgroups {workgroups} and functions {functions} and static_members {sync.get('static_members', 'None')}:")
         for m in ministry_members:
             name_str = ''
             for pm in m['ps_members']:
                 if len(name_str) > 0:
                     name_str = name_str + ' or '
                 name_str = name_str + pm['py friendly name FL']
+
+            if name_str == '':
+                name_str = '[Static member]'
 
             log.debug(f'  {name_str} <{m["email"]}> leader: {m["leader"]}')
 
