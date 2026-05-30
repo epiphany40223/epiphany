@@ -1,0 +1,7 @@
+__pycache__
+.env
+venv
+*.md
+analysis-results
+google-drive-cache.json
+log-*.txt*
