@@ -15,6 +15,10 @@ if not os.path.exists(moddir):
     print("ERROR: Could not find the ecc-python-modules directory.")
     print("ERROR: Please make a ecc-python-modules sym link and run again.")
     exit(1)
+if os.path.isfile(moddir):
+    with open(moddir) as fp:
+        dir = fp.readlines()
+    moddir = os.path.join(os.getcwd(), dir[0])
 
 sys.path.insert(0, moddir)
 
