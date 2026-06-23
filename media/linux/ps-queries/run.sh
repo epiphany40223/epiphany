@@ -56,6 +56,7 @@ fi
     --service-account-json $credential_dir/ecc-emailer-service-account.json \
     --impersonated-user no-reply@epiphanycatholicchurch.org \
     --update-names \
+    --allow-deletes \
     --logfile=$cc_logfile \
     --debug \
     $cc_extra_args

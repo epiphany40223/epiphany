@@ -137,6 +137,70 @@ def api_post(client_id, access_token,
                             client_id, access_token, api_endpoint,
                             body, log)
 
+# Generic HTTP DELETE against a v3 endpoint.
+#
+# NOTE: the DELETE method must be requested explicitly in the retry
+# session's allowed_methods; _create_session()'s default list
+# (GET/PUT/POST) does NOT include DELETE, so a 429 on a DELETE would
+# otherwise not be retried.
+#
+# A successful CC contact delete returns "204 No Content" (no body to
+# parse), which passes the 2xx check below.
+def api_delete(client_id, access_token, api_endpoint, log, description=None):
+    headers, _ = api_headers(client_id, access_token)
+
+    url = f"{client_id['endpoints']['api']}/v3/{api_endpoint}"
+    msg = f"DELETE a single Constant Contact item from endpoint {api_endpoint}"
+    if description:
+        msg += f": {description}"
+    log.info(msg)
+
+    with _create_session(allowed_methods=["DELETE"]) as session:
+        r = session.delete(url, headers=headers)
+    if r.status_code < 200 or r.status_code > 299:
+        log.error(f"Got a non-2xx DELETE status: {r.status_code}")
+        log.error(r.text)
+        raise CCAPIError(r.status_code, r.text, api_endpoint)
+    # 204 No Content on success -- nothing to return.
+
+# Delete a single CC Contact.
+#
+# IMPORTANT -- Constant Contact "delete" semantics (verified empirically
+# on 2026-06-23 against the live account):
+#
+# - Delete is a SOFT delete. The contact record is not destroyed: it
+#   keeps its contact_id, gains a "deleted_at" timestamp, and has all of
+#   its list_memberships stripped. (DELETE /v3/contacts/{id} -> 204.)
+#
+# - A deleted contact disappears from a normal GET /contacts; you must
+#   pass status=all to see it. It does NOT count against the account's
+#   billable active-contact total.
+#
+# - Delete is NOT the same as unsubscribe. After a delete,
+#   permission_to_send remains whatever it was (e.g. "explicit"); the
+#   contact is not opted out.
+#
+# - Delete is REVERSIBLE by us (the account owner): re-adding the same
+#   email to a list -- which is exactly what the sync's create path does
+#   via POST contacts/sign_up_form -- resurrects the SAME contact_id and
+#   clears deleted_at. So when ParishSoft re-asserts a previously-removed
+#   email (a parishioner rejoins), the existing sync logic auto-restores
+#   the contact. No special "undelete" path is needed.
+#
+# - The one IRREVERSIBLE state is unsubscribe/opt-out: the account owner
+#   can NEVER re-subscribe an unsubscribed contact (only the contact
+#   themselves can). That is why the caller must never delete an
+#   unsubscribed contact -- doing so would hide the opt-out behind
+#   deleted_at and could provoke repeated failed re-create attempts.
+def delete_contact(contact, client_id, access_token, log):
+    name = f"{contact.get('first_name', '')} " \
+           f"{contact.get('last_name', '')}".strip()
+    email = contact['email_address']['address']
+    description = f"{name} <{email}>" if name else f"<{email}>"
+    api_delete(client_id, access_token,
+               f'contacts/{contact["contact_id"]}', log,
+               description=description)
+
 ####################################################################
 #
 # Constant Contact authentication
