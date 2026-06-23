@@ -71,6 +71,14 @@ def setup_cli_args():
                         action='store_true',
                         help='Update CC Contact names from PS data when they differ')
 
+    parser.add_argument('--allow-deletes',
+                        default=False,
+                        action='store_true',
+                        help='Actually delete CC Contacts that are deletion '
+                             'candidates (no PS Members, or no lists after '
+                             'sync). Without this flag, candidates are only '
+                             'logged, never deleted')
+
     parser.add_argument('--unsubscribed-report',
                         default=False,
                         action='store_true',
@@ -303,8 +311,53 @@ def detect_name_mismatches(cc_contacts_by_email, update_names, log):
 
 ####################################################################
 
-def log_deletion_candidates(cc_contacts_by_email, actions, log):
-    # Count unsubscribe actions per email
+# Identify CC Contacts that should be deleted, and (only when
+# allow_deletes is set) emit 'delete' actions for them.
+#
+# A contact is a deletion candidate if EITHER:
+#   (a) it has no linked PS Member (CC has a contact ParishSoft no longer
+#       knows about), or
+#   (b) it would have zero list memberships after this sync runs (its
+#       current memberships minus the unsubscribes we're about to do).
+# ParishSoft is the source of truth, so a CC contact that PS no longer
+# backs -- or that ends up on no synced list -- has no reason to exist.
+#
+# HARD GUARD -- never delete an unsubscribed contact:
+#
+#   CC delete is a reversible SOFT delete (see ConstantContact.delete_contact
+#   for the full, empirically-verified write-up): the record persists with
+#   a deleted_at timestamp, drops off the billable active-contact count, and
+#   is hidden from a normal GET (we already drop deleted_at contacts at
+#   download time). Critically, deleted != unsubscribed -- a deleted contact
+#   is NOT opted out.
+#
+#   Because delete is reversible, the cyclic ParishSoft case is handled for
+#   free: parishioner leaves -> deleted; parishioner rejoins -> their email
+#   re-enters the desired set -> our download filter hides the deleted
+#   record so it looks "missing" -> compute_create_actions() emits a create
+#   -> POST sign_up_form resurrects the SAME contact_id and clears
+#   deleted_at. No undelete path required.
+#
+#   The ONE state we can't undo is unsubscribe/opt-out: the account owner
+#   can never re-subscribe an unsubscribed contact (only the contact can).
+#   So if we deleted an unsubscribed contact, the deleted_at download filter
+#   would hide their opt-out from filter_unsubscribed(), a still-desired
+#   email would loop on failed re-creates, and we'd risk an anti-spam
+#   violation. There's also no upside: unsubscribed contacts already don't
+#   count toward billing. Hence: candidates that are unsubscribed are
+#   logged as protected and never deleted.
+#
+# Reporting note: delete actions carry sync_index=None (a deletion is
+# global, not tied to one list), so -- like update_name actions -- they
+# are logged here and in execute_actions() but do not appear in the
+# per-list notification emails. The superseded unsubscribe actions for a
+# deleted contact remain in the action list (harmless: execute_actions()
+# performs the delete instead, since deleting strips memberships anyway).
+def compute_delete_actions(cc_contacts_by_email, actions, allow_deletes, log):
+    delete_actions = []
+
+    # Count unsubscribe actions per email, so we can tell which contacts
+    # will have zero list memberships once this sync's unsubscribes run.
     unsub_counts = defaultdict(int)
     for action in actions:
         if action['type'] == 'unsubscribe':
@@ -314,17 +367,46 @@ def log_deletion_candidates(cc_contacts_by_email, actions, log):
         first = contact.get('first_name', '')
         last = contact.get('last_name', '')
 
-        # No PS Members linked
+        reasons = []
         if not contact.get('PS MEMBERS'):
-            log.info(f'Deletion candidate (no PS Members): '
-                     f'{email} ({first} {last})')
+            reasons.append('no PS Members')
 
-        # Would have zero list memberships after sync
         current_count = len(contact.get('list_memberships', []))
         post_sync_count = current_count - unsub_counts.get(email, 0)
         if post_sync_count == 0:
-            log.info(f'Deletion candidate (no lists after sync): '
+            reasons.append('no lists after sync')
+
+        if not reasons:
+            continue
+        reason_str = ', '.join(reasons)
+
+        # Guard: never delete an unsubscribed/opted-out contact (see above).
+        is_unsubscribed = (contact['email_address'].get('permission_to_send')
+                           == 'unsubscribed')
+        if is_unsubscribed:
+            log.info(f'Deletion candidate PROTECTED (unsubscribed, not '
+                     f'deleting): {email} ({first} {last}) [{reason_str}]')
+            continue
+
+        if allow_deletes:
+            log.info(f'Deleting contact ({reason_str}): '
                      f'{email} ({first} {last})')
+            delete_actions.append({
+                'type':       'delete',
+                'email':      email,
+                'list_name':  None,
+                'list_uuid':  None,
+                'detail':     f'Delete contact {email} ({first} {last}) '
+                              f'[{reason_str}]',
+                'sync_index': None,
+            })
+        else:
+            # Preserve the historical behavior: log candidates, delete
+            # nothing, unless --allow-deletes is given.
+            log.info(f'Deletion candidate ({reason_str}): '
+                     f'{email} ({first} {last})')
+
+    return delete_actions
 
 ####################################################################
 
@@ -340,10 +422,33 @@ def execute_actions(actions, cc_contacts_by_email, ps_members_by_email,
     for email in sorted(actions_by_email.keys()):
         email_actions = actions_by_email[email]
 
+        deletes = [a for a in email_actions if a['type'] == 'delete']
         creates = [a for a in email_actions if a['type'] == 'create']
         subscribes = [a for a in email_actions if a['type'] == 'subscribe']
         unsubscribes = [a for a in email_actions if a['type'] == 'unsubscribe']
         name_updates = [a for a in email_actions if a['type'] == 'update_name']
+
+        # A delete supersedes every other action for this email. Deleting
+        # the contact strips its list memberships anyway, so there is no
+        # point issuing subscribe/unsubscribe/name PUTs first. (A delete
+        # and a create/subscribe should never co-occur -- a contact being
+        # deleted is wanted by no list -- but handle it defensively.)
+        if deletes:
+            if dry_run or no_sync:
+                log.info(f"Dry-run/no-sync: {deletes[0]['detail']}")
+                continue
+            try:
+                CC.delete_contact(cc_contacts_by_email[email],
+                                  cc_client_id, cc_access_token, log)
+            except CCAPIError as e:
+                log.error(f"DELETE failed for {email}: "
+                          f"HTTP {e.status_code}: {e.response_text}")
+                failures.append({
+                    'email': email,
+                    'action': 'DELETE',
+                    'error': str(e),
+                })
+            continue
 
         # Build POST dict (create or subscribe via sign_up_form endpoint)
         post_dict = None
@@ -715,6 +820,16 @@ def main():
                                  include='list_memberships',
                                  status='all')
 
+    # CC delete is a soft delete: deleted contacts persist (with their
+    # list memberships stripped) and carry a 'deleted_at' timestamp.  We
+    # request status='all' so we can see unsubscribed contacts, but that
+    # also returns deleted contacts, which don't need -- so drop them.
+    num_before = len(cc_contacts)
+    cc_contacts = [c for c in cc_contacts if 'deleted_at' not in c]
+    num_deleted = num_before - len(cc_contacts)
+    if num_deleted > 0:
+        log.info(f"Filtered out {num_deleted} deleted Constant Contact contacts")
+
     # Normalize CC contact emails to lowercase
     for contact in cc_contacts:
         contact['email_address']['address'] = \
@@ -761,8 +876,12 @@ def main():
     actions.extend(detect_name_mismatches(cc_contacts_by_email,
                                           args.update_names, log))
 
-    # Log deletion candidates (not added to action list)
-    log_deletion_candidates(cc_contacts_by_email, actions, log)
+    # Compute deletions. Deletion candidates are always logged; actual
+    # 'delete' actions are only emitted (and later executed) when
+    # --allow-deletes is given. Must run after the subscribe/unsubscribe
+    # actions exist, since "no lists after sync" depends on them.
+    actions.extend(compute_delete_actions(cc_contacts_by_email, actions,
+                                          args.allow_deletes, log))
 
     # Execute action list
     failures = execute_actions(actions, cc_contacts_by_email,
