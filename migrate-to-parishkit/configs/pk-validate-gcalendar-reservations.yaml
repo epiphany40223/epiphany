@@ -1,0 +1,79 @@
+common:
+  dry_run: false
+  timezone: America/Kentucky/Louisville
+
+logging:
+  log_dir: /opt/parishkit/logs
+
+slack:
+  token_file: /opt/parishkit/credentials/slack-token.txt
+  channel: "#bot-errors"
+  level: ERROR
+
+google:
+  service_account_file: /opt/parishkit/credentials/google-service-account.json
+  # JMS This could be a user less than the super admin -- just reads
+  # R/W perms to the relevant google calendars
+  delegated_subject: itadmin@epiphanycatholicchurch.org
+
+calendars:
+  timezone: America/New_York
+  acceptable_domains:
+    - epiphanycatholicchurch.org
+    - churchofepiphany.com
+  calendars:
+    - name: Epiphany Events
+      calendar_id: churchofepiphany.com_9gueg54raienol399o0jtdgmpg@group.calendar.google.com
+      check_conflicts: false
+
+    - name: Kitchen (EH)
+      calendar_id: churchofepiphany.com_2d36363539313732302d343738@resource.calendar.google.com
+      check_conflicts: true
+    - name: Dining Room (EH)
+      calendar_id: churchofepiphany.com_34373539303436353836@resource.calendar.google.com
+      check_conflicts: true
+    - name: Living Room (EH)
+      calendar_id: churchofepiphany.com_37313933333139382d323530@resource.calendar.google.com
+      check_conflicts: true
+    - name: Polycom (EH)
+      calendar_id: c_188am3mlh8ghkjovnmm43cqqhdgla@resource.calendar.google.com
+      check_conflicts: true
+
+    - name: Areas F-H (CC)
+      calendar_id: churchofepiphany.com_2d3336333531363533393538@resource.calendar.google.com
+      check_conflicts: true
+    - name: Areas I-K (CC)
+      calendar_id: churchofepiphany.com_2d33353739373832333731@resource.calendar.google.com
+      check_conflicts: true
+    - name: Coffee Bar Room (CC)
+      calendar_id: churchofepiphany.com_2d38343237303931342d373732@resource.calendar.google.com
+      check_conflicts: true
+    - name: Connector table 1 (CC)
+      calendar_id: churchofepiphany.com_2d3538323334323031353338@resource.calendar.google.com
+      check_conflicts: true
+    - name: Connector table 2 (CC)
+      calendar_id: churchofepiphany.com_2d3538313436353238373034@resource.calendar.google.com
+      check_conflicts: true
+    - name: Commercial Kitchen (CC)
+      calendar_id: churchofepiphany.com_34383131343230342d333531@resource.calendar.google.com
+      check_conflicts: true
+    - name: Service Kitchen (CC)
+      calendar_id: c_18867q9j680j6iodj5ne2gjk6mdc0@resource.calendar.google.com
+      check_conflicts: true
+
+    - name: Worship Space (WC)
+      calendar_id: churchofepiphany.com_33363131333030322d363435@resource.calendar.google.com
+      check_conflicts: true
+    - name: Chapter (WC)
+      calendar_id: churchofepiphany.com_2d3431353233343734323336@resource.calendar.google.com
+      check_conflicts: true
+    - name: Narthex (WC)
+      calendar_id: churchofepiphany.com_3334313632303539343135@resource.calendar.google.com
+      check_conflicts: true
+    - name: Quiet room (WC)
+      calendar_id: churchofepiphany.com_2d36343734343332342d353333@resource.calendar.google.com
+      check_conflicts: true
+
+    - name: Lighthouse
+      calendar_id: churchofepiphany.com_2d38303937383836353134@resource.calendar.google.com
+      check_conflicts: true

@@ -1,0 +1,66 @@
+common:
+  dry_run: false
+  timezone: America/Kentucky/Louisville
+
+logging:
+  log_dir: /opt/parishkit/logs
+
+slack:
+  token_file: /opt/parishkit/credentials/slack-token.txt
+  channel: "#bot-errors"
+  level: ERROR
+
+parishsoft:
+  api_key_file: /opt/parishkit/credentials/parishsoft-api-key.txt
+  cache_dir: /opt/parishkit/cache/parishsoft
+  cache_limit: 14m
+  expected_organization: Epiphany Catholic Church
+
+constant_contact:
+  client_id_file: /opt/parishkit/credentials/constant-contact-client.json
+  access_token_file: /opt/parishkit/credentials/constant-contact-token.json
+
+email:
+  provider: google-workspace
+  service_account_file: /opt/parishkit/credentials/google-service-account.json
+  delegated_user: no-reply@epiphanycatholicchurch.org
+
+sync:
+  notifications:
+    sender: no-reply@epiphanycatholicchurch.org
+  update_names: true
+  # Keep this enabled for normal operations: it moves detailed filtered-
+  # unsubscribed-contact tables into the scheduled report. If disabled, those
+  # tables are included in regular sync update emails, and a run with no
+  # Constant Contact changes can still send an email only about filtered
+  # unsubscribed contacts.
+  unsubscribed_report:
+    enabled: true
+    day_of_week: monday
+    time: "02:00"
+    window_minutes: 14
+    # Records the last local date for which the report was sent.
+    state_file: /opt/parishkit/run/pk-sync-ps-to-cc-unsubscribed-report.json
+
+  lists:
+    - source_workgroup: CC SYNC Daily Gospel Reflections
+      target_list: PS SYNC Daily Gospel Reflections
+      notifications:
+        - ps-constantcontact-sync@epiphanycatholicchurch.org
+        - director-communications@epiphanycatholicchurch.org
+        - business-manager@epiphanycatholicchurch.org
+    - source_workgroup: CC SYNC Epiphany Happenings
+      target_list: PS SYNC Epiphany Happenings
+      notifications:
+        - ps-constantcontact-sync@epiphanycatholicchurch.org
+        - director-communications@epiphanycatholicchurch.org
+    - source_workgroup: CC SYNC Obituaries
+      target_list: PS SYNC Obituaries
+      notifications:
+        - ps-constantcontact-sync@epiphanycatholicchurch.org
+        - director-communications@epiphanycatholicchurch.org
+    - source_workgroup: CC SYNC Weekday Mass
+      target_list: PS SYNC Weekday Mass
+      notifications:
+        - ps-constantcontact-sync@epiphanycatholicchurch.org
+        - director-communications@epiphanycatholicchurch.org

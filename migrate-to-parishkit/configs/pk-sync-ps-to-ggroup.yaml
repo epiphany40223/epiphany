@@ -1,0 +1,737 @@
+common:
+  dry_run: false
+  timezone: America/Kentucky/Louisville
+
+logging:
+  log_dir: /opt/parishkit/logs
+
+slack:
+  token_file: /opt/parishkit/credentials/slack-token.txt
+  channel: "#bot-errors"
+  level: ERROR
+
+parishsoft:
+  api_key_file: /opt/parishkit/credentials/parishsoft-api-key.txt
+  cache_dir: /opt/parishkit/cache/parishsoft
+  cache_limit: 14m
+  expected_organization: Epiphany Catholic Church
+
+google:
+  service_account_file: /opt/parishkit/credentials/google-service-account.json
+  delegated_subject: itadmin@epiphanycatholicchurch.org
+
+email:
+  provider: google-workspace
+  service_account_file: /opt/parishkit/credentials/google-service-account.json
+  delegated_user: no-reply@epiphanycatholicchurch.org
+
+sync:
+  google_mail_domains:
+    - gmail.com
+    - epiphanycatholicchurch.org
+  notifications:
+    sender: no-reply@epiphanycatholicchurch.org
+  groups:
+    - group: "ppc@epiphanycatholicchurch.org"
+      notify:
+        - "administrative-assistant@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "100-Parish Pastoral Council"
+    - group: "administration-committee@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "102-Finance Advisory Council"
+    - group: "worship-committee@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "103-Worship Committee"
+    - group: "stewardship@epiphanycatholicchurch.org"
+      notify:
+        - "director-parish-engagement@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "104-Stewardship Team"
+    - group: "social-responsibility-steering-commitee@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "107-Social Resp Steering Comm"
+    - group: "ten-percent-committee@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ten-percent-chair@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "110-Ten Percent Committee"
+    - group: "ten-percent-treasurer@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ten-percent-chair@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Ten Percent Treasurer"
+    - group: "ten-percent-ad-hoc-committee@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ten-percent-chair@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Ten Percent ad hoc committee"
+    - group: "hispanic-ministry-team@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "111-Hispanic Ministry Team"
+    - group: "communications-planning-team@epiphanycatholicchurch.org"
+      notify:
+        - "director-communications@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "113-Media Comms Planning Comm."
+    - group: "garden-and-grounds@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "emswine2@gmail.com"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "203-Garden & Grounds"
+    - group: "tech-committee@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "207-Technology Committee"
+    - group: "art-and-environment-ministry@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "300-Art & Environment"
+    - group: "audio-visual-lighting-ministry@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "301-Audio/Visual/Light Minstry"
+    - group: "worship-liturgical-planning-discernment@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "304-LiturgicalPlanningDscrnmnt"
+    - group: "acolytes@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "309-Acolytes"
+    - group: "choir@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "director-choir@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "310-Adult Choir"
+    - group: "bell-ringers@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "311-Bell Choir"
+      workgroups:
+        - "Bell choir email list"
+    - group: "eucharistic-ministers@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "tonya@cabral.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "313-Eucharistic Ministers"
+    - group: "funeral-mass-ministry@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "315-Funeral Mass Ministry"
+    - group: "greeters@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "316-Greeters"
+    - group: "musicians@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "317-Instrumentalists & Cantors"
+      workgroups:
+        - "Musicians email list"
+    - group: "lectors@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "318-Lectors"
+    - group: "prayer-chain-ministry@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "511-Prayer Chain Ministry"
+    - group: "worship-music-assistant@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Worship Music Assistant"
+    - group: "welcome-desk@epiphanycatholicchurch.org"
+      notify:
+        - "director-parish-engagement@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "404-Welcome Desk"
+    - group: "stewardship-name-badges-google-drive-access@epiphanycatholicchurch.org"
+      notify:
+        - "director-parish-engagement@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Name Badges Google Drive acces"
+    - group: "bereavement-receptions@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "bereavement-receptions-chair@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "500-Bereavement Receptions"
+    - group: "care-for-the-sick@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "501-Eucharist to Sick&Homebnd"
+    - group: "healing-blankets-ministry@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "505-Healing Blanket Ministry"
+    - group: "grief-support-group@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "508-Grief Support Group"
+    - group: "women-of-hope-support-groups@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "509-HOPE for the Widowed Support Groups"
+    - group: "sages@epiphanycatholicchurch.org"
+      notify:
+        - "joanhagedorn46@gmail.com"
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "412-Sages (for 50 yrs. +)"
+    - group: "sel@epiphanycatholicchurch.org"
+      notify:
+        - "justlmw@att.net"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "413-Singles Explore Life (SEL)"
+    - group: "advocates-for-the-common-good@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "700-Advocates for Common Good"
+    - group: "svdpconference@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "707-St. Vincent De Paul"
+    - group: "twinning-committee@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "709-Twinning Committee:Chiapas"
+    - group: "creation-care-team@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "710-Creation Care Team"
+    - group: "childrens-formation-catechists@epiphanycatholicchurch.org"
+      notify:
+        - "formation@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "800-Catechists for Children"
+    - group: "gather-the-children@epiphanycatholicchurch.org"
+      notify:
+        - "formation@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "802-Gather the Children Prayer Leaders"
+    - group: "rcia-team@epiphanycatholicchurch.org"
+      notify:
+        - "formation@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "807-Catechumenate / Initiation Team Members"
+    - group: "bibletimes-core-team@epiphanycatholicchurch.org"
+      notify:
+        - "bibletimes-chair@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "808-BibleTimes Volunteers"
+    - group: "confirmation-core@epiphanycatholicchurch.org"
+      notify:
+        - "youth-minister@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "903-Confirmation Core Team"
+    - group: "livestream-team@epiphanycatholicchurch.org"
+      notify:
+        - "director-communications@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Livestream Team"
+    - group: "livestream-video-upload@epiphanycatholicchurch.org"
+      notify:
+        - "director-communications@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Livestream Video Upload"
+    - group: "movers@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Movers"
+    - group: "taizeprayer@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "E-Taize Prayer"
+    - group: "soullife@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      ministries:
+        - "E-Soul Life"
+    - group: "zoom@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Zoom license"
+    - group: "apply@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Apply@ECC email list"
+    - group: "registration@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Registration@ECC email list"
+    - group: "renovations@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Renovations@ECC email list"
+    - group: "worship-liturgy-plans-editor@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Liturgy Plans editor"
+    - group: "worship-liturgy-planning-leadership@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Liturgy Planning Ldr"
+    - group: "worship-liturgy-planning-reader@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Liturgy Plans reader"
+    - group: "worship-liturgy-participation-materials@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Liturgy Particption Editor"
+    - group: "music-ministry-musicians-information-editor@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Musicians Info editor"
+    - group: "music-ministry-sheet-music-access@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Sheet Music access"
+    - group: "mp3-uploads-group@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Homebound MP3 Recordings"
+    - group: "ministry-homebound-liturgy-recipients@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Homebound recipients email lst"
+        - "Homebound MP3 Recordings"
+    - group: "liturgy-transcriptions@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Liturgy Transcriptions"
+    - group: "maintenance-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Maintenance"
+    - group: "office-group@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Office@ECC email list"
+    - group: "pastoral-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Pastoral"
+    - group: "ppc-exec@epiphanycatholicchurch.org"
+      notify:
+        - "pastor@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "PPC Executive Committee"
+    - group: "ppc-assistant@epiphanycatholicchurch.org"
+      notify:
+        - "pastor@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "PPC Assistant"
+    - group: "recordings-viewer@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Recordings access"
+    - group: "support-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Support"
+    - group: "auxiliary-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Auxiliary"
+    - group: "wedding-ministries@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "wedding-assistant-chair@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Wedding Ministries email list"
+    - group: "worship-administration@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Worship Administration"
+    - group: "healing-blanket-requests@epiphanycatholicchurch.org"
+      notify:
+        - "associate-pastor@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Healing Blanket requests"
+    - group: "youth-ministry-parents-jr-high@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-youth@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "YouthMin parent: Jr high"
+    - group: "youth-ministry-parents-sr-high@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-youth@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "YouthMin parent: Sr high"
+    - group: "spectrum@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Spectrum@ECC email list"
+    - group: "incoming-photos@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Google Drive Incoming Photos"
+      static_members:
+        - email: "staff@epiphanycatholicchurch.org"
+          leader: false
+    - group: "ministry-chairs@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "all_ministry_chairs"
+          purpose: "Find ministry chairs"
+          ministry_pattern: '^(\d\d\d|E-Soul|E-Taize).*'
+          staff_owner_domains:
+            - "epiphanycatholicchurch.org"
+            - "ecclou.org"
+            - "archlou.org"
+    - group: "worship-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Worship ministry chair"
+          ministry_prefix: "103"
+    - group: "ten-percent-chair@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Ten percent ministry chair"
+          ministry_prefix: "110"
+    - group: "stewardship-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-parish-engagement@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Stewardship ministry chair"
+          ministry_prefix: "104-Stewardship"
+    - group: "collection-counters-chair@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Collection counter ministry chair"
+          ministry_prefix: "201"
+    - group: "technology-chair@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Technology ministry chair"
+          ministry_prefix: "207"
+    - group: "worship-art-and-environment-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Worship/art&environment ministry chair"
+          ministry_prefix: "300"
+    - group: "wedding-assistant-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Wedding assistant ministry chair"
+          ministry_prefix: "307"
+    - group: "worship-acolytes-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Worship/acolytes ministry chair"
+          ministry_prefix: "309"
+    - group: "worship-communion-ministers-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Worship/communion ministers ministry chair"
+          ministry_prefix: "313"
+    - group: "worship-greeters-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Worship/greeters ministry chair"
+          ministry_prefix: "316"
+    - group: "worship-lectors-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Worship/lectors ministry chair"
+          ministry_prefix: "318"
+    - group: "companions-chair@epiphanycatholicchurch.org"
+      notify:
+        - "director-parish-engagement@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Epiphany Companions ministry chair"
+          ministry_prefix: "401-Epiphany Companions"
+    - group: "sunday-morning-coffee-chair@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Sunday morning coffee chair"
+          ministry_prefix: "409"
+    - group: "bereavement-receptions-chair@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Bereavement receptions: Eucharist ministry chair"
+          ministry_prefix: "500"
+    - group: "bereavement-receptions-team-1@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_role"
+          purpose: "Bereavement receptions: team 1"
+          ministry_prefix: "500"
+          member_roles:
+            - "Team 1 Member"
+            - "Team Member: Both"
+          leader_roles:
+            - "Staff"
+            - "Chairperson"
+            - "Team 1 Leader"
+    - group: "bereavement-receptions-team-1-leader@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_role"
+          purpose: "Bereavement receptions: team 1 leader"
+          ministry_prefix: "500"
+          leader_roles:
+            - "Team 1 Leader"
+    - group: "bereavement-receptions-team-2@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_role"
+          purpose: "Bereavement receptions: team 2"
+          ministry_prefix: "500"
+          member_roles:
+            - "Team 2 Member"
+            - "Team Member: Both"
+          leader_roles:
+            - "Staff"
+            - "Chairperson"
+            - "Team 2 Leader"
+    - group: "bereavement-receptions-team-2-leader@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_role"
+          purpose: "Bereavement receptions: team 2 leader"
+          ministry_prefix: "500"
+          leader_roles:
+            - "Team 2 Leader"
+    - group: "care-for-the-sick-chair@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Care for the Sick: Eucharist ministry chair"
+          ministry_prefix: "501"
+    - group: "healing-blankets-chair@epiphanycatholicchurch.org"
+      notify:
+        - "pastoral-associate-parish-life@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Chair: Healing Blankets"
+          ministry_prefix: "505"
+    - group: "sel-chair@epiphanycatholicchurch.org"
+      notify:
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "SEL ministry chair"
+          ministry_prefix: "413-Singles Explore Life (SEL)"
+    - group: "bibletimes-chair@epiphanycatholicchurch.org"
+      notify:
+        - "formation@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Bibletimes chair"
+          ministry_prefix: "808"
+    - group: "gather-the-children-chair@epiphanycatholicchurch.org"
+      notify:
+        - "formation@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Gather the Children chair"
+          ministry_prefix: "802"
+    - group: "youth-ministry-adult-volunteers-chair@epiphanycatholicchurch.org"
+      notify:
+        - "youth-minister@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Youth Ministry Adult Volunteers"
+          ministry_prefix: "901"
+    - group: "confirmation-core-chair@epiphanycatholicchurch.org"
+      notify:
+        - "youth-minister@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      selectors:
+        - type: "ministry_chair"
+          purpose: "Confirmation Core Team Chair"
+          ministry_prefix: "903"
