@@ -1,0 +1,262 @@
+common:
+  dry_run: false
+  timezone: America/Kentucky/Louisville
+
+logging:
+  log_dir: /opt/parishkit/logs
+
+slack:
+  token_file: /opt/parishkit/credentials/slack-token.txt
+  channel: "#bot-errors"
+  level: ERROR
+
+parishsoft:
+  api_key_file: /opt/parishkit/credentials/parishsoft-api-key.txt
+  cache_dir: /opt/parishkit/cache/parishsoft
+  cache_limit: 14m
+  expected_organization: Epiphany Catholic Church
+
+google:
+  service_account_file: /opt/parishkit/credentials/google-service-account.json
+  delegated_subject: itadmin@epiphanycatholicchurch.org
+
+rosters:
+  workgroup_leader_suffix: " Ldr"
+  ministries:
+    - ministry: "100-Parish Pastoral Council"
+      spreadsheet_id: "1aIoStpSOsup8XL5eNd8nhpJwM-IqN2gTkwVf_Qvlylc"
+      include_birthday: false
+    - ministry: "102-Finance Advisory Council"
+      spreadsheet_id: "1oGkjyLDexQyb-z53n2luFpE9vU7Gxv0rX6XirtxSjA0"
+      include_birthday: false
+    - ministry: "103-Worship Committee"
+      spreadsheet_id: "1h_ZvhkYlnebIu0Tk7h1ldJo-VKnJsJGe1jEzY34mcd0"
+      include_birthday: false
+    - ministry: "104-Stewardship Team"
+      spreadsheet_id: "1avaHrl-sHOWOc541GclHZL3ajG30HozISR0HDoswKnM"
+      include_birthday: false
+    - ministry: "107-Social Resp Steering Comm"
+      spreadsheet_id: "1Am3v0Pv4D9zubkGYgFbUd8e92PZnBPrbcwKrMrs8AnI"
+      include_birthday: false
+    - ministry: "108-Faith Formation Team"
+      spreadsheet_id: "1rWy81dH5ZSdjfXGyFN6nF9DIkVk1NS5G7RmHZDn5FTY"
+      include_birthday: false
+    - ministry: "110-Ten Percent Committee"
+      spreadsheet_id: "18BIrnBWf_4LS9XeC9tordSD1SBgJz67a0I9Ouj6ZcEc"
+      include_birthday: false
+    - ministry: "111-Hispanic Ministry Team"
+      spreadsheet_id: "1FuUzKKmezkfBcBJdGiX1gbw4PHmqR_nivwAjoFTLjK8"
+      include_birthday: false
+    - ministry: "113-Media Comms Planning Comm."
+      spreadsheet_id: "1erlqkK_F-ol8Bmo5Pg6SoAe355tOxwU3D4pU179foCU"
+      include_birthday: false
+    - ministry: "115-Community Care Committee"
+      spreadsheet_id: "1bKiNztcE20jrK24ccoCzOJDuJsA-nAR-P-6BYstIDog"
+      include_birthday: false
+    - ministry: "116-Youth Council"
+      spreadsheet_id: "1dM3gNsnTJyQDLeRSmP1iRhjWlXV0aHiOCmdLtG3KnKc"
+      include_birthday: false
+    - ministry: "200-Audit Committee"
+      spreadsheet_id: "1OJ3z9tS9qoZMjr4EfSh5zeKy_PKmaRja9htIthjUPpI"
+      include_birthday: false
+    - ministry: "201-Collection Counter"
+      spreadsheet_id: "1w-PQ-_jnzWWRB3id-Mh4pNHTHJzf9Al1gc_p7cS0koM"
+      include_birthday: false
+    - ministry: "203-Garden & Grounds"
+      spreadsheet_id: "1ZrJCRCrrClQuEq9KPXiRVj2s2u78L6R4-P7hbMpYqzs"
+      include_birthday: false
+    - ministry: "204-Parish Office Volunteers"
+      spreadsheet_id: "1yhGeBNaUTuVkEGTRkCh5SC6hQLOpdaEVNpXaq2WmMc4"
+      include_birthday: false
+    - ministry: "206-Space Arrangers"
+      spreadsheet_id: "1ZIAn7MdeDVcgvHwR98dXs_ewIaU2uWbl6mvriLSk5V0"
+      include_birthday: false
+    - ministry: "207-Technology Committee"
+      spreadsheet_id: "1Gn2m2VMabPkWJWg_NTs6XeGPf_Qi7qPELLxyOx9Q0vU"
+      include_birthday: false
+    - ministry: "208-Weekend Closer"
+      spreadsheet_id: "1pj2r_0Xjog22g-kiSmSGkO6BHIIZqW7uXcE3hUs6Xy8"
+      include_birthday: false
+    - ministry: "300-Art & Environment"
+      spreadsheet_id: "1uXy2zTQeeH_YtBAR46lDV5X8ADZRgPnNROtzDU_iqv0"
+      include_birthday: false
+    - ministry: "301-Audio/Visual/Light Minstry"
+      spreadsheet_id: "1LtsNJc-9KYZkQqy2BITQ4Xgd_ns4Uo7z3YSQdnQrzN8"
+      include_birthday: false
+    - ministry: "303-Linens/Vestments Ministry"
+      spreadsheet_id: "1ul5doCFZx4Y_L8ZNmDarVdgLy_dQo2MkE0mdo5kbrY0"
+      include_birthday: false
+    - ministry: "304-LiturgicalPlanningDscrnmnt"
+      spreadsheet_id: "11A59wLOy58-ADKm60YuVGDG0N02E8a9iY-VoCjQX9tY"
+      include_birthday: false
+    - ministry: "306-Music Support for Children"
+      spreadsheet_id: "1ODBCOAUY5g93-ZDrgAx9-Fv5wT4VSeMYxHgpFeb2F4s"
+      include_birthday: false
+    - ministry: "307-Wedding Assistant"
+      spreadsheet_id: "1UBzQOEpdYmb1afAnrPDlQcz0hoouvd6mkpEV6rYDMxg"
+      include_birthday: false
+    - ministry: "308-Worship&Music Support Team"
+      spreadsheet_id: "1kHRnohAEeaC_2-yTTcgHe36yRVJ4EhWhmbBCZ0P_vI8"
+      include_birthday: false
+    - ministry: "309-Acolytes"
+      spreadsheet_id: "1zXfAxnuQCATWQ7nU7QYn2Mvy1Ql1Huy7Ve1DW60nPKA"
+      include_birthday: false
+    - ministry: "310-Adult Choir"
+      spreadsheet_id: "1ku8Aq9dXm_mrOq421MWVk7hAqV2Am5FFSgUACOYs2WU"
+      include_birthday: false
+    - ministry: "311-Bell Choir"
+      spreadsheet_id: "1UTzXgO9ZLBHB0w-zAW8-u57cgWLbkWWGanJgPC9gboE"
+      include_birthday: true
+    - ministry: "312-Children's Music Ministry"
+      spreadsheet_id: "11H5SbDti8Jm2HMqdo3mZ3_5iTBky4OmZGdB_WeCOZYI"
+      include_birthday: false
+    - ministry: "313-Eucharistic Ministers"
+      spreadsheet_id: "10Aq9XtZHL3v0m0Erm71f8BSUYr7CiEDMwzDWTSgKPJ4"
+      include_birthday: false
+    - ministry: "315-Funeral Mass Ministry"
+      spreadsheet_id: "107rbGV_WbEz6m6m8XMliLWIMFKKMz8pQv8pdjgLFvLI"
+      include_birthday: false
+    - ministry: "316-Greeters"
+      spreadsheet_id: "1vd7sltcU8MVwIBad__PyXXMN_cUEFvdXpL5RkYiBWJ0"
+      include_birthday: false
+    - ministry: "317-Instrumentalists & Cantors"
+      spreadsheet_id: "1YP3sC4dcOWH9Li1rJV8D5FI9mef50xvxqOf6K1K54_U"
+      include_birthday: true
+    - ministry: "318-Lectors"
+      spreadsheet_id: "1X796X7_wFZmYoKMzGnj2BFFCOeoncIEILv1cmq_CJB8"
+      include_birthday: false
+    - ministry: "319-Liturgical Dance Ministry"
+      spreadsheet_id: "14s4gtJMjK0qiHvN-eQ1zaD76PoSGVd9qcfIPxTDGhrc"
+      include_birthday: false
+    - ministry: "401-Epiphany Companions"
+      spreadsheet_id: "1voFdTbY3RMs3R_X-pO6-hbjBfC9Prm80ON-lLDTl2UI"
+      include_birthday: false
+    - ministry: "404-Welcome Desk"
+      spreadsheet_id: "1pJwD2UXiDAKng-DFwdWMp0AbZQFSJoiOsJaQgJmfvCE"
+      include_birthday: false
+    - ministry: "409-Sunday Morning Coffee"
+      spreadsheet_id: "1zaVGPdnHp5zZu3zbWfGckIaxbCeCSSTYyoe4pCIlQjs"
+      include_birthday: false
+    - ministry: "412-Sages (for 50 yrs. +)"
+      spreadsheet_id: "11LCDr-Vc3jyeKh5nrd49irscdvTv3TDXhpOoFWlohgs"
+      include_birthday: false
+    - ministry: "413-Singles Explore Life (SEL)"
+      spreadsheet_id: "1-uvQO5RRf0K6NJlR_4Mijygn4XGk0zhvowdflKLoEUc"
+      include_birthday: false
+    - ministry: "414-Hospitality Linen Ministry"
+      spreadsheet_id: "1speD5aJbcLc0hugyfhP8J1vhrFeHYO3-Zpuc77GQBjM"
+      include_birthday: false
+    - ministry: "500-Bereavement Receptions"
+      spreadsheet_id: "17QXoqgreLu8sUQpZfooNkto4NV06wdoE3yA6Q5vgiAw"
+      include_birthday: false
+      role_sheets:
+        - name: "500-Bereavement Receptions: Team 1"
+          roles:
+            - "Staff"
+            - "Chairperson"
+            - "Team 1 Leader"
+            - "Team 1 Member"
+            - "Team Member: Both"
+          spreadsheet_id: "1UKk8-zsi4m1i271-SbM4UhkREs0dYcZSpmwGsV7m9rQ"
+        - name: "500-Bereavement Receptions: Team 2"
+          roles:
+            - "Staff"
+            - "Chairperson"
+            - "Team 2 Leader"
+            - "Team 2 Member"
+            - "Team Member: Both"
+          spreadsheet_id: "1XGvOa98piwKa05yYUIWXIXGXyMHNYSYPMAyvwwSl28A"
+    - ministry: "501-Eucharist to Sick&Homebnd"
+      spreadsheet_id: "1KkCF2V4JIK65b9QsfSG-lGMCASXPavxIxim-CfzxBYk"
+      include_birthday: false
+    - ministry: "505-Healing Blanket Ministry"
+      spreadsheet_id: "1fKXe-NuoObjgYoFRcbuJQwIOjFIAfT7TQB87eccgfng"
+      include_birthday: false
+    - ministry: "507-Flower Angels"
+      spreadsheet_id: "1GslfFYPsXPGk16N9Oq6wx8l2HeZNryIBu29lFuLITck"
+      include_birthday: false
+    - ministry: "508-Grief Support Group"
+      spreadsheet_id: "1NOijo2AHwftLBGDyCiyGMEIp4Qmfw-0jVjHG9Ygz3S8"
+      include_birthday: false
+    - ministry: "509-HOPE for the Widowed Support Groups"
+      spreadsheet_id: "1Ua7pm-4Av7vPhU8quL5sAEKfowo8O_jfEF34vD1s3Wg"
+      include_birthday: false
+    - ministry: "510-Flower Delivery to SHB"
+      spreadsheet_id: "160CPnzR_Q-kph_36LLCPFMC_pLRdMFbUQ2fkQ90LEw0"
+      include_birthday: false
+    - ministry: "700-Advocates for Common Good"
+      spreadsheet_id: "1r6FNXGn-T5anj9X7HGlB2EpZ9oXfy5dQXD6z-OQEGgE"
+      include_birthday: false
+    - ministry: "701-CLOUT"
+      spreadsheet_id: "1k_hH1tEWBGuERCmFvhZxKOfAsBkqy0uZ16LAd0_jMDg"
+      include_birthday: false
+    - ministry: "703-Eyeglass Ministry"
+      spreadsheet_id: "1Iz8hz7NAhh9-dVMiC7mL8yYFi_qmM_ayB5IXhJU0uPw"
+      include_birthday: false
+    - ministry: "704-Habitat for Humanity"
+      spreadsheet_id: "1gBQXnTgxodILkjXvBrfJ-sztVj6NZaZQI1kbddAESNE"
+      include_birthday: false
+    - ministry: "705-Hunger & Poverty Ministry"
+      spreadsheet_id: "1i3EBKO3Lj3lIprhnoc4VeabEIPAuce5JeV99y1zrUAc"
+      include_birthday: false
+    - ministry: "706-Prison Ministry"
+      spreadsheet_id: "1HacDJsMK-oLKjuPjvrABhbYn-b0joox3GMY9uEA--yg"
+      include_birthday: false
+    - ministry: "707-St. Vincent De Paul"
+      spreadsheet_id: "1m0Cp7k0XyeJvZ8Z0IZXrudD3oALfeLr0sWvvnEEgn0o"
+      include_birthday: false
+    - ministry: "708-Social Concerns Forum"
+      spreadsheet_id: "1rT8JyEELbazL2scZZP4glt-ZVyK2v3Nn-Rr9rtuhmhU"
+      include_birthday: false
+    - ministry: "709-Twinning Committee:Chiapas"
+      spreadsheet_id: "1lXkeHsyHNqHYH4zs_HiQdaq8PK8vh5W2koQE5sCq_7U"
+      include_birthday: false
+    - ministry: "710-Creation Care Team"
+      spreadsheet_id: "1tFmzvu53v-oBF3P59fl4zv46VHt4PRu066YyceuYNl4"
+      include_birthday: false
+    - ministry: "711-Women's Concerns Committee"
+      spreadsheet_id: "1t-pu0efeZbLgnLiRQXgIf_MPZA06-CXiY5k9h0qkXI8"
+      include_birthday: false
+    - ministry: "800-Catechists for Children"
+      spreadsheet_id: "1jsoRxugVwXi_T2IDq9J-mEVdzS8xaOk9kuXGAef-YaQ"
+      include_birthday: false
+    - ministry: "802-Gather the Children Prayer Leaders"
+      spreadsheet_id: "1SqqnAFEZlUdCAxp6NYKqpqGFy13L_aheVEGzHLLzOuk"
+      include_birthday: false
+    - ministry: "805-Monday Adult Bible Study Catechists"
+      spreadsheet_id: "1rBKiweOBT-JZFbfv5Sf4_vjjOlAYnOGaZIhadtBPxSE"
+      include_birthday: false
+    - ministry: "807-Catechumenate / Initiation Team Members"
+      spreadsheet_id: "1lI9eO0bryD6GFIsgJ5FipGePK4FaJ7v8eIp71DFz_6A"
+      include_birthday: false
+    - ministry: "808-BibleTimes Volunteers"
+      spreadsheet_id: "1gANQt7PBc8erErQRHrRLtkdmOF3Y7DbuLC3J6aRLu4U"
+      include_birthday: false
+    - ministry: "901-Youth Ministry Adult Vols"
+      spreadsheet_id: "13neLXFrDTsohe_N_CVPX7ajx4pFvYb9miFtZtUqdVl4"
+      include_birthday: false
+    - ministry: "902-Adult Advisory Council"
+      spreadsheet_id: "1yW9tUxef7slTboXYXlVoWrAH80vhP-IAZ53MBjXYUPA"
+      include_birthday: false
+    - ministry: "903-Confirmation Core Team"
+      spreadsheet_id: "1Ay9Zp3HnHmINygZWIilVWMvlbD4IfKygyOoa9wU4FK8"
+      include_birthday: false
+    - ministry: "E-Taize Prayer"
+      spreadsheet_id: "1Sz6tRzQ7q8sqN9tjaq3wX2lpE7aWi9-bNyyooDebmt4"
+      include_birthday: false
+    - ministry: "E-Soul Life"
+      spreadsheet_id: "14txmxfY_gacwdusNQJMM8SwNiHnshCxPJZc7leD4X2Q"
+      include_birthday: false
+  workgroups:
+    - workgroup: "Livestream Team"
+      spreadsheet_id: "1Yku0IFuIKZCeUNGB5c_Ser_geYkylC2o1tiVfaNwkx8"
+      include_birthday: false
+    - workgroup: "YouthMin parent: Jr high"
+      spreadsheet_id: "1VIs-AezopoWd3rpVU_kqMOTTXlBPpjI9IxAbhDpSnG4"
+      include_birthday: false
+    - workgroup: "YouthMin parent: Sr high"
+      spreadsheet_id: "1B_2LeR0EbG3oDUqifvB51YhCuj30lhaYHfUb9bmCj5A"
+      include_birthday: false
+    - workgroup: "Movers"
+      spreadsheet_id: "1q0rNZQ0Od3cCoFG2qLgKZep10GzQ3nmvVIIJuUOWBgY"
+      include_birthday: false

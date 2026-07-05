@@ -1,0 +1,65 @@
+# Cron-friendly runner config for Epiphany's migrated parishkit jobs.
+#
+# Copy this file to /opt/parishkit/config/pk-cron-runner.yaml and adjust paths
+# if parishkit is installed somewhere other than /opt/parishkit.
+
+lock:
+  # Prevent overlapping full-runner invocations.
+  path: /opt/parishkit/run/pk-cron-runner.lock
+  # A normal run should finish well under this; if not, alert instead of
+  # silently starting a second copy.
+  stale_after: 30m
+  stale_action: exit-and-alert
+
+logging:
+  # Runner logs are JSON Lines; child commands write their own logs according
+  # to their individual configs.
+  log_file: /opt/parishkit/logs/pk-cron-runner.log
+
+slack:
+  token_file: /opt/parishkit/credentials/slack-token.txt
+  channel: "#bot-errors"
+  level: ERROR
+  notify_success: false
+  context: Epiphany ParishKit runner
+
+runner:
+  stop_on_first_failure: true
+  context: Epiphany ParishKit runner
+
+jobs:
+  - name: ministry-rosters
+    enabled: true
+    cwd: /opt/parishkit
+    timeout: 5m
+    command:
+      - pk-create-ps-ministry-rosters
+      - --config
+      - /opt/parishkit/config/pk-create-ps-ministry-rosters.yaml
+
+  - name: ps-to-google-groups
+    enabled: true
+    cwd: /opt/parishkit
+    timeout: 5m
+    command:
+      - pk-sync-ps-to-ggroup
+      - --config
+      - /opt/parishkit/config/pk-sync-ps-to-ggroup.yaml
+
+  - name: ps-to-cc
+    enabled: true
+    cwd: /opt/parishkit
+    timeout: 5m
+    command:
+      - pk-sync-ps-to-cc
+      - --config
+      - /opt/parishkit/config/pk-sync-ps-to-cc.yaml
+
+  - name: validate-google-calendar
+    enabled: true
+    cwd: /opt/parishkit
+    timeout: 5m
+    command:
+      - pk-validate-gcalendar-reservations
+      - --config
+      - /opt/parishkit/config/pk-validate-gcalendar-reservations.yaml
