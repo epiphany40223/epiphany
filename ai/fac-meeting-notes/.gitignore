@@ -1,0 +1,11 @@
+# The source documents for a meeting (transcripts, financial reports) and the
+# minutes generated from them contain real parishioner names and parish
+# financial data.  Never commit them.
+*.docx
+*.pdf
+*.srt
+*.vtt
+*.json
+
+# Editor backups
+*~
