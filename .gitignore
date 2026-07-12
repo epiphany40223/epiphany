@@ -11,6 +11,7 @@ client_id.json
 user-credentials.json
 
 slack_token.txt
+openai-api-key.txt
 
 venv
 py38
