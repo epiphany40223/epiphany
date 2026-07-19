@@ -761,3 +761,8 @@ sync:
         - "ps-google-sync@epiphanycatholicchurch.org"
       workgroups:
         - "Worship Administration"
+    - group: "wordpress-backups@epiphanycatholicchurch.org"
+      notify:
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Google Drive WordPress backups"
