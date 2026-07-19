@@ -61,7 +61,10 @@ def runner(args, log):
     # Creates a temporary text file and writes content to it.
     # The file must manually be removed later!
     def _add_file(files, type, content_blob):
-        content  = content_blob.decode("utf-8").strip()
+        if isinstance(content_blob, str):
+            content = content_blob.strip()
+        else:
+            content = content_blob.decode("utf-8").strip()
         fp       = tempfile.NamedTemporaryFile(mode="w", delete=False)
         filename = fp.name
         fp.write(content)
@@ -149,14 +152,18 @@ def runner(args, log):
         token = fp.read().strip()
     slack_client = slack_sdk.WebClient(token=token)
     response = slack_client.chat_postMessage(channel=args.slack_channel,
-                                            blocks=blocks)
+                                            blocks=blocks,
+                                            text=f"runner.py {type} notification")
     log.info(f"Sent {type} notification message blocks to Slack")
     log.debug(blocks)
 
     # Sadly, blocks can't include files.  So upload those separately (and
     # remove the corresponding local temporary files).
+    # files_upload_v2() requires a channel ID (not a channel name); get
+    # the ID from the response of the chat_postMessage call, above.
+    channel_id = response['channel']
     for file in files:
-        response = slack_client.files_upload(channels=args.slack_channel,
+        response = slack_client.files_upload_v2(channel=channel_id,
                                             title=file['title'],
                                             file=file['filename'])
         os.unlink(file['filename'])
