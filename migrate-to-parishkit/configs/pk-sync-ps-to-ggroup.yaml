@@ -32,6 +32,11 @@ sync:
   notifications:
     sender: no-reply@epiphanycatholicchurch.org
   groups:
+
+
+#################################################################
+# Ministries
+
     - group: "ppc@epiphanycatholicchurch.org"
       notify:
         - "administrative-assistant@epiphanycatholicchurch.org"
@@ -332,104 +337,17 @@ sync:
         - "ps-google-sync@epiphanycatholicchurch.org"
       ministries:
         - "E-Soul Life"
-    - group: "zoom@epiphanycatholicchurch.org"
+    - group: "wedding-ministries@epiphanycatholicchurch.org"
       notify:
         - "director-worship@epiphanycatholicchurch.org"
+        - "wedding-assistant-chair@epiphanycatholicchurch.org"
         - "ps-google-sync@epiphanycatholicchurch.org"
       workgroups:
-        - "Zoom license"
-    - group: "apply@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Apply@ECC email list"
-    - group: "registration@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Registration@ECC email list"
-    - group: "renovations@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Renovations@ECC email list"
-    - group: "worship-liturgy-plans-editor@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "ECC Liturgy Plans editor"
-    - group: "worship-liturgy-planning-leadership@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Liturgy Planning Ldr"
-    - group: "worship-liturgy-planning-reader@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "ECC Liturgy Plans reader"
-    - group: "worship-liturgy-participation-materials@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "ECC Liturgy Particption Editor"
-    - group: "music-ministry-musicians-information-editor@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "ECC Musicians Info editor"
-    - group: "music-ministry-sheet-music-access@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "ECC Sheet Music access"
-    - group: "mp3-uploads-group@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Homebound MP3 Recordings"
-    - group: "ministry-homebound-liturgy-recipients@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Homebound recipients email lst"
-        - "Homebound MP3 Recordings"
-    - group: "liturgy-transcriptions@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Liturgy Transcriptions"
-    - group: "maintenance-staff@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Staff: Maintenance"
-    - group: "office-group@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Office@ECC email list"
-    - group: "pastoral-staff@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Staff: Pastoral"
+        - "Wedding Ministries email list"
+
+#################################################################
+# Related to ministries
+
     - group: "ppc-exec@epiphanycatholicchurch.org"
       notify:
         - "pastor@epiphanycatholicchurch.org"
@@ -442,43 +360,6 @@ sync:
         - "ps-google-sync@epiphanycatholicchurch.org"
       workgroups:
         - "PPC Assistant"
-    - group: "recordings-viewer@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Recordings access"
-    - group: "support-staff@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Staff: Support"
-    - group: "auxiliary-staff@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Staff: Auxiliary"
-    - group: "wedding-ministries@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "wedding-assistant-chair@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Wedding Ministries email list"
-    - group: "worship-administration@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Worship Administration"
-    - group: "healing-blanket-requests@epiphanycatholicchurch.org"
-      notify:
-        - "associate-pastor@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Healing Blanket requests"
     - group: "youth-ministry-parents-jr-high@epiphanycatholicchurch.org"
       notify:
         - "pastoral-associate-youth@epiphanycatholicchurch.org"
@@ -491,21 +372,11 @@ sync:
         - "ps-google-sync@epiphanycatholicchurch.org"
       workgroups:
         - "YouthMin parent: Sr high"
-    - group: "spectrum@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Spectrum@ECC email list"
-    - group: "incoming-photos@epiphanycatholicchurch.org"
-      notify:
-        - "business-manager@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      workgroups:
-        - "Google Drive Incoming Photos"
-      static_members:
-        - email: "staff@epiphanycatholicchurch.org"
-          leader: false
+
+
+#################################################################
+# Chairs and ministry leaders
+
     - group: "ministry-chairs@epiphanycatholicchurch.org"
       notify:
         - "business-manager@epiphanycatholicchurch.org"
@@ -735,3 +606,158 @@ sync:
         - type: "ministry_chair"
           purpose: "Confirmation Core Team Chair"
           ministry_prefix: "903"
+
+#################################################################
+# Staff
+
+    - group: "maintenance-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Maintenance"
+    - group: "office-group@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Office@ECC email list"
+    - group: "pastoral-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Pastoral"
+    - group: "support-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Support"
+    - group: "auxiliary-staff@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Staff: Auxiliary"
+
+#################################################################
+# Utility mailing lists
+
+    - group: "apply@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Apply@ECC email list"
+    - group: "registration@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Registration@ECC email list"
+    - group: "renovations@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Renovations@ECC email list"
+    - group: "spectrum@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Spectrum@ECC email list"
+    - group: "zoom@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Zoom license"
+    - group: "healing-blanket-requests@epiphanycatholicchurch.org"
+      notify:
+        - "associate-pastor@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Healing Blanket requests"
+
+#################################################################
+# Google Drive permissions
+
+    - group: "worship-liturgy-plans-editor@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Liturgy Plans editor"
+    - group: "worship-liturgy-planning-leadership@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Liturgy Planning Ldr"
+    - group: "worship-liturgy-planning-reader@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Liturgy Plans reader"
+    - group: "worship-liturgy-participation-materials@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Liturgy Particption Editor"
+    - group: "music-ministry-musicians-information-editor@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Musicians Info editor"
+    - group: "music-ministry-sheet-music-access@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "ECC Sheet Music access"
+    - group: "mp3-uploads-group@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Homebound MP3 Recordings"
+    - group: "ministry-homebound-liturgy-recipients@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Homebound recipients email lst"
+        - "Homebound MP3 Recordings"
+    - group: "liturgy-transcriptions@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Liturgy Transcriptions"
+    - group: "incoming-photos@epiphanycatholicchurch.org"
+      notify:
+        - "business-manager@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Google Drive Incoming Photos"
+      static_members:
+        - email: "staff@epiphanycatholicchurch.org"
+          leader: false
+    - group: "recordings-viewer@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Recordings access"
+    - group: "worship-administration@epiphanycatholicchurch.org"
+      notify:
+        - "director-worship@epiphanycatholicchurch.org"
+        - "ps-google-sync@epiphanycatholicchurch.org"
+      workgroups:
+        - "Worship Administration"
