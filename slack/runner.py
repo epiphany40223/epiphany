@@ -61,7 +61,10 @@ def runner(args, log):
     # Creates a temporary text file and writes content to it.
     # The file must manually be removed later!
     def _add_file(files, type, content_blob):
-        content  = content_blob.decode("utf-8").strip()
+        if isinstance(content_blob, str):
+            content = content_blob.strip()
+        else:
+            content = content_blob.decode("utf-8").strip()
         fp       = tempfile.NamedTemporaryFile(mode="w", delete=False)
         filename = fp.name
         fp.write(content)
