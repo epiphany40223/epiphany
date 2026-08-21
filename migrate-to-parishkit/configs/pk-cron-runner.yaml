@@ -31,7 +31,7 @@ jobs:
   - name: ministry-rosters
     enabled: true
     cwd: /opt/parishkit
-    timeout: 5m
+    timeout: 10m
     command:
       - pk-create-ps-ministry-rosters
       - --config
