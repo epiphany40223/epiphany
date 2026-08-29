@@ -262,22 +262,36 @@ After completing this step, press Enter to continue."""
                 timeout=30
             )
 
-            if response.ok:
+            try:
+                result = json.loads(response.text)
+            except json.JSONDecodeError as exc:
+                logging.error(
+                    f'Invalid response while updating thermostat '
+                    f'{target_ecobee}: HTTP {response.status_code}'
+                )
+                logging.error(response.text)
+                raise Exception(
+                    f"Thermostat update returned invalid JSON: {response.text}"
+                ) from exc
+
+            code = result.get('status', {}).get('code')
+
+            if response.ok and code == 0:
                 logging.info(f'Thermostat {target_ecobee} updated successfully.')
                 logging.info(response.text)
-            else:
-                result = json.loads(response.text)
-                code = result.get('status', {}).get('code', 0)
-                if code == 14:
-                    logging.info(f'Access token expired while attempting to set sche\
+            elif code == 14:
+                logging.info(f'Access token expired while attempting to set sche\
 dule mode change...refreshing.')
-                    self.refresh_tokens_if_needed()
-                    # This will invoke the retry
-                    raise(self.EcobeeNeedRefresh())
-                else:
-                    logging.error(f'Failed to update thermostat {target_ecobee}: {response.status_code}')
-                    logging.error(response.text)
-                    raise Exception(f"Thermostat update failed: {response.text}")
+                self.refresh_tokens_if_needed()
+                # This will invoke the retry
+                raise(self.EcobeeNeedRefresh())
+            else:
+                logging.error(
+                    f'Failed to update thermostat {target_ecobee}: '
+                    f'HTTP {response.status_code}, Ecobee status {code}'
+                )
+                logging.error(response.text)
+                raise Exception(f"Thermostat update failed: {response.text}")
 
         _set_schedule()
 
