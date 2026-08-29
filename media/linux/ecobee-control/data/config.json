@@ -46,7 +46,8 @@
 	"CC H",
 	"CC J",
 	"CC L",
-	"LH ENTRANCE"
+	"LH ENTRANCE",
+	"LH Main"
     ],
     "zones": [
 	{
@@ -55,7 +56,8 @@
 		"Lighthouse-1-Lighthouse (75)"
             ],
             "ecobees": [
-		"LH ENTRANCE"
+		"LH ENTRANCE",
+		"LH Main"
             ]
         },
         {
