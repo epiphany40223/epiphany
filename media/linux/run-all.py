@@ -108,9 +108,8 @@ def main():
         for subdir in [
                 'ricoh',
                 'email-patch-tuesday',
-                'ps-queries',
                 'calendar-audit',
-                'calendar-reservations',
+                'calendar-gsheet',
                 'ecobee-control',
             ]:
             os.chdir(os.path.join(git_top, 'media', 'linux', subdir))
