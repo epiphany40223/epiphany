@@ -10,8 +10,7 @@ logfile_dir=$HOME/logfiles
 credential_dir=$HOME/credentials
 
 git_base=$HOME/git/epiphany/media/linux
-prog_dir=$git_base/ps-queries
-sqlite_dir=$git_base/ps-data
+prog_dir=$git_base/calendar-gsheet
 
 cd $prog_dir
 
@@ -22,6 +21,9 @@ cd $prog_dir
 ################################################################################
 
 # We only need to do this once a day, around 2am or so.
+
+hour=`date '+%H'`
+minute=`date '+%M'`
 
 if test $hour -eq 2 -a $minute -lt 15; then
     gsheet_logfile=$logfile_dir/linux/gsheet-driven-google-group/gsheet-driven-google-group-logfile.txt
