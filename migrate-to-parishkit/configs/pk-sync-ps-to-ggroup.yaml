@@ -125,12 +125,6 @@ sync:
         - "ps-google-sync@epiphanycatholicchurch.org"
       ministries:
         - "301-Audio/Visual/Light Minstry"
-    - group: "worship-liturgical-planning-discernment@epiphanycatholicchurch.org"
-      notify:
-        - "director-worship@epiphanycatholicchurch.org"
-        - "ps-google-sync@epiphanycatholicchurch.org"
-      ministries:
-        - "304-LiturgicalPlanningDscrnmnt"
     - group: "acolytes@epiphanycatholicchurch.org"
       notify:
         - "director-worship@epiphanycatholicchurch.org"
@@ -270,7 +264,7 @@ sync:
         - "pastoral-associate-social-resp@epiphanycatholicchurch.org"
         - "ps-google-sync@epiphanycatholicchurch.org"
       ministries:
-        - "709-Twinning Committee:Chiapas"
+        - "709-Solidarity Committee"
     - group: "creation-care-team@epiphanycatholicchurch.org"
       notify:
         - "pastoral-associate-social-resp@epiphanycatholicchurch.org"

@@ -86,9 +86,6 @@ rosters:
     - ministry: "303-Linens/Vestments Ministry"
       spreadsheet_id: "1ul5doCFZx4Y_L8ZNmDarVdgLy_dQo2MkE0mdo5kbrY0"
       include_birthday: false
-    - ministry: "304-LiturgicalPlanningDscrnmnt"
-      spreadsheet_id: "11A59wLOy58-ADKm60YuVGDG0N02E8a9iY-VoCjQX9tY"
-      include_birthday: false
     - ministry: "306-Music Support for Children"
       spreadsheet_id: "1ODBCOAUY5g93-ZDrgAx9-Fv5wT4VSeMYxHgpFeb2F4s"
       include_birthday: false
@@ -143,8 +140,8 @@ rosters:
     - ministry: "413-Singles Explore Life (SEL)"
       spreadsheet_id: "1-uvQO5RRf0K6NJlR_4Mijygn4XGk0zhvowdflKLoEUc"
       include_birthday: false
-    - ministry: "414-Hospitality Linen Ministry"
-      spreadsheet_id: "1speD5aJbcLc0hugyfhP8J1vhrFeHYO3-Zpuc77GQBjM"
+    - ministry: "451-Communication Content Creation Team"
+      spreadsheet_id: "1Irf4brFA6OpsaaovO7Z8ZJIQlqjdxSEnDXD3O0quiPo"
       include_birthday: false
     - ministry: "500-Bereavement Receptions"
       spreadsheet_id: "17QXoqgreLu8sUQpZfooNkto4NV06wdoE3yA6Q5vgiAw"
@@ -208,7 +205,7 @@ rosters:
     - ministry: "708-Social Concerns Forum"
       spreadsheet_id: "1rT8JyEELbazL2scZZP4glt-ZVyK2v3Nn-Rr9rtuhmhU"
       include_birthday: false
-    - ministry: "709-Twinning Committee:Chiapas"
+    - ministry: "709-Solidarity Committee"
       spreadsheet_id: "1lXkeHsyHNqHYH4zs_HiQdaq8PK8vh5W2koQE5sCq_7U"
       include_birthday: false
     - ministry: "710-Creation Care Team"
@@ -225,6 +222,9 @@ rosters:
       include_birthday: false
     - ministry: "805-Monday Adult Bible Study Catechists"
       spreadsheet_id: "1rBKiweOBT-JZFbfv5Sf4_vjjOlAYnOGaZIhadtBPxSE"
+      include_birthday: false
+    - ministry: "806-Facilitator of Small groups bible/Book study"
+      spreadsheet_id: "1iK-gBqhDogxwkfqpx2jjOh8rKQm34PxcNwlSoebjceA"
       include_birthday: false
     - ministry: "807-Catechumenate / Initiation Team Members"
       spreadsheet_id: "1lI9eO0bryD6GFIsgJ5FipGePK4FaJ7v8eIp71DFz_6A"
