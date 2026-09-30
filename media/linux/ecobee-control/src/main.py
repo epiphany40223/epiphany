@@ -14,6 +14,19 @@
 import os
 import argparse
 import logging
+import warnings
+
+# The production server runs this under WSL1, which leaves the x87 FPU
+# in 53-bit (double) precision mode.  numpy then cannot identify the
+# long double format and emits a UserWarning when it is first used
+# (pandas triggers this at import time).  This script never uses long
+# doubles, so the warning is harmless noise: silence just that one.
+# This must run before anything imports numpy.
+warnings.filterwarnings(
+    "ignore",
+    message=r"Signature .* for <class 'numpy\.longdouble'> does not match",
+    category=UserWarning,
+)
 
 from google_calendar.google_calendar_client import GoogleCalendarClient
 from ecobee.ecobee_client import EcobeeClient
