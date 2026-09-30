@@ -174,7 +174,10 @@ class EcobeeClient:
         logging.info("Starting authorization process...")
         print("Starting authorization process...")
         authorize_response = self.ecobee_service.authorize(timeout=30)
-        logging.debug(f"AuthorizeResponse: {authorize_response.pretty_format()}")
+        # Don't log the whole response: it includes the authorization
+        # code, which can be exchanged for tokens
+        logging.debug(f"Authorization PIN expires in "
+                      f"{authorize_response.expires_in} minutes")
         pin = authorize_response.ecobee_pin
         logging.info(
             f"""Please go to https://ecobee.com, login to the web
@@ -193,8 +196,10 @@ After completing this step, press Enter to continue."""
         """Request initial tokens after authorization (if you're interactive)."""
         logging.info("Requesting tokens...")
         try:
-            token_response = self.ecobee_service.request_tokens(timeout=30)
-            logging.debug(f"TokenResponse: {token_response.pretty_format()}")
+            self.ecobee_service.request_tokens(timeout=30)
+            # Don't log the whole response: it includes the tokens
+            logging.debug(f"New access token expires "
+                          f"{self.ecobee_service.access_token_expires_on}")
             print(f"New Access Token: {self.ecobee_service.access_token}")
             print(f"New Refresh Token: {self.ecobee_service.refresh_token}")
         except EcobeeApiException as e:
@@ -205,8 +210,10 @@ After completing this step, press Enter to continue."""
         """Refresh the access and refresh tokens."""
         logging.info("Refreshing tokens...")
         try:
-            token_response = self.ecobee_service.refresh_tokens(timeout=30)
-            logging.debug(f"TokenResponse: {token_response.pretty_format()}")
+            self.ecobee_service.refresh_tokens(timeout=30)
+            # Don't log the whole response: it includes the tokens
+            logging.debug(f"New access token expires "
+                          f"{self.ecobee_service.access_token_expires_on}")
             logging.info("Tokens refreshed successfully.")
 
             self.write_credentials_file()
