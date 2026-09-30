@@ -90,6 +90,24 @@ class EcobeeClient:
     class EcobeeNeedRefresh(Exception):
         pass
 
+    # Raise this error when an Ecobee API call fails in a way that is
+    # probably temporary: a network error, a timeout, or a response
+    # that isn't JSON (e.g., the HTTP 503 page Ecobee returns during an
+    # outage).  Note that Ecobee reports real API errors -- including
+    # expired tokens -- as HTTP 500 with a JSON status body, so the HTTP
+    # status code alone does not mean "temporary".
+    class EcobeeTransientError(Exception):
+        pass
+
+    # Retry token refreshes and transient errors, backing off for up to
+    # 2 minutes.  This runs under run-all.py, whose lockfile goes stale
+    # after 16 minutes, so keep the total retry time modest.
+    _retry = retry.Retry(
+        predicate=retry.if_exception_type(EcobeeNeedRefresh,
+                                          EcobeeTransientError),
+        initial=5, multiplier=2, maximum=30, timeout=120,
+    )
+
     def __init__(self, thermostat_name="Test1", credentials_file=None, config=None):
         """
         Initializes the EcobeeClient, sets up the file paths and starts authentication.
@@ -156,7 +174,10 @@ class EcobeeClient:
         logging.info("Starting authorization process...")
         print("Starting authorization process...")
         authorize_response = self.ecobee_service.authorize(timeout=30)
-        logging.debug(f"AuthorizeResponse: {authorize_response.pretty_format()}")
+        # Don't log the whole response: it includes the authorization
+        # code, which can be exchanged for tokens
+        logging.debug(f"Authorization PIN expires in "
+                      f"{authorize_response.expires_in} minutes")
         pin = authorize_response.ecobee_pin
         logging.info(
             f"""Please go to https://ecobee.com, login to the web
@@ -175,8 +196,10 @@ After completing this step, press Enter to continue."""
         """Request initial tokens after authorization (if you're interactive)."""
         logging.info("Requesting tokens...")
         try:
-            token_response = self.ecobee_service.request_tokens(timeout=30)
-            logging.debug(f"TokenResponse: {token_response.pretty_format()}")
+            self.ecobee_service.request_tokens(timeout=30)
+            # Don't log the whole response: it includes the tokens
+            logging.debug(f"New access token expires "
+                          f"{self.ecobee_service.access_token_expires_on}")
             print(f"New Access Token: {self.ecobee_service.access_token}")
             print(f"New Refresh Token: {self.ecobee_service.refresh_token}")
         except EcobeeApiException as e:
@@ -187,8 +210,10 @@ After completing this step, press Enter to continue."""
         """Refresh the access and refresh tokens."""
         logging.info("Refreshing tokens...")
         try:
-            token_response = self.ecobee_service.refresh_tokens(timeout=30)
-            logging.debug(f"TokenResponse: {token_response.pretty_format()}")
+            self.ecobee_service.refresh_tokens(timeout=30)
+            # Don't log the whole response: it includes the tokens
+            logging.debug(f"New access token expires "
+                          f"{self.ecobee_service.access_token_expires_on}")
             logging.info("Tokens refreshed successfully.")
 
             self.write_credentials_file()
@@ -252,19 +277,38 @@ After completing this step, press Enter to continue."""
         self.schedule_payload['selection']['selectionMatch'] = thermostat_id
 
         # Use a private function with a @retry decorator so that it'll retry
-        # if we need to refresh our tokens
-        @retry.Retry(predicate=retry.if_exception_type(self.EcobeeNeedRefresh))
+        # if we need to refresh our tokens or hit a transient error.
+        # Re-sending the same schedule is harmless, so retrying the POST
+        # is safe even if an earlier attempt actually reached Ecobee.
+        @self._retry
         def _set_schedule():
-            response = requests.post(
-                self.ECOBEE_THERMOSTAT_URL,
-                data=json.dumps(self.schedule_payload, default=str),
-                headers={'Authorization': 'Bearer ' + self.ecobee_service.access_token},
-                timeout=30
-            )
+            try:
+                response = requests.post(
+                    self.ECOBEE_THERMOSTAT_URL,
+                    data=json.dumps(self.schedule_payload, default=str),
+                    headers={'Authorization': 'Bearer ' + self.ecobee_service.access_token},
+                    timeout=30
+                )
+            except requests.exceptions.RequestException as exc:
+                logging.warning(
+                    f'Temporary error updating thermostat {target_ecobee} '
+                    f'(will retry): {exc!r}'
+                )
+                raise self.EcobeeTransientError(str(exc)) from exc
 
             try:
                 result = json.loads(response.text)
             except json.JSONDecodeError as exc:
+                # A non-JSON 5xx or 429 is Ecobee being down or
+                # rate-limiting us, not a problem with our request
+                if response.status_code == 429 or response.status_code >= 500:
+                    logging.warning(
+                        f'Ecobee returned HTTP {response.status_code} with '
+                        f'no API status while updating thermostat '
+                        f'{target_ecobee} (will retry)'
+                    )
+                    raise self.EcobeeTransientError(
+                        f"HTTP {response.status_code}") from exc
                 logging.error(
                     f'Invalid response while updating thermostat '
                     f'{target_ecobee}: HTTP {response.status_code}'
@@ -295,8 +339,9 @@ dule mode change...refreshing.')
 
         _set_schedule()
 
-    # If this function needs to refresh tokens, it'll automatically retry
-    @retry.Retry(predicate=retry.if_exception_type(EcobeeNeedRefresh))
+    # If this function needs to refresh tokens or hits a transient error,
+    # it'll automatically retry
+    @_retry
     def get_thermostat_id_by_name(self, ecobee_name):
         """
         Given a thermostat name, return its identifier.
@@ -305,12 +350,15 @@ dule mode change...refreshing.')
 
         try:
             thermostat_response = self.ecobee_service.request_thermostats(selection, timeout=30)
-            for tstat in thermostat_response.thermostat_list:
-                if tstat.name.lower() == ecobee_name.lower():
-                    logging.debug(f"Found thermostat {ecobee_name} with ID {tstat.identifier}")
-                    return tstat.identifier
-            logging.warning(f"Thermostat {ecobee_name} not found in registered thermostats.")
-            return None
+        except requests.exceptions.RequestException as e:
+            # This includes timeouts and connection errors.  It also
+            # includes requests' JSONDecodeError: during an Ecobee outage
+            # the API answers with a non-JSON body (e.g., HTTP 503), and
+            # pyecobee fails when it tries to parse that as JSON.
+            logging.warning(
+                f"Temporary error fetching thermostats from Ecobee "
+                f"(will retry): {e!r}")
+            raise self.EcobeeTransientError(str(e)) from e
         except EcobeeApiException as e:
             if e.status_code == 14:
                 logging.info(f'Access token expired while attempting to get thermostat ID...refreshing.')
@@ -320,6 +368,13 @@ dule mode change...refreshing.')
             else:
                 logging.error(f"Failed to fetch thermostats: {e}")
                 raise
+
+        for tstat in thermostat_response.thermostat_list:
+            if tstat.name.lower() == ecobee_name.lower():
+                logging.debug(f"Found thermostat {ecobee_name} with ID {tstat.identifier}")
+                return tstat.identifier
+        logging.warning(f"Thermostat {ecobee_name} not found in registered thermostats.")
+        return None
 
     def format_dt_str(self, dt_val):
         """
