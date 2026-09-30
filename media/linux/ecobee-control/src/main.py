@@ -12,6 +12,8 @@
 #              Ecobee thermostats based on those events.
 
 import os
+import re
+import sys
 import argparse
 import logging
 import warnings
@@ -32,6 +34,36 @@ from google_calendar.google_calendar_client import GoogleCalendarClient
 from ecobee.ecobee_client import EcobeeClient
 from zone_scheduler import schedule_ecobees_for_lookahead
 
+# Ecobee credentials that can show up in log output: bearer tokens in
+# request headers, and tokens / the app key in token-request URLs.
+# pyecobee sends those as query parameters, and both urllib3's debug
+# output and pyecobee's error messages include the full request URL.
+_SECRET_RE = re.compile(
+    r'(Bearer\s+|[?&](?:code|refresh_token|access_token|client_id)=)'
+    r'[^\s&"\']+')
+
+def redact(text):
+    """Replace Ecobee credentials in text with a placeholder."""
+    return _SECRET_RE.sub(r'\1<redacted>', text)
+
+class RedactFilter(logging.Filter):
+    """Logging handler filter that redacts credentials from each record's
+    message and traceback before the record is formatted."""
+    def filter(self, record):
+        record.msg = redact(record.getMessage())
+        record.args = None
+        if record.exc_info and not record.exc_text:
+            record.exc_text = logging.Formatter().formatException(record.exc_info)
+        if record.exc_text:
+            record.exc_text = redact(record.exc_text)
+        return True
+
+def log_uncaught_exception(exc_type, exc, tb):
+    """sys.excepthook that sends uncaught exceptions through logging, so
+    their tracebacks are redacted too (e.g., pyecobee puts the
+    token-request URL in some exception messages)."""
+    logging.critical("Unhandled exception", exc_info=(exc_type, exc, tb))
+
 def setup_logging(args):
     level = logging.WARNING
     if args.verbose:
@@ -40,6 +72,22 @@ def setup_logging(args):
         level = logging.DEBUG
 
     logging.basicConfig(level=level)
+
+    # This script's output can be posted to Slack, so redact credentials
+    # from everything that gets logged, including uncaught exceptions
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(RedactFilter())
+    sys.excepthook = log_uncaught_exception
+
+    # pyecobee's debug output includes every request's headers (i.e.,
+    # the Ecobee bearer token) and full token-refresh requests and
+    # responses (i.e., the long-lived refresh token), in formats the
+    # redaction filter does not try to cover.  Keep pyecobee at INFO or
+    # above unless its debug output is explicitly requested.
+    if args.debug_ecobee:
+        logging.getLogger("pyecobee").setLevel(logging.DEBUG)
+    else:
+        logging.getLogger("pyecobee").setLevel(max(level, logging.INFO))
 
 def setup_cli():
     # Get the directory of the current script
@@ -78,6 +126,12 @@ def setup_cli():
     parser.add_argument('--debug',
                         default=False,
                         action='store_true')
+    parser.add_argument('--debug-ecobee',
+                        default=False,
+                        action='store_true',
+                        help="Also show the pyecobee library's debug "
+                        "output.  WARNING: this prints Ecobee "
+                        "credentials; only use it interactively.")
 
     args = parser.parse_args()
 
